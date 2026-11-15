@@ -172,6 +172,7 @@ class Conversations:
             self.saver, self.store = PostgresSaver(self.pool), PostgresStore(self.pool)
             # [왜] 그래프에 넘기는 Store에는 색인을 켜지 않는다(다른 put이 임베딩 호출을 부르지 않게). 사실 기억만 색인 Store를 쓴다
             self.profile = profile.ProfileMemory(PostgresStore(self.pool, index=profile.INDEX) if indexed else self.store, indexed)
+            self.mcp = None  # [왜] 그래프를 만들 때 _graph가 채운다. warm()이 이 검색기로 품번 색인도 미리 만든다(factory로 만든 시험 그래프는 없음)
             self.graph = factory(self.saver, self.store) if factory else self._graph()
         except Exception:
             self.stack.close()
@@ -182,6 +183,19 @@ class Conversations:
 
     def close(self):
         self.stack.close()
+
+    def warm(self):
+        """서버 시작 뒤 데몬 스레드에서 부른다: 검색 BM25 색인과 MCP 하위 프로세스의 품번 색인을 미리 만들어 첫 질문의 콜드 스타트(7~23초)를 없앤다(점검 C #1).
+
+        [주의] 실패해도 서버는 그대로 뜬다. 오류는 종류만 로그에 남기고(질의 · 접속 정보 제외) 첫 질문이 원래대로 색인을 만든다.
+        """
+        try:
+            from backend.rag.retrieve import warmup
+            warmup()
+            if self.mcp is not None:
+                self.mcp.check([], [])
+        except Exception as error:
+            LOGGER.warning('warmup_failed error=%s', type(error).__name__)
 
     def readiness(self):
         """모델 호출·사용자 행 읽기 없이 현재 분석 저장소의 연결과 스키마를 확인한다."""
@@ -316,7 +330,7 @@ class Conversations:
         # [왜] 키 없는 데모는 실제 그래프를 그대로 돌리고 LLM 응답만 기록에서 꺼낸다(조장 결정 11-10). 카드 도구의 카드 읽기 LLM도
         #      같은 chat을 받아야 프롬프트가 기록(scripts/demo/record_demo.py의 build_app)과 같아진다
         chat = demo.service_chat() if self.mode == 'demo' else llm.node_chat
-        mcp = self.stack.enter_context(StdioMcpRetriever())  # 사실 확인(check_corpus)만 MCP로 부른다
+        mcp = self.mcp = self.stack.enter_context(StdioMcpRetriever())  # 사실 확인(check_corpus)만 MCP로 부른다
         # [왜] 사양 표(part_specifications)를 11-09에 버리고 후보 찾기 · 판정 값은 카드 읽기가 기본이다(ADR 0016, 평가 실행기 run_graph.py와 같은 조립)
         # [주의] 카드 도구는 MCP를 거치지 않고 DATABASE_URL로 DB를 직접 읽는다. 표지 품번 색인은 조립 때가 아니라 첫 판정 때 한 번 읽는다
         specs, find = default_specs(chat=chat), default_find(chat=chat)

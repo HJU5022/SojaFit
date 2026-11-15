@@ -15,6 +15,7 @@ from functools import partial
 
 from langgraph.graph import END, START, StateGraph
 
+from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import read_profile
 from backend.graph.nodes import QUANTITY_CLAIM
 from backend.multi_agent import facts as facts_mod
@@ -76,6 +77,22 @@ def finish_node(state: dict) -> dict:
     return {'path': ['끝']}
 
 
+def facts_step(state: dict, *, lookup=None) -> dict:
+    """품번·판 확인(멀티): MCP 시간 초과는 한 번 다시 부르고(콜드 스타트), 그래도 안 되면 search_error 거절로 보낸다(점검 C #1).
+
+    [왜] 이 노드는 RetrievalUnavailableError를 안 잡아 첫 질문의 MCP 30초 시간 초과가 처리 안 된 오류(503)가 됐다.
+         거절이면 Supervisor(계획 LLM)를 부르지 않고(plan_node가 refusal_reason을 보고 건너뛴다) 거절 노드로 간다.
+    """
+    for attempt in (1, 2):
+        try:
+            return facts_mod.facts_node(state, lookup=lookup)
+        except RetrievalUnavailableError as error:
+            if error.kind == 'timeout' and attempt == 1:
+                continue
+            LOGGER.warning('facts_unavailable kind=%s attempts=%s', error.kind, attempt)
+            return {'facts': {}, 'refusal_reason': Reason.SEARCH_ERROR.value, 'path': ['사실 확인']}
+
+
 def guarded(node, agent: str, path: str, *, skip_after_failure: bool = False):
     """서브에이전트 노드가 LLM · 공급자 오류로 죽으면 그 할 일을 실패 보고(search_error)로 바꿔 올린다(점검 C #2).
 
@@ -134,7 +151,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     # [왜] 노드 이름 = 그림에 보이는 이름. 갈림 함수(supervisor.after_*)도 이 이름을 돌려준다(supervisor.NODE)
     g.add_node('입력 읽기', partial(parse_node, parse=parse or nodes.read_input))
     g.add_node('기억 읽기', read_profile)  # Store(사용자 사실)에서 선호 실장 방식만 읽는다. Store 없이 compile하면(평가 실행기) 선호 없음
-    g.add_node('품번·판 확인', partial(facts_mod.facts_node, lookup=lookup))
+    g.add_node('품번·판 확인', partial(facts_step, lookup=lookup))
     g.add_node('Supervisor', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled, web_enabled=web_enabled))  # 계획(LLM 1번)
     g.add_node('RAG 에이전트', guarded(partial(docs_agent, retriever=retriever, chat=chat, find=find,
                                        web_search=web_search if web_enabled else None,

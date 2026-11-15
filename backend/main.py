@@ -11,6 +11,7 @@
 THREADS_ENABLED=1이면 명시적으로 준비한 DATABASE_URL의 분석 저장소·MCP 세션을 앱 수명 동안 관리한다.
 """
 import os
+import threading
 from http import HTTPStatus
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -49,6 +50,8 @@ async def lifespan(app: FastAPI):
             from backend.conversations.memory_service import Conversations
             conversations = Conversations(os.environ['DATABASE_URL'])
             app.state.conversations = conversations
+            # [왜] 색인 만들기(7~23초)가 서버 시작을 막지 않게 데몬 스레드로 한다. /health는 곧바로 답하고, 첫 질문이 색인을 기다리지 않게 한다(점검 C #1)
+            threading.Thread(target=conversations.warm, name='warmup', daemon=True).start()
         yield
     finally:
         if conversations:

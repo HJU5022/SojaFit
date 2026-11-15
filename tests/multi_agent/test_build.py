@@ -333,6 +333,44 @@ def test_synth_failure_ends_as_search_error_refusal():
     assert out['refusal_reason'] == 'search_error' and out['answer'] == ''
 
 
+def unavailable(kind):
+    from backend.graph.mcp_retriever import RetrievalUnavailableError
+    return RetrievalUnavailableError(kind)
+
+
+def test_facts_step_retries_a_cold_start_timeout_once_then_uses_the_answer():
+    from backend.multi_agent.supervisor import Facts
+    calls = []
+
+    def lookup(state):
+        calls.append(1)
+        if len(calls) == 1:
+            raise unavailable('timeout')
+        return Facts(parts={'1N4148': True})
+    out = B.facts_step({'question': '1N4148?'}, lookup=lookup)
+    assert len(calls) == 2 and out['facts']['parts'] == {'1N4148': True} and 'refusal_reason' not in out
+
+
+@pytest.mark.parametrize(('kind', 'attempts'), [('timeout', 2), ('mcp_unavailable', 1), ('tool_error', 1), ('invalid_response', 1)])
+def test_facts_step_turns_retrieval_failure_into_a_search_error_refusal(kind, attempts):
+    calls = []
+
+    def lookup(state):
+        calls.append(1)
+        raise unavailable(kind)
+    out = B.facts_step({'question': '1N4148?'}, lookup=lookup)
+    assert len(calls) == attempts and out == {'facts': {}, 'refusal_reason': 'search_error', 'path': ['사실 확인']}
+
+
+def test_graph_refuses_without_calling_the_plan_llm_when_part_check_is_unavailable():
+    def lookup(state):
+        raise unavailable('timeout')
+    chat = scripted(supervisor=[])  # 부르면 빈 목록에서 IndexError
+    out = app(chat, lookup=lookup).invoke({'input': 'SS14 VRRM?'})
+    assert chat.calls == [] and out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '거절']
+    assert out['refusal']['code'] == 'search_error' and '다시 시도' in out['answer']
+
+
 def test_budget_limit_interrupt_and_code_errors_still_stop_the_run():
     """is_llm_failure가 아닌 오류(한도 초과 · 인터럽트 · 코드 오류)는 실패 보고로 바꾸지 않고 그대로 올린다."""
     from langgraph.errors import GraphInterrupt

@@ -108,6 +108,8 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
     old = state.get('counters') or {}
     c = {'hops': old.get('hops', 0) + 1, 'agents': old.get('agents', 0), 'searches': old.get('searches', 0),
          'replans': old.get('replans', 0) + (1 if replan else 0)}
+    if state.get('refusal_reason'):  # 품번·판 확인이 이미 실패(search_error)로 정했다: 계획 LLM을 부르지 않고 거절 노드로 간다
+        return {'plan': {}, 'question_type': '', 'counters': c, 'path': ['계획']}
     try:
         plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled, web_enabled), Plan)
     except Exception as error:

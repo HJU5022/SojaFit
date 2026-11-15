@@ -709,6 +709,61 @@ def test_enabled_app_lifespan_opens_and_closes_real_persistence(runtime, monkeyp
     assert not hasattr(app.state, 'conversations')
 
 
+def test_warm_builds_both_indexes_and_swallows_failures_without_leaking_detail(monkeypatch, caplog):
+    """점검 C #1: 시작 때 데몬 스레드가 검색 색인과 MCP 품번 색인을 미리 만든다. 실패해도 서버는 뜨고, 로그에는 오류 종류만 남는다."""
+    from types import SimpleNamespace
+    from backend.rag import retrieve
+    calls = []
+    svc = Conversations.__new__(Conversations)
+    svc.mcp = SimpleNamespace(check=lambda parts, revisions: calls.append(('mcp', parts, revisions)))
+    monkeypatch.setattr(retrieve, 'warmup', lambda: calls.append('bm25'))
+    svc.warm()
+    assert calls == ['bm25', ('mcp', [], [])]
+
+    svc.mcp = None  # factory로 만든 그래프(시험)는 MCP 검색기가 없다
+    calls.clear()
+    svc.warm()
+    assert calls == ['bm25']
+
+    def broken():
+        raise RuntimeError('postgresql://user:secret@host/db refused')
+    monkeypatch.setattr(retrieve, 'warmup', broken)
+    svc.warm()  # 예외를 밖으로 내지 않는다
+    assert 'warmup_failed error=RuntimeError' in caplog.text and 'secret' not in caplog.text
+
+
+def test_lifespan_starts_warmup_in_a_daemon_thread_without_waiting_for_it(monkeypatch):
+    """색인 만들기가 서버 시작을 막지 않는다: warm()이 끝나기 전에 /health가 답하고, 스레드는 데몬이다."""
+    import threading
+    from fastapi.testclient import TestClient
+    from backend.conversations import memory_service
+    from backend.main import app
+    started, release, seen = threading.Event(), threading.Event(), {}
+
+    class FakeConversations:
+        def __init__(self, dsn):
+            pass
+        def warm(self):
+            seen['thread'] = threading.current_thread()
+            started.set()
+            release.wait(10)
+        def close(self):
+            pass
+    monkeypatch.setattr(memory_service, 'Conversations', FakeConversations)
+    monkeypatch.setenv('DATABASE_URL', 'postgresql://unused/unused')
+    monkeypatch.setenv('THREADS_ENABLED', '1')
+    monkeypatch.setenv('DEMO_MODE', '1')
+    try:
+        with TestClient(app) as client:
+            assert client.get('/health').status_code == 200  # warm()은 아직 release를 기다리는 중
+            assert started.wait(5) and not release.is_set()
+            assert seen['thread'].daemon and seen['thread'].name == 'warmup' and seen['thread'].is_alive()
+    finally:
+        release.set()
+    seen['thread'].join(5)
+    assert not seen['thread'].is_alive()
+
+
 def test_message_sends_no_approved_cases_and_returns_profile_hints():
     """DB 없이 분석 서비스의 질문 한 번: 승인 사례를 찾지 않고 빈 목록을 넘기며, 그 질문으로 찾은 사용자 사실을 결과에 붙인다."""
     from contextlib import contextmanager
