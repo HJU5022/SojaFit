@@ -1030,3 +1030,30 @@
 - 초기 검사: 집중 258개 통과. 첫 전체 검사는 2497 passed/32 skipped/2 failed/23 errors였다. 시험 DB 이름 ci_pr가 테스트의 ci_auth 안전 검사에 맞지 않은 23건과 프런트 빌드 경로가 없어 로그인 복귀가 404였던 1건은 시험 환경 문제였다. ci_auth와 사본의 frontend/dist를 준비한 뒤 해당 24건 모두 통과했다. 기존 T6 테스트가 과거 질문을 현재 question에 합치던 동작을 기대한 1건은 현재 질문의 정확 일치·별도 history의 공격 원문 보존 검사로 수정했고 관련 7개가 통과했다. 평가 정답·동결 파일·runner는 변경하지 않았다.
 - 최종 통합 검증: main a4de1a45와 선별한 변경의 tree 7abb4816에서 전체 pytest 2522 passed/32 skipped/0 failed(342.66초). 별도 corpus·vector·재시작 등의 실행 조건을 요구하는 32건은 건너뛰었으며 docling 기존 DeprecationWarning 1건이 있었다. 같은 사본의 프런트 11파일/270개, TypeScript app/node, Vite production build 통과. 저장된 인젝션 기록 CLI는 110행/위반 0건이었다. 이번에 실제 모델·검색·임베딩·가격 호출은 하지 않았다.
 - 범위 검토: 총 29파일을 선별했고 새 보고서는 트리·research 목록에 각각 한 줄 등록했다. staged diff의 비밀값 패턴과 로컬 설정 값 대조에서 실제 키·개인키 발견 0건, 동결 데이터 변경 0건, 제외 경로 포함 0건이었다. 기능 수정과 보고서·기록을 별도 커밋으로 나누며 PR은 main을 대상으로 생성하고 병합하지 않는다.
+
+## 2026-11-15 · 로컬 실제 API와 KiCad 제외를 저장소 설정에 고정
+
+- 요청에 따라 docker-compose.local.yml에서 renderer와 해당 의존성을 제거했다. 실제 API 플래그 0/0과 내부 DB·계정·볼륨·8010 바인딩은 기존 값을 유지하며 api/thread-setup에 INCLUDE_KICAD=0을 명시했다.
+- docker-compose.yml도 renderer profile을 제거하고 API·준비 작업·코퍼스 이미지에 INCLUDE_KICAD=0을 명시했다. 두 로컬 Compose의 KICAD_RENDERER_URL은 빈 값으로 고정해 .env의 원격 주소가 로컬 변환 경로를 켜지 않게 했다.
+- 실제 API 로컬 실행 명령은 docker compose --env-file .env.local -f docker-compose.local.yml up -d --build --wait --wait-timeout 120 이다. 키 없는 G2 기본 Compose의 데모 모드는 유지한다. 로컬 .env는 앞서 복구한 DEMO_MODE=0, DEMO_REPLAY=0 상태다.
+- .env.example, docs/specs/local-live-api.md, docs/specs/external-complete-schematics.md의 로컬 설명과 tests/api/API.md를 갱신했다. 실제 회로도 검색·모델 분석 지원, KiCad 원본만 있는 자료의 변환 제한을 명시했다. 새 파일·주요 문서·배포 파일·의존성은 변경하지 않았다.
+- 검증: uv run --no-sync pytest tests/api/test_local_live_config.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py -q 에서 230 passed(22.24초). Compose 검사에는 가짜 값과 --no-env-resolution을 사용했으며 비밀값을 출력하지 않았다.
+- 현재 OSC8011은 저장소 설정과 기존 포트 override로 up -d --no-build를 적용했다. /health=200, 실제 API 플래그 0/0, 공급자 키 존재, kicad-cli 없음, renderer 주소 비어 있음을 확인했다. API 이미지 SHA와 DB 컨테이너 ID가 실행 전후 동일하다.
+- 예전 renderer 컨테이너는 exited 상태로 남아 Compose orphan 경고가 나온다. 이번 작업은 기존 컨테이너·이미지·볼륨 삭제를 포함하지 않는다.
+- 이번에는 설정·변환 회귀 검사를 실행했다. 직전 실제 검색/분석의 부분 문서 안내와 추적403은 별도 결과로 남으며, 수정 후 유료 요청을 반복하지 않았다. 동결 평가셋 재측정·새 빈 DB/전체 이미지 재빌드는 이번 범위에서 실행하지 않았다.
+
+## 2026-11-15 · KiCad 제외 설정 재빌드와 실제 API 확인
+
+- 사용자 승인 범위는 로컬 OSC 이미지 재빌드와 실제 회로도 검색 1회·LLM 분석 1회다. 기존 8011 로컬 Compose와 DB 볼륨을 사용한다.
+- docker compose -p osc-schematic-local -f docker-compose.yml -f <sojafit-osc-live-no-kicad-8011.yml> up -d --build 명령으로 갱신한다. 로그는 OS 임시 폴더에 저장하고 비밀값은 출력하지 않는다.
+- 빌드 상한은 10분, 검색과 분석 대기는 각각 180초다. 사용자 요청은 각각 1회이며 기존 서비스 예산과 내부 재시도 상한을 유지한다.
+- 새 이미지 ID, KiCad 미설치, 실제 API 모드 0/0, HTTP 준비, PNG 수신과 분석 완료를 확인한다. 실제 공급자 청구 금액은 측정하지 않는다.
+
+### 재빌드 후 확인 결과
+
+- Compose build/up 종료 코드 0. 새 API 이미지 sha256:8bb3a921f9fbf0d9451ba3d9ec122fa5076f2ca1e006316281c9f20e458e60b2이며 이전 bbc562d2 이미지에서 바뀌었다. 기존 빌드 캐시를 사용했으며 빈 Docker 환경 빌드 시간 측정은 아니다. 빌드 로그는 OS 임시 폴더 osc-no-kicad-rebuild.log다.
+- DB 컨테이너 ID 6b53038ba03bf83358a3fbdd3968337f60e6049809877ac4eeba085a749cd0ff가 유지됐다. 새 API에서 DEMO_MODE=0, DEMO_REPLAY 비활성, kicad-cli 없음, dpkg KiCad 설치 기록 없음, renderer URL 빈 값, 모델·검색·임베딩 키 존재를 확인했다. /health=200이며 기존 renderer는 exited다.
+- 재빌드 후 브라우저를 새로 열어 정격 질문 1회를 전송했다. thread_id=4191ad30-2e32-48a7-959b-683896988dd7, 실제 API run=completed, question_type=rating, error=null이다. 답변은 TSC 1N4148 VRRM=100V, ABSOLUTE MAXIMUM RATINGS 표 1쪽을 제시했다. 이번 답변에는 직전 두 정격 질문에서 보인 일부 문서 작업 미완료 안내가 표시되지 않았다.
+- 재빌드 후 검색 1회를 보냈다. 검색어 SparkFun Breadboard Power Supply 5V 3.3V schematic, 검색 대상 제품·보드 참고 회로도다. public 원시 결과10/후보2, manufacturer 원시 결과10/후보3의 새 검색 로그를 확인했다. SparkFun 공식 PDF가 반환됐고 manifest와 PNG 시트 HTTP200, 화면 이미지와 제조사 공식 2등급 표시를 확인했다.
+- KiCad 원본만 있는 자료 변환과 업로드 회로 연결 일치 검색은 이번 검증 대상이 아니다. 실제 분석과 공개 PDF 기반 참고 회로도 검색이 KiCad 없이 동작함을 확인한 결과다.
+- OpenTelemetry 추적 내보내기 403 Forbidden은 이번에도 관찰됐다. 화면 분석 완료와 회로도 PNG 수신에는 성공했지만 추적 저장 성공은 확인되지 않았다. 호출은 사용자 요청 기준 검색1/분석1이며 내부 공급자 세부 호출 수와 실제 청구 금액은 별도 측정하지 않았다.
