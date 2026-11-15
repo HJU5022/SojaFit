@@ -17,6 +17,10 @@ class InvalidNetlist(ValueError):
     """연결 정보가 없거나 제한된 KiCad export 문법이 아니다."""
 
 
+class InvalidNetlistEncoding(InvalidNetlist):
+    """UTF-8로 디코드할 수 없는 원본 바이트."""
+
+
 class NetlistTooLarge(InvalidNetlist):
     """원본 바이트 상한 초과."""
 
@@ -173,7 +177,7 @@ def normalize_netlist(raw: bytes) -> NormalizedCircuit:
     try:
         text = raw.decode("utf-8", errors="strict")
     except UnicodeDecodeError:
-        raise InvalidNetlist("expected UTF-8") from None
+        raise InvalidNetlistEncoding("expected UTF-8") from None
     if "\x00" in text:
         raise InvalidNetlist("NUL is not allowed")
     root = _read_export(text)

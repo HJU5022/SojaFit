@@ -10,6 +10,17 @@ ALLOWED_LICENSES = frozenset({
     "GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0-only", "GPL-3.0-or-later",
 })
 
+# SPDX deprecated identifiers with an unambiguous current replacement.
+_DEPRECATED_LICENSE_ALIASES = {
+    "GPL-2.0": "GPL-2.0-only",
+    "GPL-3.0": "GPL-3.0-only",
+}
+
+
+def normalize_license_id(value: str | None) -> str | None:
+    """Return the canonical SPDX identifier for an unambiguous alias."""
+    return _DEPRECATED_LICENSE_ALIASES.get(value, value) if isinstance(value, str) else None
+
 
 @dataclass(frozen=True)
 class VerifiedSchematicSource:

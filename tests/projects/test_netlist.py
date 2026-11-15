@@ -71,6 +71,12 @@ def test_hash_happens_before_strict_decode(monkeypatch):
     assert calls == [b"\xff"]
 
 
+def test_invalid_utf8_has_encoding_specific_subclass():
+    module = parser()
+    with pytest.raises(module.InvalidNetlistEncoding):
+        module.normalize_netlist(b"\xff")
+
+
 def test_depth_limit_in_ignored_metadata():
     module = parser()
     raw = (FIXTURES / "minimal.net").read_bytes()

@@ -35,7 +35,7 @@ class ExternalSchematicChoice(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str
     source_url: str
-    source_type: Literal["manufacturer_official", "public_web"]
+    source_type: Literal["manufacturer_official", "community", "public_web"]
     revision: str | None
 
 
@@ -98,10 +98,17 @@ def external_schematic_manifest(
     response: Response,
     q: Annotated[str, Query(min_length=2, max_length=200), BeforeValidator(str.strip)],
     source_url: Annotated[str | None, Query(max_length=2048)] = None,
+    component_type: Annotated[Literal["diode"] | None, Query()] = None,
 ):
     response.headers["Cache-Control"] = "private, no-store"
-    manifest = (_schematic_call(find_external_schematic, q, source_url) if source_url is not None
-                else _schematic_call(find_external_schematic, q))
+    if component_type == "diode" and len(q) > 194:
+        raise HTTPException(422, "다이오드 검색어는 194자 이하로 입력해 주세요.")
+    call_args = (q, source_url) if source_url is not None else (q,)
+    if component_type is not None:
+        if source_url is None:
+            call_args = (q, None)
+        call_args = (*call_args, component_type)
+    manifest = _schematic_call(find_external_schematic, *call_args)
     return ExternalSchematicResponse(
         project=manifest.project, commit=manifest.commit, license=manifest.license,
         attribution=manifest.attribution, repository_url=manifest.repository_url,

@@ -5,10 +5,13 @@ import os
 import re
 import socket
 import time
+from hashlib import sha256
 from pathlib import PurePosixPath
 from urllib.parse import quote, unquote, urljoin, urlsplit
 
 import httpx
+
+from .external_schematic import _Cache
 
 from .external_circuit_search import (
     GitHubRepositoryRef, github_repository_ref, read_bounded_body, safe_public_https_url,
@@ -16,13 +19,25 @@ from .external_circuit_search import (
 from .schematic_source import (
     ALLOWED_LICENSES, ExternalSchematicConfigurationError, ExternalSchematicInvalidSource,
     ExternalSchematicRateLimited, ExternalSchematicUpstreamError, VerifiedSchematicSource,
+    normalize_license_id,
 )
+
+# Match the renderer's bounded selected-hierarchy input limit. This remains a
+# repository-wide cap; file and sheet limits below still apply independently.
+MAX_DISCOVERY_BYTES = 25 * 1024**2
 
 _API = frozenset({"api.github.com"})
 _RAW = frozenset({"raw.githubusercontent.com"})
 _DOWNLOAD_HOSTS = _API | _RAW | {"codeload.github.com"}
 _SHA = re.compile(r"[a-fA-F0-9]{40}")
+_GITHUB_API_CACHE = _Cache(128, 16 * 1024**2, lambda entry: entry[1], 900, time.monotonic)
 _EXCLUDED = re.compile(r"datasheet|application[-_ ]?note|block[-_ ]?diagram|(?:^|[/_. -])(?:pcb|layout|renders?|rendering|3d|photo|preview|partial|detail|pinout|old|deprecated|obsolete|draft|backup|archive|archived|stage|excerpt|subsystem|section|fragment)(?:$|[/_. -])", re.I)
+_CERN_SHORT_NOTICE = re.compile(
+    r"^CERN Open Hardware Licence Version 2\s*[–-]\s*"
+    r"(?:Permissive|Weakly Reciprocal|Strongly Reciprocal)\s*"
+    r"\(CERN-OHL-(?:P|W|S)-2\.0\)\s+Copyright\s+\(c\)\s+[^\r\n]+$",
+    re.I,
+)
 
 
 def _public_addresses(host: str) -> tuple[str, ...]:
@@ -70,6 +85,8 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
             if (parsed.path, parsed.query) != (original.path, original.query) or parsed.fragment:
                 raise ExternalSchematicInvalidSource()
             headers = {"Accept-Encoding": "identity"}
+            if phase == "public_asset":
+                headers["User-Agent"] = "SojaFit/1.0 (schematic viewer)"
             if not mock:
                 headers["Host"] = parsed.hostname
             if parsed.hostname in _API:
@@ -109,15 +126,21 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
 
 
 def _api(url, cap, client):
-    data, _ = download_bounded(url, max_bytes=cap, allowed_hosts=_API, client=client,
-                                phase="github_api")
-    try:
-        value = json.loads(data)
-        if not isinstance(value, dict):
-            raise ValueError()
-        return value
-    except (ValueError, RecursionError):
-        raise ExternalSchematicUpstreamError() from None
+    def produce():
+        data, _ = download_bounded(url, max_bytes=cap, allowed_hosts=_API, client=client,
+                                    phase="github_api")
+        try:
+            value = json.loads(data)
+            if not isinstance(value, dict):
+                raise ValueError()
+            return value, len(data)
+        except (ValueError, RecursionError):
+            raise ExternalSchematicUpstreamError() from None
+
+    if isinstance(client._transport, httpx.MockTransport):
+        return produce()[0]
+    credential = sha256(os.getenv("GITHUB_TOKEN", "").strip().encode()).digest()
+    return _GITHUB_API_CACHE.get((url, cap, credential), produce)[0]
 
 
 def _valid_path(path):
@@ -149,6 +172,8 @@ def _blobs(tree):
 
 _TOKEN = re.compile(r'"(?:[^"\\]|\\.)*"|[()]|[^\s()"]+|"')
 _VALUE = re.compile(r'\s+"Value"\s+"([^"\\]{1,256})"')
+_REFERENCE = re.compile(r'\s+"Reference"\s+"([^"\\]{1,64})"')
+_UUID = re.compile(r'\s+"?([0-9a-fA-F-]{8,64})"?')
 _FILE = re.compile(r'\s+"Sheet\s*file"\s+"([^"\\]{1,1024})"', re.I)
 
 
@@ -156,6 +181,34 @@ _NUMBER = r"(-?\d{1,12}(?:\.\d{1,12})?)"
 _WIRE_POINTS = re.compile(r"\s+\(xy\s+" + _NUMBER + r"\s+" + _NUMBER +
                           r"\)\s+\(xy\s+" + _NUMBER + r"\s+" + _NUMBER + r"\)\s*\)")
 _LEGACY_WIRE_POINTS = re.compile(r"\s*" + r"\s+".join([_NUMBER] * 4) + r"\s*")
+
+# KiCad's generic Device:D symbols carry the actual part number in Value.  Do
+# not require a diode-specific library id for those symbols: Device:D,
+# Device:D_Small, Device:D_Schottky, and Device:D_Zener are all normal placed
+# diode symbols.  The exclusions are intentional so an LED/photodiode cannot
+# become a diode merely because its reference starts with D.
+_DIODE_VALUE_EXCLUDED = re.compile(r"(?:^|[^a-z0-9])(?:led|photo(?:diode)?|photodiode)(?:$|[^a-z0-9])", re.I)
+_DIODE_LIBRARY_EXCLUDED = re.compile(
+    r"(?:^|[:_])(?:led|photo(?:diode)?|photodiode|laser(?:diode)?)(?:$|[:_])", re.I,
+)
+
+
+def _is_placed_diode(reference, value, library):
+    if not re.fullmatch(r"d\d+", reference.casefold()):
+        return False
+    lib_name = library.rsplit(":", 1)[-1].casefold()
+    if _DIODE_VALUE_EXCLUDED.search(value) or _DIODE_LIBRARY_EXCLUDED.search(library):
+        return False
+    if re.search(r"(?:diode|schottky|rectifier|zener)", library, re.I):
+        return True
+    # Generic KiCad Device:D variants are classified by their symbol name,
+    # while D_Photo/D_LED remain explicitly excluded above.
+    if lib_name == "d" or (lib_name.startswith("d_") and not re.search(
+            r"(?:led|photo|laser)", lib_name, re.I)):
+        return True
+    # Keep support for legacy symbols whose library name itself is SS33/SS34.
+    # The Value field alone is never enough: a resistor can be labelled SS33.
+    return bool(re.fullmatch(r"ss\d+[a-z0-9-]*", lib_name))
 
 
 def _nonzero_segment(match):
@@ -165,6 +218,48 @@ def _nonzero_segment(match):
     return (x1, y1) != (x2, y2)
 
 
+def _embedded_diode(source):
+    """Classify a custom library definition by its description and electrical pins."""
+    from backend.graph.netlist import _sexpr
+
+    try:
+        normalized = re.sub(r'"(?:\\.|[^"\\])*"',
+                            lambda m: json.dumps(json.loads(m[0], strict=False)), source)
+        symbol = _sexpr(normalized)
+    except (ValueError, RecursionError):
+        return None
+    if len(symbol) < 2 or not isinstance(symbol[1], str):
+        return None
+    description = " ".join(item[2] for item in symbol[2:]
+                           if isinstance(item, list) and len(item) >= 3
+                           and item[0] == "property" and isinstance(item[1], str)
+                           and item[1] in {"Description", "ki_keywords"}
+                           and isinstance(item[2], str))
+    if (not re.search(r"\b(?:diode|schottky|rectifier|zener)\b", description, re.I)
+            or re.search(r"led|photo|laser", description, re.I)
+            or _DIODE_LIBRARY_EXCLUDED.search(symbol[1])):
+        return None
+    pins = []
+    pending = [symbol]
+    while pending:
+        node = pending.pop()
+        if node and node[0] == "pin":
+            if len(node) < 2 or not isinstance(node[1], str) or node[1] not in {"passive", "no_connect"}:
+                return None
+            if node[1] == "passive":
+                names = [x[1] for x in node if isinstance(x, list) and len(x) >= 2
+                         and x[0] == "name" and isinstance(x[1], str)]
+                if len(names) != 1:
+                    return None
+                pins.append(names[0].casefold())
+        pending.extend(x for x in node if isinstance(x, list))
+    anodes = {"a", "anode"}
+    cathodes = {"k", "c", "cathode"}
+    if len(pins) != 2 or not (set(pins) & anodes) or not (set(pins) & cathodes):
+        return None
+    return symbol[1]
+
+
 def _sheet_data(path, source):
     """Read placed components and direct child sheets; embedded symbol libraries are not instances."""
     children, values = [], []
@@ -172,6 +267,12 @@ def _sheet_data(path, source):
     child_start = 0
     symbols = 0
     has_wire = False
+    instances = []
+    embedded_diodes = set()
+    library_start = 0
+    instance_start = 0
+    instance_values = {}
+    current_ref = current_value = current_lib = current_uuid = None
     if path.lower().endswith(".kicad_sch"):
         stack = []
         finished = False
@@ -184,8 +285,33 @@ def _sheet_data(path, source):
                     raise ExternalSchematicInvalidSource()
                 stack.append(None)
             elif part == ")":
+                if stack == ["kicad_sch", "symbol_instances", "path"]:
+                    from backend.graph.netlist import _sexpr
+                    try:
+                        block = source[instance_start:token.end()]
+                        block = re.sub(r'"(?:\\.|[^"\\])*"',
+                                       lambda m: json.dumps(json.loads(m[0], strict=False)), block)
+                        node = _sexpr(block)
+                        if len(node) < 2 or not isinstance(node[1], str):
+                            raise ValueError()
+                        key = node[1].rsplit("/", 1)[-1].casefold()
+                        fields = {x[0]: x[1] for x in node[2:] if isinstance(x, list)
+                                  and len(x) == 2 and x[0] in {"reference", "value"}}
+                        value = (fields["reference"], fields["value"])
+                        if (not re.fullmatch(r"[0-9a-f-]{8,64}", key)
+                                or not all(isinstance(item, str) for item in value)
+                                or (key in instance_values and instance_values[key] != value)):
+                            raise ValueError()
+                        instance_values[key] = value
+                    except (ValueError, TypeError, KeyError, IndexError):
+                        raise ExternalSchematicInvalidSource() from None
+                if stack == ["kicad_sch", "lib_symbols", "symbol"]:
+                    if library := _embedded_diode(source[library_start:token.end()]):
+                        embedded_diodes.add(library)
                 if stack == ["kicad_sch", "sheet"] and len(children) != child_start + 1:
                     raise ExternalSchematicInvalidSource()
+                if stack == ["kicad_sch", "symbol"] and current_ref:
+                    instances.append((current_ref, current_value or "", current_lib or "", current_uuid))
                 if not stack or stack.pop() is None:
                     raise ExternalSchematicInvalidSource()
                 finished = not stack
@@ -193,10 +319,15 @@ def _sheet_data(path, source):
                 raise ExternalSchematicInvalidSource()
             elif stack[-1] is None:
                 stack[-1] = part
+                if stack == ["kicad_sch", "symbol_instances", "path"]:
+                    instance_start = source.rfind("(", 0, token.start())
+                if stack == ["kicad_sch", "lib_symbols", "symbol"]:
+                    library_start = source.rfind("(", 0, token.start())
                 if len(stack) == 1 and part != "kicad_sch":
                     raise ExternalSchematicInvalidSource()
                 if len(stack) == 2 and part == "symbol":
                     symbols += 1
+                    current_ref = current_value = current_lib = current_uuid = None
                 if stack == ["kicad_sch", "wire", "pts"]:
                     has_wire |= _nonzero_segment(_WIRE_POINTS.match(source, token.end()))
                 if len(stack) == 2 and part == "sheet":
@@ -204,11 +335,24 @@ def _sheet_data(path, source):
                     child_start = len(children)
                 if len(stack) == 3 and part == "lib_id" and stack[1] == "symbol":
                     if match := re.match(r'\s+"([^"\\]{1,256})"', source[token.end():token.end()+260]):
-                        values.append(match[1].rsplit(":", 1)[-1])
+                        lib = match[1].rsplit(":", 1)[-1]
+                        values.append(lib)
+                        if len(stack) == 3 and stack[0] == "kicad_sch":
+                            current_lib = match[1]
+                if len(stack) == 3 and part == "uuid" and stack[1] == "symbol":
+                    if match := _UUID.match(source, token.end()):
+                        current_uuid = match[1].casefold()
                 if len(stack) == 3 and part == "property" and stack[1] in {"symbol", "sheet"}:
                     pattern = _VALUE if stack[1] == "symbol" else _FILE
                     if match := pattern.match(source, token.end()):
                         (values if stack[1] == "symbol" else children).append(match[1])
+                    if stack == ["kicad_sch", "symbol", "property"]:
+                        ref = _REFERENCE.match(source, token.end())
+                        value = _VALUE.match(source, token.end())
+                        if ref:
+                            current_ref = ref[1]
+                        if value:
+                            current_value = value[1]
         if not finished:
             raise ExternalSchematicInvalidSource()
     else:
@@ -216,6 +360,7 @@ def _sheet_data(path, source):
             raise ExternalSchematicInvalidSource()
         active = ""
         wire_points_next = False
+        legacy_reference = legacy_value = legacy_lib = None
         for line in source.splitlines():
             if wire_points_next:
                 has_wire |= _nonzero_segment(_LEGACY_WIRE_POINTS.fullmatch(line))
@@ -226,25 +371,45 @@ def _sheet_data(path, source):
                 active = line
                 count += line == "$Sheet"
                 symbols += line == "$Comp"
+                if line == "$Comp":
+                    legacy_reference = legacy_value = legacy_lib = None
                 child_start = len(children)
             elif line in {"$EndSheet", "$EndComp"}:
                 if active == "$Sheet" and len(children) != child_start + 1:
                     raise ExternalSchematicInvalidSource()
                 if active != line.replace("$End", "$"):
                     raise ExternalSchematicInvalidSource()
+                if active == "$Comp" and legacy_reference and legacy_value:
+                    instances.append((legacy_reference, legacy_value or "", legacy_lib or "", None))
                 active = ""
             elif active == "$Sheet" and (match := re.match(r'^F1\s+"([^"\\]+)"', line)):
                 children.append(match[1])
             elif active == "$Comp" and line.startswith("L "):
                 fields = line.split()
                 if len(fields) == 3:
-                    values.append(fields[1].rsplit(":", 1)[-1])
+                    legacy_lib = fields[1]
+                    values.append(legacy_lib.rsplit(":", 1)[-1])
+            elif active == "$Comp" and (match := re.match(r'^F 0 "([^"]+)"', line)):
+                legacy_reference = match[1]
             elif active == "$Comp" and (match := re.match(r'^F 1 "([^"]+)"', line)):
-                values.append(match[1])
+                legacy_value = match[1]
+                values.append(legacy_value)
         if active:
             raise ExternalSchematicInvalidSource()
     if not (values or children) or len(children) != count or not all(_valid_path(ref) for ref in children):
         raise ExternalSchematicInvalidSource()
+    for reference, value, prefix, placed_uuid in instances:
+        fallback = instance_values.get(placed_uuid.casefold()) if placed_uuid else None
+        if fallback and fallback[0] == reference and fallback[1]:
+            if value and value != fallback[1]:
+                raise ExternalSchematicInvalidSource()
+            if not value:
+                value = fallback[1]
+        if not value:
+            continue
+        if (_is_placed_diode(reference, value, prefix)
+                or (prefix in embedded_diodes and _is_placed_diode(reference, value, "Device:D"))):
+            values.append(f"diode:{value.casefold()}")
     return [str(PurePosixPath(path).parent / ref) for ref in children], values, symbols, has_wire
 
 
@@ -344,6 +509,10 @@ def _matches_query(query, evidence, readme):
             pattern = re.escape(term) + r"(?![a-z0-9])"
         if not re.search(r"(?<![a-z0-9])" + pattern, text):
             return False
+    if "diode" in terms:
+        model_terms = [t for t in terms if t != "diode" and re.search(r"[a-z]", t) and re.search(r"\d", t)]
+        if model_terms and not any(re.search(r"diode:" + re.escape(t) + r"(?:[^a-z0-9]|$)", placed) for t in model_terms):
+            return False
     return True
 
 
@@ -366,28 +535,117 @@ def inspect_github_candidates(repository: GitHubRepositoryRef, *, query: str = "
         return ()
 
 
+def _select_query_root(graph, evidence_by_path, symbols, wires, query, readme):
+    """Find complete matching hierarchies without mixing independent projects."""
+    children = set().union(*graph.values()) if graph else set()
+    roots = sorted(set(graph) - children)
+    if not roots:
+        raise ExternalSchematicInvalidSource()
+    # A repository root may contain an unrelated broken sibling. Try complete
+    # nested hierarchies as well, while preferring a complete matching parent
+    # when one exists so the same child is not returned twice.
+    matches = []
+    candidates = roots + sorted(set(graph) - set(roots))
+    for candidate in candidates:
+        visited = set()
+
+        def walk(node, active):
+            if node in active or node not in graph:
+                raise ExternalSchematicInvalidSource()
+            if node in visited:
+                return
+            visited.add(node)
+            for child in graph[node]:
+                walk(child, active | {node})
+
+        try:
+            walk(candidate, set())
+            _, count = _root({node: graph[node] for node in visited})
+        except ExternalSchematicInvalidSource:
+            continue
+        placed = sum(symbols[node] for node in visited)
+        has_wire = any(wires[node] for node in visited)
+        evidence = " ".join(value for node in visited for value in evidence_by_path[node])
+        if placed >= 2 and has_wire and _matches_query(query, evidence, readme):
+            matches.append((candidate, count, frozenset(visited)))
+    if not matches:
+        raise ExternalSchematicInvalidSource()
+    complete = []
+    for match in matches:
+        if any(match[2] < other[2] for other in matches):
+            continue
+        complete.append(match)
+    return tuple(complete)
+
+
+def _short_cern_license(license_text, readme):
+    """Accept only the repository's structured short CERN-OHL declaration."""
+    lines = [line.strip() for line in license_text.replace("\r\n", "\n").split("\n") if line.strip()]
+    if len(lines) != 3:
+        return None
+    notice = " ".join(lines[:2]) + " " + lines[2]
+    match = _CERN_SHORT_NOTICE.fullmatch(notice)
+    if not match:
+        return None
+    license_id = re.search(r"\((CERN-OHL-[PWS]-2\.0)\)", notice, re.I)[1].upper()
+    names = {"P": "Permissive", "W": "Weakly Reciprocal", "S": "Strongly Reciprocal"}
+    expected = f"CERN Open Hardware Licence Version 2 - {names[license_id[9]]}"
+    if lines[0].replace("–", "-").casefold() != expected.casefold():
+        return None
+    if re.search(r"non.?commercial|all rights reserved|additional terms|no derivatives|proprietary", notice, re.I):
+        return None
+    scope = re.sub(r"\s+", " ", re.sub(r"[`*_]", "", readme)).casefold()
+    if re.search(r"non.?commercial|commercial.{0,30}prohibited|no derivatives|additional terms|proprietary|all rights reserved", scope):
+        return None
+    declaration = (r"all hardware design files(?:\s*\([^)]{0,300}\))?\s+are licensed under (?:the )?"
+                   r"(?:cern open hardware licence version 2\s*[–-]\s*"
+                   + re.escape(names[license_id[9]].casefold()) + r"\s*\()?"
+                   + re.escape(license_id.casefold()) + r"\)?\.")
+    if not re.search(declaration, scope):
+        return None
+    return license_id
+
+
 def _inspect(ref, query, client):
     slug = f"{ref.owner}/{ref.repo}"
     api = f"https://api.github.com/repos/{slug}"
     cap = 256 * 1024
     metadata = _api(api, cap, client)
+    # GitHub preserves repository casing in archive roots; use its canonical name.
+    canonical = metadata.get("full_name")
+    if isinstance(canonical, str):
+        actual = github_repository_ref(f"https://github.com/{canonical}")
+        if actual is None or actual.repository_url.casefold() != ref.repository_url.casefold():
+            return ()
+        ref = actual
+        slug = f"{ref.owner}/{ref.repo}"
+        api = f"https://api.github.com/repos/{slug}"
     license_data = metadata.get("license")
-    license_id = license_data.get("spdx_id") if isinstance(license_data, dict) else None
-    if not isinstance(license_id, str) or license_id not in ALLOWED_LICENSES or metadata.get("private") is True:
+    license_id = normalize_license_id(license_data.get("spdx_id")
+                                     if isinstance(license_data, dict) else None)
+    metadata_license_unknown = license_id == "NOASSERTION"
+    if (not isinstance(license_id, str)
+            or (license_id not in ALLOWED_LICENSES and not metadata_license_unknown)
+            or metadata.get("private") is True):
         return ()
     branch = metadata.get("default_branch")
     if not _valid_path(branch):
         return ()
-    head = _api(f"{api}/commits/{quote(branch, safe='')}", cap, client)
+    # The commits endpoint can include a large commit object and exceed the
+    # bounded metadata response. The branch endpoint returns the same pinned
+    # commit/tree SHAs in a compact response.
+    head = _api(f"{api}/branches/{quote(branch, safe='')}", cap, client)
     try:
-        commit, tree_sha = head["sha"], head["commit"]["tree"]["sha"]
+        commit = head["commit"]["sha"]
+        tree_sha = head["commit"]["commit"]["tree"]["sha"]
     except (KeyError, TypeError):
         raise ExternalSchematicUpstreamError() from None
     if any(not isinstance(s, str) or not _SHA.fullmatch(s) for s in (commit, tree_sha)):
         return ()
     files = _blobs(_api(f"{api}/git/trees/{tree_sha}?recursive=1", 2 * 1024**2, client))
-    eda = sorted(p for p in files if p.lower().endswith((".kicad_sch", ".sch")))
-    if not 1 <= len(eda) <= 20:
+    eda = sorted((p for p in files if p.lower().endswith((".kicad_sch", ".sch"))),
+                 key=lambda p: (not p.lower().endswith(".kicad_sch"), p))
+    if not 1 <= len(eda) <= 128:
         return ()
     raw = f"https://raw.githubusercontent.com/{slug}/{commit}/"
 
@@ -399,77 +657,115 @@ def _inspect(ref, query, client):
         except UnicodeError:
             raise ExternalSchematicInvalidSource() from None
 
-    graph, evidence, symbols = {}, [], {}
+    graph, evidence, evidence_by_path, symbols, wires = {}, [], {}, {}, {}
     has_wire = False
-    remaining = 12 * 1024**2
+    remaining = MAX_DISCOVERY_BYTES
     for path in eda:
-        source, size = fetch(path, min(remaining, 4 * 1024**2))
+        if remaining <= 0:
+            if query:
+                break
+            raise ExternalSchematicInvalidSource()
+        file_cap = min(remaining, 4 * 1024**2)
+        try:
+            source, size = fetch(path, file_cap)
+        except ExternalSchematicInvalidSource:
+            if not query:
+                raise
+            # A failed/partial read must still consume its worst-case budget.
+            remaining -= file_cap
+            continue
         remaining -= size
-        graph[path], placed_values, symbols[path], sheet_has_wire = _sheet_data(path, source)
+        try:
+            child_paths, placed_values, placed_count, sheet_has_wire = _sheet_data(path, source)
+        except ExternalSchematicInvalidSource:
+            if not query:
+                raise
+            continue
+        graph[path] = child_paths
+        symbols[path] = placed_count
+        evidence_by_path[path] = placed_values
+        wires[path] = sheet_has_wire
         has_wire |= sheet_has_wire
         evidence.extend(placed_values)
-    root, sheet_count = _root(graph)
-    # Count placements in each sheet instance, including repeated children.
-    pending, placed = [root], 0
-    while pending:
-        sheet = pending.pop()
-        placed += symbols[sheet]
-        pending.extend(graph[sheet])
-    if placed < 2 or not has_wire:
-        return ()
     readme = ""
     readme_path = next((p for p in sorted(files) if p.casefold() in {"readme", "readme.md", "readme.rst"}), None)
     if readme_path:
         readme, _ = fetch(readme_path, cap)
+    license_path = next((p for p in sorted(files)
+                         if p.casefold() in {"license", "license.md", "license.txt"}), None)
+    license_evidence_url = None
+    if metadata_license_unknown:
+        if not license_path or not readme:
+            return ()
+        license_text, _ = fetch(license_path, cap)
+        license_id = _short_cern_license(license_text, readme)
+        if license_id not in ALLOWED_LICENSES:
+            return ()
+    if license_path:
+        license_evidence_url = f"{raw}{quote(license_path)}"
     part_evidence = " ".join(evidence)
-    if not _matches_query(query, part_evidence, readme):
-        return ()
+    if query:
+        selections = _select_query_root(
+            graph, evidence_by_path, symbols, wires, query, readme)
+    else:
+        root, sheet_count = _root(graph)
+        selected_paths = frozenset(graph)
+        pending, placed = [root], 0
+        while pending:
+            sheet = pending.pop()
+            placed += symbols[sheet]
+            pending.extend(graph[sheet])
+        if placed < 2 or not has_wire:
+            return ()
+        if not _matches_query(query, part_evidence, readme):
+            return ()
+        selections = ((root, sheet_count, selected_paths),)
     linked = _readme_links(readme)
     captioned = _schematic_captions(readme)
-    assets = []
-    root_path = PurePosixPath(root)
-    for path in files:
-        file = PurePosixPath(path)
-        kind = file.suffix.lower().lstrip(".")
-        if kind not in {"png", "svg", "pdf"}:
-            continue
-        if sheet_count > 1 and kind != "pdf":
-            continue
-        stem = file.stem.casefold()
-        same_stem = stem == root_path.stem.casefold()
-        same_root_pdf = kind == "pdf" and same_stem and file.parent == root_path.parent
-        # KiCad projects often keep both the schematic and the PCB in a folder named PCB.
-        checked_path = path
-        if same_root_pdf:
-            checked_path = "/".join([p for p in file.parent.parts if p.casefold() != "pcb"] + [file.name])
-        if _EXCLUDED.search(checked_path):
-            continue
-        # A PDF beside the root EDA file is the project's exported original
-        # schematic even when its basename is a board name.
-        named = same_root_pdf
-        if not named:
-            named = _full_drawing_name(stem)
-        if not named:
-            # A matched EDA/project stem can prefix an explicit schematic designation.
-            for prefix in {root_path.stem.casefold(), ref.repo.casefold()}:
-                if stem.startswith(prefix) and stem[len(prefix):len(prefix)+1] in {"-", "_", " "}:
-                    named = _full_drawing_name(stem[len(prefix)+1:])
-                    if named:
-                        break
-        if path in captioned and not re.search(r"schematic|circuit[-_ ]?diagram", stem):
-            named = True
-        paired = same_stem or file.parent == root_path.parent or path in linked
-        if named and paired:
-            assets.append((("pdf", "png", "svg").index(kind), not same_root_pdf, len(file.parts),
-                           path.casefold(), kind, path))
-    def candidate(kind, paths):
-        return VerifiedSchematicSource(slug, commit, license_id, slug + " contributors", ref.repository_url,
-                                       f"{ref.repository_url}/tree/{commit}", root, kind, paths, root,
-                                       expected_sheets=sheet_count)
+    def sources_for(root, sheet_count, selected_paths):
+        assets = []
+        root_path = PurePosixPath(root)
+        for path in files:
+            file = PurePosixPath(path)
+            kind = file.suffix.lower().lstrip(".")
+            if kind not in {"png", "svg", "pdf"}:
+                continue
+            if sheet_count > 1 and kind != "pdf":
+                continue
+            stem = file.stem.casefold()
+            same_stem = stem == root_path.stem.casefold()
+            same_root_pdf = kind == "pdf" and same_stem and file.parent == root_path.parent
+            checked_path = path
+            if same_root_pdf:
+                checked_path = "/".join([p for p in file.parent.parts if p.casefold() != "pcb"] + [file.name])
+            if _EXCLUDED.search(checked_path):
+                continue
+            named = same_root_pdf or _full_drawing_name(stem)
+            if not named:
+                for prefix in {root_path.stem.casefold(), ref.repo.casefold()}:
+                    if stem.startswith(prefix) and stem[len(prefix):len(prefix)+1] in {"-", "_", " "}:
+                        named = _full_drawing_name(stem[len(prefix)+1:])
+                        if named:
+                            break
+            if path in captioned and not re.search(r"schematic|circuit[-_ ]?diagram", stem):
+                named = True
+            paired = same_stem or file.parent == root_path.parent or path in linked
+            if len(selections) > 1:
+                paired = file.parent == root_path.parent and same_stem
+            if named and paired:
+                assets.append((("pdf", "png", "svg").index(kind), not same_root_pdf, len(file.parts),
+                               path.casefold(), kind, path))
+        def candidate(kind, paths):
+            return VerifiedSchematicSource(slug, commit, license_id, slug + " contributors", ref.repository_url,
+                                           f"{ref.repository_url}/blob/{commit}/{quote(root)}", root, kind, paths, root,
+                                           expected_sheets=sheet_count, license_evidence_url=license_evidence_url)
 
-    # Keep one preferred asset per format and the original EDA as the final fallback.
-    formats = {}
-    for *_, kind, asset in sorted(assets):
-        if kind not in formats:
-            formats[kind] = candidate(kind, (asset,))
-    return (*formats.values(), candidate("kicad", ()))
+        formats = {}
+        for *_, kind, asset in sorted(assets):
+            if kind not in formats:
+                formats[kind] = candidate(kind, (asset,))
+        if all(PurePosixPath(path).suffix.casefold() == ".kicad_sch" for path in selected_paths):
+            formats["kicad"] = candidate("kicad", tuple(sorted(selected_paths)))
+        return tuple(formats.values())
+
+    return tuple(source for selection in selections for source in sources_for(*selection))

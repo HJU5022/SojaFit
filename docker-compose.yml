@@ -1,9 +1,12 @@
 # G2: `docker compose up` 한 줄로 전체 서비스가 10분 안에 떠야 합니다.
 # 평가자에게는 API 키가 없으므로 기본값은 데모 모드(DEMO_MODE=1)입니다.
-# 서비스 4개: api(FastAPI + 빌드한 React 화면), thread-setup(분석 저장소 준비 후 종료), corpus-load(데모 코퍼스 스냅샷 적재 후 종료), db(pgvector PostgreSQL).
+# 기본 서비스 4개: api(FastAPI + 빌드한 React 화면), thread-setup(분석 저장소 준비 후 종료), corpus-load(데모 코퍼스 스냅샷 적재 후 종료), db(pgvector PostgreSQL).
 services:
   api:
-    build: .
+    build:
+      context: .
+      args:
+        INCLUDE_KICAD: "0"
     ports:
       - "8000:8000"
     # .env가 없어도 뜹니다 (키가 필요 없는 데모 모드)
@@ -19,6 +22,7 @@ services:
       AUTH_ORIGIN: ${DEMO_AUTH_ORIGIN:-http://localhost:8000}
       # 호스트 이름 db는 아래 db 서비스. .env의 DATABASE_URL보다 이 값이 우선한다.
       DATABASE_URL: postgresql://app:app@db:5432/app
+      KICAD_RENDERER_URL: ${KICAD_RENDERER_URL:-http://renderer:8000}
     # db가 healthcheck를 통과한 뒤에 api를 띄운다(스키마 적재 전에 연결하지 않게).
     depends_on:
       db:
@@ -54,6 +58,14 @@ services:
       db:
         condition: service_healthy
 
+  # KiCad 10 원본 변환만 담당하는 선택적 무상태 서비스. 기본 up에는 포함되지 않는다.
+  # 로컬에서 renderer까지 띄우려면 `docker compose --profile schematic up --build`를 사용한다.
+  # KICAD_RENDERER_URL을 지정하지 않은 Compose API는 이 서비스의 내부 주소를 사용한다.
+  renderer:
+    profiles: ["schematic"]
+    build:
+      context: .
+      target: renderer
   db:
     # pgvector 확장이 들어 있는 Postgres. 서비스 표는 db/020_service_baseline.sql(기준선)이 만들고 LangGraph 표는 thread-setup이 만들고, 데모 코퍼스 스냅샷은 위 corpus-load가 넣는다.
     image: pgvector/pgvector:pg16
