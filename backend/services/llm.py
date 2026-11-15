@@ -230,15 +230,10 @@ def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
     return vectors, response.usage.total_tokens, provider, model
 
 
-@lru_cache(maxsize=1)
-def _voyage_http():
-    """Voyage 호출이 TLS 연결을 다시 맺지 않게 한 개를 재사용하는 httpx.Client(스레드 안전). 시간 제한은 호출마다 넘긴다."""
-    import httpx
-    return httpx.Client()
-
-
 def _voyage_post(path: str, payload: dict) -> dict:
     """Voyage REST에 POST해 JSON 본문을 돌려준다. 429·5xx는 5번까지 늘려 가며 다시 부르고, 결제 신호(402)는 바로 멈춘다."""
+    import httpx
+
     key = os.getenv("VOYAGE_API_KEY")
     if not key:
         raise RuntimeError("VOYAGE_API_KEY is required")
@@ -246,7 +241,7 @@ def _voyage_post(path: str, payload: dict) -> dict:
         budget = _evaluation_budget.get()
         runtime = budget is not None and budget.on_reserve is not None
         timeout = budget.reserve(json.dumps(payload), output_tokens=0, embedding=True) if runtime else 180
-        r = _voyage_http().post(f"https://api.voyageai.com/v1/{path}", timeout=timeout, headers={"Authorization": f"Bearer {key}"}, json=payload)
+        r = httpx.post(f"https://api.voyageai.com/v1/{path}", timeout=timeout, headers={"Authorization": f"Bearer {key}"}, json=payload)
         if r.status_code == 200:
             return r.json()
         if r.status_code == 402 or re.search("payment|billing", r.text, re.I):
