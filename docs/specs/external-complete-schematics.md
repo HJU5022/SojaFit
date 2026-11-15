@@ -110,7 +110,7 @@
 
 - API 최종 이미지는 KiCad를 포함하지 않는다. `Dockerfile`의 `renderer` target이 KiCad 10과 `/health`, `/render`를 제공하며, API는 `KICAD_RENDERER_URL`이 있을 때 KiCad 원본만 이 서비스로 보낸다. API 이미지와 renderer 이미지는 서로 다른 Cloud Run 서비스로 배포한다.
 - 선택 KiCad 파일 다운로드의 한도 오류는 자료 손상으로 분류하지 않는다. renderer는 한도 오류를 `503`과 제한된 `Retry-After`로 전달하며, API도 기존의 `503`/`Retry-After` 계약을 유지한다. 일반 변환 장애와 잘못된 원본의 `422`는 별도로 처리한다.
-- 로컬 Compose의 기본값은 `KICAD_RENDERER_URL=http://renderer:8000`이지만 `renderer`는 `schematic` profile이다. 회로도 원본 경로까지 재현하려면 `docker compose --profile schematic up --build`를 사용한다. 기본 `docker compose up`은 API·DB 데모 경로다.
+- 로컬 실제 API Compose는 `KICAD_RENDERER_URL`을 비우고 KiCad renderer를 시작하지 않는다. 로컬 검색·표시 대상은 공개 PDF·PNG·SVG 회로도와 정적 회로도다. KiCad 원본만 있는 결과는 PNG로 변환하지 않는다. 실제 LLM·외부 검색은 `DEMO_MODE=0`, `DEMO_REPLAY=0`과 공급자 키 설정으로 활성화한다.
 - Cloud Run의 API 환경변수 `KICAD_RENDERER_URL`에는 renderer의 HTTPS 서비스 URL만 넣는다. Cloud Run에서 실행될 때 API는 metadata server에서 그 URL을 audience로 한 ID token을 받아 `Authorization: Bearer`로 호출한다. renderer는 비공개로 두고 API 서비스 계정에 renderer의 `roles/run.invoker`를 부여해야 한다. 이 문서의 명령은 예시이며 실제 Cloud Run 배포·호출은 수행하지 않았다.
 
 예시 명령(자리표시자만 사용): Artifact Registry 저장소·Cloud Run의 프로젝트/리전·서비스 계정은 미리 준비한다. 두 컨테이너는 8000 포트로 실행하므로 배포에도 `--port 8000`을 지정한다. API의 DB·인증·Exa 환경변수와 Secret 설정은 기존 배포 설정을 유지하며, 아래 명령은 renderer 연결에 필요한 부분만 보여준다. `RENDERER_SERVICE_URL`은 renderer 배포 후 출력되는 실제 HTTPS 서비스 URL로 바꾼다.
@@ -149,7 +149,7 @@ gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAcco
 - 공개 GitHub 저장소 후보의 PNG·PDF 이미지는 고정 커밋의 `raw.githubusercontent.com` 원본에서 받는다. 제조사 페이지가 연결한 공식 GitHub 파일은 해당 원본 URL에서 받으며, 재조회 시 SHA-256이 달라지면 버린다. 그 밖의 공개 웹 후보는 검색으로 확인한 원본 URL에서 받는다.
 - 제조사 도메인 보강 검색은 검색어에서 식별한 Adafruit·SparkFun·Seeed·Arduino·Pololu·Olimex·Raspberry Pi·PJRC의 공식 도메인으로 제한한다. 제조사 페이지의 GitHub 자료는 허용한 공식 조직의 직접 링크만 원본으로 취급한다.
 - PDF는 전체 회로도 파일의 시트를 목표 300 DPI로 변환한다. 여러 페이지의 일반 안내서는 회로도 표시 페이지를 식별할 때만 그 페이지를 반환한다. 시트당 출력은 4,000만 픽셀 이내다.
-- KiCad 원본은 검증한 선택 계층의 파일만 고정 commit에서 직접 다운로드해 임시 디렉터리에 배치하고 `kicad-cli`로 PDF로 내보낸 뒤 PNG로 렌더링한다. `asset_paths`가 없는 기존 source만 제한된 저장소 압축본 경로를 사용한다. 운영 renderer 이미지가 KiCad 10을 설치하고 기본 API 이미지는 설치하지 않는다(`backend/projects/schematic_render.py`, `Dockerfile`).
+- KiCad 원본은 renderer가 배포된 환경에서만 검증한 선택 계층의 파일을 고정 commit에서 직접 다운로드해 `kicad-cli`로 PDF로 내보낸 뒤 PNG로 렌더링한다. `asset_paths`가 없는 기존 source만 제한된 저장소 압축본 경로를 사용한다. 운영 renderer 이미지가 KiCad 10을 설치하고 기본 API 이미지와 로컬 실제 API 이미지는 설치하지 않는다(`backend/projects/schematic_render.py`, `Dockerfile`).
 - SVG는 허용 요소 목록에 없는 요소, 외부 참조, 스크립트, 이벤트 속성을 거절한다(`backend/projects/schematic_render.py:43`).
 - 다중 시트 프로젝트는 모든 시트를 순서대로 반환한다. 원본과 시트 수가 다르면 그 후보를 버린다(`backend/projects/external_schematic.py:154-155`).
 - 구형 `.sch`는 프로젝트가 제공한 전체 PNG·SVG·PDF가 있을 때 지원한다. KiCad 9.0.2로 구형 원본을 직접 내보낼 때 배치된 심볼이 빠진 사례가 있다(설계 시점 관찰, 재측정하지 않음).
@@ -247,7 +247,7 @@ gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAcco
 ## 한계
 
 - 모든 부품에 공개 완성 회로도가 있다는 보장은 없다.
-- API 이미지에는 `kicad-cli`가 없다. 별도 renderer target의 KiCad 10을 사용하며 로컬 Compose도 해당 서비스를 연결한다. 원격 연결 누락·불일치는 원본으로 승인하지 않는다. 컨테이너와 실제 화면의 통합 검증은 [작업 기록](../worklog/sth.md)의 2026-11-15 PR134 항목을 따른다.
+- API 이미지와 로컬 실제 API에는 `kicad-cli`가 없다. KiCad 원본 변환은 배포된 별도 renderer target의 KiCad 10에서만 수행하며, 로컬 Compose는 renderer를 연결하지 않는다. 로컬에서 원격 연결이 없으면 KiCad 원본을 승인하지 않는다. 컨테이너와 실제 화면의 통합 검증은 [작업 기록](../worklog/osc.md)의 2026-11-15 항목을 따른다.
 - GitHub 호출 한도: 익명 또는 `GITHUB_TOKEN` 한도를 따른다. 조직 OAuth App 자격 증명을 요청에 연결하는 코드는 없다.
 - 설계 시점의 외부 호출 검증(ATtiny85, LM7805 저장소 반환)은 저장소에 원시 기록이 없어 옮기지 않았다.
 - Exa의 색인과 공개 접근성에 따라 찾지 못하는 회로도가 있다. 모델명이나 변형을 확신할 수 없으면 다른 회로도로 대신하지 않는다. 회로도 파일명·PDF 본문에서 식별할 수 없는 실제 도면도 제외될 수 있다.

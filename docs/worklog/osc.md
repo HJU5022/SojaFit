@@ -1030,3 +1030,40 @@
 - 초기 검사: 집중 258개 통과. 첫 전체 검사는 2497 passed/32 skipped/2 failed/23 errors였다. 시험 DB 이름 ci_pr가 테스트의 ci_auth 안전 검사에 맞지 않은 23건과 프런트 빌드 경로가 없어 로그인 복귀가 404였던 1건은 시험 환경 문제였다. ci_auth와 사본의 frontend/dist를 준비한 뒤 해당 24건 모두 통과했다. 기존 T6 테스트가 과거 질문을 현재 question에 합치던 동작을 기대한 1건은 현재 질문의 정확 일치·별도 history의 공격 원문 보존 검사로 수정했고 관련 7개가 통과했다. 평가 정답·동결 파일·runner는 변경하지 않았다.
 - 최종 통합 검증: main a4de1a45와 선별한 변경의 tree 7abb4816에서 전체 pytest 2522 passed/32 skipped/0 failed(342.66초). 별도 corpus·vector·재시작 등의 실행 조건을 요구하는 32건은 건너뛰었으며 docling 기존 DeprecationWarning 1건이 있었다. 같은 사본의 프런트 11파일/270개, TypeScript app/node, Vite production build 통과. 저장된 인젝션 기록 CLI는 110행/위반 0건이었다. 이번에 실제 모델·검색·임베딩·가격 호출은 하지 않았다.
 - 범위 검토: 총 29파일을 선별했고 새 보고서는 트리·research 목록에 각각 한 줄 등록했다. staged diff의 비밀값 패턴과 로컬 설정 값 대조에서 실제 키·개인키 발견 0건, 동결 데이터 변경 0건, 제외 경로 포함 0건이었다. 기능 수정과 보고서·기록을 별도 커밋으로 나누며 PR은 main을 대상으로 생성하고 병합하지 않는다.
+
+## 2026-11-15 · 로컬 Compose KiCad 제외
+
+- docker-compose.local.yml에서 renderer 서비스와 depends_on 항목 제거. api/thread-setup 빌드 인자는 INCLUDE_KICAD=0, 실행 환경은 DEMO_MODE=0, DEMO_REPLAY=0.
+- docker-compose.yml에서 renderer profile 제거. api/thread-setup/corpus-load 빌드 인자는 INCLUDE_KICAD=0. 두 Compose 파일의 KICAD_RENDERER_URL은 빈 문자열.
+- 전용 로컬 실행 명령은 `docker compose --env-file .env.local -f docker-compose.local.yml up -d --build --wait --wait-timeout 120`.
+- 환경변수 예시, 로컬 실행 사양, 회로도 지원 범위, 설정 테스트 문서 갱신.
+- 회귀 검사 명령은 `uv run --no-sync pytest tests/api/test_local_live_config.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py -q`. PR 선별본 결과는 230 passed, 21.55초.
+- Compose 설정 검사는 합성 인증값과 `--no-env-resolution` 옵션 사용. renderer 제거, INCLUDE_KICAD=0, 실제 API 모드, DB·Origin 격리 확인.
+
+## 2026-11-15 · KiCad 제외 이미지 재빌드 및 API 통합 검증
+
+| 항목 | 설정·결과 |
+|---|---|
+| 실행 환경 | OSC, Compose 프로젝트 osc-schematic-local, 127.0.0.1:8011, 기존 DB 볼륨 |
+| 실행 명령 | `docker compose -p osc-schematic-local -f docker-compose.yml -f <sojafit-osc-live-no-kicad-8011.yml> up -d --build` |
+| 실행 상한 | 빌드 10분, 검색·분석 각각 180초, 검색 1회·분석 1회 |
+| 빌드 조건 | 기존 BuildKit 캐시 사용 |
+| 빌드 종료 코드 | 0 |
+| API 이미지 | sha256:8bb3a921f9fbf0d9451ba3d9ec122fa5076f2ca1e006316281c9f20e458e60b2 |
+| DB 컨테이너 | 6b53038ba03bf83358a3fbdd3968337f60e6049809877ac4eeba085a749cd0ff, 재빌드 전후 동일 |
+| API 실행 환경 | DEMO_MODE=0, DEMO_REPLAY=0, 공급자 키 설정, KICAD_RENDERER_URL 빈 문자열 |
+| KiCad | kicad-cli 및 dpkg 설치 항목 없음, 기존 renderer 컨테이너 exited |
+| HTTP 준비 상태 | GET /health HTTP 200 |
+| 분석 질문 | TSC 1N4148 VRRM 정격 및 데이터시트 근거 조회 |
+| 분석 결과 | completed, question_type=rating, error=null, VRRM=100V, ABSOLUTE MAXIMUM RATINGS 1쪽, 인용 근거 2건 |
+| 분석 thread_id | 4191ad30-2e32-48a7-959b-683896988dd7 |
+| 검색 대상 | 제품·보드 참고 회로도 |
+| 검색어 | SparkFun Breadboard Power Supply 5V 3.3V schematic |
+| 검색 후보 | public 원시 결과 10건·후보 2건, manufacturer 원시 결과 10건·후보 3건 |
+| 이미지 수신 | SparkFun 공식 PDF, manifest HTTP 200, PNG 시트 HTTP 200, 제조사 공식 2등급 표시 |
+| 추적 전송 | OpenTelemetry HTTP 403 Forbidden, 원격 추적 저장 실패 |
+| 빌드 로그 | OS 임시 폴더 osc-no-kicad-rebuild.log |
+
+- 검증 범위는 공개 PDF 기반 참고 회로도 검색과 정격 분석. KiCad 원본 변환, 업로드 회로 연결 일치 검색, 빈 Docker 환경 빌드 시간은 측정 대상에서 제외.
+- 전용 8010 Compose는 설정 검사, 기존 8011 환경은 재빌드·API 통합 검증 수행.
+- 공급자별 내부 호출 수와 청구 금액은 미집계.
