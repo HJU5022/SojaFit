@@ -1,8 +1,8 @@
 # 평가 리포트
 
 - 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: `6707002` (수치마다 측정한 커밋과 원시 파일은 해당 행에 적는다)
+- 기준일: 2026-11-16 (3-D · 8 · 8.1 · 8.2절과 11-2절을 11-16에 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
+- 기준 커밋: 문서 전체의 단일 기준 커밋은 없다. 수치마다 측정한 커밋과 원시 파일은 해당 행에 적는다(옛 머리 `6707002`는 11-12 시점)
 - 정본 여부: 정본(평가 수치). 배포 리비전은 비정본(정본: [README.md](README.md) 맨 위 표)
 - 관련 문서: [README.md](README.md), [SPEC.md](SPEC.md), [docs/GATES.md](docs/GATES.md), [docs/research/injection-results.md](docs/research/injection-results.md), [evals/guides/preregister.md](evals/guides/preregister.md)
 

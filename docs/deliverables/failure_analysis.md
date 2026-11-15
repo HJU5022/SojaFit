@@ -1,8 +1,8 @@
 # 실패 사례 분석
 
 - 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: 6707002
+- 기준일: 2026-11-16 (6 · 8 · 9절은 11-13 · 11-16 추가분)
+- 기준 커밋: 절마다 근거 파일을 적는다(옛 머리 6707002는 11-12 시점)
 - 정본 여부: 비정본(제출물). 수치의 정본은 [EVAL_REPORT.md](../../EVAL_REPORT.md) 5, 6, 11장
 - 관련 문서: [DELIVERABLES.md](DELIVERABLES.md), [ai_tools_log.md](ai_tools_log.md), [demo_script.md](demo_script.md), 사전 등록 [preregister.md](../../evals/guides/preregister.md)
 
