@@ -6,7 +6,7 @@
 - 넣지 않는 것: 공통 오류 응답·요청 ID·본문 한도·라우터 등록(`backend/main.py`), 인증 구현(`backend/auth.py`), 프로젝트 SQL(`backend/projects/`), 분석 실행(`backend/conversations/`, `backend/multi_agent/`), Mouser 호출 자체(`backend/services/mouser.py`).
 - 담당: 서비스·운영
 
-경로 수와 오류 코드 표의 정본은 [SPEC.md](../../SPEC.md) 4절이고, 경로 목록(메서드, 경로)은 `tests/api/test_openapi.py`가 고정한다. 화면 함수는 `frontend/src/api/<이름>.ts`에 있다. 짝이 없는 파일은 `health.py`와 `external_circuits.py`이고, 탈퇴 `DELETE /api/me`(`profile.py`)를 부르는 `deleteAccount`는 `frontend/src/api/auth.ts`에 있다. 계약 상세는 [api-error-contract.md](../../docs/specs/api-error-contract.md), [login-auth.md](../../docs/specs/login-auth.md), [google-user-login.md](../../docs/specs/google-user-login.md)를 따른다.
+경로 수와 오류 코드 표의 정본은 [SPEC.md](../../SPEC.md) 4절이고, 경로 목록(메서드, 경로)은 `tests/api/test_openapi.py`가 고정한다. 화면의 호출은 모두 `frontend/src/api.ts`의 `api()`를 거치고 자료형은 `frontend/src/types.ts`에 있다(2026-11-16 새 화면부터 라우터마다 짝 파일을 두지 않는다). 계약 상세는 [api-error-contract.md](../../docs/specs/api-error-contract.md), [login-auth.md](../../docs/specs/login-auth.md), [google-user-login.md](../../docs/specs/google-user-login.md)를 따른다.
 
 ## 파일
 | 파일 | 경로 (메서드 경로) |
