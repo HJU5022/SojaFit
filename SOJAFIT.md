@@ -71,11 +71,11 @@ SojaFit (proj3-b)
 │   │   │   ├── tinydimmer.png <- tinydimmer 원본 회로도
 │   │   │   ├── hrem.png <- HRem 원본 회로도
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
-│   │   ├── product/        <- 랜딩이 쓰는 실제 데모 화면 캡처
-│   │   │   ├── condition-evidence.png <- 조건 행과 데이터시트 근거(쪽·표·행)를 보인 검토 화면 캡처
-│   │   │   └── missing-condition.png <- 추가 조건을 물어보는 검토 화면 캡처
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
+│   │       ├── product/    <- 랜딩이 쓰는 실제 데모 화면 캡처
+│   │       │   ├── condition-evidence.png <- 조건 행과 데이터시트 근거(쪽·표·행)를 보인 검토 화면 캡처
+│   │       │   └── missing-condition.png <- 추가 조건을 물어보는 검토 화면 캡처
 │   │       ├── samples/    <- 새 프로젝트 창의 "샘플 넷리스트 받기"가 내려 주는 공개 라이선스 넷리스트
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)

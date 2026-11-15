@@ -197,13 +197,13 @@ export function Landing() {
           <div>
             <figure>
               <a
-                href="/product/missing-condition.png"
+                href="/assets/product/missing-condition.png"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="추가 조건 입력 화면 크게 보기"
               >
                 <img
-                  src="/product/missing-condition.png"
+                  src="/assets/product/missing-condition.png"
                   alt="허용 전압강하를 묻고 값을 입력해 재개하는 실제 데모 화면"
                   width="872"
                   height="366"
@@ -214,13 +214,13 @@ export function Landing() {
             </figure>
             <figure>
               <a
-                href="/product/condition-evidence.png"
+                href="/assets/product/condition-evidence.png"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="조건별 판정 근거 화면 크게 보기"
               >
                 <img
-                  src="/product/condition-evidence.png"
+                  src="/assets/product/condition-evidence.png"
                   alt="1N4007G의 필요 역전압 18.75 V와 후보 값 1000 V, 데이터시트 인용을 보여 주는 실제 데모 화면"
                   width="622"
                   height="551"

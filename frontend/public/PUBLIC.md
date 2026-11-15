@@ -8,5 +8,4 @@
 ## 파일
 - `PUBLIC.md` — 이 폴더 설명.
 - `circuit-schematics/` — 검증된 공개 원본에서 고정한 데모 회로도 PNG 15개. 작업대의 원본 회로도 창이 씁니다.
-- `product/` — 랜딩이 쓰는 실제 데모 화면 캡처 2장(`condition-evidence.png` · `missing-condition.png`).
 - `assets/` — Vite 개발 화면과 FastAPI 배포 화면이 `/assets`로 제공하는 브랜드 이미지. [ASSETS.md](assets/ASSETS.md)
