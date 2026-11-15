@@ -106,9 +106,6 @@ def _mentions_exact_part(doc: dict, exact_parts: set[str]) -> bool:
 def keep_docs(docs: list[dict], parts: list[str], question: str, exact_parts: set[str] | None = None) -> list[dict]:
     """LLM에 보여 주기 전에 코드로 거른다: 물은 품번이 아닌 다른 품번만 적힌 표 줄, 질문이 요청한 개정판이 아닌 문서."""
     # [왜] 단일 그래프 채점 노드의 결정적 검사와 같다. 인용한 청크에 대상 품번이 있게 하는 첫 관문이다(설계 그림 인용 검사)
-    # WORD tokens can retain a trailing `.pdf`, so extract the revision code
-    # from the original sentence with a boundary-aware expression.
-    revisions = requested_revisions(question)
     return [d for d in docs if _mentions_exact_part(d, exact_parts or set())
             and not other_part_row(d, parts)
             and revision_matches(question, d.get('file'), d.get('doc_parts') or d.get('parts'), parts)]

@@ -391,7 +391,7 @@ class Conversations:
     @contextmanager
     def locked(self, user, thread):
         with self.connection() as conn:
-            row = self._owned(conn, user, thread)
+            self._owned(conn, user, thread)  # 소유자가 아니면 404
             self._hold_account(conn, user)  # [왜] 실행이 끝날 때까지 탈퇴가 끼어들어 지운 기록을 다시 만들지 않게 한다
             if not conn.execute('SELECT pg_try_advisory_lock(hashtextextended(%s,0)) AS ok', (str(thread),)).fetchone()['ok']:
                 raise HTTPException(409, '분석을 처리 중입니다. 잠시 후 다시 시도하세요.')
@@ -456,7 +456,6 @@ class Conversations:
         snapshot = self.graph.get_state(self.config(thread))
         state = snapshot.values or {}
         pending = [i.value for task in snapshot.tasks for i in task.interrupts]
-        judgement = state.get('judgement') or {}
         return {'id': str(row['id']), 'mode': self.mode, 'filename': row['filename'], 'target': row['target'], 'version': row['version'],
                 'status': row['status'], 'messages': messages, 'answer': '' if pending or (row.get('input_record') or {}).get('execution_limit_reached') else state.get('answer', ''),
                 'interrupt': pending[0] if pending else None, 'can_approve': False,
