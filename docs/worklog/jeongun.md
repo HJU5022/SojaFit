@@ -1085,3 +1085,12 @@
 - 결과(11-15, 1차 시도): 측정이 시작되지 못했다. Exa 요청 1번은 HTTP 200이었으나 `run_gate`의 `GATE_WARMUP`이 품번 확인 MCP 호출에서 `RetrievalUnavailableError: timeout`으로 죽었다(첫 문항 전, LLM 호출 0, 비용 0). 원인은 원격 DB 첫 응답 지연(23초)으로 MCP 준비 30초 시간 초과(조장 확인 [실측], 두 번째 실행은 warm-up 6.9초). 로컬 DB는 쓰지 않는다. 같은 명령으로 1번 재시도한다.
 - 결과(11-15, 재시도, `evals/results/graph/2026-11-15-web-parallel/`): set1 49/50 · p50 8.3초 · p95 34.4초 · 0.042달러, set2 50/50 · 6.3초 · 25.3초 · 0.032달러(합 0.074달러, 상한 1달러 이내). 대상 26건 평균 8.80 → 20.36초로 늘었고 2등급 단계가 R1의 1~2.5초에서 14~25초로 길어졌다(대상 평균 16.6초, 웹은 돌았음). 대상 26건 모두 거절 통과, 관련 문항 판정 변화는 v3-41 · v3-15뿐(둘 다 R1에서 흔들리던 판정 경로 문항). Exa 402 · OpenRouter 403 없음. 시간: 두 회차 약 30분. 원인은 확인하지 못했다(추정만 README에). 채택 여부는 적지 않았다.
 - 결정(11-15, 조장): 기각. `77ace99`를 `8a12bbd`(`git revert`)로 되돌렸다. 되돌린 6파일은 `77ace99` 직전과 같고 `tests/multi_agent` · `tests/repo` 347 통과. 기준은 R1(`b790004`)로 남는다. 재측정은 하지 않았다.
+
+## 2026-11-15 운영 다운 복구(Exa 키 버전 파기)와 main 배포 시도 (브랜치 `jeongun`)
+
+- 발견: main `7ba86325` 배포(`gcloud run deploy sojafit-api --source <git archive 7ba86325> --no-traffic --tag main-7ba8632 --revision-suffix 7ba8632`, 21:16~21:22 KST)가 리비전 생성에서 실패했다. 원인은 Secret Manager `EXA_API_KEY` 버전 1이 DESTROYED(버전 2는 11-14 13:34 생성, enabled)인데 서비스 설정이 버전 1을 고정해 쓰던 것이다.
+- 영향 [실측]: 운영 100% 리비전 `sojafit-api-574de79-rs`도 같은 버전 1을 써서, 최소 인스턴스 0대에서 새 인스턴스가 뜰 때마다 "Could not fetch secret … Instance startup will now abort"로 시작하지 못했다. 이 로그의 첫 기록은 11-14 22:43 KST다. 21:22 KST에 공개 주소 `/health` · `/login` · `/`가 모두 500이었다.
+- 복구: 같은 이미지(`sha256:87101e5c…`, 코드 `574de79`)에 `--update-secrets EXA_API_KEY=EXA_API_KEY:2 --cpu 1 --memory 1Gi`만 바꿔 리비전 `sojafit-api-574de79-exa2`(태그 `fix-574de79-exa2`)를 0%로 만들고, 태그 주소에서 `/health` 200(냉 기동 16.0초) · `/login` 200 · `/` 200을 확인했다. 조장 승인 뒤 `update-traffic --to-revisions sojafit-api-574de79-exa2=100`(21:26 KST). 공개 주소 세 곳 200, 서비스 Ready True.
+- 정리: 실패한 리비전 `sojafit-api-7ba8632`의 태그 `main-7ba8632`를 지웠다(남아 있으면 서비스 Ready가 False). 리비전 자체와 빌드된 main 이미지(`sha256:3ebfa703…`)는 남겨 두었다.
+- 확인 못 한 것: 로그인 뒤 분석 · 웹 근거 경로(유료 호출이라 하지 않음). 누가 · 왜 버전 1을 파기했는지. 다른 비밀값의 고정 버전은 모두 enabled였다.
+- 다음: main `7ba86325` 배포는 보류 중이다. main API 이미지는 KiCad를 빼고(`INCLUDE_KICAD=0`) `KICAD_RENDERER_URL`의 렌더러(`sojafit-osc-kicad-renderer`, 11-13 이미지)로 보내는데, 그 렌더러가 main의 `include_netlist` 요청을 지원하는지 모른다. 렌더러 재배포 여부를 정한 뒤 진행한다.
