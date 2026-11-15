@@ -1,9 +1,14 @@
 # jeongun 작업 기록
 
 ## 2026-11-15 web-to-main 동결 전 백엔드 수정(로컬 커밋만, 푸시 · PR 없음)
-- 목적: 11-15 점검(`reports/2026-11-15-점검/합본-동결전-목록.md`)의 백엔드 수정을 `web-to-main`에 커밋 하나에 목적 하나로 쌓아 PR 준비 상태로 둔다. `frontend/`는 건드리지 않는다.
-- 그룹 1(동작 불변): A4 `a3411700`(macOS RLIMIT_AS), A1 `c4667658`(`None.result()` 크래시), A2(a) `4aa14a55`(외부 실패 경고 로그), D3 `f732afba`(`.env.example` 키 없는 데모 기본). 전체 pytest [실측]: 기준선 31 실패 → 14 실패(새 실패 0, 모두 cairo 없음 12 + `/private/tmp` 경로 2), 통과 2344 → 2371.
-- 그룹 2 정확도 확인: 사전 등록 `evals/guides/preregister.md`(2026-11-15 동결 전 백엔드 수정 묶음). 웹 끔 v3 50×1을 before · after 한 번씩, 상한 4회 · LLM 0.3달러 · Exa 0회. 명령 `uv run --env-file <.env> python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-16-fixes-<팔> --sets 1 --keep-going`(`DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 EVAL_WEB=0 WEB_PREFETCH=0 EXA_WEB_SEARCH_ENABLED=0 EXA_API_KEY=`). 중단 조건: Exa 요청 흔적, 서비스 DB 쓰기, 예산 초과.
+- 목적: 11-15 점검(`reports/2026-11-15-점검/합본-동결전-목록.md`)의 백엔드 수정을 `web-to-main`에 커밋 하나에 목적 하나로 쌓아 PR 준비 상태로 둔다. `frontend/`는 건드리지 않는다. 상세 보고: `reports/2026-11-15-점검/fix-for-main.md`.
+- 그룹 1(올바른 입력의 동작 불변): A4 `a3411700`(macOS `RLIMIT_AS`, 웹 근거 시험 8건 복구), A1 `c4667658`(`None.result()` 크래시), A2(a) `4aa14a55`(외부 실패 WARNING 로그), D3 `f732afba`(`.env.example` 키 없는 데모 기본).
+- 그룹 2(동작 변경, 하나씩 되돌릴 수 있음): C7 `a75ebfd6`, C3 `392d4c88`, C2 `2e6c6a72`, C1 `979d265c`, B3 `9eda28b0`. 덤으로 B2 `9b8aceb4`(오류로 멈춘 대화의 남은 노드를 조건 대기로 안 봄), A7 `3b08b07e`(`download_bounded` 전체 마감 인자). 안 한 것: A5(a) · C5(이유는 보고서).
+- 실행한 명령 · 결과 [실측]: 전체 `uv run pytest -q`(`.env` 없음) 기준선 31 실패 · 통과 2344 → 그룹 1 뒤 14 실패 · 2371 → 그룹 2 뒤 14 실패 · 2421 → 최종 14 실패 · 2423 통과 · 186 건너뜀. 실패 14건은 모두 기준선과 같은 환경 탓(cairo 없음 12 + 이 worktree가 `/private/tmp` 아래라 로그 검사에 걸리는 2)이고 새 실패는 없다.
+- 정확도 회귀(사전 등록 `evals/guides/preregister.md` 2026-11-15 묶음, 웹 끔 v3 50×1): `uv run --env-file <.env> python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-16-fixes-<팔> --sets 1 --keep-going --p95 120`(`DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 EVAL_WEB=0 WEB_PREFETCH=0 EXA_WEB_SEARCH_ENABLED=0 EXA_API_KEY=`). before(코드 `f732afba` 상당) 50/50 · p50 4.3 · p95 9.1초 · 0.0297달러, after(`9eda28b0`) 50/50 · p50 4.8 · p95 11.1초 · 0.0281달러. 판정 일치 10/10 · 오류 거절 0 · Exa 흔적 0 · 새 실패 0. 2회 사용(상한 4회), 합 0.058달러(상한 0.3달러), Exa 0.
+- 방법 참고: 속도 실험(`sojafit-exp-*` 컨테이너)과 겹치지 않으려고 컨테이너가 없을 때만 무거운 단계를 돌렸고, 두 팔은 해당 커밋을 `git archive`로 임시 폴더에 풀어 돌렸다(결과의 `git` 칸은 임시 폴더 해시, 결과 폴더 README에 매핑).
+- 확인 못 한 것: 실제 PostgreSQL을 쓰는 시험(B3 삭제 · 실제 lifespan · 기존 DB 시험 186건 건너뜀), Linux · Docker에서의 전체 pytest, 웹 켬 평가, C3 가드의 실제 Supervisor 동작(v3에 일상 대화 문항 없음), C2 재시도가 실제 429에서 도는지, 화면.
+- 다음 할 일: 조장이 PR 본문 초안(`fix-for-main.md`)을 보고 푸시 · PR 여부를 정한다. 프런트 몫 4건(보고서 "프런트 후속")과 `jeongun`에서만 고칠 주요 문서(README 257 · 260행의 `.env.example` 기본값 설명)가 남아 있다.
 
 ## 2026-11-13 main 574de79 배포(Cloud Run)
 - 배포: `main` `574de79`(PR #127 병합, 인용 숫자 검사 포함)를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-574de79 --revision-suffix 574de79`(빌드 ~10:50 KST 끝). 리비전 `sojafit-api-574de79`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
