@@ -20,7 +20,7 @@
 - `api.ts` — 쿠키 API fetch 경계·오류·SSE 연결.
 - `types.ts` — 공개 API 자료형.
 - `stream.ts` — SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트).
-- `circuit.ts` — 프로젝트 연결에서 부품 목록과 핀·넷 뽑기.
+- `circuit.ts` — 프로젝트 연결에서 부품 목록과 핀·넷 뽑기. `unsupportedPartReason`은 LED·표시기·다이오드가 아닌 부품을 판정 대상에서 빼고 서버(`_require_supported_target`)와 같은 문구로 이유를 보인다(서버가 최종 판단). 시험 `../tests/circuit.test.ts`.
 - `display.ts` — 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수: 긴 소수는 유효숫자 3자리로(받은 값은 마우스를 올리면 보임), 판정 기준식(`v_in_max * kV`)은 한국어로, 답변 속 등록된 말뭉치 인용 번호(`[79]`)는 숨기고, 링크는 http(s)만, 수량별 가격 조회 경로(`/prices?parts=…&quantity=…`)와 예상 금액 줄(적용 구간·단가·금액, 계산을 보류한 경우 안내). 시험 `../tests/display.test.ts`.
 - `inputLabels.ts` — 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내(`inputPlaceholder`). 이름과 뜻은 `backend/judge/rules/roles.yaml` 머리말과 짝이다.
 - `ui.tsx` — 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식. `Markdown`은 서버 답을 그리되 그림과 http(s) 아닌 링크는 글자로만 보인다.

@@ -14,6 +14,7 @@ import {
   useResource,
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
+import { unsupportedPartReason } from './circuit';
 import { NewProject, refreshNavigation } from './Projects';
 import { MissingInput, Reply } from './Reply';
 import { SchematicSection } from './Schematic';
@@ -73,9 +74,16 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     scope = useRef(0),
     end = useRef<HTMLDivElement>(null);
   const parts = partsOf(project.data),
-    diodes = parts.filter((p) => /^D\d/i.test(p.ref));
+    diodes = parts.filter((p) => /^D\d/i.test(p.ref)),
+    // [왜] LED·표시기는 대체 판정을 지원하지 않는다(서버가 422). 고르기 전에 이유를 보이고 고를 수 없게 한다
+    usable = diodes.filter((p) => !unsupportedPartReason(p)),
+    blocked = diodes.filter((p) => unsupportedPartReason(p)),
+    targetReason = (() => {
+      const chosen = parts.find((p) => p.ref === target);
+      return chosen ? unsupportedPartReason(chosen) : '';
+    })();
   useEffect(() => {
-    if (!target && diodes.length) setTarget(diodes[0].ref);
+    if (!target && usable.length) setTarget(usable[0].ref);
   }, [project.data, target]);
   useEffect(() => {
     let live = true;
@@ -225,6 +233,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         return;
       }
       if (!target) throw new Error('먼저 검토할 다이오드를 선택해 주세요.');
+      if (targetReason) throw new Error(targetReason);
       if (demo || !tid) {
         const created = await api<{ id: string }>(`/projects/${projectId}/threads`, 'POST');
         tid = created.id;
@@ -330,21 +339,31 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 >
                   <option value="">부품 선택</option>
                   {diodes.map((p) => (
-                    <option value={p.ref} key={p.ref}>
+                    <option value={p.ref} key={p.ref} disabled={!!unsupportedPartReason(p)}>
                       {p.ref} · {p.value}
+                      {unsupportedPartReason(p) ? ' (판정 범위 밖)' : ''}
                     </option>
                   ))}
                 </select>
               </label>
-              {!diodes.length && <p>회로에 다이오드가 없습니다. 넷리스트를 첨부해 주세요.</p>}
-              <p className="part-status">
-                {waiting
-                  ? '사용 조건을 기다리고 있습니다.'
-                  : active
-                    ? statuses[active.result.status]
-                    : part
-                      ? '선택한 부품으로 검토할 준비가 되었습니다.'
-                      : '회로를 먼저 가져오세요.'}
+              {!usable.length && (
+                <p>회로에 판정할 수 있는 다이오드가 없습니다. 넷리스트를 첨부해 주세요.</p>
+              )}
+              {blocked.map((p) => (
+                <p className="muted" key={p.ref}>
+                  {unsupportedPartReason(p)}
+                </p>
+              ))}
+              <p className="part-status" role={targetReason ? 'alert' : undefined}>
+                {targetReason
+                  ? targetReason
+                  : waiting
+                    ? '사용 조건을 기다리고 있습니다.'
+                    : active
+                      ? statuses[active.result.status]
+                      : part
+                        ? '선택한 부품으로 검토할 준비가 되었습니다.'
+                        : '회로를 먼저 가져오세요.'}
               </p>
             </div>
             <Circuit project={project.data} target={target} />
@@ -507,7 +526,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                       {availableQuestions.map((q) => (
                         <button
                           key={q.id}
-                          disabled={busy}
+                          disabled={busy || !!targetReason}
                           onClick={() => send(q)}
                           data-demo-id={q.id}
                         >
@@ -590,7 +609,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     className="primary send"
                     disabled={
                       busy ||
-                      (!attachment && (!!waiting || !!running || !target || !question.trim()))
+                      (!attachment &&
+                        (!!waiting || !!running || !target || !!targetReason || !question.trim()))
                     }
                     aria-label={attachment ? '넷리스트 보내기' : '질문 보내기'}
                   >
