@@ -254,10 +254,10 @@ curl http://localhost:8000/health   # {"status":"ok"}
 
 ### 키를 넣고 실제 모드
 
-`.env.example`은 실제 모드(`DEMO_MODE=0`)가 기본이다. 복사한 뒤 키와 32바이트 이상의 무작위 `AUTH_SECRET`을 채워야 서버가 시작한다.
+실제 모드는 `.env`에서 `DEMO_MODE=0`과 `DEMO_REPLAY=0`으로 두고 키와 32바이트 이상의 무작위 `AUTH_SECRET`을 채워야 서버가 시작한다(`DEMO_MODE`가 1이 아닌데 `AUTH_SECRET`이 비면 `backend/auth.py`가 시작을 거부하고, `DEMO_REPLAY=1`은 `DEMO_MODE=1`과 함께일 때만 허용된다). `.env.example`의 `DEMO_MODE` · `DEMO_REPLAY` 기본값은 그 파일의 주석을 따르므로, 복사한 뒤 두 값을 위 조건에 맞는지 확인하고 띄운다. 키 없는 데모를 띄울 때는 `.env`를 만들지 않거나 두 값을 1로 둔다.
 
 ```bash
-cp .env.example .env                                                  # DEMO_MODE=0
+cp .env.example .env                                                  # 두 값과 키를 채운 뒤 띄운다
 uv run python -c "import secrets; print(secrets.token_urlsafe(32))"   # AUTH_SECRET 만들기
 docker compose up --build
 ```
