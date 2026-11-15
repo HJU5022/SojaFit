@@ -1,5 +1,20 @@
 # 사전 등록
 
+## 2026-11-15 speed-exp 후속 · 웹 끔에서 LLM·HTTP 레버 P1·P2 (B1 측정 전)
+- 목적: 웹 근거를 끈 경로에서 정확도를 잃지 않고 응답 시간을 줄이는 값싼 레버 둘을 잰다. 앞 실험(웹 켬 9 run)은 채택 0건이었다. 근거: 조사 보고서 `reports/SojaFit 응답 시간 10초 단축 방법.md`, 기준 A1~A3 결과(Supervisor 호출 평균 1.85초, RAG 에이전트 2.44초, 회로 읽기 2.76초, 내부 `search` 평균 약 1.95초).
+- 조건(모든 팔 동일, Docker `sojafit-exp:deps`, 8 CPU, 3GB, 컨테이너 하나씩): 동결 v3 50문항, `run_gate --sets 1 --keep-going` 1회 = 1 run. `DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0`. `EVAL_WEB`·`WEB_PREFETCH`·`EXA_WEB_SEARCH_ENABLED`는 설정하지 않는다(컨테이너 실행기가 .env의 해당 줄을 걸러낸다). 결과 `summary.model_env`에서 `DEMO_MODE=="0"`이고 `EVAL_WEB`·`WEB_PREFETCH`가 `"1"`이 아님을 확인한다. Exa 요청이 하나라도 생기면 중단한다(측정 도구가 요청을 보내기 전에 프로세스를 끝낸다, Exa 예산 $0).
+- 측정 도구(저장소 밖): httpx 요청마다 호스트·경로·상태·시간을 기록하고, OpenRouter 응답에서는 `provider`·모델·토큰 수(글은 기록하지 않음)를, Voyage 호출은 시간을 기록한다.
+- 현재 제공자 확인(작은 호출 1건, 같은 `_chat_model(HAIKU)` 클라이언트, 출력 5토큰 이하) [실측]: 응답의 `provider` = `Google`(Vertex), 모델 `anthropic/claude-haiku-5.5`, 입력 13·출력 4 토큰, 1.04초(연결 새로 맺음 포함). 한 건이라 분포는 모른다. 분포는 기준 run 기록에서 본다.
+- 기준 B: 지금 `speed-exp` HEAD(94b88025, backend는 733c238f와 같음) 그대로. B1·B2.
+- **P1 · OpenRouter 제공자 고르기** (`backend/services/llm.py` `_chat_model`의 `extra_body`, Haiku에만). 공식 문서(openrouter.ai/docs/guides/routing/provider-selection, 2026-11-15) [문서]: 요청 본문의 `provider` 객체에 `sort`("price"|"throughput"|"latency" 또는 `{by, partition}`)·`order`·`allow_fallbacks`(기본 true)·`preferred_max_latency`·`preferred_min_throughput` 등이 있다. `sort`·`order`는 기본 라우팅(캐시가 따뜻한 제공자에 붙는 것 포함)을 우회한다. `preferred_*`는 기준을 못 채운 제공자를 뒤로 미루기만 한다. 설정: `{"provider": {"sort": "latency"}}`(`allow_fallbacks` 기본 true 유지, 제공자 이름 하드코딩 없음). `reasoning` 설정은 그대로 둔다.
+  - **실행 조건(사전 등록)**: B1 기록에서 Haiku 호출의 90% 이상이 `Google` 한 제공자에서 나왔고 그 제공자가 관측한 제공자 중 호출당 시간이 가장 짧으면(제공자가 하나뿐이어도 같음) 이미 가장 빠른 제공자를 쓰는 것이므로 P1 run은 하지 않고 그 사실만 기록한다. 아니면 P1을 잰다.
+  - 목표 지표: 모든 Haiku 호출의 호출당 평균 초(`llm_call_log.seconds`, 노드별 평균도 같이 적는다).
+- **P2 · Voyage 연결 재사용** (`backend/services/llm.py` `_voyage_post`): 호출마다 `httpx.post`(새 연결·TLS) 대신 모듈 수준 `httpx.Client` 하나를 쓴다(스레드 안전하게 쓴다). 시간 제한·헤더·본문·오류 처리·재시도는 그대로. 모델·파라미터 변경 없음. 목표 지표: `search` 단계 평균 초(문항당 최대 칸 값 평균).
+- 판정 규칙(고정, 완화 금지): ① 팔의 모든 run의 통과 수 ≥ 기준 두 run 중 낮은 쪽. ② 팔 run에서 새로 실패한 문항은 {v3-02, v3-08, v3-15, v3-41}과 기준 두 run에서 모두 실패한 문항 안에 있어야 한다. ③ 후보 판정(candidate_judge 10문항) 일치 10/10, 모든 run. ④ 속도: 팔 평균 p95가 기준 평균 p95보다 1.0초 이상 짧거나, **팔의 두 run 모두** 목표 지표가 기준 평균보다 10% 이상 줄고 팔 평균 p95가 기준 평균 p95보다 길지 않다. 하나라도 어기면 기각하고 그 커밋을 되돌린다.
+- 3번째 run은 ①~③이 모든 run에서 맞고 ④가 경계일 때만 한다(경계 = 평균 p95 개선이 0.5~1.0초, 또는 목표 지표 10% 이상 개선이 두 run 중 한 run뿐). 상한: 8 run, LLM $0.5(run당 약 $0.03~0.04), Exa $0.
+- 순서(끼워 넣기): B1 → (P1) → B2 → P2a → (P1b) → P2b. P1을 건너뛰면 B1 → P2a → B2 → P2b. 코드는 곁가지 브랜치에서 측정하고(P1: `speed-exp-P1`, P2: `speed-exp-P2`) 결과와 함께 `speed-exp`에 cherry-pick한다. 기각하면 되돌림 커밋을 따로 둔다. 푸시·배포·다른 브랜치·작업 트리는 건드리지 않는다.
+- 기대(측정 전) [추정]: P2는 연결 맺기 67~94ms × 검색당 Voyage 호출 2~3건이라 `search` 단계의 약 5~12%. P1은 이미 Google이면 효과 없음, 아니면 느린 제공자로 간 호출만 줄어든다. 기대가 틀려도 그대로 기록한다.
+
 ## 2026-11-15 speed-exp 보정 3 · L3 3번째 run과 추가 기준 run (A4·L3c 측정 전)
 - 이미 나온 값(Docker, `model_env` 확인함): 기준 A3(733c238f) 48/50 p95 16.8초 웹 평균 14.1초(실패 v3-15·v3-16). L3a(4aa883f4) 49/50 p95 14.2초 웹 평균 9.86초. L4b(13267ec2) 47/50 p95 12.8초, 실패 v3-01·v3-15·v3-16, 후보 판정 9/10. L3b(4aa883f4) 49/50 p95 14.1초 웹 평균 10.23초, 후보 판정 10/10.
 - L4 판정(고정 규칙 그대로): L4b에서 {v3-02, v3-08, v3-15, v3-41, v3-16} 밖의 v3-01이 실패하고 후보 판정이 9/10이라 모든 run 조건을 어긴다 → 기각, 되돌린다. v3-01 행에는 웹 단계(grade2·grade3)가 없어 L4 코드가 닿지 않는 경로다. 그래도 규칙은 완화하지 않는다.
