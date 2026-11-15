@@ -11,7 +11,7 @@ import type { ApiError } from '../api/client'
 import { errorMessage, requestIdProps } from '../api/client'
 import type { ContextNet } from '../lib/circuit'
 import { CHECK_LABELS, VERDICT_LABELS, VERDICT_TONE, candidatesOf, citationHref, citationText, documentEvidenceOf, formatValue, judgementOf } from '../lib/judgement'
-import { INPUT_LABELS } from '../lib/inputLabels'
+import { INPUT_LABELS, inputPlaceholder } from '../lib/inputLabels'
 import PriceLookup from './PriceLookup'
 
 export type DetailTab = { key: string; runId: string; part: string | null; label: string }
@@ -75,8 +75,44 @@ export function Checks({ candidate, resolved, showDocument = false }: { candidat
   </table></div>
 }
 
+const SPEC_LABELS: Record<string, string> = {
+  VRRM: '반복 최대 역전압', VR: '역전압 정격', IF_AV: '평균 순방향 전류', IFSM: '서지 순방향 전류',
+  VF: '순방향 전압 강하', IR: '역누설 전류', VZ: '제너 전압', PD: '허용 손실 전력',
+  IPP: '피크 펄스 전류', VC: '클램프 전압', VBR: '항복 전압', CJ: '접합 정전용량', TRR: '역회복 시간',
+}
+
+function ApprovalConditions({ candidate, id }: { candidate: CandidateDto; id: string }) {
+  const missing = [...new Set(candidate.missing ?? [])]
+  const checks = (candidate.checks ?? []).filter(check => check.tier === 'required' && check.result === 'unverified')
+  return <section className="approval-conditions" id={id} aria-labelledby={`${id}-title`}>
+    <details>
+    <summary><strong id={`${id}-title`}>승인 전에 필요한 확인</strong><span>입력 {missing.length}개 · 사양 {checks.length}개</span></summary>
+    {missing.length > 0 && <><p>입력할 회로 조건</p><ul>{missing.map(code => <li key={code}>
+      <strong>{INPUT_LABELS[code] ?? `추가 조건 (${code})`}</strong>
+      <p>{Object.hasOwn(INPUT_LABELS, code) ? `실제 사용 조건을 질문에 알려 주세요. 입력 형식 ${inputPlaceholder(code)}` : '조건 대조에서 항목의 의미를 확인하고 실제 값·단위 또는 관련 문서 근거를 질문에 알려 주세요. 값을 추측하지 마세요.'}</p>
+    </li>)}</ul></>}
+    {checks.length > 0 && <><p>확인할 필수 사양</p><ul>{checks.map((check, index) => {
+      const name = SPEC_LABELS[check.code] ? `${SPEC_LABELS[check.code]} (${check.code})` : `사양 (${check.code})`
+      const reason = check.why?.replace(/\b[a-z][a-z0-9_]*\b/g, code => INPUT_LABELS[code] ?? code)
+      const action = check.why?.startsWith('빠진 값:') ? '먼저 사유에 표시된 실제 회로값·단위 또는 시험 조건을 질문에 보완해 주세요.'
+        : check.why?.includes('회로 전류를 몰라') ? '회로의 실제 순방향 전류와 단위를 질문에 알려 주세요.'
+          : check.why?.includes('원래 부품') ? '원래 부품의 데이터시트에서 같은 시험 조건의 사양값을 확인하고 문서·쪽·표/행 근거를 질문에 알려 주세요.'
+            : '후보 데이터시트에서 이 사양의 값과 시험 조건을 확인하고 문서·쪽·표/행 근거를 질문에 알려 주세요.'
+      return <li key={`${check.code}-${index}`}><strong>{name}</strong>
+        {reason && <p>미확인 이유: {reason}</p>}
+        {check.threshold != null && <p>요구 기준: {requiredValue(check)}</p>}
+        {check.condition && <p>확인할 시험 조건: {check.condition}</p>}
+        <p>{action}</p>
+      </li>
+    })}</ul></>}
+    <p>보완한 내용을 아래 질문창에 적어 다시 검토해 주세요. 새 결과에서 승인 가능 여부를 확인할 수 있습니다.</p>
+    </details>
+  </section>
+}
+
 function Approval({ candidate, messageId, reviewer, projectId }: { candidate: CandidateDto; messageId: number | null; reviewer: string; projectId: number }) {
   const quantityId = useId()
+  const conditionsId = useId()
   const client = useQueryClient()
   const saved = useQuery({ queryKey: ['message-approvals', messageId], queryFn: ({ signal }) => listMessageApprovals(messageId!, signal), enabled: messageId !== null, retry: false, refetchOnMount: 'always' })
   const approval = saved.data?.find(item => item.message_id === messageId && item.candidate_part === candidate.part && item.verdict === candidate.verdict)
@@ -130,8 +166,8 @@ function Approval({ candidate, messageId, reviewer, projectId }: { candidate: Ca
     {currentQuote && <><p className="property-note">견적 {currentQuote.part_number} × {currentQuote.quantity}</p>
       {ownQuotes.length > 1 && <label>저장된 견적<select className="input" value={currentQuote.id} onChange={event => { setSelectedQuoteId(Number(event.target.value)); setCreatingQuote(false) }}>{ownQuotes.map(item => <option key={item.id} value={item.id}>#{item.id} · {item.quantity}개</option>)}</select></label>}
       {!creatingQuote && <button className="btn" disabled={busy || quotes.isFetching || Boolean(quotes.error)} onClick={() => { setQuantity('1'); setCreatingQuote(true) }}>새 견적 작성</button>}</>}
-    {!approval && !other && <button className="btn btn-primary" disabled={busy || checking || Boolean(saved.error) || messageId === null || !approvable} onClick={() => void act(approve)}>{busy ? '저장 중' : '검토하고 승인'}</button>}
-    {!approvable && <p className="property-note">{missingRequired ? '필수 조건을 확인하지 않아 승인할 수 없습니다. 조건 대조와 빠진 입력을 확인해 주세요.' : '이 판정은 승인 대상이 아닙니다.'}</p>}
+    {!approval && !other && <button className="btn btn-primary" aria-describedby={missingRequired ? conditionsId : undefined} disabled={busy || checking || Boolean(saved.error) || messageId === null || !approvable} onClick={() => void act(approve)}>{busy ? '저장 중' : '검토하고 승인'}</button>}
+    {missingRequired ? <ApprovalConditions candidate={candidate} id={conditionsId} /> : !approvable && <p className="property-note">이 판정은 승인 대상이 아닙니다.</p>}
     {saved.error && <div className="notice" role="alert" {...requestIdProps(saved.error)}><p>승인 상태를 불러오지 못했습니다. {errorMessage(saved.error)}</p><button className="btn" onClick={() => void saved.refetch()}>승인 상태 다시 확인</button></div>}
     {quotes.isPending && messageId !== null && <p role="status" className="property-note">견적 이력을 확인하는 중입니다.</p>}
     {quotes.error && <div className="notice" role="alert" {...requestIdProps(quotes.error)}><p>견적 이력을 불러오지 못했습니다. 새 저장 전에 이력을 다시 확인해 주세요.</p><button className="btn" onClick={() => void quotes.refetch()}>견적 이력 다시 조회</button></div>}
@@ -185,7 +221,7 @@ function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target
       </section>
       <section className="property-group" aria-labelledby={`checks-title-${panelId}`}><h2 id={`checks-title-${panelId}`}>조건 대조</h2>
         <Checks candidate={candidate} resolved showDocument />
-        {[...(candidate.cautions ?? []), ...(candidate.missing ?? []).map(item => `문서에 없는 값: ${item}`), ...(candidate.uncertain ?? []).map(item => `확실하지 않은 값: ${item}`)].map(note => <p className="caution" key={note}>{note}</p>)}
+        {[...(candidate.cautions ?? []), ...(candidate.uncertain ?? []).map(item => `확실하지 않은 값: ${item}`)].map(note => <p className="caution" key={note}>{note}</p>)}
       </section>
       </>}
       <section className="property-group" aria-labelledby={`circuit-heading-${panelId}`}><h2 id={`circuit-heading-${panelId}`}>회로</h2><dl>

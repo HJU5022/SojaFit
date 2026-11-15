@@ -1153,7 +1153,7 @@ it('shows concise part links and opens the chosen candidate checks and evidence 
   fireEvent.click(second)
   expect(await within(screen.getByRole('tabpanel')).findByRole('heading', { name: '1N5819' })).toHaveFocus()
   expect(within(screen.getByRole('tabpanel')).getByText('20 V')).toBeInTheDocument()
-  expect(within(screen.getByRole('tabpanel')).getByText('문서에 없는 값: VF')).toBeInTheDocument()
+  expect(within(screen.getByRole('region', { name: '승인 전에 필요한 확인' })).getByText('허용 전압 강하')).toBeInTheDocument()
   expect(within(screen.getByRole('tabpanel')).getByText('r1-1N5819.pdf')).toBeInTheDocument()
   expect(within(screen.getByRole('tabpanel')).queryByText('r1-SS34L.pdf')).toBeNull()
   expect(within(screen.getByRole('tabpanel')).queryByRole('heading', { name: '근거' })).toBeNull()
@@ -1500,4 +1500,102 @@ it('looks up the server-approved part and quantity only on click and saves quant
   expect(await screen.findByText('견적 SS34L-ORDER × 25')).toBeInTheDocument()
   expect(quotes).toEqual([{ quantity: 25 }])
   expect(prices).toHaveLength(1)
+})
+
+
+it('explains missing circuit inputs beside the disabled approval button without duplicate items or writes', async () => {
+  const writes = candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { missing: ['v_in_max', 'i_max', 'v_in_max', 'future_input'] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(guidance).toHaveTextContent('입력 전원 최대 전압')
+  expect(guidance).toHaveTextContent('다이오드 최대 순방향(부하) 전류')
+  expect(guidance).toHaveTextContent('예: 12 V')
+  expect(guidance).toHaveTextContent('예: 1 A')
+  expect(guidance).toHaveTextContent('future_input')
+  expect(within(guidance).getAllByText('입력 전원 최대 전압')).toHaveLength(1)
+  expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: '검토하고 승인' })).toHaveAttribute('aria-describedby', guidance.id)
+  expect(writes).toEqual([])
+})
+
+it.each([
+  ['시험 조건이 다르거나 적혀 있지 않음', '후보 데이터시트'],
+  ['원래 부품의 같은 시험 조건 값 없음', '원래 부품의 데이터시트'],
+  ['빠진 값: v_in_max', '회로값'],
+  ['회로 전류를 몰라 그 전류의 VF를 볼 수 없음', '순방향 전류'],
+])('explains the required specification and next check for %s', async (why, action) => {
+  const writes = candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { checks: [{ code: 'VRRM', tier: 'required', result: 'unverified', why, threshold: 15, op: '>=', unit: 'V', condition: 'TA=25°C' }, { code: 'IR', tier: 'conditional', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(guidance).toHaveTextContent('반복 최대 역전압 (VRRM)')
+  expect(guidance).toHaveTextContent('15 V')
+  expect(guidance).toHaveTextContent('TA=25°C')
+  expect(guidance).toHaveTextContent(action)
+  expect(guidance).not.toHaveTextContent('누설 전류 (IR)')
+  expect(writes).toEqual([])
+})
+
+it('keeps unknown specification codes explicit and does not invent a value or unit', async () => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { checks: [{ code: 'FUTURE_SPEC', tier: 'required', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(guidance).toHaveTextContent('FUTURE_SPEC')
+  expect(guidance).toHaveTextContent('후보 데이터시트')
+  expect(guidance).not.toHaveTextContent('예: 12 V')
+})
+
+it('does not block approval or show missing-required guidance for an optional unverified check', async () => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { checks: [{ code: 'IR', tier: 'conditional', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+  expect(screen.queryByRole('region', { name: '승인 전에 필요한 확인' })).toBeNull()
+})
+
+
+it('keeps approval guidance collapsed by default and toggles without losing the question draft or writing', async () => {
+  const writes = candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { missing: ['v_in_max', 'v_in_max'], checks: [{ code: 'VRRM', tier: 'required', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  const details = guidance.querySelector('details')!
+  expect(details).not.toHaveAttribute('open')
+  expect(guidance).toHaveTextContent('입력 1개 · 사양 1개')
+  expect(within(guidance).getByText('입력 전원 최대 전압')).not.toBeVisible()
+  const input = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '작성 중인 회로 조건' } })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(details).toHaveAttribute('open')
+  expect(within(guidance).getByText('입력 전원 최대 전압')).toBeVisible()
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(details).not.toHaveAttribute('open')
+  expect(input).toHaveValue('작성 중인 회로 조건')
+  expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
+  expect(writes).toEqual([])
 })

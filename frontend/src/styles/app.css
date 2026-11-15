@@ -292,6 +292,12 @@ a svg { width: 13px; height: 13px; stroke-width: 1.75; margin-left: 4px; vertica
 .props .dot { align-items: baseline; }
 .props .skeleton { width: 100%; min-height: 48px; height: auto; gap: 8px; padding: 12px; }
 .approval { display: grid; justify-items: start; gap: 8px; }
+.approval-conditions { width: 100%; color: var(--ink-2); font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.approval-conditions summary { cursor: pointer; }
+.approval-conditions summary span { margin-left: 6px; color: var(--ink-3); }
+.approval-conditions details[open] summary { margin-bottom: 8px; }
+.approval-conditions ul { display: grid; gap: 8px; margin-block: 6px; padding-left: 18px; }
+.approval-conditions p + p { margin-top: 4px; }
 .approval-state { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 18px; }
 .approval-state svg { width: 15px; height: 15px; stroke-width: 1.75; color: var(--ink-3); }
 .property-note { color: var(--ink-3); font-size: 12px; line-height: 18px; }
