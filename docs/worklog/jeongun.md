@@ -1134,3 +1134,5 @@
 - 확인 못 한 것: 로그인 뒤 전체 흐름(분석 · 승인 · 견적)을 새 화면 + 현재 백엔드로 끝까지 돌리지 않음(다른 세션 `fe-verify`와 조장 손 시험 몫). Playwright 시험은 옮기기만 했고 실행하지 않음(키 없는 데모 서버 + Chrome 필요). 원본 회로도 웹 검색은 외부 검색을 부를 수 있어 호출하지 않음. 메일 · Google · Mouser · 관리자 변경 종단 동작.
 - 뺀 것: 로그인 전 대화 링크의 로그인 뒤 복귀, 일반 참고 회로도 검색(`reference_only`), 가격 수량별 단가·합계 계산, 확대·이동 도면 뷰어, 개인정보처리방침 이전 글(새 글은 축약본), 더미 모드. 자세한 표는 `reports/2026-11-15-점검/fe-integrate.md`.
 - 다음: 조장 손 시험에서 나온 버그를 이 브랜치에 작은 커밋으로. `Dockerfile` · `Dockerfile.recovery`의 `COPY data/circuits/`는 새 화면이 쓰지 않는다(고정 파일이라 두었음).
+- 추가(같은 작업): 커밋 전체 목록 · 인벤토리 표는 `reports/2026-11-15-점검/fe-integrate.md`(위 ①~⑫ 뒤에 입력칸 안내 · 문서 정리 커밋이 더 있다). 개발 프록시의 Origin 바꿔치기는 로컬 uvicorn(`AUTH_ORIGIN=http://localhost:8765`)과 Vite(5199)로 확인했다 `[실측]`: Vite 경유 `POST /api/auth/login`은 Origin 검사를 통과해 503(DB 없음), 같은 요청을 백엔드에 직접 보내면 403 `ORIGIN_MISMATCH`.
+- 알려진 문제: `frontend/public/assets/product/condition-evidence.png`(랜딩 캡처)는 표시 수정 전 화면이라 `>= 0.17142857142857143 A` · `v_in_max * kV`가 그대로 찍혀 있고, `missing-condition.png`는 옛 칸 이름(`허용 전압강하`)이다. 다시 찍으려면 키 없는 데모 서버 전체가 필요해 하지 않았다. 조장 손 시험 뒤 다시 찍을지(또는 그림을 뺄지) 조장이 정한다. 점검 `fe-verify`의 F1(입력칸 라벨이 코드로 보임)은 `8f528922`로 답했다.
