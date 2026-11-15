@@ -5,7 +5,7 @@ import * as auth from '../api/auth'
 import type { ApiError } from '../api/client'
 
 type Auth = {
-  user: auth.User | null; loading: boolean; error: unknown; accountDeleted: boolean
+  user: auth.User | null; loading: boolean; error: unknown; accountDeleted: boolean; resumeAfterLogin: boolean
   login: (email: string, password: string) => Promise<void>
   signup: (email: string) => Promise<void>
   googleSignup: () => Promise<void>
@@ -28,14 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(!dummy)
   const [error, setError] = useState<unknown>(null)
   const [accountDeleted, setAccountDeleted] = useState(false)
+  const [resumeAfterLogin, setResumeAfterLogin] = useState(true)
   // [왜] 공용 PC에서 다음 사람이 앞 사람의 회로 · 대화 · 설정을 보지 않게, 로그인 상태를 잃으면(로그아웃 · 탈퇴 · 세션 만료)
-  // 화면 메모리(React Query 캐시)와 탭 저장소를 비운다. 주소의 projectId · targetRef는 보호 화면이 /login으로 바꿔(replace) 지운다
-  function endSession() {
+  // 화면 메모리와 탭 저장소를 비운다. 직접 종료는 복귀도 막고, 세션 만료만 내부 대화 주소를 로그인 화면에 전달한다.
+  function endSession(resume = false) {
     client.clear()
     try { sessionStorage.clear() } catch { /* 저장소를 막은 브라우저: 지울 것도 없다 */ }
     setUser(null)
     setError(null)
     setAccountDeleted(false)
+    setResumeAfterLogin(resume)
   }
   useEffect(() => {
     if (dummy) return
@@ -46,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       client.clear()
       try { sessionStorage.clear() } catch { /* 위와 같음 */ }
       setUser(null); setError(null); setAccountDeleted(false)
+      setResumeAfterLogin(true)
     }
     window.addEventListener('sojafit:session-expired', expire)
     auth.getMe(controller.signal).then((user) => { if (current && !controller.signal.aborted) setUser(user) }).catch((error: ApiError) => {
@@ -76,13 +79,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   async function googleSignup() {
     await auth.googleSignup()
-    endSession()
+    endSession(true)
     setUser(await auth.getMe())
     setError(null)
   }
   async function googleLink(email: string, password: string) {
     await auth.googleLink(email, password)
-    endSession()
+    endSession(true)
     setUser(await auth.getMe())
     setError(null)
   }
@@ -97,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     endSession()
     setAccountDeleted(true)
   }
-  return <AuthContext.Provider value={{ user, loading, error, accountDeleted, login, signup, googleSignup, googleLink, demoLogin, logout, deleteAccount }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, error, accountDeleted, resumeAfterLogin, login, signup, googleSignup, googleLink, demoLogin, logout, deleteAccount }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { getDemoStatus, getGoogleOnboarding, getGoogleStatus } from '../api/auth'
 import type { DemoAccount } from '../api/auth'
 import { errorMessage, requestIdProps } from '../api/client'
@@ -9,6 +9,7 @@ import { useAuth } from '../auth/AuthProvider'
 import AuthCard from '../components/AuthCard'
 
 const SERVICE_DOWN = '로그인 서비스가 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.'
+const RETURN_KEY = 'sojafit:login-return'
 const NOT_ALLOWED = '로그인 요청을 허용할 수 없습니다. 공식 서비스 주소에서 다시 접속해 주세요.'
 const MESSAGES: Record<string, string> = {
   UNAUTHORIZED: '로그인하지 못했습니다. 이메일과 비밀번호 또는 가입 방법을 확인해 주세요.',
@@ -30,9 +31,22 @@ function loginErrorMessage(error: unknown) {
 // 폼 제출이라 Enter로 로그인된다.
 export default function LoginPage() {
   const auth = useAuth()
+  const location = useLocation()
   const [params] = useSearchParams()
+  const [returnTo] = useState(() => {
+    let stored: string | null = null
+    try { stored = sessionStorage.getItem(RETURN_KEY) } catch { /* 저장소 없이 경로 상태만 사용한다. */ }
+    const value: unknown = location.state?.returnTo ?? stored
+    return typeof value === 'string' && value.length <= 2048 && /^\/app(?:[?#]|$)/.test(value) && !/[\\\s\p{Cc}]/u.test(value) ? value : '/app'
+  })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  useEffect(() => {
+    try {
+      if (!auth.user && auth.resumeAfterLogin && returnTo !== '/app') sessionStorage.setItem(RETURN_KEY, returnTo)
+      else sessionStorage.removeItem(RETURN_KEY)
+    } catch { /* 탭 저장소를 막아도 현재 화면의 복귀 주소는 유지한다. */ }
+  }, [auth.user, auth.loading, auth.resumeAfterLogin, returnTo, error])
   const [google, setGoogle] = useState(false)
   const [demo, setDemo] = useState(false)
   const finishingGoogle = params.get('google') === 'finish'
@@ -69,7 +83,7 @@ export default function LoginPage() {
     })
   }
   if (auth.loading) return <p role="status">로그인 상태 확인 중입니다.</p>
-  if (auth.user) return <Navigate to="/app" replace />
+  if (auth.user) return <Navigate to={auth.resumeAfterLogin ? returnTo : '/app'} replace />
   const failure = error || auth.error
   const credentialsFailed = (failure as Partial<ApiError> | null)?.code === 'UNAUTHORIZED'
   return <AuthCard title="로그인" links={<><Link to="/signup">회원가입</Link><Link to="/reset-password">비밀번호 재설정</Link><Link to="/privacy">개인정보처리방침</Link></>}>

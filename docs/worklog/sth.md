@@ -13,6 +13,14 @@
 - 재현/검증: 새 검사에서 수정 전 자동 갱신 초안 소실, 변경 후 조회 실패의 후속 갱신 덮어쓰기, 최초 조회 실패 후 입력 잠금 누락3건을 확인했다. 조회 결과 렌더까지 기다려 원인을 대조한 뒤 수정했다. 설정10건 통과. 최종 npm run test:run ->10파일/250통과(8.50초), npm run build -- --logLevel error ->TypeScript·Vite 통과. PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q tests/repo/test_repo_layout.py ->5통과(0.84초). 전부 모의 HTTP·오프라인 검사다.
 - 미확인/다음: 8010 이미지 반영·수정 후 브라우저 재현·실제 설정 저장/삭제·유료 API·운영 DB·동결 평가 재측정·커밋·푸시는 하지 않았다. 저장/삭제 후 명시적 최신 조회 성공은 요청대로 폼 전체를 서버 값으로 동기화한다.
 
+## 2026-11-15 재로그인 후 프로젝트·대화 위치 복원
+- 요청/범위: STH에서 비로그인 대화 링크 또는 세션 만료 후 로그인하면 원래 프로젝트·대화로 돌아오게 수정했다. 앞선 설정 조회 잠금·대화 삭제 수정과 미커밋 기록을 보존했다. 유료 API·실제 로그인·계정 생성/연결·운영 DB·배포·커밋·푸시는 하지 않았다.
+- 변경: RequireAuth가 pathname/search/hash를 로그인 경로 상태로 전달하고 LoginPage가 검증한 /app 주소로 복귀한다. 로그인 실패 후 재시도·새로고침·Google 콜백의 새 로그인 화면에도 이어지도록 주소만 탭 sessionStorage에 임시 저장하고 성공 후 지운다. 저장소 차단 시 경로 상태만 사용한다. 외부/프로토콜 상대/하위 경로·경로 이동/백슬래시·공백·제어문자/2048자 초과 값은 기본 /app으로 바꾼다.
+- 세션 경계: AuthProvider의 기존 React Query·탭 저장소 정리는 유지했다. 직접 로그아웃·탈퇴는 resumeAfterLogin=false로 이전 대화 복귀도 막고, 세션 만료와 Google 인증 완료의 세션 갱신은 복귀를 허용한다. 로그인 URL에 회로 식별자를 붙이지 않고 대화 본문·판정·자격 증명은 저장하지 않는다. 다른 계정의 자원 조회는 기존 서버 소유권 확인을 그대로 거친다.
+- 파일/문서: AuthProvider.tsx·RequireAuth.tsx·LoginPage.tsx와 기존 AuthProvider.test.tsx, SRC.md·login-auth.md·user-thread-memory.md를 갱신했다. 새 파일·API·스키마·의존성은 없다. 주요 문서 직접 수정 없이 SPEC4/8.5/8.6의 로그인 복귀·직접 종료 예외를 조장에게 PR 코멘트로 제안한다. React 점검 기준으로 훅 순서/조건부 탐색/저장소 예외/외부 주소 거절을 확인했다.
+- 재현/검증: 수정 전 비로그인/세션 만료 두 경우에서 로그인 후 /app만 남고 Google 콜백용 주소가 보관되지 않는 3건 실패를 확인했다. 수정 후 실제 AuthProvider·LoginPage·RequireAuth와 모의 HTTP로 실패 후 재시도 복귀, 쿼리·해시 유지, 캐시 삭제, Google 콜백·가입·연결 완료, 탭 저장소 차단, 직접 로그아웃·탈퇴, 안전하지 않은 주소 거절을 검사했다. 최종 npm run test:run ->10파일/242통과(8.63초), npm run build -- --logLevel error ->TypeScript·Vite 통과. PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q tests/repo/test_repo_layout.py ->5통과(0.76초).
+- 미확인/다음: 실제 OAuth 제공자 왕복·운영 세션·8010 이미지 반영·동결 평가 재측정은 미실행이다. 저장소가 차단된 브라우저에서 전체 페이지를 다시 여는 경우에는 탭 임시 주소가 없어 기본 작업대로 돌아간다. 변경한 복귀 흐름의 8010 실제 화면 확인은 별도 이미지 반영 후 수행해야 한다.
+
 ## 2026-11-15 최초 설정 조회 중 편집 잠금
 - 요청/범위: STH에서 느린 최초 설정 응답이 입력 초안을 덮는 문제를 수정했다. 앞선 대화 삭제 수정과 미커밋 기록을 보존하고, 최초 조회 중 편집 차단만 적용했다. API·DB·의존성·저장/삭제 계약은 변경하지 않았다.
 - 원인/변경: SettingsPage의 소속 입력과 직무/선호 실장 방식 select가 busy만 확인해 최초 GET 대기 중 편집 가능했다. 기존 저장 버튼과 같은 busy || facts.isPending 조건을 두 편집 렌더 지점에 적용했다. 기존 불러오는 중 안내와 응답 이후 서버 값 초기화·편집 동작은 유지한다.
