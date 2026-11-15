@@ -23,6 +23,12 @@ class InvalidProject(ValueError):
     """알 수 없는 데모 또는 잘못된 프로젝트 이름."""
 
 
+class DuplicateProject(Exception):
+    """소유자에게만 공개할 중복 후보. 원본과 해시는 포함하지 않는다."""
+    def __init__(self, projects: list[dict]):
+        self.projects = projects
+
+
 def demo_path(demo_id: str) -> Path:
     """카탈로그(DEMOS)에 있는 데모 회로의 연결 정보 파일. 키 없는 데모 재생도 이 경로로 기록 질문의 회로를 잇는다."""
     item = catalog_by_id().get(demo_id)
@@ -38,9 +44,26 @@ def project_name(name: str) -> str:
 
 
 class ProjectRepository:
-    def create_empty(self, user_id: int, name: str) -> Project:
+    def _check_duplicates(self, conn, user_id, name, source_sha256=None, *, allow_duplicate=False):
+        # 같은 계정의 동시 생성도 검사와 INSERT 사이에 끼어들지 못하게 한다.
+        conn.execute('SELECT id FROM users WHERE id=%s FOR UPDATE', (user_id,))
+        if allow_duplicate:
+            return
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute('SELECT p.id,p.name,lower(btrim(p.name))=lower(%s) AS same_name,'
+                        'c.source_sha256=%s AS same_netlist FROM projects p LEFT JOIN circuits c ON c.project_id=p.id '
+                        'WHERE p.user_id=%s AND (lower(btrim(p.name))=lower(%s) OR c.source_sha256=%s) '
+                        'ORDER BY p.updated_at DESC,p.id DESC LIMIT 5', (name, source_sha256, user_id, name, source_sha256))
+            matches = [{'id': row['id'], 'name': row['name'],
+                        'matches': [key for key, same in (('name', row['same_name']), ('netlist', row['same_netlist'])) if same]}
+                       for row in cur.fetchall()]
+        if matches:
+            raise DuplicateProject(matches)
+
+    def create_empty(self, user_id: int, name: str, *, allow_duplicate=False) -> Project:
         name = project_name(name)
         with auth.connection() as conn:
+            self._check_duplicates(conn, user_id, name, allow_duplicate=allow_duplicate)
             project_id = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,%s,'upload') RETURNING id",
                                       (user_id, name)).fetchone()[0]
             return self._get_owned(conn, user_id, project_id)
@@ -58,9 +81,10 @@ class ProjectRepository:
             conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread_id, project_id))
             return self._get_owned(conn, user_id, project_id), str(thread_id)
 
-    def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str) -> Project:
+    def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str, allow_duplicate=False) -> Project:
         name = project_name(name)
         with auth.connection() as conn:
+            self._check_duplicates(conn, user_id, name, source_sha256, allow_duplicate=allow_duplicate)
             project_id = conn.execute(
                 "INSERT INTO projects (user_id, name, source_kind) VALUES (%s, %s, 'upload') RETURNING id",
                 (user_id, name),
@@ -71,7 +95,7 @@ class ProjectRepository:
             )
             return self._get_owned(conn, user_id, project_id)
 
-    def create_demo(self, user_id: int, demo_id: str, name: str) -> Project:
+    def create_demo(self, user_id: int, demo_id: str, name: str, *, allow_duplicate=False) -> Project:
         name = project_name(name)
         if demo_id not in DEMOS:
             raise InvalidProject("등록된 데모 회로를 선택해 주세요.")
@@ -79,6 +103,7 @@ class ProjectRepository:
         source = demo_path(demo_id).read_bytes()
         connections = json.loads(source)
         with auth.connection() as conn:
+            self._check_duplicates(conn, user_id, name, hashlib.sha256(source).hexdigest(), allow_duplicate=allow_duplicate)
             project_id = conn.execute(
                 "INSERT INTO projects (user_id, name, source_kind, demo_id) VALUES (%s, %s, 'demo', %s) RETURNING id",
                 (user_id, name, demo_id),

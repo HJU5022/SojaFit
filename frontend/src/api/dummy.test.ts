@@ -152,7 +152,7 @@ it('filters and pages the demo catalog like the real API', async () => {
 
 it('creates demo projects through the same POST contract as the real API', async () => {
   const request = await freshDummy()
-  const response = await request('/api/projects', {
+  const response = await request('/api/projects?allow_duplicate=true', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ demo_id: 'breadboard_supply', name: '내 데모' }),
   })
@@ -162,6 +162,15 @@ it('creates demo projects through the same POST contract as the real API', async
   const threads = await request(`/api/projects/${created.id}/threads`)
   expect(threads.status).toBe(200)
   expect(await json(threads)).toEqual([])
+})
+
+it('warns about duplicate demo content and does not silently create another project', async () => {
+  const request = await freshDummy()
+  const before = await json(await request('/api/projects'))
+  const response = await request('/api/projects', { method: 'POST', body: JSON.stringify({ demo_id: 'breadboard_supply', name: '다른 이름' }) })
+  expect(response.status).toBe(409)
+  expect(await json(response)).toMatchObject({ details: { duplicates: [expect.objectContaining({ id: 1, matches: ['netlist'] })] } })
+  expect(await json(await request('/api/projects'))).toEqual(before)
 })
 
 it('never substitutes demo components for an uploaded netlist', async () => {

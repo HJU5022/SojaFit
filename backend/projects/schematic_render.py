@@ -21,9 +21,11 @@ import httpx
 from PIL import Image
 
 from backend.graph.netlist import TOKEN as _SEXPR_TOKEN, _sexpr
-from backend.projects.external_circuit_search import canonical_product_query, is_non_circuit_asset
+from backend.projects.external_circuit_search import (
+    _MANUFACTURER_ALIASES, canonical_product_query, is_non_circuit_asset,
+)
 from backend.projects.schematic import (
-    COMMAND_TIMEOUT_SECONDS, KicadServiceUnavailable, run_kicad_pdf,
+    COMMAND_TIMEOUT_SECONDS, KicadServiceUnavailable, run_kicad_pdf, run_kicad_netlist,
 )
 from backend.projects.schematic_source import (
     ExternalSchematicInvalidSource, ExternalSchematicRateLimited, ExternalSchematicUpstreamError,
@@ -393,7 +395,9 @@ def _selected_kicad(source: VerifiedSchematicSource, fetch: Callable[[str], byte
 
 
 def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.Client | None = None,
-                              kicad_export: Callable = run_kicad_pdf) -> tuple[bytes, ...]:
+                              kicad_export: Callable = run_kicad_pdf,
+                              expected_connections=None, kicad_netlist_export: Callable = run_kicad_netlist,
+                              connection_consumer: Callable | None = None) -> tuple[bytes, ...]:
     from backend.projects.schematic_discovery import download_bounded
 
     if (not re.fullmatch(r"[\w.-]+/[\w.-]+", source.repository, re.ASCII)
@@ -401,7 +405,7 @@ def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.
         raise _invalid()
     _path(source.repository)
     kind = source.asset_kind
-    if kind not in MIME:
+    if kind not in MIME or ((expected_connections is not None or connection_consumer) and kind != 'kicad'):
         raise _invalid()
     with tempfile.TemporaryDirectory(prefix="sojafit-render-") as temporary:
         work = Path(temporary)
@@ -433,14 +437,25 @@ def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.
                         def fetch_selected(path):
                             selected_url = f"https://raw.githubusercontent.com/{source.repository}/{source.commit}/{quote(path)}"
                             body, selected_mime = download_bounded(selected_url, max_bytes=MAX_IMAGE_BYTES,
-                                                                   allowed_hosts=frozenset({"raw.githubusercontent.com"}),
-                                                                   client=client, phase="github_raw")
-                            if selected_mime not in {"text/plain", "application/octet-stream"}:
+                                allowed_hosts=frozenset({'raw.githubusercontent.com'}),client=client,phase='github_raw')
+                            if selected_mime not in {'text/plain','application/octet-stream'}:
                                 raise _invalid()
                             return body
-                        root, count = _selected_kicad(source, fetch_selected, work / "source")
+                        root,count = _selected_kicad(source,fetch_selected,work/'source')
                     else:
                         root, count = _archive(source, data, work / "source")
+                    if expected_connections is not None or connection_consumer:
+                        from backend.projects.netlist import MAX_BYTES, same_circuit, normalize_netlist
+                        net_output = work / 'netlist'
+                        net_output.mkdir()
+                        netlist = kicad_netlist_export(root, net_output)
+                        if not netlist.is_file() or netlist.stat().st_size > MAX_BYTES:
+                            raise _invalid()
+                        actual = normalize_netlist(netlist.read_bytes()).connections
+                        if expected_connections is not None and not same_circuit(actual, expected_connections):
+                            raise _invalid()
+                        if connection_consumer:
+                            connection_consumer(actual)
                     output = work / "export"
                     output.mkdir()
                     _, pdf = kicad_export(root, output)
@@ -471,6 +486,7 @@ def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.
 def _public_asset(url: str, kind: str, *, client: httpx.Client | None = None) -> tuple[bytes, str]:
     """Download one discovered public asset with the same SSRF and size guards."""
     from backend.projects.schematic_discovery import download_bounded
+    from backend.projects.external_circuit_search import _manufacturer_for, _SCHEMATIC_WORDS
 
     if kind not in {"png", "svg", "pdf"} or not isinstance(url, str):
         raise _invalid()
@@ -478,10 +494,34 @@ def _public_asset(url: str, kind: str, *, client: httpx.Client | None = None) ->
     host = parsed.hostname
     if not host or parsed.scheme != "https":
         raise _invalid()
-    limit = MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES
+    archive = kind == "pdf" and parsed.path.casefold().endswith(".zip")
+    if archive and not _manufacturer_for(url):
+        raise _invalid()
+    limit = MAX_ARCHIVE_BYTES if archive else MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES
     data, mime = download_bounded(url, max_bytes=limit, allowed_hosts=frozenset({host}),
                                   client=client, phase="public_asset")
     generic = {"application/octet-stream"} | ({"text/plain"} if kind == "svg" else set())
+    if archive:
+        if mime not in MIME['kicad'] | generic:
+            raise _invalid()
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+                entries = bundle.infolist()
+                if len(entries) > MAX_TREE_ITEMS or sum(e.file_size for e in entries) > MAX_ARCHIVE_UNCOMPRESSED_BYTES:
+                    raise _invalid()
+                pdfs = [e for e in entries if e.filename.casefold().endswith('.pdf')
+                        and _SCHEMATIC_WORDS.search(e.filename)]
+                if len(pdfs) != 1 or pdfs[0].file_size > MAX_PDF_BYTES or pdfs[0].flag_bits & 1:
+                    raise _invalid()
+                _path(pdfs[0].filename)
+                _verify_artifact_name(parsed.path.rsplit('/', 1)[-1], pdfs[0].filename.rsplit('/', 1)[-1], url, '')
+                with bundle.open(pdfs[0]) as stream:
+                    data = stream.read(MAX_PDF_BYTES + 1)
+                if len(data) > MAX_PDF_BYTES or not data.startswith(b'%PDF-'):
+                    raise _invalid()
+        except (zipfile.BadZipFile, OSError, ValueError, RuntimeError):
+            raise _invalid() from None
+        return data, 'application/pdf'
     if mime not in MIME[kind] | generic:
         raise _invalid()
     return data, mime
@@ -544,7 +584,7 @@ def _bounded_pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
     return pages
 
 
-def _pdf_identity_text(data: bytes) -> str:
+def _pdf_identity_text(data: bytes, *, require_circuit: bool = False) -> str:
     """Extract a bounded amount of PDF text in the same worker boundary as page inspection."""
     if not isinstance(data, bytes) or len(data) > MAX_PDF_BYTES:
         raise _invalid()
@@ -553,7 +593,8 @@ def _pdf_identity_text(data: bytes) -> str:
         path.write_bytes(data)
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "backend.projects.schematic_render", "inspect-pdf-text", str(path)],
+                [sys.executable, "-m", "backend.projects.schematic_render",
+                 "inspect-published-pdf" if require_circuit else "inspect-pdf-text", str(path)],
                 cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
                 capture_output=True, text=True, encoding="utf-8",
                 env={**{key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
@@ -625,6 +666,21 @@ def _verify_artifact_name(query: str, source_file: str, source_url: str, title: 
     filename = _identity_compact(source_file or urlsplit(source_url).path.rsplit("/", 1)[-1])
     if any(marker in filename for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS):
         raise _invalid()
+    stem = unquote(source_file or urlsplit(source_url).path.rsplit("/", 1)[-1]).rsplit(".", 1)[0]
+    stem = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", stem)
+    query_identity = _identity_compact(canonical_product_query(query))
+    format_words = _IDENTITY_STOPWORDS | {
+        "public", "products", "schem", "sch", "print", "schaltplan", "page", "sheet",
+        "rev", "revision", "version", "optimized", "large", "small", "medium", "guide",
+    }
+    # shortcut: compare named project identities, not pixels; opaque/mislabelled assets need content review.
+    known_board = any(_identity_compact(alias) in query_identity
+                      for aliases in _MANUFACTURER_ALIASES.values() for alias in aliases)
+    if known_board and not re.fullmatch(r"[0-9a-f\s-]+", stem, re.I):
+        for word in set(re.findall(r"[a-z]{3,}", canonical_product_query(stem).casefold())) - format_words:
+            identity = "qtpy" if word == "qtrp" else word
+            if identity not in query_identity:
+                raise _invalid()
     requested = _pico_variant(_identity_compact(canonical_product_query(query)))
     actual = _pico_variant(filename)
     if requested and actual and requested != actual:
@@ -634,9 +690,6 @@ def _verify_artifact_name(query: str, source_file: str, source_url: str, title: 
 def _verify_public_identity(query: str, *, title: str, page_url: str, source_file: str,
                             source_url: str, kind: str, pdf_text: str = "", linked_identity: str = "") -> None:
     """Reject a valid image/PDF whose board variant is not the requested one."""
-
-    from backend.projects.external_circuit_search import _MANUFACTURER_ALIASES
-
     _verify_artifact_name(query, source_file, source_url, title)
     query = _VOLTAGE.sub(lambda match: "".join(match.groups()), canonical_product_query(query))
     from backend.projects.external_circuit_search import component_evidence_matches, component_context
@@ -731,7 +784,7 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
                 raise _invalid()
 
 
-def _verify_image_page(page_url: str, source_url: str, *, client=None) -> None:
+def _verify_image_page(page_url: str, source_url: str, *, client=None) -> str:
     from backend.projects.external_circuit_search import _page_assets
 
     if not page_url or page_url == source_url:
@@ -742,9 +795,10 @@ def _verify_image_page(page_url: str, source_url: str, *, client=None) -> None:
     # Search also reads the HTML counterpart of an indexed Markdown page.
     page_url = page_url[:-3] if page_url.endswith(".md") else page_url
     # shortcut: verify publisher evidence, not image semantics; use content review if mislabelling persists.
-    if not any(url == source_url for url, _ in _page_assets(
-            page_url, client=client, required=True, require_schematic_context=True)):
-        raise _invalid()
+    for url, label in _page_assets(page_url, client=client, required=True, require_schematic_context=True):
+        if url == source_url:
+            return label
+    raise _invalid()
 
 
 def inspect_public_schematic(url: str, kind: str, query: str, *, title: str = "",
@@ -752,8 +806,9 @@ def inspect_public_schematic(url: str, kind: str, query: str, *, title: str = ""
                              client: httpx.Client | None = None) -> tuple[str, int]:
     """Download, identify, and fingerprint one public schematic in one pass."""
     _verify_artifact_name(query, source_file, url, title)
+    publisher_label = ''
     if kind in {"png", "svg"}:
-        _verify_image_page(page_url, url, client=client)
+        publisher_label = _verify_image_page(page_url, url, client=client)
     data, _ = _public_asset(url, kind, client=client)
     pdf_text = _pdf_identity_text(data) if kind == "pdf" else ""
     linked_identity = ""
@@ -762,6 +817,12 @@ def inspect_public_schematic(url: str, kind: str, query: str, *, title: str = ""
         linked_identity = _official_link_identity(canonical_product_query(query), page_url, url, client=client)
     _verify_public_identity(query, title=title, page_url=page_url, source_file=source_file,
                             source_url=url, kind=kind, pdf_text=pdf_text, linked_identity=linked_identity)
+    from backend.projects.external_circuit_search import _manufacturer_for
+    if _manufacturer_for(page_url) or _manufacturer_for(url):
+        proof = _identity_compact(canonical_product_query(
+            f'{source_file} {url} {pdf_text} {publisher_label} {linked_identity}'))
+        if any(term not in proof for term in _identity_terms(canonical_product_query(query))):
+            raise _invalid()
     if kind == "png":
         _valid_png(data)
         with Image.open(io.BytesIO(data), formats=["PNG"]) as png:
@@ -789,6 +850,79 @@ def fingerprint_public_schematic(url: str, kind: str, *, client: httpx.Client | 
     else:
         count = len(_bounded_pdf_schematic_pages(data))
     return hashlib.sha256(data).hexdigest(), count
+
+
+def _verify_pdf_circuit(document):
+    """Conservative vector-content heuristic; it does not establish design correctness."""
+    import ctypes
+    from collections import Counter
+    import pypdfium2 as pdfium
+
+    if len(document) != 1 or _pdf_creator_is_pcbnew(document):
+        raise _invalid()
+    page = document[0]
+    try:
+        textpage = page.get_textpage()
+        try:
+            if textpage.count_chars() > MAX_PDF_TEXT_BYTES:
+                raise _invalid()
+            text = textpage.get_text_range()
+        finally:
+            textpage.close()
+        refs = set(re.findall(r'\b(?:IC|R|C|D|Q|U|L)\d{1,4}\b', text.upper()))
+        if (len(refs) < 6 or len({re.sub(r'\d+', '', ref).upper() for ref in refs}) < 2
+                or is_non_circuit_asset('', text)
+                or any(marker in _identity_compact(text) for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS)):
+            raise _invalid()
+        lines, segments = set(), 0
+        for count, obj in enumerate(page.get_objects(max_depth=1), 1):
+            if count > 10000 or obj.type in {pdfium.raw.FPDF_PAGEOBJ_IMAGE, pdfium.raw.FPDF_PAGEOBJ_FORM}:
+                raise _invalid()
+            if obj.type != pdfium.raw.FPDF_PAGEOBJ_PATH:
+                continue
+            previous = None
+            matrix = obj.get_matrix()
+            for index in range(pdfium.raw.FPDFPath_CountSegments(obj)):
+                segments += 1
+                if segments > 50000:
+                    raise _invalid()
+                segment = pdfium.raw.FPDFPath_GetPathSegment(obj, index)
+                x, y = ctypes.c_float(), ctypes.c_float()
+                if not pdfium.raw.FPDFPathSegment_GetPoint(segment, x, y):
+                    raise _invalid()
+                point = matrix.on_point(x.value, y.value)
+                if not all(math.isfinite(v) for v in point):
+                    raise _invalid()
+                if previous and pdfium.raw.FPDFPathSegment_GetType(segment) == pdfium.raw.FPDF_SEGMENT_LINETO:
+                    dx, dy = abs(point[0]-previous[0]), abs(point[1]-previous[1])
+                    if (5 <= dx < page.get_width()*.8 and dy < .1) or (5 <= dy < page.get_height()*.8 and dx < .1):
+                        lines.add(tuple(sorted((tuple(round(v*2) for v in previous), tuple(round(v*2) for v in point)))))
+                previous = point
+        ends = Counter(point for line in lines for point in line)
+        if len(lines) < 8 or sum(count >= 3 for count in ends.values()) < 2:
+            raise _invalid()
+    finally:
+        page.close()
+
+
+def inspect_published_pdf(url: str, query: str, *, page_url: str, source_file: str,
+                          client: httpx.Client | None = None) -> tuple[str, int]:
+    """Require publisher linkage and document content; metadata cannot prove either."""
+    _verify_artifact_name(query, source_file, url, '')
+    label = _verify_image_page(page_url, url, client=client)
+    terms = _identity_terms(canonical_product_query(query))
+    def matches(value):
+        value = canonical_product_query(value).casefold()
+        return terms and all(re.search(r'(?<![a-z0-9])'+re.escape(term)+r'(?![a-z0-9])', value) for term in terms)
+    if not matches(label):
+        raise _invalid()
+    data, _ = _public_asset(url, 'pdf', client=client)
+    text = _pdf_identity_text(data, require_circuit=True)
+    if not any(matches(line) for line in text.splitlines() if len(line) <= 200):
+        raise _invalid()
+    _verify_public_identity(query, title='', page_url=page_url, source_file=source_file,
+                            source_url=url, kind='pdf', pdf_text=text)
+    return hashlib.sha256(data).hexdigest(), 1
 
 
 def render_public_schematic(source: VerifiedSchematicSource, *, client: httpx.Client | None = None) -> tuple[bytes, ...]:
@@ -829,11 +963,16 @@ if __name__ == "__main__":
             print(",".join(str(index) for index in pages))
         except (ExternalSchematicInvalidSource, OSError, ValueError):
             raise SystemExit(1)
-    elif len(sys.argv) >= 3 and sys.argv[1] == "inspect-pdf-text":
+    elif len(sys.argv) >= 3 and sys.argv[1] in {"inspect-pdf-text", "inspect-published-pdf"}:
         try:
+            if sys.argv[1] == 'inspect-published-pdf' and os.name == 'posix':
+                import resource
+                resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30))
             import pypdfium2 as pdfium
             document = pdfium.PdfDocument(Path(sys.argv[2]).read_bytes())
             try:
+                if sys.argv[1] == 'inspect-published-pdf':
+                    _verify_pdf_circuit(document)
                 chunks = []
                 for index in range(min(len(document), MAX_SHEETS)):
                     page = document[index]

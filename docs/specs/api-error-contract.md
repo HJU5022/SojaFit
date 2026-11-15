@@ -23,6 +23,8 @@
 
 ## What
 
+- 프로젝트 생성 중복409의 선택적 `details.duplicates`는 소유 프로젝트의 id/name/matches를 최대5개 제공한다([생성 계약](netlist-conversation-versions.md)). 기존 error/code/message/request_id와 로그 형식은 유지하고 다른 오류에는 details를 추가하지 않는다. 클라이언트는409 CONFLICT의 검증된 후보만 선택 UI에 쓰고 잘못된 메타데이터는 무시한다.
+
 1. 요청마다 서버가 UUID 기반 요청 식별자를 만들고 `request.state.request_id`에 저장한다.
 2. 정상 응답은 기존 본문을 유지하고 `X-Request-ID` 헤더만 추가한다.
 3. HTTP 오류, 검증 오류, 처리되지 않은 예외는 동일한 최상위 `error` 구조를 사용한다.

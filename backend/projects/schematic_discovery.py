@@ -479,6 +479,10 @@ def _documents_7805(readme):
 def _matches_query(query, evidence, readme):
     if not query:
         return True
+    query = re.sub(r'(?<=[a-z0-9])(?=[A-Z][a-z])', ' ', query)
+    readme = re.sub(r'(?<=[a-z0-9])(?=[A-Z][a-z])', ' ', readme)
+    query = re.sub(r'\btiny(?=\d+\b)', 'ATtiny', query, flags=re.I)
+    query = re.sub(r'\bdev(?=\s+board\b)', 'development', query, flags=re.I)
     # Korean particles often directly follow the model number; preserve part identifiers.
     phrase = re.sub(r"(?<=[a-z0-9])(?:으로|에서|의|을|를|은|는|이|가|로)(?=\s|$)", " ", query.casefold())
     purposes = {"전원 공급": "power supply", "전원공급": "power supply", "전원": "power",

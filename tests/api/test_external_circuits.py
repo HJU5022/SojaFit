@@ -24,7 +24,9 @@ def test_schematic_failure_reason_keeps_error_contract(client, schematic_boundar
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
-    yield TestClient(app, raise_server_exceptions=False)
+    reference_client=TestClient(app, raise_server_exceptions=False)
+    reference_client.params={'reference_only':'true'}
+    yield reference_client
     app.dependency_overrides.clear()
 
 
@@ -37,7 +39,7 @@ def schematic_boundary(monkeypatch):
             source_url=f"https://github.com/owner/repo/tree/{'a' * 40}",
             source_file="hardware/board.kicad_sch", token="signed-token", sheet_count=2,
             source_type="community", evidence_grade=3, manufacturer=None, model=None,
-            revision=None, source_sha256=None, license_evidence_url=None, choices=()),
+            revision=None, source_sha256=None, license_evidence_url=None, choices=(), circuit_version=None),
         queries=[], sheet_calls=[], png=b"\x89PNG\r\n\x1a\nfixture", error=None,
     )
 
@@ -77,10 +79,52 @@ def test_external_schematic_manifest_returns_all_sheet_urls(client, schematic_bo
     assert response.json() == {
         **{key: value for key, value in vars(schematic_boundary.manifest).items()
            if key not in {"token", "sheet_count"}},
-        "images": [{"sheet": i, "url": f"/api/external-circuits/schematics/signed-token/{i}"} for i in range(2)],
+        "images": [{"sheet": i, "url": f"/api/external-circuits/schematics/signed-token/{i}?reference_only=true"} for i in range(2)],
         "choices": [],
     }
     assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_project_schematic_checks_owned_version_before_search_and_sheet(client,schematic_boundary,monkeypatch):
+    client.params={}
+    api=import_module('backend.api.external_circuits')
+    connections={'parts':[{'ref':'D1','value':'SS34'}],'nets':[{'nodes':[{'ref':'D1','pin':'1'}]}]}
+    owned=[]
+    def get(user,project,thread):
+        owned.append((user,project,thread))
+        if user!=1 or project!=12:raise api.ProjectNotFound()
+        return SimpleNamespace(connections=connections,circuit_version=2)
+    monkeypatch.setattr(api,'ProjectRepository',lambda:SimpleNamespace(get_owned=get))
+    calls=[]
+    def find(q,url=None,**kw):calls.append((q,kw['connections']));return schematic_boundary.manifest
+    monkeypatch.setattr(api,'find_external_schematic',find)
+    params={'q':'Board','project_id':12,'circuit_version':2}
+    response=client.get('/api/external-circuits/schematics',params=params)
+    assert response.status_code==200 and response.json()['circuit_version']==2
+    assert calls==[('Board',connections)] and owned[0]==(1,12,None)
+    image=response.json()['images'][0]['url']
+    assert 'project_id=12&circuit_version=2' in image
+    monkeypatch.setattr(api,'load_external_schematic_sheet',lambda t,i,**kw:schematic_boundary.png if kw['connections']==connections else None)
+    assert client.get(image).status_code==200
+    assert client.get('/api/external-circuits/schematics',params={**params,'circuit_version':1}).status_code==409
+    assert client.get('/api/external-circuits/schematics',params={**params,'project_id':13}).status_code==404
+    assert client.get('/api/external-circuits/schematics',params={**params,'component_type':'diode'}).status_code==422
+    assert len(calls)==1
+    app.dependency_overrides[auth.current_user_id]=lambda:2
+    assert client.get(image).status_code==404
+
+
+@pytest.mark.parametrize('params',[{'project_id':12},{'circuit_version':1},{'thread_id':'00000000-0000-0000-0000-000000000001'}])
+def test_incomplete_circuit_scope_never_searches(client,schematic_boundary,params):
+    assert client.get('/api/external-circuits/schematics',params={'q':'Board',**params}).status_code==422
+    assert schematic_boundary.queries==[]
+
+
+def test_legacy_unscoped_requests_cannot_display_a_project_original(client,schematic_boundary):
+    client.params={}
+    assert client.get('/api/external-circuits/schematics?q=Board').status_code==422
+    assert client.get('/api/external-circuits/schematics/signed-token/0').status_code==422
+    assert schematic_boundary.queries==[] and schematic_boundary.sheet_calls==[]
 
 
 @pytest.mark.parametrize("query", ["ab", "x" * 200, " " + "x" * 200 + " "])
@@ -146,10 +190,11 @@ def test_external_schematic_sheet_invalid_index_is_not_found(client, schematic_b
     ("ExternalCircuitSearchError", 502, "UPSTREAM_ERROR"),
 ])
 def test_external_schematic_safe_errors(client, schematic_boundary, path, exception_name, status, code):
+    client.params = {}
     api = import_module("backend.api.external_circuits")
     schematic_boundary.error = getattr(api, exception_name)(
         17 if exception_name == "ExternalSchematicRateLimited" else "private credential marker")
-    response = client.get(path)
+    response = client.get(path + ('&' if '?' in path else '?') + 'reference_only=true')
     assert response.status_code == status
     assert response.json()["error"]["code"] == code
     assert response.headers["cache-control"] == "private, no-store"

@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import base64
 import binascii
+import json
 from typing import Any
 import subprocess
 from pathlib import Path
@@ -27,8 +28,16 @@ class KicadServiceUnavailable(RuntimeError):
 
 
 def run_kicad_pdf(root: Path, output: Path) -> tuple[str, Path]:
+    return _run_export(root, output, 'pdf')
+
+
+def run_kicad_netlist(root: Path, output: Path) -> Path:
+    return _run_export(root, output, 'netlist')[1]
+
+
+def _run_export(root: Path, output: Path, kind: str) -> tuple[str, Path]:
     """검증한 root 회로도와 자식 시트를 한 PDF로 내보낸다."""
-    pdf = output / "schematic.pdf"
+    pdf = output / ('schematic.net' if kind == 'netlist' else 'schematic.pdf')
     home = output / "home"
     home.mkdir()
     env = {"HOME": str(home), "PATH": os.environ.get("PATH", os.defpath)}
@@ -37,9 +46,12 @@ def run_kicad_pdf(root: Path, output: Path) -> tuple[str, Path]:
             [KICAD_CLI, "--version"], check=True, capture_output=True, text=True,
             timeout=COMMAND_TIMEOUT_SECONDS, env=env,
         ).stdout.strip()
-        command = [KICAD_CLI, "sch", "export", "pdf", "--output", str(pdf), str(root)]
+        command = [KICAD_CLI, "sch", "export", kind, "--output", str(pdf)]
+        if kind == 'netlist':
+            command += ['--format', 'kicadsexpr']
+        command.append(str(root))
         if os.name == "posix":
-            command = ["prlimit", "--as=2147483648", "--fsize=20971520", "--", *command]
+            command = ["prlimit", "--as=2147483648", '--fsize='+str(5*1024**2 if kind == 'netlist' else 20*1024**2), "--", *command]
         subprocess.run(command, cwd=root.parent, check=True, env=env,
                        timeout=COMMAND_TIMEOUT_SECONDS, stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL)
@@ -91,18 +103,24 @@ def _renderer_headers(url: str) -> dict[str, str]:
     return {}
 
 
-def render_remote_kicad(source: Any, *, client: Any = None) -> tuple[bytes, ...]:
+def render_remote_kicad(source: Any, *, connections=None, client: Any = None) -> tuple[bytes, ...]:
     """KiCad 원본만 별도 renderer에 보내고 PNG 시트를 검증해 돌려받는다."""
     import httpx
     url = os.getenv("KICAD_RENDERER_URL", "").rstrip("/")
     if not url or not url.startswith(("http://", "https://")):
         raise KicadServiceUnavailable("KiCad 렌더러가 설정되지 않았습니다.")
     body = {"source": _source_payload(source)}
+    if connections is not None:
+        body['include_netlist'] = True
     owned = client is None
     if owned:
         client = httpx.Client(timeout=90, follow_redirects=False, trust_env=False)
     try:
-        response = client.post(url + "/render", json=body, headers=_renderer_headers(url))
+        from backend.projects.external_circuit_search import read_bounded_body
+        from backend.projects.netlist import MAX_BYTES
+        with client.stream('POST', url + '/render', json=body,
+                           headers={**_renderer_headers(url), 'Accept-Encoding': 'identity'}) as response:
+            raw_response = read_bounded_body(response, RENDERER_MAX_RESPONSE_BYTES * 4 // 3 + MAX_BYTES + 65536)
         if response.status_code == 422:
             raise ExternalSchematicInvalidSource("KiCad 원본이 유효하지 않습니다.")
         if response.status_code == 429 or (
@@ -120,7 +138,15 @@ def render_remote_kicad(source: Any, *, client: Any = None) -> tuple[bytes, ...]
             )
         if response.status_code != 200:
             raise KicadServiceUnavailable("KiCad 렌더러가 변환에 실패했습니다.")
-        data = response.json()
+        data = json.loads(raw_response)
+        if connections is not None:
+            from backend.projects.netlist import MAX_BYTES, InvalidNetlist, same_circuit
+            candidate = data.get('connections') if isinstance(data,dict) else None
+            try:
+                if len(json.dumps(candidate).encode()) > MAX_BYTES or not same_circuit(candidate, connections):
+                    raise ExternalSchematicInvalidSource('원격 원본과 업로드 회로가 일치하지 않습니다.')
+            except (InvalidNetlist, TypeError, ValueError):
+                raise ExternalSchematicInvalidSource('원격 원본 연결을 확인할 수 없습니다.') from None
         sheets = data.get("sheets") if isinstance(data, dict) else None
         if not isinstance(sheets, list) or not 1 <= len(sheets) <= RENDERER_MAX_SHEETS:
             raise KicadServiceUnavailable("KiCad 렌더러 응답이 올바르지 않습니다.")
@@ -183,14 +209,22 @@ try:
     @app.post("/render")
     def renderer_render(body: dict[str, Any]):
         try:
+            if set(body)-{'source','include_netlist'} or type(body.get('include_netlist',False)) is not bool:
+                raise ValueError('invalid renderer request')
             source = _renderer_source(body.get("source"))
             from backend.projects.schematic_render import _valid_png, render_external_schematic
-            sheets = render_external_schematic(source)
+            captured = []
+            sheets = (render_external_schematic(source,connection_consumer=captured.append)
+                      if body.get('include_netlist') else render_external_schematic(source))
             sheets = tuple(_valid_png(sheet) for sheet in sheets)
             encoded = [base64.b64encode(sheet).decode("ascii") for sheet in sheets]
             if sum(len(sheet) for sheet in sheets) > RENDERER_MAX_RESPONSE_BYTES:
                 raise ValueError("response too large")
-            return {"sheets": encoded}
+            result = {"sheets": encoded}
+            if body.get('include_netlist'):
+                if len(captured)!=1:raise ValueError('candidate netlist missing')
+                result['connections'] = json.loads(json.dumps(captured[0],default=dict))
+            return result
         except (ValueError, InvalidKicadProject, ExternalSchematicInvalidSource):
             raise HTTPException(status_code=422, detail="invalid KiCad source") from None
         except ExternalSchematicRateLimited as error:

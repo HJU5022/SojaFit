@@ -16,6 +16,124 @@ def parser():
     return importlib.import_module("backend.projects.netlist")
 
 
+def test_circuit_fingerprint_uses_components_and_pin_partition():
+    import json
+    base=json.loads(json.dumps(parser().normalize_netlist((FIXTURES/'minimal.net').read_bytes()).connections,default=dict))
+    same=json.loads(json.dumps(base));same['parts'].reverse();same['nets'][0]['nodes'].reverse()
+    same['nets'][0].update(code='99',name='renamed')
+    assert parser().circuit_fingerprint(base)==parser().circuit_fingerprint(same)
+    for change in ('pin','value','split'):
+        other=json.loads(json.dumps(base))
+        if change=='pin':other['nets'][0]['nodes'][0]['pin']='9'
+        elif change=='value':other['parts'][0]['value']='1N4007'
+        else:
+            node=other['nets'][0]['nodes'].pop()
+            other['nets'].append({'code':'2','name':'isolated','nodes':[node]})
+        assert parser().circuit_fingerprint(base)!=parser().circuit_fingerprint(other)
+    duplicate=json.loads(json.dumps(base));duplicate['nets'].append(duplicate['nets'][0])
+    with pytest.raises(parser().InvalidNetlist):parser().circuit_fingerprint(duplicate)
+
+
+def _cycle_circuit(lengths, offset=0):
+    refs = [f'R{i + offset}' for i in range(sum(lengths))]
+    nets, start = [], 0
+    for size in lengths:
+        cycle = refs[start:start + size]
+        nets.extend({'nodes': [{'ref': ref, 'pin': '2'},
+                               {'ref': cycle[(i + 1) % size], 'pin': '1'}]}
+                    for i, ref in enumerate(cycle))
+        start += size
+    return {'parts': [{'ref': ref, 'value': '1k', 'footprint': 'R_0603'} for ref in refs], 'nets': nets}
+
+
+def _scrambled_cycles(lengths, seed):
+    import random
+    circuit = _cycle_circuit(lengths)
+    names = [f'R{i + 1000}' for i in range(sum(lengths))]
+    random.Random(seed).shuffle(names)
+    refs = {part['ref']: name for part, name in zip(circuit['parts'], names)}
+    return {'parts': [{**part, 'ref': refs[part['ref']]} for part in circuit['parts']],
+            'nets': [{'nodes': [{**node, 'ref': refs[node['ref']]} for node in net['nodes']]}
+                     for net in circuit['nets']]}
+
+
+@pytest.mark.parametrize('lengths', [[120], [200], [240], [60, 60, 60, 60]])
+@pytest.mark.parametrize('seed', [1, 7, 19])
+def test_large_symmetric_circuits_survive_random_reference_order(lengths, seed):
+    assert parser().same_circuit(_cycle_circuit(lengths), _scrambled_cycles(lengths, seed))
+
+
+def test_anchored_symmetry_is_resolved_without_spending_steps_on_impossible_pairs(monkeypatch):
+    monkeypatch.setattr(parser(), 'MAX_MATCH_STEPS', 240)
+    assert parser().same_circuit(_cycle_circuit([240]), _scrambled_cycles([240], 7))
+    assert not parser().same_circuit(_cycle_circuit([240]), _scrambled_cycles([120, 120], 7))
+
+
+def test_renumbered_symmetric_parts_require_a_complete_connection_mapping():
+    left, right = _cycle_circuit([6]), _cycle_circuit([6], 100)
+    right['parts'].reverse()
+    right['nets'].reverse()
+    assert parser().circuit_fingerprint(left) != parser().circuit_fingerprint(right)
+    assert parser().same_circuit(left, right)
+    # All local part/pin/net degrees are equal, but the complete circuits differ.
+    assert not parser().same_circuit(left, _cycle_circuit([3, 3], 100))
+
+
+@pytest.mark.parametrize('change', ['pin', 'value', 'footprint', 'prefix', 'missing'])
+def test_renumbering_cannot_hide_a_different_circuit(change):
+    import json
+    left = json.loads(json.dumps(parser().normalize_netlist((FIXTURES/'minimal.net').read_bytes()).connections, default=dict))
+    right = json.loads(json.dumps(left))
+    for part in right['parts']:
+        part['ref'] += '00'
+    for net in right['nets']:
+        for node in net['nodes']:
+            node['ref'] += '00'
+    assert parser().same_circuit(left, right)
+    if change == 'pin': right['nets'][0]['nodes'][0]['pin'] = '1'
+    elif change == 'value': right['parts'][0]['value'] = '1N4007'
+    elif change == 'footprint': right['parts'][0]['footprint'] = 'D_SMA'
+    elif change == 'prefix':
+        right['parts'][0]['ref'] = 'X100'
+        right['nets'][0]['nodes'][0]['ref'] = 'X100'
+    else:
+        right['parts'].append({'ref': 'C100', 'value': '1n', 'footprint': ''})
+    assert not parser().same_circuit(left, right)
+
+
+@pytest.mark.parametrize('limit', ['MAX_MATCH_STEPS', 'MAX_MATCH_SECONDS', 'MAX_MATCH_PARTS', 'MAX_MATCH_NETS', 'MAX_MATCH_PINS'])
+def test_renumber_match_fails_closed_at_search_and_size_limits(monkeypatch, limit):
+    monkeypatch.setattr(parser(), limit, 0)
+    assert not parser().same_circuit(_cycle_circuit([6]), _cycle_circuit([6], 100))
+    assert parser().same_circuit(_cycle_circuit([6]), _cycle_circuit([6]))
+
+
+def test_small_circuit_matches_agree_with_exhaustive_reference_permutations():
+    import itertools
+    import random
+    rng = random.Random(19)
+    def make(offset):
+        circuit = _cycle_circuit([4], offset)
+        nodes = [node for net in circuit['nets'] for node in net['nodes']]
+        rng.shuffle(nodes)
+        cuts = sorted(rng.sample(range(1, len(nodes)), 3))
+        circuit['nets'] = [{'nodes': nodes[a:b]} for a, b in zip([0, *cuts], [*cuts, len(nodes)])]
+        return circuit
+    def renamed(circuit, names):
+        refs = {part['ref']: name for part, name in zip(circuit['parts'], names)}
+        return {'parts': [{**part, 'ref': refs[part['ref']]} for part in circuit['parts']],
+                'nets': [{'nodes': [{**node, 'ref': refs[node['ref']]} for node in net['nodes']]} for net in circuit['nets']]}
+    for index in range(30):
+        left = make(0)
+        names = [f'R{i}' for i in range(100, 104)]
+        rng.shuffle(names)
+        right = renamed(left, names) if index % 2 == 0 else make(100)
+        expected = any(parser().circuit_fingerprint(left) == parser().circuit_fingerprint(renamed(right, permutation))
+                       for permutation in itertools.permutations(part['ref'] for part in left['parts']))
+        assert parser().same_circuit(left, right) == expected
+        assert parser().same_circuit(right, left) == expected
+
+
 def test_normalize_exact_shape_hash_and_immutable_result():
     raw = (FIXTURES / "minimal.net").read_bytes()
     result = parser().normalize_netlist(raw)

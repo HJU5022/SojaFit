@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
+import { Suspense } from 'react'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import WorkbenchPage from './WorkbenchPage'
 import { failure, network, user } from '../test/network'
@@ -345,6 +346,50 @@ it('keeps the project when only the selected conversation version returns 404', 
   expect(client.getQueryData(['projects'])).toEqual([made(null, '유효한 프로젝트')])
 })
 
+it.each(['', '&threadId=old-thread'])('does not refetch a confirmed missing project while navigation is pending %s', async suffix => {
+  const client = new QueryClient()
+  const other = { ...made(null, '다른 프로젝트'), id: 2 }
+  client.setQueryData(['project', 1, suffix ? 'old-thread' : ''], made(null, '삭제된 캐시'))
+  const reads: string[] = []
+  let accessibleAgain = false
+  network(path => {
+    if (path === '/api/projects') return Response.json([other])
+    if (path.split('?')[0] === '/api/projects/1') {
+      reads.push(path)
+      if (accessibleAgain) return Response.json(made(null, '접근 복구된 프로젝트'))
+      // 중복 조회는 대기시켜 잘못된 구현이 무한 요청 대신 횟수 검증으로 실패하게 한다.
+      if (reads.filter(read => read === path).length > 1) return new Promise<Response>(() => {})
+      return failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404)
+    }
+    return Response.json([])
+  })
+  let release!: () => void, blocked = true
+  const listReady = new Promise<void>(resolve => { release = () => { blocked = false; resolve() } })
+  const navigating = vi.fn()
+  function PendingList() {
+    const location = useLocation()
+    if (!location.search && blocked) { navigating(); throw listReady }
+    return <WorkbenchPage />
+  }
+  try {
+    renderWithQueries(<MemoryRouter initialEntries={[`/app?projectId=1${suffix}`, `/app?projectId=1${suffix}`]}><HistoryControls /><Suspense fallback={<p>목록 준비 중</p>}><PendingList /></Suspense></MemoryRouter>, client)
+    await waitFor(() => expect(navigating).toHaveBeenCalled())
+    // 목록 화면 준비 중에 캐시 갱신으로 기존 화면이 다시 그려져도 재조회하지 않는다.
+    await act(async () => { client.setQueryData(['projects'], [other]); await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(reads).toEqual(suffix ? ['/api/projects/1?thread_id=old-thread', '/api/projects/1'] : ['/api/projects/1'])
+    await act(async () => { release() })
+    expect(await screen.findByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeInTheDocument()
+    expect(client.getQueryData(['project', 1, suffix ? 'old-thread' : ''])).toBeUndefined()
+    accessibleAgain = true
+    fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+    await waitFor(() => expect(client.getQueryData(['project', 1, suffix ? 'old-thread' : ''])).toMatchObject({ name: '접근 복구된 프로젝트' }))
+    expect(reads).toHaveLength(suffix ? 3 : 2)
+  } finally {
+    await act(async () => { release(); cleanup() })
+    client.clear()
+  }
+})
+
 it('does not close another rename dialog when an earlier project returns 404 late', async () => {
   let finish!: (value: Response) => void
   let missing = false
@@ -462,4 +507,50 @@ it('keeps the project name after a failed creation so the same form can retry', 
   fireEvent.submit(form)
   await waitFor(() => expect(create).toHaveBeenCalledTimes(2))
   expect(name).toHaveValue('실패해도 유지')
+})
+
+it.each(['open', 'copy', 'edit', 'reopen'])('requires a fresh duplicate choice and preserves the form: %s', async choice => {
+  const requests: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') {
+      requests.push(path)
+      return path.includes('allow_duplicate=true') ? Response.json(made(null, '새 복사본')) : Response.json({ error: { code: 'CONFLICT', message: '중복', request_id: 'test' }, details: { duplicates: [{ id: 5, name: '기존 회로', matches: ['name', 'netlist'] }] } }, { status: 409 })
+    }
+    if (path === '/api/projects') return Response.json([])
+    if (path === '/api/demo-circuits') return catalogue()
+    if (path === '/api/projects/5') return Response.json({ ...made(null, '기존 회로'), id: 5 })
+    if (path === '/api/projects/1') return Response.json(made(null, '새 복사본'))
+    return Response.json([])
+  })
+  open(''); await screen.findByText('파일이 없으면 예제 회로로 시작'); mockDialogs()
+  fireEvent.click(screen.getAllByRole('button', { name: '새 프로젝트' })[0])
+  const dialog = screen.getByRole('dialog', { name: '새 프로젝트' })
+  const name = within(dialog).getByRole('textbox', { name: '프로젝트 이름' })
+  fireEvent.change(name, { target: { value: '겹치는 이름' } })
+  const form = within(dialog).getByRole('button', { name: '만들기' }).closest('form')!
+  fireEvent.submit(form)
+  expect(await within(dialog).findByRole('alert')).toHaveTextContent('이름 중복 · 넷리스트 중복')
+  expect(name).toHaveValue('겹치는 이름')
+  expect(requests).toEqual(['/api/projects'])
+  expect(within(dialog).getByRole('button', { name: '만들기' })).toBeDisabled()
+  if (choice === 'open') {
+    fireEvent.click(within(dialog).getByRole('button', { name: '기존 프로젝트 열기: 기존 회로' }))
+    await screen.findByRole('button', { name: '부품 고르기' })
+    expect(requests).toHaveLength(1)
+  } else if (choice === 'copy') {
+    fireEvent.click(within(dialog).getByRole('button', { name: '중복을 확인하고 새로 만들기' }))
+    await screen.findByRole('button', { name: '부품 고르기' })
+    expect(requests).toEqual(['/api/projects', '/api/projects?allow_duplicate=true'])
+  } else {
+    if (choice === 'edit') fireEvent.change(name, { target: { value: '바꾼 이름' } })
+    else {
+      fireEvent.click(within(dialog).getByRole('button', { name: '취소' }))
+      fireEvent.click(screen.getAllByRole('button', { name: '새 프로젝트' })[0])
+      expect(name).toHaveValue('')
+      fireEvent.change(name, { target: { value: '다시 입력' } })
+    }
+    expect(within(dialog).queryByRole('button', { name: '중복을 확인하고 새로 만들기' })).toBeNull()
+    fireEvent.submit(form)
+    await waitFor(() => expect(requests).toEqual(['/api/projects', '/api/projects']))
+  }
 })

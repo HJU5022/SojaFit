@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from itertools import zip_longest
-from urllib.parse import unquote, urljoin, urlsplit
+from urllib.parse import quote, unquote, urljoin, urlsplit
 
 import httpx
 
@@ -164,7 +164,7 @@ _OFFICIAL_PUBLISHER_HOSTS = {
     "arduino.cc": frozenset({"arduino.cc", "www.arduino.cc", "docs.arduino.cc", "content.arduino.cc"}),
     "pololu.com": frozenset({"pololu.com", "www.pololu.com"}),
     "olimex.com": frozenset({"olimex.com", "www.olimex.com"}),
-    "raspberrypi.com": frozenset({"raspberrypi.com", "www.raspberrypi.com", "docs.raspberrypi.com", "pip.raspberrypi.com", "pip-assets.raspberrypi.com"}),
+    "raspberrypi.com": frozenset({"raspberrypi.com", "www.raspberrypi.com", "docs.raspberrypi.com", "datasheets.raspberrypi.com", "pip.raspberrypi.com", "pip-assets.raspberrypi.com"}),
     "pjrc.com": frozenset({"pjrc.com", "www.pjrc.com"}),
 }
 _MANUFACTURER_ALIASES = {
@@ -228,6 +228,7 @@ class _SchematicPageParser(HTMLParser):
         self._sections: dict[int, list[str]] = {}
         self._media: list[dict] = []
         self._heading_active = False
+        self._heading_link = None
         self._title = ""
         self._title_active = False
         self._anchor: tuple[str, list[str]] | None = None
@@ -251,6 +252,7 @@ class _SchematicPageParser(HTMLParser):
             self._sections = {number: text for number, text in self._sections.items() if number < level}
             self._sections[level] = self._heading
             self._heading_active = True
+            self._heading_link = values.get('data-href')
         if tag in {"figure", "table"}:
             if len(self._media) >= 8:
                 raise ValueError("image context nesting limit")
@@ -307,6 +309,9 @@ class _SchematicPageParser(HTMLParser):
                     self._add_link(url, caption)
             self._sections = scope["sections"]
         if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            if self._heading_link:
+                self._add_link(self._heading_link, ' '.join(self._heading))
+                self._heading_link = None
             self._heading_active = False
         if tag == "title":
             self._title_active = False
@@ -325,6 +330,8 @@ def _asset_kind(url: str, label: str = "") -> str | None:
     if is_non_circuit_asset(url, label):
         return None
     path = urlsplit(url).path.casefold()
+    if path.endswith(".zip"):
+        return "pdf" if _manufacturer_for(url) else None
     suffix = next((suffix for suffix in _WEB_ASSET_KIND if path.endswith(suffix)), None)
     if suffix is None:
         return None
@@ -419,7 +426,7 @@ def _page_assets(page_url: str, *, client: httpx.Client, required: bool = False,
         return ()
     found = []
     for raw, label in parser.links:
-        url = urljoin(page_url, raw)
+        url = urljoin(page_url, raw).replace(' ', '%20')
         url = _official_github_asset(url, page_url) or url
         if (url == page_url or _safe_url(url) is None or not _page_asset_host_allowed(url, page_url)
                 or is_non_circuit_asset(url, label)):
@@ -430,7 +437,8 @@ def _page_assets(page_url: str, *, client: httpx.Client, required: bool = False,
                          if urlsplit(url).path.casefold().endswith(suffix)), None)
         if kind is None and _SCHEMATIC_WORDS.search(label) and not urlsplit(url).path.rsplit("/", 1)[-1].count("."):
             kind = "png"
-        if kind and (_SCHEMATIC_WORDS.search(urlsplit(url).path) or _SCHEMATIC_WORDS.search(label)):
+        if kind and (_SCHEMATIC_WORDS.search(urlsplit(url).path) or _SCHEMATIC_WORDS.search(label)
+                     or urlsplit(url).path.casefold().endswith(".zip")):
             found.append((url, label))
     def resolution(item):
         match = re.search(r"(?:large|medium|small)(\d+)", urlsplit(item[0]).path, re.I)
@@ -489,7 +497,7 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
     except (httpx.HTTPError, KeyError, ValueError, TypeError, RecursionError):
         raise ExternalCircuitSearchError("외부 회로 검색 요청 또는 응답 처리에 실패했습니다.") from None
     found: list[WebSchematicRef] = []
-    seen: set[str] = set()
+    seen: dict[str, int] = {}
     for item in rows:
         page_url = _safe_url(item.get("url"))
         if not page_url:
@@ -537,22 +545,27 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
             "manufacturer_official" if manufacturer and _page_asset_host_allowed(item[0], page_url) else "public_web",
             item[2], item[0]))
         for source_url, label, kind in ranked_candidates:
-            if source_url in seen:
+            previous = seen.get(source_url)
+            if previous is not None and (page_url == source_url or found[previous].page_url != source_url):
                 continue
-            seen.add(source_url)
             path = urlsplit(source_url).path
             source_file = path.rsplit("/", 1)[-1] or "schematic." + kind
             label_identity = re.sub(r"[^a-z0-9]", "", label.casefold())
             display_title = (label.strip()[:200] if label and model_tokens
                              and all(token in label_identity for token in model_tokens) else title)
             official = bool(manufacturer and _page_asset_host_allowed(source_url, page_url))
-            found.append(WebSchematicRef(
+            candidate = WebSchematicRef(
                 source_url=source_url, page_url=page_url, source_file=source_file,
                 asset_kind=kind, title=display_title or source_file, attribution=manufacturer if official else (urlsplit(page_url).hostname or "공개 웹 출처"),
                 source_type="manufacturer_official" if official else "public_web",
                 evidence_grade=2 if official else None, manufacturer=manufacturer if official else None,
                 model=display_title or None,
-            ))
+            )
+            if previous is None:
+                seen[source_url] = len(found)
+                found.append(candidate)
+            else:
+                found[previous] = candidate
     def priority(ref):
         exact, matched = _relevance_score(query_text, ref)
         model_words = {word.casefold() for word in re.findall(r"[A-Za-z0-9]+|[가-힣]+", query_text)} - {
@@ -586,6 +599,41 @@ def search_public_schematics(query: str, limit: int = 5, *, client: httpx.Client
     return _search_public_schematics(query, limit, client=client)
 
 
+def _raspberrypi_portal_schematics(query: str, *, client: httpx.Client) -> tuple[WebSchematicRef, ...]:
+    """Look up the exact product category, without registering a model URL."""
+    from backend.projects.schematic_discovery import download_bounded
+    from backend.projects.schematic_render import _verify_artifact_name
+    from backend.projects.schematic_source import ExternalSchematicInvalidSource
+    url = 'https://pip.raspberrypi.com/search?q=' + quote(query, safe='')
+    body, mime = download_bounded(url, max_bytes=512 * 1024,
+        allowed_hosts=frozenset({'pip.raspberrypi.com'}), client=client, phase='official_product_search')
+    if 'text/html' not in mime:
+        return ()
+    parser = _SchematicPageParser()
+    parser.feed(body.decode('utf-8', 'replace'))
+    product = re.sub(r'[^a-z0-9]', '', canonical_product_query(query).casefold())
+    for raw, _ in parser.links:
+        page = urljoin(url, raw)
+        parsed = urlsplit(page)
+        category = re.fullmatch(r'/categories/\d+-(.+)', parsed.path)
+        if parsed.hostname != 'pip.raspberrypi.com' or not category:
+            continue
+        if re.sub(r'[^a-z0-9]', '', category[1].casefold()) != product:
+            continue
+        refs = []
+        for asset, label in _page_assets(page, client=client, required=True):
+            filename = urlsplit(asset).path.rsplit('/', 1)[-1]
+            try:
+                _verify_artifact_name(query, filename, asset, label)
+            except ExternalSchematicInvalidSource:
+                continue
+            refs.append(WebSchematicRef(asset, page, filename, _asset_kind(asset, label) or 'png',
+                label[:200], 'Raspberry Pi', source_type='manufacturer_official', evidence_grade=2,
+                manufacturer='Raspberry Pi', model=query))
+        return tuple(refs[:5])
+    return ()
+
+
 def search_manufacturer_schematics(query: str, limit: int = 5, *, client: httpx.Client | None = None) -> tuple[WebSchematicRef, ...]:
     """제조사 공식 도메인만 대상으로 공개 회로도 후보를 재검색한다.
 
@@ -606,11 +654,16 @@ def search_manufacturer_schematics(query: str, limit: int = 5, *, client: httpx.
     seen: set[str] = set()
     for domain in domains:
         board_name = re.sub(r"\s+(?:schematics?|회로도)\s*$", "", canonical_product_query(query.strip()), flags=re.I)
+        if domain == 'raspberrypi.com':
+            for candidate in _raspberrypi_portal_schematics(board_name, client=client):
+                if candidate.source_url not in seen:
+                    found.append(candidate)
+                    seen.add(candidate.source_url)
         search_host = "learn.adafruit.com" if domain == "adafruit.com" else domain
         try:
             candidates = _search_public_schematics(query, limit, client=client,
                                                     include_domains=(domain,),
-                                                    search_text=f"{board_name} downloads schematic {search_host}")
+                                                    search_text=f"{board_name} downloads schematic design files {search_host}")
         except ExternalCircuitSearchError:
             continue
         for candidate in candidates:

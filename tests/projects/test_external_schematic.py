@@ -82,12 +82,47 @@ def test_manifest_all_sheets_and_cross_instance(service):
     assert result == worker.find("  attiny85  ")
     assert result.sheet_count == 2
     assert worker.load(result.token, 1) == b"sheet1"
-    assert counts == {"search": 1, "inspect": 2, "render": 1}
+    assert counts == {"search": 1, "inspect": MAX_COMPONENT_REPOSITORIES, "render": 1}
     cold = api.ExternalSchematicService(worker.search, worker.inspect, worker.render, wall=lambda: clock[0])
     assert cold.load(result.token, 0) == b"sheet0"
-    assert counts == {"search": 1, "inspect": 2, "render": 2}
+    assert counts == {"search": 1, "inspect": MAX_COMPONENT_REPOSITORIES, "render": 2}
 
 
+def test_project_match_cache_and_token_are_bound_to_full_connections(service):
+    worker,_,clock,_=service
+    connections={'parts':[{'ref':'D1','value':'SS34','footprint':''}],
+                 'nets':[{'nodes':[{'ref':'D1','pin':'1'}]}]}
+    other={'parts':connections['parts'],'nets':[{'nodes':[{'ref':'D1','pin':'2'}]}]}
+    calls=[]
+    def matched(source,expected):
+        calls.append(expected)
+        if expected!=connections:raise ExternalSchematicInvalidSource()
+        return (b'correct sheet',b'correct sheet2')
+    worker.match_render=matched
+    result=worker.find('custom project',connections=connections)
+    assert worker.load(result.token,0,connections=connections)==b'correct sheet'
+    with pytest.raises(ExternalSchematicNotFound):worker.find('custom project',connections=other)
+    with pytest.raises(ExternalSchematicInvalidToken):worker.load(result.token,0,connections=other)
+    with pytest.raises(ExternalSchematicInvalidToken):worker.load(result.token,0)
+    unbound=worker.find('custom project')
+    with pytest.raises(ExternalSchematicInvalidToken):worker.load(unbound.token,0,connections=connections)
+    cold=api.ExternalSchematicService(worker.search,worker.inspect,worker.render,match_render=matched,wall=lambda:clock[0])
+    assert cold.load(result.token,0,connections=connections)==b'correct sheet'
+    assert len(calls)==3
+
+
+@pytest.mark.parametrize('kind', ['pdf', 'png', 'svg'])
+def test_project_original_never_accepts_a_web_document_without_connections(service, kind):
+    worker, counts, _, _ = service
+    worker.search = lambda *args: (WebSchematicRef(
+        f'https://example.org/board-schematic.{kind}', 'https://example.org/board',
+        f'board-schematic.{kind}', kind, 'Board schematic', 'Publisher'),)
+    connections = {'parts': [{'ref': 'D1', 'value': 'SS34'}],
+                   'nets': [{'nodes': [{'ref': 'D1', 'pin': '1'}]}]}
+    with pytest.raises(ExternalSchematicNotFound) as error:
+        worker.find('Board schematic', connections=connections)
+    assert error.value.reason == 'circuit_mismatch'
+    assert counts['inspect'] == counts['render'] == 0
 def test_default_community_render_rate_limit_is_not_reported_as_missing(service):
     worker, _, _, source = service
     ref = GitHubRepositoryRef('group', 'board', 'https://github.com/group/board')
@@ -154,7 +189,7 @@ def test_expired_tampered_or_out_of_range_never_redownloads(service):
     assert counts["render"] == 1
 
 
-def test_reads_legacy_v1_token_during_rolling_deployment(service):
+def test_legacy_unbound_token_cannot_bypass_current_source_verification(service):
     worker, counts, _, source = service
     expires = 1500
     payload = [source.repository, source.commit, source.license, source.attribution,
@@ -164,8 +199,9 @@ def test_reads_legacy_v1_token_during_rolling_deployment(service):
     signature = base64.urlsafe_b64encode(hmac.digest(api._key(), part, "sha256")).rstrip(b"=")
     token = (part + b"." + signature).decode()
 
-    assert worker.load(token, 0) == b"sheet0"
-    assert counts["render"] == 1
+    with pytest.raises(ExternalSchematicInvalidToken):
+        worker.load(token, 0)
+    assert counts["render"] == 0
 
 
 def test_negative_cache_expires_and_transient_failure_is_retried(service):
@@ -346,6 +382,21 @@ def test_search_supplements_public_results_with_manufacturer_results(monkeypatch
     assert calls == ["broad", "official"]
 
 
+def test_direct_public_pdf_gets_one_bounded_publication_search(monkeypatch):
+    from backend.projects import external_circuit_search as search
+    direct=replace(_official_ref(),source_url='https://example.org/schematic.pdf',page_url='https://example.org/schematic.pdf',source_type='public_web',evidence_grade=None)
+    linked=replace(direct,page_url='https://example.org/project')
+    calls=[]
+    monkeypatch.setattr(search,'search_public_schematics',lambda *a:(direct,))
+    monkeypatch.setattr(search,'search_manufacturer_schematics',lambda *a:())
+    monkeypatch.setattr(search,'_search_public_schematics',lambda *a,**kw:calls.append(kw['search_text']) or (linked,))
+    assert api._search('555 Theremin',5)==(linked,)
+    assert len(calls)==1 and 'project' in calls[0]
+    calls.clear()
+    assert api._search('Teensy 4.0',5)==(direct,)
+    assert calls==[]
+
+
 def _official_ref():
     return WebSchematicRef(
         source_url="https://cdn.sparkfun.com/datasheets/Dev/Arduino/Boards/Pro_Micro_v13b.pdf",
@@ -355,6 +406,114 @@ def _official_ref():
         evidence_grade=2, manufacturer="SparkFun Electronics", model="SparkFun Pro Micro v13",
         revision="v13b", license="CC-BY-4.0",
     )
+
+
+@pytest.mark.parametrize('mirror_hash,with_original,expected', [
+    ('b' * 64, True, 1), ('a' * 64, True, 2), ('b' * 64, False, 0),
+])
+def test_mislabelled_public_bytes_need_a_rendered_original(service, mirror_hash, with_original, expected):
+    worker, _, _, source = service
+    official = replace(source, repository='', commit='', source_file='schematic.png', root_schematic='schematic.png',
+        asset_kind='png', asset_paths=(), expected_sheets=1, source_type='manufacturer_official', evidence_grade=2,
+        source_url='https://www.pjrc.com/teensy/schematic40.png', source_sha256='a' * 64, model='Teensy 4.0')
+    renamed = replace(official, source_type='public_web', evidence_grade=None,
+        source_url='https://example.org/schematic.png', source_sha256=mirror_hash, model='Wrong project title')
+    sources = (official, renamed) if with_original else (renamed,)
+    refs = tuple(replace(_official_ref(), source_url=s.source_url, source_type=s.source_type) for s in sources)
+    worker.search = lambda *a: refs
+    worker.inspect = lambda candidate, **kw: (sources[refs.index(candidate)],)
+    worker.render = lambda s: (b'rendered bytes',)
+    if expected:
+        result = worker.find('Teensy 4.0')
+        assert len(result.choices) == expected
+        assert (renamed.source_url in [c.source_url for c in result.choices]) == (mirror_hash == 'a' * 64)
+        if expected == 2:
+            assert worker.find('Teensy 4.0', renamed.source_url).model == official.model
+    else:
+        with pytest.raises(ExternalSchematicNotFound):
+            worker.find('Teensy 4.0')
+
+
+def test_community_preview_cannot_replace_eda_render(service):
+    worker, _, _, source = service
+    preview = replace(source, asset_kind='png', asset_paths=('schematic.png',))
+    worker.inspect = lambda *a, **kw: (preview, source)
+    rendered = []
+    worker.render = lambda s: rendered.append(s.asset_kind) or (b'EDA sheet', b'EDA sheet2')
+    assert worker.find('custom project').source_type == 'community'
+    assert rendered == ['kicad']
+
+
+@pytest.mark.parametrize('query,kind,proof,accepted', [
+    ('555 Theremin','pdf',('a'*64,1),True),
+    ('Teensy 4.0','pdf',None,False),
+    ('555 Theremin','png',None,False),
+    ('555 Theremin','pdf',('b'*64,1),False),
+    ('555 Theremin','pdf',('a'*64,2),False),
+])
+def test_unanchored_pdf_requires_publication_proof_without_board_or_image_bypass(service,query,kind,proof,accepted):
+    worker,_,_,source=service
+    ref=replace(_official_ref(),source_url='https://example.org/schematic.'+kind,source_type='public_web',evidence_grade=None,asset_kind=kind)
+    public=replace(source,repository='',commit='',source_type='public_web',evidence_grade=None,asset_kind=kind,
+        source_url=ref.source_url,source_file='schematic.'+kind,root_schematic='schematic.'+kind,
+        source_sha256='a'*64,expected_sheets=1,asset_paths=(),model='Wrong search title')
+    calls=[]
+    worker.search=lambda *a:(ref,)
+    worker.inspect=lambda *a,**kw:(public,)
+    worker.render=lambda s:(b'verified image',)
+    worker.public_pdf_inspect=lambda source,**kw:calls.append(kw['query']) or proof
+    if accepted:
+        result=worker.find(query)
+        assert result.source_type=='public_web' and result.evidence_grade is None
+        assert result.model==query.casefold()
+        assert worker.find(query,ref.source_url).source_url==ref.source_url
+    else:
+        with pytest.raises(ExternalSchematicNotFound):worker.find(query)
+    assert calls==([] if proof is None else [query.casefold()])
+
+
+def test_publication_verification_preserves_rate_limit(service):
+    worker,_,_,source=service
+    ref=replace(_official_ref(),source_type='public_web',evidence_grade=None)
+    worker.search=lambda *a:(ref,)
+    worker.inspect=lambda *a,**kw:(replace(source,source_type='public_web',evidence_grade=None,
+        asset_kind='pdf',expected_sheets=1,source_sha256='a'*64),)
+    def limited(*a,**kw):raise ExternalSchematicRateLimited(77)
+    worker.public_pdf_inspect=limited
+    with pytest.raises(ExternalSchematicRateLimited) as error:worker.find('555 Theremin')
+    assert error.value.retry_after==77
+
+
+def test_unrenderable_original_cannot_vouch_for_a_public_copy(service):
+    worker, _, _, source = service
+    refs=(replace(_official_ref(),source_url='https://example.org/original.pdf'),
+          replace(_official_ref(),source_url='https://example.org/mirror.pdf',source_type='public_web'))
+    worker.search=lambda *a: refs
+    worker.inspect=lambda ref, **kw: (replace(source,source_type=ref.source_type,
+        evidence_grade=2 if ref==refs[0] else None,asset_kind='pdf',asset_paths=(),
+        source_file='schematic.pdf',root_schematic='schematic.pdf',expected_sheets=1,
+        source_url=ref.source_url,source_sha256='a'*64),)
+    def render(ref):
+        if ref.source_type=='manufacturer_official':
+            raise ExternalSchematicInvalidSource()
+        pytest.fail('untrusted copy was rendered')
+    worker.render=render
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find('Teensy 4.0')
+
+
+def test_old_policy_token_cannot_bypass_reference_verification(service):
+    import base64, json, hmac
+    worker, counts, _, _ = service
+    token = worker.find('custom project').token
+    payload = json.loads(base64.urlsafe_b64decode(token.split('.')[0]+'=='))
+    payload['version'] = 2
+    part = api._encode(json.dumps(payload, separators=(',', ':')).encode())
+    old = (part+b'.'+api._encode(hmac.digest(api._key(), part, 'sha256'))).decode()
+    previous = counts['render']
+    with pytest.raises(ExternalSchematicInvalidToken):
+        worker.load(old, 0)
+    assert counts['render'] == previous
 
 
 def test_service_does_not_call_lazy_fallback_after_verified_official_render(service):
@@ -547,10 +706,13 @@ def test_public_web_token_restores_verified_asset_on_cold_instance(service):
                      root_schematic="schematic.png", asset_kind="png", asset_paths=(),
                      expected_sheets=1, source_type="public_web", evidence_grade=None,
                      source_sha256="a" * 64)
-    worker.search = lambda query, limit: (1,)
-    worker.inspect = lambda candidate, **kwargs: (public,)
+    original = replace(public, source_type='manufacturer_official', evidence_grade=2,
+                       source_url='https://www.pjrc.com/schematic.png')
+    refs = (replace(_official_ref(), source_url=original.source_url), replace(_official_ref(), source_url=public.source_url))
+    worker.search = lambda query, limit: refs
+    worker.inspect = lambda candidate, **kwargs: (original if candidate == refs[0] else public,)
     worker.render = lambda candidate: (b"verified",)
-    result = worker.find("board schematic")
+    result = worker.find("board schematic", public.source_url)
     assert result.source_type == "public_web"
     assert result.evidence_grade is None
     cold = api.ExternalSchematicService(worker.search, worker.inspect, worker.render, wall=lambda: clock[0])
@@ -573,7 +735,8 @@ def test_choices_only_include_fully_verified_sources_and_reuse_validation(servic
         return (replace(source, repository="", commit="", source_url=candidate.source_url,
                         source_file=candidate.source_file, root_schematic=candidate.source_file,
                         asset_kind="png", asset_paths=(), expected_sheets=1,
-                        source_type="public_web", evidence_grade=None, source_sha256="a" * 64),)
+                        source_type="manufacturer_official" if candidate == refs[0] else "public_web",
+                        evidence_grade=2 if candidate == refs[0] else None, source_sha256="a" * 64),)
 
     def render(candidate):
         rendered.append(candidate.source_url)
@@ -604,7 +767,8 @@ def test_user_can_select_an_exact_web_candidate_without_arbitrary_url_fetch(serv
         source, repository="", commit="", source_url=candidate.source_url,
         source_file=candidate.source_file, root_schematic=candidate.source_file,
         asset_kind="png", asset_paths=(), expected_sheets=1,
-        source_type="public_web", evidence_grade=None, source_sha256="a" * 64),)
+        source_type="manufacturer_official" if candidate == refs[0] else "public_web",
+        evidence_grade=2 if candidate == refs[0] else None, source_sha256="a" * 64),)
     worker.render = lambda candidate: (b"verified",)
 
     first = worker.find("Board")
@@ -769,7 +933,7 @@ def test_public_choice_switch_keeps_all_verified_choices(service):
     worker.inspect = lambda ref, **kwargs: (replace(source, repository="", commit="",
         source_url=ref.source_url, source_file=ref.source_file, root_schematic=ref.source_file,
         asset_kind="png", asset_paths=(), expected_sheets=1,
-        source_type="public_web", evidence_grade=None, source_sha256="a" * 64),)
+        source_type="manufacturer_official", evidence_grade=2, source_sha256="a" * 64),)
     worker.render = lambda source: (b"ok",)
     first = worker.find("public board")
     for ref in (refs[1], refs[0]):
@@ -791,10 +955,13 @@ def test_diode_search_does_not_hide_verified_web_source_behind_repository_hits(s
     monkeypatch.setattr(search, "search_public_schematics", lambda *args: calls.update(public=1) or (web,))
     monkeypatch.setattr(search, "search_manufacturer_schematics", lambda *args: calls.update(manufacturer=1) or ())
     verified = replace(source, source_type=source_type, evidence_grade=2 if source_type == "manufacturer_official" else None,
-                       expected_sheets=1, source_sha256="a" * 64, source_url=web.source_url)
+                       expected_sheets=1, source_sha256="a" * 64, source_url=web.source_url,
+                       asset_kind='pdf', asset_paths=(), source_file=web.source_file, root_schematic=web.source_file)
     worker.search = api._search
     worker.inspect = lambda candidate, **kwargs: (verified,) if candidate is web else ()
     worker.render = lambda candidate: (b"verified",)
+    if source_type == 'public_web':
+        worker.public_pdf_inspect = lambda *args, **kwargs: ('a' * 64, 1)
     result = worker.find("SS33 diode")
     assert result.source_url == web.source_url
     assert calls == {"public": 1, "manufacturer": 1}

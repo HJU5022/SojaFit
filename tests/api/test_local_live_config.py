@@ -34,6 +34,10 @@ def test_local_api_cannot_inherit_production_database_or_auth(tmp_path):
         'DEMO_MODE': '0', 'DEMO_REPLAY': '0', 'THREADS_ENABLED': '1'}
     assert api['environment']['AUTH_SECRET'] == 'example-local-only-secret'
     assert api['environment']['PYTHON_DOTENV_DISABLED'] == '1'
+    assert api['environment']['KICAD_RENDERER_URL'] == 'http://renderer:8000'
+    assert config['services']['renderer']['build']['target'] == 'renderer'
+    assert api['depends_on']['renderer']['condition'] == 'service_started'
+    assert not config['services']['renderer'].get('ports')
     assert api['ports'][0]['host_ip'] == '127.0.0.1' and str(api['ports'][0]['published']) == '8010'
     assert not config['services']['db'].get('ports')
     assert config['name'] == 'sojafit-sth-local'

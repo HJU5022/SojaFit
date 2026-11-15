@@ -243,6 +243,26 @@ def test_readme_link_priority_and_query_mismatch():
     assert repo.inspect("LM7805 power supply") is None
 
 
+@pytest.mark.parametrize('query,readme', [
+    ('ATtiny85 dev board', '# attiny85 development board'),
+    ('tiny85 Fan Control', '# Tiny85FanControl\nA temperature-controlled fan system.'),
+    ('Tiny85FanControl', '# Tiny85FanControl\nA temperature-controlled fan system.'),
+])
+def test_project_name_spelling_keeps_verified_native_schematic(query, readme):
+    repo = Repo({'board.kicad_sch': BOARD, 'README.md': readme.encode()})
+    source = repo.inspect(query)
+    assert source is not None and source.asset_kind == 'kicad'
+
+
+@pytest.mark.parametrize('query,source,readme', [
+    ('tiny850 Fan Control', BOARD, '# Tiny850FanControl'),
+    ('tiny85 Fan Control', BOARD.replace(b'ATtiny85', b'ATtiny84'), '# Tiny85FanControl\nATtiny85'),
+    ('ATtiny85 dev board', BOARD, '# attiny85 development tool'),
+])
+def test_project_spelling_cannot_replace_placed_model_or_requested_purpose(query, source, readme):
+    assert Repo({'board.kicad_sch': source, 'README.md': readme.encode()}).inspect(query) is None
+
+
 @pytest.mark.parametrize("image", ["photo.png", "schematic-3d.png", "docs/schematic.png", "block-diagram.pdf"])
 def test_irrelevant_asset_falls_back_to_valid_eda(image):
     assert Repo({"board.kicad_sch": BOARD, image: b""}).inspect().asset_kind == "kicad"

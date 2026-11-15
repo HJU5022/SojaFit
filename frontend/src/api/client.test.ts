@@ -1,9 +1,35 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { apiFetch, apiRequest, dummyFlowEnabled, errorMessage, requestIdProps } from './client'
 import { fetchPrices } from './prices'
+import { createDemo, createEmptyProject, uploadProject } from './projects'
 import { openRunStream } from './conversations'
 
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+it('accepts only bounded, valid owned-project conflict metadata for the duplicate prompt', async () => {
+  const valid = { id: 5, name: '기존 프로젝트', matches: ['name', 'netlist'] }
+  vi.stubGlobal('fetch', async () => Response.json({ error: { code: 'CONFLICT', message: '중복', request_id: 'test' }, details: { duplicates: [valid, { ...valid, id: -1 }, { ...valid, matches: ['unknown'] }, null] } }, { status: 409 }))
+  await expect(apiFetch('/api/projects')).rejects.toMatchObject({ duplicates: [valid] })
+  vi.stubGlobal('fetch', async () => Response.json({ error: { code: 'UNAVAILABLE', message: '오류' }, details: { duplicates: [valid] } }, { status: 503 }))
+  await expect(apiFetch('/api/projects')).rejects.not.toHaveProperty('duplicates')
+})
+
+it.each(['empty', 'demo', 'upload'])('sends explicit duplicate consent only on a confirmed %s creation', async kind => {
+  const sent: { path: string; body: BodyInit | null | undefined }[] = []
+  vi.stubGlobal('fetch', async (path: string, init: RequestInit) => { sent.push({ path, body: init.body }); return Response.json({ id: 6 }, { status: 201 }) })
+  const file = new File(['(export)'], 'same.net')
+  for (const allow of [false, true]) {
+    if (kind === 'empty') await createEmptyProject('이름', allow)
+    else if (kind === 'demo') await createDemo('breadboard_supply', '이름', undefined, allow)
+    else await uploadProject('이름', file, undefined, allow)
+  }
+  const path = kind === 'upload' ? '/api/projects/upload' : '/api/projects'
+  expect(sent.map(item => item.path)).toEqual([path, `${path}?allow_duplicate=true`])
+  if (kind === 'upload') for (const item of sent) {
+    expect((item.body as FormData).get('file')).toBe(file)
+    expect((item.body as FormData).get('name')).toBe('이름')
+  }
+})
 
 it('expires sessions for HTML 401 errors and keeps the header request id', async () => {
   const expired = vi.fn()
