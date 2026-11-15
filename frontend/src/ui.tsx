@@ -161,7 +161,6 @@ export function Source({ cite }: { cite: Citation }) {
     </div>
   );
 }
-export { partsOf, pinsOf } from './circuit';
 export function Circuit({ project, target }: { project: Project | null; target: string }) {
   const part = partsOf(project).find((p) => p.ref === target),
     pins = pinsOf(project, target);

@@ -10,11 +10,10 @@ import {
   Markdown,
   Modal,
   navigate,
-  partsOf,
   useResource,
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
-import { unsupportedPartReason } from './circuit';
+import { partsOf, unsupportedPartReason } from './circuit';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply } from './Reply';
 import { SchematicSection } from './Schematic';
