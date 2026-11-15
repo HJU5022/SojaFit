@@ -20,7 +20,7 @@
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: clone 시작 → `/health` 200 243.9초, 스모크 28/28. 한계는 G2 절) |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요 |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
-| G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50. 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
+| G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
 | G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 증거 보강 필요 (스크린샷 3장 · 배포본 트레이스 수신 확인, 대시보드에서 평가 점수가 트레이스에 붙은 화면은 아직 없음) |
 | G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 진행 중 (비밀값 검사 충족, 시연 영상 파일 없음, 다른 조원 포트폴리오 · AI 도구 기록 없음. 아래 G7) |
 
@@ -134,7 +134,7 @@
 |---|---|---|
 | 기준 평가셋 | v3 50건(관련 25 · 비관련 25, 2026-11-10 동결). v1 50건(11-02), v2 70건(11-03)도 동결 | `evals/FROZEN.json`, [ADR 0015](adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md) |
 | 개선 전후 비교 | 3-A 검색 5단계, 3-B 판정 길 8단계, 3-C v3 검색 길 2단계, 3-D 현재 스택 확인. 달라진 문항 목록과 회귀 문항 포함 | [EVAL_REPORT.md](../EVAL_REPORT.md) 3절 |
-| v3 현재 값 | 50/50 | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
+| v3 현재 값 | 50/50(`DEMO_MODE` 미기록. `DEMO_MODE=0` 기록 측정은 47 ~ 50/50, [EVAL_REPORT.md](../EVAL_REPORT.md) 8.2절 통과 열) | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
 | 검색 기준선(v1) | 하이브리드 Recall@5 0.737 · MRR 0.649 | `evals/results/retrieval/retrieval_baseline_2026-11-03.json` |
 | 사전 등록 | 바꾸기 전 기대를 기록 | `evals/guides/preregister.md` |
 

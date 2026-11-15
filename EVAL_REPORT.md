@@ -1,7 +1,7 @@
 # 평가 리포트
 
 - 상태: 현행
-- 기준일: 2026-11-16 (3-D · 8 · 8.1 · 8.2절과 11-2절을 11-16에 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
+- 기준일: 2026-11-16 (4절 단일 대 멀티 표의 `d9-improve2` 행, 8 · 8.1 · 8.2절, 10장 마지막 문단, 11-2절을 11-16에 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
 - 기준 커밋: 문서 전체의 단일 기준 커밋은 없다. 수치마다 측정한 커밋과 원시 파일은 해당 행에 적는다(옛 머리 `6707002`는 11-12 시점)
 - 정본 여부: 정본(평가 수치). 배포 리비전은 비정본(정본: [README.md](README.md) 맨 위 표)
 - 관련 문서: [README.md](README.md), [SPEC.md](SPEC.md), [docs/GATES.md](docs/GATES.md), [docs/research/injection-results.md](docs/research/injection-results.md), [evals/guides/preregister.md](evals/guides/preregister.md)
@@ -283,7 +283,7 @@ S0(기준점)은 #39 두 세트를 고친 채점기(`61a29f1`)로 다시 채점�
 | 구성 | 통과 | 지표 | 지연 | 조건 | 원시 |
 |---|---|---|---|---|---|
 | 단일(D4 `backend/graph/`) | 48/50 | cited_gold 23, correct_refusal 25, over_refusal 2(v3-18 · v3-19, 둘 다 정격 질문, `refusal_code` part_missing · not_found), 질문 종류 일치 25/25, LLM 호출 103 | p50 4.0초, p95 11.6초(행의 `latency_s`에서 올림(0.95n)번째 값으로 계산) | 커밋 `11dc216`+작업 트리 변경, 09:53 | `evals/results/graph/2026-11-12-d9-v3-single/set1.json` |
-| 멀티(D5 `backend/multi_agent/`) | 50/50 | cited_gold 25, correct_refusal 25 | p50 4.9초, p95 10.0초(`DEMO_MODE` 미기록, 조건별 값은 8.2절) | 커밋 `520988c`+작업 트리 변경 (3-D) | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
+| 멀티(D5 `backend/multi_agent/`) | 50/50(`DEMO_MODE` 미기록) | cited_gold 25, correct_refusal 25 | p50 4.9초, p95 10.0초(`DEMO_MODE` 미기록, 조건별 값은 8.2절) | 커밋 `520988c`+작업 트리 변경 (3-D) | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
 | 단일, 판정 연습 44문항(동결 아님) | 40/44 | cited_gold 20, correct_refusal 20, over_refusal 3, wrong_citation 1, 질문 종류 일치 22/24 | p50 3.5초 | 커밋 `11dc216`+작업 트리 변경, 10:06 | `evals/results/graph/2026-11-12-d9-judge-dev-single/set1.json` |
 | 멀티, 판정 연습 44문항(동결 아님) | 41/44 | cited_gold 23, correct_refusal 18, hallucination_risk 2, over_refusal 1, 질문 종류 일치 24/24 | p50 4.4초 | 커밋 `11dc216`+작업 트리 변경, 10:13 | `evals/results/graph/2026-11-12-d9-judge-dev-multi/set1.json` |
 
@@ -614,7 +614,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 4 | v3-26 · 릴레이 K1 대체 후보를 골라 달라 | 다이오드 코퍼스 범위 밖인 릴레이 후보를 제시하지 않는다. | 다이오드 검토 범위 밖. 접점 AC/DC·부하·구성·절연이 없어 후보를 승인하지 않음 | 거절. “데이터시트에서 확인하지 못했어요… 품번·주문 코드를 알려 주세요”. `correct_refusal` | 둘 다 거절. Codex는 범위 밖·부족 스펙을 말하고, 우리는 품번 부족형 일반 거절에 가깝다 |
 | 5 | v3-45 · S1A SERIES_S2202.pdf만으로 S1J 정격을 확인 | 요청 판본이 코퍼스에 없으면 다른 판본의 수치로 대신하지 않는다. | 지정 판본을 못 확인해 수치를 답하지 않음. S2102를 S2202 값으로 대신 쓰지 않음 | 거절. “요청하신 판(S2202)의 데이터시트가 없어요”. `correct_refusal` | 결론은 같음. 잘못된 개정판 수치 대체를 막는 거절 |
 
-50문항 전체에 대한 Codex 집계는 [`TALLY.md`](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)(문항별 [`tally.jsonl`](evals/results/graph/2026-11-12-codex-v3-50/tally.jsonl), 재현 `scripts/eval/tally_codex_v3.py`)에 있다. 규칙 기반이며 LLM 판정은 쓰지 않았다. 규칙으로 정답·올바른 거절이 확정된 것은 43건, 오답 1건(v3-04), 과잉 거절 1건(v3-24), 사람 판정 필요 5건(v3-22·23·25·29·34)이다. 사람 판정 5건은 조장(하정운)이 2026-11-13에 판정했다([`human_judgments.jsonl`](evals/results/graph/2026-11-12-codex-v3-50/human_judgments.jsonl)): v3-22·23·25 오답(넷리스트 확인 없이 연결을 추정), v3-29·34 올바른 거절. 최종 Codex 45/50(관련 정답 20 · 오답 4 · 과잉 거절 1, 비관련 올바른 거절 25), 우리 서비스는 50/50(`d9-improve2`)이다.
+50문항 전체에 대한 Codex 집계는 [`TALLY.md`](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)(문항별 [`tally.jsonl`](evals/results/graph/2026-11-12-codex-v3-50/tally.jsonl), 재현 `scripts/eval/tally_codex_v3.py`)에 있다. 규칙 기반이며 LLM 판정은 쓰지 않았다. 규칙으로 정답·올바른 거절이 확정된 것은 43건, 오답 1건(v3-04), 과잉 거절 1건(v3-24), 사람 판정 필요 5건(v3-22·23·25·29·34)이다. 사람 판정 5건은 조장(하정운)이 2026-11-13에 판정했다([`human_judgments.jsonl`](evals/results/graph/2026-11-12-codex-v3-50/human_judgments.jsonl)): v3-22·23·25 오답(넷리스트 확인 없이 연결을 추정), v3-29·34 올바른 거절. 최종 Codex 45/50(관련 정답 20 · 오답 4 · 과잉 거절 1, 비관련 올바른 거절 25), 우리 서비스는 50/50(`d9-improve2`, `DEMO_MODE` 미기록)이다.
 
 두 쪽의 채점 기준은 같지 않다. 우리 서비스는 답이 인용한 (PDF, 쪽)이 정답 근거와 일치하는지까지 채점기가 보고, Codex는 쪽 인용이 없어 결론의 방향과 핵심 값만 규칙으로 봤다. Codex는 정답 초안 작성에도 쓰였다. 후보 찾기 5건은 열린 정답 규칙에서 모두 정답이지만 재현율이 낮다(v3-11 2/16, v3-12 2/25, v3-13 2/2, v3-14 3/6, v3-15 2/4). Codex는 한 번만 실행했고 원본 대화 로그는 저장소에 없다. Codex 실행 환경은 TALLY.md 6절(Codex 웹, 웹 접근 켬, 저장소 미연결, 실행 하정운)이다.
 
