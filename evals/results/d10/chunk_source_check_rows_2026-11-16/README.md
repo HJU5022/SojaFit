@@ -11,7 +11,7 @@ uv run pytest -q tests/evals/test_chunk_source_check.py   # 변이 시험(합성
 
 ## 새 검사가 하는 일
 1. `pdfplumber.find_tables()`로 그 쪽의 표를 칸 격자로 읽는다. 병합 칸(`None`)은 칸 좌표로 풀어, 그 자리를 덮는 칸의 글자를 쓴다(가로 병합과 세로 병합 모두).
-2. 청크의 행 이름(PARAMETER·CONDITIONS·SYMBOL)과 문자 구성이 같은 행을 쪽의 모든 표에서 찾는다(PDF는 아래첨자를 줄 끝으로 보내서 `V` `R`처럼 순서가 달라 글자 구성으로 비교, 유사도 0.9 이상 중 최고 하나. 같은 이름 행이 여럿이고 결과가 갈리면 미확인).
+2. 청크의 행 이름(PARAMETER·CONDITIONS·SYMBOL)과 문자 구성이 **정확히 같은** 행을 쪽의 모든 표에서 찾는다(PDF는 아래첨자를 줄 끝으로 보내서 `V` `R`처럼 순서가 달라 글자 구성(Counter)으로 비교). 정확히 같은 행이 없고 0.9 이상으로 비슷한 행만 있으면 가장 가까운 행에 붙여 값만 비교하지 않고 `row_mismatch`(필드 `행 이름`, 가장 가까운 행 표시)로 둔다. 0.9 미만이면 미확인. 같은 이름 행이 여럿이고 결과가 갈리면 미확인. 점수는 `row_check.name_score`에 남긴다.
 3. 그 행에서 청크의 값 칸(TYP·MAX·VALUE·품번 열)과 UNIT이 머리글이 같은 열의 칸 값과 같은지 본다. 하나라도 다르면 `row_mismatch`, 어디서 온 값인지(`found_elsewhere`: 같은 행 다른 열 / 다른 행 같은 열 / 다른 행 다른 열)를 함께 적는다.
 4. 행을 못 찾으면 `unlocated`(미확인). 일치로 세지 않는다.
 기존 필드(`result`·`row_window_ok`·`mismatch` 등)는 그대로이고 `row_check` 필드만 더했다.
@@ -25,6 +25,7 @@ uv run pytest -q tests/evals/test_chunk_source_check.py   # 변이 시험(합성
 | 행 검사 `row_mismatch` | **0** |
 | 행 검사 `unlocated`(미확인) | **6** (아래 목록) |
 | 확인 못 한 칸이 남은 `ok` | 0 (값·단위 칸을 전부 비교함. 청크당 2~9칸) |
+| 행 이름 점수(`name_score`) | 행을 찾은 117건 모두 1.0(정확히 같음) |
 
 `row_mismatch`가 0건이므로 불일치 항목 목록은 없다. 이 117건에서 "다른 행 값으로 바뀐 청크는 없다"는 말은 맞지만, 지난번 0건과 같은 결론이라 새로 발견된 것은 없다는 뜻이기도 하다. 청크 오류로 분류된 것은 0건이고 코퍼스·청커는 바꾸지 않았다.
 
@@ -47,14 +48,17 @@ uv run pytest -q tests/evals/test_chunk_source_check.py   # 변이 시험(합성
 ## 검사기가 되는지: 변이 시험
 값 하나를 바꾼 가짜 청크를 만들어 기존 쪽 검사와 새 행 검사가 잡는지 센다. 원래 칸과 같은 값으로 바꾸는 경우는 변이로 세지 않는다.
 
-### 합성 표(`tests/evals/test_chunk_source_check.py`, 7개 통과)
+### 합성 표(`tests/evals/test_chunk_source_check.py`, 8개 통과)
 실제 PDF(TBS606 electrical, ABS15J ratings)와 같은 모양의 격자 2개, 깨끗한 청크 12개.
 | 변이 종류 | 개수 | 쪽 검사가 잡음 | 행 검사가 잡음 |
 |---|---|---|---|
 | 같은 쪽 다른 행의 값(같은 열) | 72 | 0 | **72** |
 | 같은 행 다른 열의 값(TYP↔MAX, 품번 열 사이) | 8 | 0 | **8** |
 | 다른 행의 단위 | 48 | 0 | **48** |
+| 조건 숫자를 쪽의 다른 숫자로 바꿔 그런 조건의 행이 표에 없는 청크(예: `TJ = 125°C` → `TJ = 6°C`) | 254 | 0 | **254** |
 | 깨끗한 청크 | 12 | 막음 0 | 막음 0(12개 모두 `ok`) |
+
+조건 숫자 변이는 사전 등록 뒤, 점검 중 허점을 찾아 더했다. 처음 구현(행 이름 유사도 0.9 이상이면 가장 가까운 행에 붙임)은 이 254건 중 109건을 `ok`로 통과시키고 87건만 값 불일치로 잡았으며 58건은 미확인이었다. 그래서 행 이름이 정확히 같을 때만 `ok`로 조였고(위 방법 2), 그 뒤 254건 모두 `row_mismatch`다. 이 변이는 합성 표에만 걸었고 실제 표본에는 걸지 않았다.
 판정 함수를 일부러 항상 통과로 바꾸면 탐지가 0/72가 되어 시험이 실패한다(시험이 비어 있지 않음을 확인).
 
 ### 실제 표본(`summary.json`의 `row_check.mutation_control`)
@@ -73,15 +77,15 @@ uv run pytest -q tests/evals/test_chunk_source_check.py   # 변이 시험(합성
 
 ## 남은 한계
 1. 부품 행(Device) 표 형식은 못 읽는다(위 6건). 쓰려면 Device 열을 행 이름으로 보고 두 줄 머리글(`Breakdown Voltage ... / Min`)을 합쳐 열을 맞춰야 한다.
-2. 행 이름은 글자 구성(Counter)으로 비교해서, 조건의 숫자만 서로 바뀐 경우(`IF = 3A, TJ = 25°C` ↔ `IF = 25A, TJ = 3°C`)는 같은 행으로 본다. 라벨이 같고 값이 다른 행은 값이 갈라서 잡지만 조건 칸 안의 숫자 순서 오류는 못 잡는다.
+2. 행 이름(PARAMETER·CONDITIONS·SYMBOL)은 글자 구성(Counter)이 정확히 같은지만 본다. 그래서 (a) 조건 칸의 숫자가 순서만 바뀐 경우(`IF = 3A, TJ = 25°C` ↔ `IF = 25A, TJ = 3°C`)는 같은 행으로 본다(못 잡음). (b) 청크 조작이 아니라 청커가 라벨 글자를 조금 바꿔 쓴 경우도 `row_mismatch`가 된다(이번 표본은 0건이라 얼마나 생기는지는 모른다). (c) 행 이름은 어느 행인지 찾는 데만 쓰이고 PARAMETER·SYMBOL 글자 자체의 정확성은 따로 검증하지 않는다.
 3. 두 행의 칸 값이 같으면(예: 두 품번 열 모두 6.64) 바꿔도 달라지지 않으므로 오류로 셀 수 없다.
 4. 선(괘선)으로 그려진 표만 읽는다(`find_tables` 기본값). 표본 123개는 모두 읽혔지만 선 없는 표는 `unlocated`가 된다.
 5. 표 각주(`주:`), PARAMETER·SYMBOL 같은 글자 필드 자체의 정확성, ORDERING·DIM 같은 다른 표 종류는 검사하지 않는다. UNIT은 PDF 칸이 비어 있으면 건너뛴다(이번 표본에서는 0건).
 6. 표본 123개는 전체 표 행의 약 0.3%다. 117건 일치를 전체로 일반화하지 않는다.
-7. `page_grids`(pdfplumber 어댑터)는 단위 시험이 없다(원본 PDF가 저장소 밖). 실제 표본 재실행, 변이 시험 113건, 손 대조 6건(TBS606 IR 125°C, GBJ50JG IF, TSCDH40065G1 CJ·IR, 1.5KE TJ MAX, SMDJ RӨJA)으로 확인했다. 123개를 전부 눈으로 대조하지는 않았다.
+7. `page_grids`(pdfplumber 어댑터)는 단위 시험이 없다(원본 PDF가 저장소 밖). 실제 표본 재실행, 실제 표본 변이 113건, 손 대조 6건(TBS606 IR 125°C, GBJ50JG IF, TSCDH40065G1 CJ·IR, 1.5KE TJ MAX, SMDJ RӨJA)으로 확인했다. 123개를 전부 눈으로 대조하지는 않았다.
 8. PDF 파일의 sha256을 `data/manifest.jsonl`과 대조하지 않은 것은 지난번과 같다.
 
 ## 파일
-- `results.jsonl`: 청크별 기존 필드 + `row_check`(status, table, row, checked, unchecked, mismatch, 미확인 사유)
+- `results.jsonl`: 청크별 기존 필드 + `row_check`(status, table, row, name_score, checked, unchecked, mismatch, 미확인 사유)
 - `summary.json`: 기존 집계 + `row_check` 집계 + 변이 시험(`mutation_control`)
 - 도구: `scripts/eval/chunk_source_check.py` (`--rows`, `--out`), 시험: `tests/evals/test_chunk_source_check.py`

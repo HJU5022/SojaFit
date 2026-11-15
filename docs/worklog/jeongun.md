@@ -1097,8 +1097,8 @@
 
 ## 2026-11-16 표·수치 청크 대조에 같은 쪽 다른 행 값 검사 추가 (브랜치 `jeongun`)
 - 목적: 강사 11/13 코멘트(축 ②)의 "11/16까지 같은 쪽 다른 행으로 바뀐 오류를 잡는 검사를 더하라"에 대응. 사전 등록 `evals/guides/preregister.md` 2026-11-15 항목(구현 전에 커밋).
-- 바꾼 파일: `scripts/eval/chunk_source_check.py`(`--rows` · `--out`, `row_check`, 쪽 검사를 `page_check`로 꺼냄 — 계산은 그대로), `tests/evals/test_chunk_source_check.py`(신규 7개), 결과 `evals/results/d10/chunk_source_check_rows_2026-11-16/`(신규), 폴더 설명 `scripts/eval/EVAL.md` · `tests/evals/EVALS.md` · `evals/results/d10/README.md`, `SOJAFIT.md` 트리 2줄.
+- 바꾼 파일: `scripts/eval/chunk_source_check.py`(`--rows` · `--out`, `row_check`, 쪽 검사를 `page_check`로 꺼냄 — 계산은 그대로), `tests/evals/test_chunk_source_check.py`(신규 8개), 결과 `evals/results/d10/chunk_source_check_rows_2026-11-16/`(신규), 폴더 설명 `scripts/eval/EVAL.md` · `tests/evals/EVALS.md` · `evals/results/d10/README.md`, `SOJAFIT.md` 트리 2줄.
 - 명령: `uv run python scripts/eval/chunk_source_check.py --rows`(21초, 같은 시드 1116 · 칸당 3개), `uv run pytest -q tests/evals/test_chunk_source_check.py`.
-- 결과 [실측]: 기존 폴더 출력과 기존 필드 123건 전부 같음(같은 표본). 행 검사 117 일치 · 0 불일치 · 6 미확인(tvs · zener electrical의 부품 행 표). 합성 변이 128건(다른 행 72 · 다른 열 8 · 다른 행 단위 48): 쪽 검사 0건, 행 검사 128건 탐지, 깨끗한 12건 통과. 실제 표본 변이 113건: 같은 쪽 다른 행 103건 중 쪽 검사 0 · 6줄 창 18 · 행 검사 103, 같은 행 다른 열 10건 중 행 검사 10.
-- 확인 못 한 것: 부품 행(Device) 표 형식(6건 미확인), 조건 칸 안 숫자만 바뀐 오류, 선 없는 표, `page_grids` 어댑터 단위 시험(원본 PDF가 저장소 밖), 123개 전수 눈 대조(손 대조 6건), PDF sha256 대조. 표본은 전체 표 행의 약 0.3%.
+- 결과 [실측]: 기존 폴더 출력과 기존 필드 123건 전부 같음(같은 표본). 행 검사 117 일치 · 0 불일치 · 6 미확인(tvs · zener electrical의 부품 행 표). 합성 변이 382건(다른 행 72 · 다른 열 8 · 다른 행 단위 48 · 조건 숫자 254): 쪽 검사 0건, 행 검사 382건 탐지, 깨끗한 12건 통과. 조건 숫자 변이는 점검 중 허점(행 이름 0.9 이상이면 가장 가까운 행에 붙임 → 254건 중 109건 통과)을 찾아 더하고 행 이름이 정확히 같을 때만 일치로 조였다(실제 표본 117건은 모두 점수 1.0이라 결과 불변). 실제 표본 변이 113건: 같은 쪽 다른 행 103건 중 쪽 검사 0 · 6줄 창 18 · 행 검사 103, 같은 행 다른 열 10건 중 행 검사 10.
+- 확인 못 한 것: 부품 행(Device) 표 형식(6건 미확인), 조건 칸 안 숫자의 순서만 바뀐 오류, 청커가 라벨을 바꿔 쓴 경우의 오탐 크기, 선 없는 표, `page_grids` 어댑터 단위 시험(원본 PDF가 저장소 밖), 123개 전수 눈 대조(손 대조 6건), PDF sha256 대조. 표본은 전체 표 행의 약 0.3%.
 - 다음: 부품 행 표 지원 여부는 정운 결정. `docs/deliverables/failure_analysis.md` 91번 줄(검사기 한계 83~86%)에 이번 결과를 반영할지도 정운 결정(이 작업에서는 고치지 않음). 푸시 · PR 없음.
