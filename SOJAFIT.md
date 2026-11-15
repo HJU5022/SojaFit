@@ -45,17 +45,14 @@ SojaFit (proj3-b)
 │       ├── eval-live.yml   <- 버튼으로 돌리는 진짜 모델 v3 평가와 기준 검사(Secrets 키 사용, 유료)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
-├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정 (2026-11-13 화면 전면 재작성)
+├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정 (2026-11-16 새 화면으로 교체)
 │   ├── FRONTEND.md         <- 폴더 설명
-│   ├── design.md           <- 화면 모양의 기준: 색·글자·간격·상태·움직임·금지 목록
 │   ├── Dockerfile.recovery <- 운영 이미지 digest를 상속해 화면만 빌드·교체하는 복구용 이미지
 │   ├── package.json        <- npm 의존성과 실행 명령
 │   ├── package-lock.json   <- npm 의존성 고정
 │   ├── index.html          <- React 진입 HTML
-│   ├── vite.config.ts      <- React·API 프록시·Vitest와 실제 데모 JSON 기반 dummy virtual module 설정
-│   ├── tsconfig.json       <- TypeScript 프로젝트 참조
-│   ├── tsconfig.app.json   <- 화면 TypeScript 설정
-│   ├── tsconfig.node.json  <- Vite TypeScript 설정
+│   ├── vite.config.ts      <- React 플러그인과 API 프록시(개발·미리보기에서 Origin을 백엔드 AUTH_ORIGIN에 맞춰 보냄)
+│   ├── tsconfig.json       <- TypeScript 설정
 │   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
 │   │   ├── PUBLIC.md       <- 폴더 설명
 │   │   ├── circuit-schematics/ <- 검증된 공개 원본에서 고정한 데모 회로도 PNG
@@ -74,82 +71,31 @@ SojaFit (proj3-b)
 │   │   │   ├── tinydimmer.png <- tinydimmer 원본 회로도
 │   │   │   ├── hrem.png <- HRem 원본 회로도
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
+│   │   ├── product/        <- 랜딩이 쓰는 실제 데모 화면 캡처
+│   │   │   ├── condition-evidence.png <- 조건 행과 데이터시트 근거(쪽·표·행)를 보인 검토 화면 캡처
+│   │   │   └── missing-condition.png <- 추가 조건을 물어보는 검토 화면 캡처
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
 │   │       ├── samples/    <- 새 프로젝트 창의 "샘플 넷리스트 받기"가 내려 주는 공개 라이선스 넷리스트
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
 │   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘·화면 머리 로고)
-│   └── src/                <- 화면 소스와 단위 테스트
+│   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
-│       ├── main.tsx        <- Router·QueryClient·글꼴·스타일 진입점
-│       ├── App.tsx         <- 경로 표(랜딩·로그인 계열·작업대·설정·관리자)
-│       ├── dummy-circuits.d.ts <- 실제 데모 JSON을 묶는 build-time virtual module 타입
-│       ├── api/            <- 기존 서버 API의 typed fetch 경계
-│       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
-│       │   ├── auth.ts     <- 로그인·가입·데모 버튼 로그인·세션 복원·로그아웃·탈퇴·Google 상태 API
-│       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
-│       │   ├── projects.ts <- 소유 프로젝트·데모·업로드·이름 변경·삭제 API
-│       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
-│       │   ├── externalCircuits.ts <- 공개 원본 회로도 검색 API(GET /api/external-circuits/schematics)
-│       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
-│       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API, 키 없는 데모의 기록 질문 목록
-│       │   ├── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
-│       │   ├── profile.ts   <- 내 설정(사용자 사실 3칸) 조회·저장·삭제 API
-│       │   ├── dummy.ts     <- 개발 전용 비영속 전체 흐름 API
-│       │   └── dummy.test.ts <- 더미 API 상태·비저장·404 테스트
-│       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
-│       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·가입·로그아웃·탈퇴·401 처리, 세션을 잃으면 화면 캐시·탭 저장소 비움
-│       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
-│       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
-│       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
-│       │   ├── useRunStream.ts <- 분석 시작·재개·연결 복구 상태 머신
-│       │   ├── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
-│       │   ├── useConversation.ts <- 검토 한 건의 화면 상태(저장된 질문·실행 중 질문·단계·첨부)
-│       │   └── useNetlistFiles.ts <- 선택·드롭 공통 검증과 취소 가능한 회로 버전 첨부 전송
-│       ├── lib/            <- 화면이 쓰는 순수 함수
-│       │   ├── judgement.ts <- 판정 표기·색 이름·값과 인용 위치 표시
-│       │   ├── circuit.ts  <- 부품 목록과 대상 부품의 넷·이웃 추출
-│       │   ├── circuit.test.ts <- 넷·이웃·다이오드 판별·인용 링크·값 표시 테스트
-│       │   ├── inputLabels.ts <- 판정 입력 코드의 화면 이름
-│       │   ├── price.ts    <- Mouser 단가 문자열 읽기와 수량에 맞는 가격 구간 고르기(화면 계산 전용)
-│       │   └── price.test.ts <- 통화·소수점 표기별 읽기와 가격 구간 선택
-│       ├── pages/          <- 경로마다 하나인 화면
-│       │   ├── LandingPage.tsx <- 공개 랜딩: 예시 검토 문서·쓰는 법·판정 5종·신뢰 수치·한계
-│       │   ├── LoginPage.tsx <- 이메일 로그인·Google 로그인과 계정 연결·데모 모드의 데모 사용자 버튼
-│       │   ├── SignupPage.tsx <- 가입 인증 메일 요청
-│       │   ├── EmailActionPage.tsx <- 메일 링크의 비밀번호 설정·재설정
-│       │   ├── PrivacyPage.tsx <- 로그인 없이 읽는 개인정보처리방침과 목차
-│       │   ├── WorkbenchPage.tsx <- 작업대 셸: 레일·프로젝트 목록·부품 목록·새 프로젝트·원본 회로도·승인 사례
-│       │   ├── WorkbenchPage.test.tsx <- 예제 회로 목록(운영 404·데모·대기)에 따라 새 프로젝트 창과 원본 회로도 버튼(저장된 그림·웹 검색)이 맞게 보이는지 테스트
-│       │   ├── WorkbenchPage.ask.test.tsx <- 부품 목록의 질문 칸이 질문 속 부품 번호로 검토를 열고 질문을 한 번 보내는지, 번호가 없거나 범위 밖이면 안내만 하는지 테스트
-│       │   ├── SettingsPage.tsx <- 내 설정 3칸 저장·삭제, 확인 후 계정 삭제
-│       │   ├── SettingsPage.test.tsx <- 최초 조회 잠금·자동 갱신 초안 보존·변경 후 동기화 테스트
-│       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
-│       ├── components/     <- 화면 조각
-│       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
-│       │   ├── ChatPane.tsx <- 채팅 전용 스크롤·고정 입력창·대화 끝 이동
-│       │   ├── NetlistIntake.tsx <- 빈 프로젝트·대상 선택 전의 채팅 입력과 넷리스트 접수
-│       │   ├── ReviewDetails.tsx <- 질문·부품별 상세 탭과 보존되는 판정·근거·승인 패널
-│       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
-│       │   ├── Approval.test.tsx <- 새로고침 뒤 승인·견적 복원, 409 이미 승인됨 처리, 견적 본문은 수량만
-│       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고(견적이면 수량 단가·합계)
-│       │   ├── PriceLookup.test.tsx <- 가격 조회 버튼·재시도와 화면 복귀·재연결 자동 조회 차단 테스트
-│       │   ├── QuoteList.tsx <- 프로젝트 견적 목록(품번 × 수량·날짜), 검토로 돌아가기, 행마다 실시간 가격 조회
-│       │   ├── QuoteList.test.tsx <- 견적 목록·검토 열기·누를 때만 가격 조회·빈 목록 테스트
-│       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
-│       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
-│       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)
-│       │   ├── SafeMarkdown.test.tsx <- 표·굵게·목록 렌더와 악성 마크다운(이미지·링크·HTML) 차단 시험
-│       │   ├── ApprovedCases.tsx <- 승인 사례 목록·확인 삭제
-│       │   ├── AuthCard.tsx <- 로그인 계열 화면의 공통 카드
-│       │   └── PageShell.tsx <- 설정·관리 화면의 공통 머리와 폭
-│       ├── styles/         <- 스타일
-│       │   └── app.css     <- 전체 스타일(design.md의 토큰과 눈금)
-│       └── test/           <- 화면 테스트 설정
-│           ├── projects.tsx <- QueryClient 화면 테스트 도구
-│           ├── setup.ts    <- jest-dom matcher와 화면 정리
-│           └── network.ts  <- 손작성 API 응답·fetch 경계 테스트 대역
+│       ├── main.tsx        <- React 진입점·글꼴·스타일
+│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·작업대·설정·승인 사례·관리자)
+│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·http(s) 링크 검사
+│       ├── types.ts        <- 공개 API 자료형
+│       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
+│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기
+│       ├── ui.tsx          <- 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식
+│       ├── Landing.tsx     <- 공개 랜딩
+│       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
+│       ├── Account.tsx     <- 내 설정·승인 사례·관리자 계정·개인정보 안내
+│       ├── Workbench.tsx   <- 프로젝트 목록·새 프로젝트·회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전
+│       ├── Candidate.tsx   <- 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회
+│       ├── styles.css      <- 전체 스타일
+│       └── vite-env.d.ts   <- Vite 환경 타입
 │
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
@@ -159,7 +105,7 @@ SojaFit (proj3-b)
 │   ├── auth_email.py       <- 이메일 소유 확인 가입·암호 재설정 토큰·발송 한도·세션 폐기
 │   ├── errors.py           <- 오류 응답 error.code 16개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
 │   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
-│   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). <이름>.py가 frontend/src/api/<이름>.ts와 짝
+│   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). 화면 쪽 짝은 frontend/src/api.ts 하나
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── admin.py        <- 관리자 계정 목록·활성 상태 변경 API(/api/admin/users)
