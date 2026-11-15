@@ -388,13 +388,20 @@ def test_evaluation_chat_keeps_provider_metadata_when_schema_is_invalid(monkeypa
 
 
 def _voyage_http(monkeypatch, *replies):
-    """httpx.post를 가짜로 바꿔 (주소, 요청 본문)을 기록하고 replies를 차례로 돌려준다. 네트워크는 쓰지 않는다."""
-    import httpx
+    """Voyage가 쓰는 공용 httpx.Client의 post를 가짜로 바꿔 (주소, 요청 본문)을 기록하고 replies를 차례로 돌려준다. 네트워크는 쓰지 않는다."""
     sent, replies = [], list(replies)
     monkeypatch.setenv("VOYAGE_API_KEY", "fake-key")
     monkeypatch.setattr(llm.time, "sleep", lambda s: None)
-    monkeypatch.setattr(httpx, "post", lambda url, **kw: sent.append((url, kw["json"])) or replies.pop(0))
+    fake = SimpleNamespace(post=lambda url, **kw: sent.append((url, kw["json"])) or replies.pop(0))
+    monkeypatch.setattr(llm, "_voyage_http", lambda: fake)
     return sent
+
+
+def test_voyage_client_is_one_shared_httpx_client():
+    """연결 재사용: 호출마다 새 Client를 만들지 않는다(같은 객체를 돌려준다)."""
+    llm._voyage_http.cache_clear()
+    assert llm._voyage_http() is llm._voyage_http()
+    llm._voyage_http.cache_clear()
 
 
 def _reply(status, body=None, text=""):
