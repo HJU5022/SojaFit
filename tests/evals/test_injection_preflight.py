@@ -183,7 +183,6 @@ def test_budget_and_observation_reach_child_thread(monkeypatch):
 
 
 def test_ablation_changes_only_exact_target_and_restores_budget(monkeypatch):
-    from backend.services import llm
     observed = []
     def chat(node, system, user, schema):
         observed.append((node, system))
