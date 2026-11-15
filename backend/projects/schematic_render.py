@@ -130,7 +130,7 @@ def _pdf_creator_is_pcbnew(document) -> bool:
 
 def _rasterize(kind: str, path: Path, output: Path, page_indices: str | None = None):
     """별도 프로세스에서 실행한다. 전체 변환 성공 후 부모가 결과를 읽는다."""
-    if os.name == "posix":
+    if sys.platform == "linux":  # [왜] RLIMIT_AS는 Linux 전용. macOS는 ValueError로 하위 프로세스가 죽는다
         import resource
         resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30))
         resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_IMAGE_BYTES, MAX_IMAGE_BYTES))
@@ -965,7 +965,7 @@ if __name__ == "__main__":
             raise SystemExit(1)
     elif len(sys.argv) >= 3 and sys.argv[1] in {"inspect-pdf-text", "inspect-published-pdf"}:
         try:
-            if sys.argv[1] == 'inspect-published-pdf' and os.name == 'posix':
+            if sys.argv[1] == 'inspect-published-pdf' and sys.platform == 'linux':
                 import resource
                 resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30))
             import pypdfium2 as pdfium
