@@ -21,6 +21,8 @@
 
 계약 상세는 [user-thread-memory.md](../../docs/specs/user-thread-memory.md)와 [api-error-contract.md](../../docs/specs/api-error-contract.md)를 따른다.
 
+새 분석 대상은 고정된 회로의 값·설명·풋프린트로 확인한다. LED/7-segment 표시기와 다이오드 외 부품은 `ensure_thread`에서422로 이유를 안내해 분석 thread/run 생성 전에 차단한다. 과거 LED 대화의 `message`/`resume`도 그래프/모델 접근 전에 차단하며 상세 기록 조회는 유지한다. LED 구동 용도 설명만 있는 정류 다이오드와 메타데이터 없는 D 참조는 기존대로 허용한다.
+
 ## 파일
 | 파일 | 하는 일 |
 |---|---|

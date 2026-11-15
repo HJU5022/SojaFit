@@ -9,7 +9,7 @@ import { errorMessage, requestIdProps } from '../api/client'
 import { useConversation } from '../hooks/useConversation'
 import { useNetlistFiles } from '../hooks/useNetlistFiles'
 import type { ContextNet } from '../lib/circuit'
-import { isDiode } from '../lib/circuit'
+import { unsupportedPartReason } from '../lib/circuit'
 import { VERDICT_LABELS, VERDICT_TONE, candidatesOf, documentEvidenceOf, judgementOf, withoutCorpusCitations } from '../lib/judgement'
 import { INPUT_LABELS, inputPlaceholder } from '../lib/inputLabels'
 import ContextDiagram from './ContextDiagram'
@@ -60,7 +60,8 @@ function PastReply({ runId, selectedPart, onSelect, onEvidence }: { runId: strin
 
 // 대화에서 후보를 고르면 같은 질문의 판정과 근거를 속성 칸에 보인다.
 export default function Review({ projectId, demoId, target, nets, counts, threadId, reviewer, initialQuestion, onThread, onAttach }: Props) {
-  const readOnly = !isDiode(target)
+  const unsupported = unsupportedPartReason(target)
+  const readOnly = Boolean(unsupported)
   const chat = useConversation({ projectId, targetRef: target.ref, threadId, onThread })
   // StrictMode의 첫 effect 정리가 끝난 뒤 실제로 남은 화면에서 한 번만 보낸다.
   const sentInitial = useRef(false)
@@ -169,7 +170,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
     {attachments.dragging && <div className="attachment-drop-guide" role="status" aria-label="파일 놓기"><Paperclip aria-hidden="true" /><p>.net·.txt 파일 하나를 놓으면 채팅에 첨부됩니다.</p><p className="fine">파일당 5 MiB 이하 · 전송 전에 확인할 수 있습니다.</p></div>}
     <div className="review-body" role="region" aria-label="검토 내용">
     <div className="review-main">
-    <ChatPane context={`${threadId}:${target.ref}`} input={input} older={{ before: chat.before, loading: chat.loadingOlder, error: chat.olderError, load: chat.loadOlder }} composer={readOnly ? <p className="notice">현재 다이오드만 판정합니다. 이 부품의 저장된 기록만 확인할 수 있습니다.</p> : <>
+    <ChatPane context={`${threadId}:${target.ref}`} input={input} older={{ before: chat.before, loading: chat.loadingOlder, error: chat.olderError, load: chat.loadOlder }} composer={readOnly ? <p className="notice" role="status">{unsupported} 회로와 저장된 기록은 확인할 수 있습니다.</p> : <>
       {attachments.error ? <div className="notice notice-dismissible" role="alert"><p>{errorMessage(attachments.error)}</p><button type="button" className="icon-btn" aria-label="첨부 안내 닫기" onClick={() => attachments.setError(null)}><X aria-hidden="true" /></button></div> : null}
       <form className="composer" onSubmit={(event) => { event.preventDefault(); void send() }}>
         <label className="sr-only" htmlFor="question">질문</label>
@@ -189,7 +190,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
       <header className="doc-head">
         <h1><span className="ref">{target.ref}</span><span>{target.value}</span></h1>
       </header>
-      <p className="doc-lead">{readOnly ? '현재 판정 범위 밖 부품의 저장된 검토 기록입니다.' : state.status === 'stopped' ? '응답 수신을 중단했습니다. 실행 상태를 확인해 주세요.' : running ? '검토 중입니다. 결과를 받으면 대화에서 확인할 수 있습니다.' : `${target.ref}을 다른 부품으로 바꿔도 되는지 검토합니다. 후보 품번과 사용 조건을 적어 보내세요.`}</p>
+      <p className="doc-lead">{readOnly ? unsupported : state.status === 'stopped' ? '응답 수신을 중단했습니다. 실행 상태를 확인해 주세요.' : running ? '검토 중입니다. 결과를 받으면 대화에서 확인할 수 있습니다.' : `${target.ref}을 다른 부품으로 바꿔도 되는지 검토합니다. 후보 품번과 사용 조건을 적어 보내세요.`}</p>
       {result && <p className="fine">같은 동작은 보장하지 않습니다. 판정은 데이터시트 값과 입력한 조건으로 계산한 결과입니다.</p>}
 
       <section aria-labelledby="circuit-title"><div className="section-head"><h2 id="circuit-title">회로</h2><span>선택 부품의 연결</span></div>

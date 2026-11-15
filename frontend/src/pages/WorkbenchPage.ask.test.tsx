@@ -323,6 +323,77 @@ it('says a part outside the scope cannot be judged', async () => {
   expect(runs).toHaveLength(0)
 })
 
+const ledPart = { ref: 'D3', value: 'STAT', footprint: 'LED_SMD:LED_0805_2012Metric', description: 'Light emitting diode' }
+const ledProject = { ...project, connections: { ...project.connections, parts: [...project.connections.parts, ledPart] } }
+
+it.each(['D3의 대체 후보를 찾아 주세요.', 'D3 대신 D1을 써도 되나요?'])('explains an unsupported LED without selecting another diode or sending: %s', async text => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path === '/api/projects/1') return Response.json(ledProject)
+    return Response.json([])
+  })
+  await ask(text)
+  expect(await screen.findByRole('alert')).toHaveTextContent('D3은(는) LED로 식별됩니다.')
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue(text)
+  expect(screen.getByRole('button', { name: 'D3 STAT 판정 범위 밖' })).toBeDisabled()
+  expect(posts).toEqual([])
+})
+
+it('keeps historical LED conversations readable with a specific reason and no new analysis controls', async () => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(ledProject)
+    if (path === '/api/threads/tled') return Response.json(savedThread('tled', 1, 'D3'))
+    if (path === '/api/runs/run-tled') return Response.json(savedRun('run-tled'))
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=tled']}><WorkbenchPage /></MemoryRouter>)
+  expect(await screen.findByText('run-tled 저장된 답변')).toBeInTheDocument()
+  expect(screen.getAllByText(/D3은\(는\) LED로 식별됩니다/).length).toBeGreaterThan(0)
+  expect(screen.queryByRole('button', { name: '질문 보내기' })).toBeNull()
+  expect(posts).toEqual([])
+})
+
+it('explains a direct unsupported LED address before opening a new analysis', async () => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    return Response.json(path === '/api/projects/1' ? ledProject : [])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D3']}><WorkbenchPage /></MemoryRouter>)
+  expect(await screen.findByText(/D3은\(는\) LED로 식별됩니다/)).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '질문 보내기' })).toBeNull()
+  expect(posts).toEqual([])
+})
+
+it('keeps an uploaded LED question as a draft with an explanation and no automatic analysis', async () => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path === '/api/projects/1/netlist') return Response.json({ project: ledProject, thread_id: 'fresh' })
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(ledProject)
+    if (path === '/api/threads/fresh') return Response.json({ ...savedThread('fresh'), target_ref: null, target_locked: false, messages: [], latest_run: null })
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: 'D3 대신 D1을 써도 되나요?' } })
+  fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [new File(['(export)'], 'led.net')] } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  await waitFor(() => {
+    expect(screen.queryByRole('list', { name: '첨부한 파일' })).toBeNull()
+    expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('D3 대신 D1을 써도 되나요?')
+    expect(screen.getByRole('alert')).toHaveTextContent('D3은(는) LED로 식별됩니다.')
+  })
+  expect(posts).toEqual(['/api/projects/1/netlist'])
+})
+
 it('shows every line of a completed answer, including a markdown list', async () => {
   const done = { answer: '첫 줄 요약\n\n- 첫째 근거\n- 둘째 근거', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
   api(`event: run_started\ndata: ${JSON.stringify({ run_id: 'r1' })}\n\nevent: completed\ndata: ${JSON.stringify(done)}\n\n`)
