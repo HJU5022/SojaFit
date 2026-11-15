@@ -12,7 +12,7 @@
 
 ## 실행과 확인
 - 개발: `npm ci`, `npm run dev`(주소 `http://localhost:5173`). `/api` · `/health`는 `http://localhost:8000`으로 프록시합니다. 백엔드는 상태를 바꾸는 요청의 Origin이 `AUTH_ORIGIN`(기본 `http://localhost:8000`)과 같아야 해서, 프록시가 Origin을 그 값으로 바꿔 보냅니다. 다른 주소의 백엔드면 `SOJAFIT_API_TARGET`(프록시 대상)과 `SOJAFIT_AUTH_ORIGIN`(Origin 값)을 정합니다.
-- 확인: `npm run build`.
+- 확인: `npm test`(단위 시험, Node 22.18 이상), `npm run build`(타입 검사 포함), `npm run format:check`(Prettier, printWidth 100).
 
 ## 화면 원칙
 - 대체 판정 5종은 SPEC 3절의 화면 표기를 그대로 씁니다. 판정 색은 판정에만 씁니다.
@@ -30,3 +30,4 @@
 - `tsconfig.json` — TypeScript 설정.
 - `public/` — 정적 이미지·샘플 넷리스트. [PUBLIC.md](public/PUBLIC.md)
 - `src/` — 화면 소스. [SRC.md](src/SRC.md)
+- `tests/` — 화면 순수 함수 단위 시험. [TESTS.md](tests/TESTS.md)

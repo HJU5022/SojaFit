@@ -1,7 +1,8 @@
 /** 공통 상태·접근성·회로 표시. 서버 값을 시각화하며 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AlertCircle, ArrowUpRight, CircuitBoard, LoaderCircle, X } from 'lucide-react';
-import { api, safeLink, verdicts } from './api';
+import { api, verdicts } from './api';
+import { safeLink } from './display';
 import { partsOf, pinsOf } from './circuit';
 import type { Citation, Project, Verdict } from './types';
 export function navigate(url: string, replace = false) {

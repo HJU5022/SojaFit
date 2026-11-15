@@ -68,16 +68,3 @@ export const statuses: Record<string, string> = {
   refused: '답변 범위 안내',
   failed: '검토 실패',
 };
-export const fieldNames: Record<string, string> = {
-  temp: '온도 조건',
-  v_in_max: '최대 입력 전압',
-  i_max: '최대 전류',
-  v_drop_allowed: '허용 전압강하',
-  t_ambient: '주변 온도',
-  f_pwm: 'PWM 주파수',
-  v_coil: '코일 전압',
-  i_coil: '코일 전류',
-};
-export function safeLink(url?: string) {
-  return url && /^https?:\/\//i.test(url) ? url : undefined;
-}

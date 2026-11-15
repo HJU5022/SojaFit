@@ -1493,6 +1493,10 @@ form {
   margin: 0;
   overflow-wrap: anywhere;
 }
+.check-evidence code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+}
 .citation {
   padding: 12px 0;
   font-size: 13px;

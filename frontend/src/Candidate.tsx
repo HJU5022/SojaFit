@@ -1,7 +1,16 @@
 /** 후보 근거·승인·견적 상세. 숫자를 판정에 사용하지 않는다. 출처: SPEC 3·4·8.4절. */
 import { useState } from 'react';
 import { ArrowUpRight, Check, ChevronDown, Package, ShoppingCart } from 'lucide-react';
-import { api, ApiError, fieldNames, safeLink } from './api';
+import { api, ApiError } from './api';
+import {
+  basisLabel,
+  explainNames,
+  formatAmount,
+  opLabel,
+  roundLongDecimals,
+  safeLink,
+} from './display';
+import { inputLabel } from './inputLabels';
 import {
   Badge,
   Disclaimer,
@@ -70,10 +79,17 @@ export function PriceLookup({ part }: { part: string }) {
     </div>
   );
 }
-function amount(value: any, unit?: string | null) {
-  return value == null
-    ? '확인 안 됨'
-    : `${Array.isArray(value) ? value.join(' ~ ') : value}${unit ? ' ' + unit : ''}`;
+/** 서버 숫자를 보기 좋게 줄여 보이고, 받은 값 그대로는 마우스를 올리면 보인다. */
+function Amount({ value, unit }: { value: any; unit?: string | null }) {
+  const shown = formatAmount(value, unit);
+  const raw = value == null ? '' : [value].flat().join(' ~ ') + (unit ? ' ' + unit : '');
+  return <span title={raw && raw !== shown ? raw : undefined}>{shown}</span>;
+}
+/** 판정 기준식: 아는 이름은 한국어로 풀고(원문은 마우스 올리면), 모르면 원문을 코드 모양으로 보인다. */
+function Basis({ basis }: { basis?: string }) {
+  if (!basis) return <>미제공</>;
+  const b = basisLabel(basis);
+  return b.known ? <span title={basis}>{b.text}</span> : <code>{basis}</code>;
 }
 function checkLabel(result: string) {
   return (
@@ -174,7 +190,7 @@ export function CandidateDetails({
           <dl className="facts">
             {result.judgement.input_conditions.map((v, i) => (
               <div key={i}>
-                <dt>{fieldNames[v.code] ?? v.code}</dt>
+                <dt>{inputLabel(v.code)}</dt>
                 <dd>{v.value}</dd>
               </div>
             ))}
@@ -200,12 +216,10 @@ export function CandidateDetails({
               <summary>
                 <strong>{check.code}</strong>
                 <span>
-                  {check.op && (
-                    <small>{({ gte: '≥', lte: '≤', eq: '=' } as any)[check.op] ?? check.op} </small>
-                  )}
-                  {amount(check.threshold, check.unit)}
+                  {check.op && <small>{opLabel(check.op)} </small>}
+                  <Amount value={check.threshold} unit={check.unit} />
                 </span>
-                <span>{amount(check.value, check.unit)}</span>
+                <Amount value={check.value} unit={check.unit} />
                 <span className={'check-status ' + check.result.toLowerCase()}>
                   {checkLabel(check.result)}
                   <ChevronDown size={13} />
@@ -215,16 +229,18 @@ export function CandidateDetails({
                 <dl>
                   <div>
                     <dt>판정 기준</dt>
-                    <dd>{check.basis || '미제공'}</dd>
+                    <dd>
+                      <Basis basis={check.basis} />
+                    </dd>
                   </div>
                   <div>
                     <dt>시험 조건</dt>
-                    <dd>{check.condition || '미제공'}</dd>
+                    <dd>{check.condition ? roundLongDecimals(check.condition) : '미제공'}</dd>
                   </div>
                   {check.why && (
                     <div>
                       <dt>설명</dt>
-                      <dd>{check.why}</dd>
+                      <dd>{roundLongDecimals(explainNames(check.why))}</dd>
                     </div>
                   )}
                 </dl>

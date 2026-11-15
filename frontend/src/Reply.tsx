@@ -3,7 +3,9 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowRight, MessageSquare } from 'lucide-react';
-import { fieldNames, statuses } from './api';
+import { statuses } from './api';
+import { explainAnswer } from './display';
+import { inputLabel } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, Source } from './ui';
 import { PriceLookup } from './Candidate';
 import type { Candidate, DemoQuestion, Result, Role, Run } from './types';
@@ -53,7 +55,7 @@ export function MissingInput({
         )}
         {result.interrupt.missing?.map((code) => (
           <label key={code}>
-            {fieldNames[code] ?? code}
+            {inputLabel(code)}
             <input
               value={answers[code] ?? ''}
               onChange={(e) => setAnswers({ ...answers, [code]: e.target.value })}
@@ -81,7 +83,7 @@ export function MissingInput({
             <p>
               이 데모는 기록된 답으로 재개할 수 있습니다.
               {Object.entries(demo.resume.answers)
-                .map(([k, v]) => ` ${fieldNames[k] ?? k}: ${v}`)
+                .map(([k, v]) => ` ${inputLabel(k)}: ${v}`)
                 .join('')}
             </p>
             <button
@@ -146,13 +148,13 @@ export function Reply({
           <details className="full-answer">
             <summary>전체 답변 보기</summary>
             <div className="markdown">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{r.answer}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{explainAnswer(r.answer)}</ReactMarkdown>
             </div>
           </details>
         </>
       ) : r.answer ? (
         <div className="markdown">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{r.answer}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{explainAnswer(r.answer)}</ReactMarkdown>
         </div>
       ) : null}
       <ErrorBox error={r.error?.message ?? null} />

@@ -80,14 +80,19 @@ SojaFit (proj3-b)
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
 │   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘·화면 머리 로고)
+│   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)
+│   │   ├── TESTS.md        <- 폴더 설명
+│   │   └── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·http(s) 링크만 허용 시험
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- React 진입점·글꼴·스타일
 │       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·작업대·설정·승인 사례·관리자)
-│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·http(s) 링크 검사
+│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
 │       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기
+│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사)
+│       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름
 │       ├── ui.tsx          <- 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식
 │       ├── Landing.tsx     <- 공개 랜딩
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
@@ -850,6 +855,7 @@ SojaFit (proj3-b)
 | `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
 | `frontend/public/` | [PUBLIC.md](frontend/public/PUBLIC.md) | 서비스·운영 |
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
+| `frontend/tests/` | [TESTS.md](frontend/tests/TESTS.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
 | `backend/api/` | [API.md](backend/api/API.md) | 서비스·운영 |
 | `backend/conversations/` | [CONVERSATIONS.md](backend/conversations/CONVERSATIONS.md) | 서비스·운영 |
