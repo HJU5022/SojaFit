@@ -5,6 +5,7 @@
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 8.5 사용자 사실 기억, 4절 대화 API, 토큰 한도는 8.6)
 - 관련 문서: [evaluator-demo-readiness.md](evaluator-demo-readiness.md), [thread-memory-operations-review.md](../research/thread-memory-operations-review.md), [thread-memory-operations.md](../experiments/thread-memory-operations.md), `backend/conversations/CONVERSATIONS.md`
+- 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why
 
@@ -90,14 +91,14 @@
 | 보관 기간이 지나면 자동으로 지운다(프로젝트 · 분석 대화 60일, 기록 30일) | `db/020_service_baseline.sql`의 청소 함수 2개, 새 분석 때 작은 묶음 | 21조(파기): 보유기간이 지나 불필요해진 개인정보는 지체 없이 파기 |
 | 사용자가 프로젝트 · 내 설정을 지우면 바로 실제로 지운다 | `DELETE /api/projects/{id}`(같은 UUID 분석 기록 · checkpoint 포함), `DELETE /api/me/memory` | 36조(삭제 요구) |
 | 탈퇴하면 계정과 모든 기록을 지운다 | `DELETE /api/me`(기록 먼저, 계정 마지막, 다시 요청하면 이어서) | 37조(처리정지 요구 · 동의 철회) |
-| 가입·로그인 화면에서 처리방침을 알린다 | 공개 `/privacy`(`frontend/src/pages/PrivacyPage.tsx`: 처리 항목 · 보관 기간 · 삭제 · 외부 서비스)로 가는 링크. 별도 동의 체크와 동의값 저장은 없고 서버 `consent`는 호환용 선택 필드다(`backend/api/auth.py:193,260`) | 15조 2항(동의를 받을 때 알릴 사항) |
+| 가입·로그인 화면에서 처리방침을 알린다 | 공개 `/privacy`(`frontend/src/Account.tsx`의 `Privacy`: 처리 항목 · 보관 기간 · 삭제 · 외부 서비스. 새 화면의 글은 축약본이다)로 가는 링크. 별도 동의 체크와 동의값 저장은 없고 서버 `consent`는 호환용 선택 필드다(`backend/api/auth.py:193,260`) | 15조 2항(동의를 받을 때 알릴 사항) |
 
 #### 사용자가 지울 때(구현)
 - 프로젝트 삭제 `DELETE /api/projects/{id}`(`backend/api/projects.py:184` `delete_owned_with_checkpoints`): 프로젝트 행을 잠근 같은 트랜잭션에서 그 프로젝트 대화 UUID의 분석 checkpoint 표 3개(`checkpoint_writes` · `checkpoint_blobs` · `checkpoints`, thread_id 글자) → 분석 thread(메시지 · 승인 기록 · 분석 사건은 FK cascade) → 남은 thread가 없는 같은 UUID 분석 회로 → 프로젝트(회로 · 대화 · run · 메시지 · 승인 · 견적 · 승인 사례는 FK cascade) 순서로 지운다(`memory_service.delete_analysis_threads`, 사용자 조건으로만 고름). 하나라도 실패하면 모두 되돌린다. 사용자 사실(Store)은 프로젝트에 딸리지 않아 남는다.
 - 탈퇴 `DELETE /api/me`(`backend/main.py`): Origin 확인, 관리자는 409(운영자 CLI `--delete-user-id`도 관리자는 지우지 않음). 순서는 기록 먼저, 계정 마지막이다. ① 계정 배타 잠금 ② 그 사용자의 분석 thread · 회로 · checkpoint 전부(한 트랜잭션) ③ Store를 namespace 접두사로 찾아 지우는 반복(`(user_id,)` 아래 전부와 옛 `("memories", user_id)`, 한 번에 100개 · 최대 1만 개) ④ 계정 행(세션 · 프로젝트 · 견적 · 승인 사례 · 하루 사용량은 FK cascade, 그 이메일의 로그인 실패 행도 지움). 응답은 `{"deleted": {analysis_threads, analysis_circuits, checkpoints, memory_items, projects, quotes, account}}`이고 세션 쿠키를 지운다.
 - 멱등: 계정을 먼저 지우면 기록 삭제가 실패했을 때 다시 요청할 방법이 없다. 그래서 계정을 마지막에 지우고, 중간 실패는 503(`계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.`)이며 다시 요청하면 남은 것만 지운다(이미 지운 것은 0건).
 - 잠금(선택: advisory lock, 표 없음): 키 `hashtextextended('account:<user_id>', 0)`. 분석 실행(`locked`) · 대화 연결(`ensure_thread`) · 업로드 · thread 만들기 · 설정 저장(`account_writer`)은 공유로, 탈퇴는 배타로 잡는다. 공유끼리는 서로 막지 않고 탈퇴와만 막으므로 그 사용자의 분석이 도는 동안 탈퇴는 409(`진행 중인 분석이나 저장이 끝난 뒤 다시 시도하세요.`), 탈퇴가 도는 동안 그 사용자의 새 분석 · 재개 · 설정 저장은 409(`계정 삭제를 처리하는 중입니다.`)다. React run · 재개는 스트림을 열기 전(`admission`)에도 확인한다. 표식 표 대신 잠금을 고른 이유: DB 세션 잠금이라 프로세스가 죽어도 연결과 함께 풀려 남는 표식이 없고, 탈퇴가 실패해도 계정이 남아 있어 다시 요청하면 된다. 공유 public 업무 표의 쓰기(프로젝트 · 대화 · 견적)는 계정 행 삭제의 FK cascade가 지우므로 잠그지 않는다.
-- 화면: 내 설정(`/settings`)의 "계정 삭제"(일반 계정만 보임)는 확인 뒤에만 `DELETE /api/me`를 보낸다. 로그아웃 · 탈퇴 · 세션 만료로 로그인 상태를 잃으면 React가 화면 메모리(React Query 캐시)와 sessionStorage를 비우고 보호 화면은 `/login`으로 바꾼다(replace). 로그인 URL에 회로 식별자는 남기지 않는다. 직접 로그아웃·탈퇴는 복귀도 막으며, 세션 만료·비로그인 대화 링크만 내부 `/app` 주소를 탭에 임시 보관해 로그인 성공 후 복원·제거한다([login-auth.md](login-auth.md)). 대화 본문·판정·자격 증명은 보관하지 않는다.
+- 화면: 내 설정(`/settings`)의 "계정 삭제"(일반 계정만 보임)는 확인 뒤에만 `DELETE /api/me`를 보낸다. 로그아웃 · 탈퇴 · 세션 만료로 로그인 상태를 잃으면 새 화면(`frontend/src/App.tsx`)이 화면 상태와 `sessionStorage`를 비우고 보호 화면은 `/login`으로 바꾼다(replace). 로그인 URL에 회로 식별자는 남기지 않는다. 직접 로그아웃·탈퇴는 복귀도 막으며, 세션 만료·비로그인 대화 링크만 내부 `/app` 주소를 탭에 임시 보관해 로그인 성공 후 복원·제거한다([login-auth.md](login-auth.md)). 대화 본문·판정·자격 증명은 보관하지 않는다.
 - 한계: 분석 서비스(`THREADS_ENABLED=1`)가 없으면 탈퇴는 503이다(분석 기록 · Store를 지울 수 없으므로). React run 행이 `running`으로 남은 상태(서버가 실행 도중 죽음)는 잠금이 없어 탈퇴를 막지 않는다.
 
 ## AC
@@ -128,5 +129,5 @@
 
 - 이 문서의 이전 판(분석 thread 전용 `/api/threads/*` 경로, 업로드 `/workspace` 화면, 승인 사례 기억)은 삭제된 경로를 전제하며 현재 코드에 대응하지 않는다. 현재 경로는 [SPEC.md](../../SPEC.md) 4절.
 - 시험 AC-02·AC-03의 시험은 DB가 있을 때만 실행되는 것이 있다(`TEST_THREAD_DATABASE_URL`, `.github/workflows/ci.yml:30`). 이 문서 작성 때 실행해 확인하지 않았다.
-- 삭제 후 클라우드 로그·외부 추적·백업 사본의 보관 기간은 이 저장소로 확인할 수 없다([처리방침 화면](../../frontend/src/pages/PrivacyPage.tsx)이 같은 한계를 적는다).
+- 삭제 후 클라우드 로그·외부 추적·백업 사본의 보관 기간은 이 저장소로 확인할 수 없다([처리 안내 화면](../../frontend/src/Account.tsx)이 같은 한계를 적는다).
 
