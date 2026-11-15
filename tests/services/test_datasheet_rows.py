@@ -2,6 +2,7 @@
 import json
 import re
 import base64
+import subprocess
 import httpx
 import pytest
 
@@ -11,7 +12,7 @@ from backend.multi_agent.agents.docs import PdfAnswer, PdfOnlyAnswer, docs_agent
 from backend.multi_agent.supervisor import check_node
 from backend.judge.pdf_claims import recovery_figure_doc
 from backend.services import exa
-from backend.services.datasheet_rows import _figure_png, grade2_pdf, official_pdf, _row_has_part
+from backend.services.datasheet_rows import _figure_png, grade2_pdf, official_pdf, _row_has_part, verified_rows
 
 
 URL = 'https://www.vishay.com/docs/88751/ss32.pdf'
@@ -510,3 +511,69 @@ def test_grade2_search_honors_manufacturer_alias(manufacturer, expected, monkeyp
     exa.search_grade2_evidence(['SS34'], f'{manufacturer} reverse voltage',
                                transport=httpx.MockTransport(handle))
     assert domains == expected
+
+
+# --- 외부 호출 실패는 [] 그대로지만 운영 로그(WARNING)에 종류 · 상태 코드만 남는다(점검 A #2 a) ---
+SECRET_KEY = 'key-must-not-leak'
+TSC_PDF = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34_SERIES_B2305.pdf'
+
+
+@pytest.fixture
+def web_env(monkeypatch, caplog):
+    import logging
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', SECRET_KEY)
+    caplog.set_level(logging.WARNING)
+    return caplog
+
+
+def grade2(handler):
+    with exa.request_scope():
+        return exa.search_grade2_evidence(['SS34'], 'TSC reverse voltage', transport=httpx.MockTransport(handler))
+
+
+def assert_clean(log, *needles):
+    assert SECRET_KEY not in log.text and 'api.exa.ai' not in log.text and 'reverse voltage' not in log.text and 'SS34' not in log.text
+    assert all(n in log.text for n in needles)
+
+
+def test_exa_rate_limit_is_logged_with_status_and_class_only(web_env):
+    assert grade2(lambda req: httpx.Response(429, json={'error': 'SS34 reverse voltage'})) == []
+    assert_clean(web_env, 'exa_failure stage=search_grade2', 'HTTPStatusError', 'status=429')
+
+
+def test_exa_timeout_is_logged_with_class_only(web_env):
+    def handler(req):
+        raise httpx.ReadTimeout('timed out for SS34 reverse voltage', request=req)
+    assert grade2(handler) == []
+    assert_clean(web_env, 'exa_failure stage=search_grade2', 'ReadTimeout', 'status=None')
+
+
+def test_pdf_fetch_error_is_logged_without_the_pdf_address(web_env):
+    def handler(req):
+        if req.method == 'POST':
+            return httpx.Response(200, json={'results': [{'url': TSC_PDF}]})
+        return httpx.Response(503)
+    assert grade2(handler) == []
+    assert_clean(web_env, 'exa_failure stage=pdf_fetch', 'status=503')
+    assert 'taiwansemi' not in web_env.text
+
+
+def test_empty_search_result_is_not_a_failure_and_logs_nothing(web_env):
+    assert grade2(lambda req: httpx.Response(200, json={'results': []})) == []
+    assert web_env.records == []
+
+
+@pytest.mark.parametrize(('error', 'needle'), [
+    (subprocess.CalledProcessError(1, 'worker', stderr=b'Traceback (most recent call last):\n  File "x"\nValueError: current limit exceeds maximum limit\n'),
+     'stderr_last=ValueError: current limit exceeds maximum limit'),
+    (subprocess.TimeoutExpired('worker', 12), 'TimeoutExpired'),
+])
+def test_verify_subprocess_failure_logs_class_and_last_stderr_line_only(web_env, monkeypatch, error, needle):
+    def run(*args, **kwargs):
+        raise error
+    monkeypatch.setattr(subprocess, 'run', run)
+    assert verified_rows(b'%PDF-1.4', TSC_PDF, ['SS34'], ['reverse']) == []
+    assert 'datasheet_verify_failed' in web_env.text and needle in web_env.text
+    assert 'Traceback' not in web_env.text and 'services.taiwansemi.com' not in web_env.text and 'SS34' not in web_env.text

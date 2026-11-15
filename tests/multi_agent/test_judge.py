@@ -127,6 +127,14 @@ def test_grade2_budget_boundary_is_not_swallowed_by_row_adapter():
     assert error.value.grade == 2
 
 
+def test_grade2_search_failure_is_logged_by_class_and_does_not_stop_judging(caplog):
+    def broken(parts, terms):
+        raise RuntimeError('boom SS14 repetitive peak reverse voltage secret-token')
+    assert J._grade2_rows(broken, 'SS14', {'VRRM'}) == []
+    assert 'grade2_rows_failed error=RuntimeError' in caplog.text
+    assert 'secret-token' not in caplog.text and 'SS14' not in caplog.text
+
+
 def test_explicit_revision_is_extracted_and_row_revision_is_exact():
     """지정 판본은 접두어가 비슷한 다른 개정 코드와 섞이지 않아야 한다."""
     read = J.JudgeRead(role='R01', revision_wanted='S2202판')

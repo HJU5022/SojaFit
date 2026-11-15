@@ -22,6 +22,14 @@ from backend.services.datasheet_rows import (
 MAX_RESULTS = 5
 MAX_DOWNLOADS = 2
 LOGGER = logging.getLogger(__name__)
+
+
+def _failure(stage: str, error: BaseException) -> None:
+    """외부 호출 실패를 운영 로그(WARNING)에 남긴다. 단계 · 예외 종류 · 상태 코드만 적는다(키 · 질의 · 주소 · 예외 글은 적지 않는다)."""
+    status = error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None
+    LOGGER.warning('exa_failure stage=%s error=%s status=%s', stage, type(error).__name__, status)
+
+
 PART = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._+/-]{1,39}$')
 TOKEN = re.compile(r'[A-Za-z][A-Za-z0-9_-]{0,30}')
 OTHER_MANUFACTURER = re.compile(
@@ -185,8 +193,8 @@ def _prefetch_pdfs(parts: list[str]) -> dict:
                     found[url] = _body(client, 'GET', url, MAX_BYTES, redirect_validator=grade2_pdf)
                 except (ValueError, httpx.HTTPError):
                     continue
-    except (httpx.HTTPError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
-        LOGGER.debug('datasheet_prefetch failed')
+    except (httpx.HTTPError, ValueError, TypeError, KeyError, AttributeError, RecursionError) as error:
+        _failure('prefetch', error)
     return found
 
 
@@ -257,7 +265,8 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
                                        json={'query': query, 'numResults': MAX_RESULTS,
                                              'includeDomains': filters, 'type': 'auto'})
             payload = json.loads(response_body)
-        except (httpx.HTTPError, ValueError, TypeError, KeyError, RecursionError):
+        except (httpx.HTTPError, ValueError, TypeError, KeyError, RecursionError) as error:
+            _failure('search_grade2' if grade == 2 else 'search', error)
             return []
         results = payload.get('results') if isinstance(payload, dict) else None
         if not isinstance(results, list):
@@ -282,7 +291,8 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
                 raw, url = cached or _body(client, 'GET', url, MAX_BYTES,
                                            redirect_validator=(grade2_pdf if grade == 2 else None))
                 rows = verified_rows(raw, url, parts, words, grade=grade) if raw.startswith(b'%PDF-') else []
-            except (ValueError, httpx.HTTPError):
+            except (ValueError, httpx.HTTPError) as error:
+                _failure('pdf_fetch', error)
                 LOGGER.debug('datasheet_candidate_rejected stage=fetch reason=unreadable_pdf url=%s', urlsplit(url).path[:160])
                 rows = []
             if not rows:
@@ -328,7 +338,8 @@ def _search_grade3_reference(parts: list[str], terms: str, *, transport=None) ->
                             headers={'x-api-key': os.environ['EXA_API_KEY']},
                             json={'query': query, 'numResults': MAX_RESULTS, 'type': 'auto'})
         payload = json.loads(body)
-    except (httpx.HTTPError, ValueError, TypeError, KeyError):
+    except (httpx.HTTPError, ValueError, TypeError, KeyError) as error:
+        _failure('search_grade3', error)
         return []
     results = payload.get('results') if isinstance(payload, dict) else None
     if not isinstance(results, list):
