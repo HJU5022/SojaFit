@@ -11,14 +11,14 @@ CREATED = '2026-11-10T09:00:00+00:00'  # 실제 서비스(backend/services/quote
 
 class FakeQuotes:
     def __init__(self): self.calls = []
-    def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'verdict': verdict, 'case_id': 4, 'created_at': CREATED}
+    def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'part_number': part, 'verdict': verdict, 'case_id': 4, 'created_at': CREATED}
     def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity, 'created_at': CREATED}
     def list_quotes(self, user, project): return []
     def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'created_at': CREATED}]
     def delete_case(self, user, case): self.calls.append(('delete', user, case))
     def list_approvals(self, user, message):
         self.calls.append(('approvals', user, message))
-        return [{'id': 3, 'message_id': message, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
+        return [{'id': 3, 'message_id': message, 'candidate_part': 'SS34', 'part_number': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
                  'case_id': None, 'created_at': CREATED, 'snapshot': {'answer': 'PRIVATE_SNAPSHOT'}}]
 
 
@@ -37,7 +37,7 @@ def test_persisted_approval_read_is_owned_metadata_without_origin_or_snapshot():
         response = web.get('/api/messages/9/approvals')
     assert response.status_code == 200, response.text
     assert response.headers['cache-control'] == 'no-store'
-    assert response.json() == [{'id': 3, 'message_id': 9, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
+    assert response.json() == [{'id': 3, 'message_id': 9, 'candidate_part': 'SS34', 'part_number': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
                                 'case_id': None, 'created_at': '2026-11-10T09:00:00Z'}]
     assert 'PRIVATE_SNAPSHOT' not in response.text
     assert fake.calls == [('approvals', 7, 9)]

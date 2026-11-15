@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 
 def mount_frontend(app: FastAPI, dist: Path) -> None:
-    """빌드가 있으면 화면 주소에 React index를 주고, API·health·assets의 응답은 그대로 둔다."""
+    """화면 HTML은 저장하지 않고 자산은 재검증하며 API·health 경계는 유지한다."""
     assets = dist / "assets"
     if assets.is_dir():
         app.mount("/assets", StaticFiles(directory=assets), name="frontend-assets")
@@ -25,6 +25,8 @@ def mount_frontend(app: FastAPI, dist: Path) -> None:
     async def frontend(request: Request, call_next):
         response = await call_next(request)
         path = request.url.path
+        if request.method in {"GET", "HEAD"} and path.startswith("/assets/"):
+            response.headers["Cache-Control"] = "no-cache"
         if (
             request.method not in {"GET", "HEAD"}
             or response.status_code != 404
@@ -40,7 +42,7 @@ def mount_frontend(app: FastAPI, dist: Path) -> None:
         index = dist / "index.html"
         if not index.is_file():
             return response  # [왜] 빌드가 없으면(로컬 백엔드만 띄움) 대신 보일 화면이 없다. 공통 404 JSON 그대로
-        headers = {}
+        headers = {"Cache-Control": "no-store"}
         if request_id := response.headers.get("X-Request-ID"):
             headers["X-Request-ID"] = request_id
         return FileResponse(index, headers=headers)

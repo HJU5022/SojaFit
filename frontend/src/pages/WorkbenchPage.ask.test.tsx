@@ -325,6 +325,77 @@ it('says a part outside the scope cannot be judged', async () => {
   expect(runs).toHaveLength(0)
 })
 
+const ledPart = { ref: 'D3', value: 'STAT', footprint: 'LED_SMD:LED_0805_2012Metric', description: 'Light emitting diode' }
+const ledProject = { ...project, connections: { ...project.connections, parts: [...project.connections.parts, ledPart] } }
+
+it.each(['D3의 대체 후보를 찾아 주세요.', 'D3 대신 D1을 써도 되나요?'])('explains an unsupported LED without selecting another diode or sending: %s', async text => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path === '/api/projects/1') return Response.json(ledProject)
+    return Response.json([])
+  })
+  await ask(text)
+  expect(await screen.findByRole('alert')).toHaveTextContent('D3은(는) LED로 식별됩니다.')
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue(text)
+  expect(screen.getByRole('button', { name: 'D3 STAT 판정 범위 밖' })).toBeDisabled()
+  expect(posts).toEqual([])
+})
+
+it('keeps historical LED conversations readable with a specific reason and no new analysis controls', async () => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(ledProject)
+    if (path === '/api/threads/tled') return Response.json(savedThread('tled', 1, 'D3'))
+    if (path === '/api/runs/run-tled') return Response.json(savedRun('run-tled'))
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=tled']}><WorkbenchPage /></MemoryRouter>)
+  expect(await screen.findByText('run-tled 저장된 답변')).toBeInTheDocument()
+  expect(screen.getAllByText(/D3은\(는\) LED로 식별됩니다/).length).toBeGreaterThan(0)
+  expect(screen.queryByRole('button', { name: '질문 보내기' })).toBeNull()
+  expect(posts).toEqual([])
+})
+
+it('explains a direct unsupported LED address before opening a new analysis', async () => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    return Response.json(path === '/api/projects/1' ? ledProject : [])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D3']}><WorkbenchPage /></MemoryRouter>)
+  expect(await screen.findByText(/D3은\(는\) LED로 식별됩니다/)).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '질문 보내기' })).toBeNull()
+  expect(posts).toEqual([])
+})
+
+it('keeps an uploaded LED question as a draft with an explanation and no automatic analysis', async () => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path === '/api/projects/1/netlist') return Response.json({ project: ledProject, thread_id: 'fresh' })
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(ledProject)
+    if (path === '/api/threads/fresh') return Response.json({ ...savedThread('fresh'), target_ref: null, target_locked: false, messages: [], latest_run: null })
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: 'D3 대신 D1을 써도 되나요?' } })
+  fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [new File(['(export)'], 'led.net')] } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  await waitFor(() => {
+    expect(screen.queryByRole('list', { name: '첨부한 파일' })).toBeNull()
+    expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('D3 대신 D1을 써도 되나요?')
+    expect(screen.getByRole('alert')).toHaveTextContent('D3은(는) LED로 식별됩니다.')
+  })
+  expect(posts).toEqual(['/api/projects/1/netlist'])
+})
+
 it('shows every line of a completed answer, including a markdown list', async () => {
   const done = { answer: '첫 줄 요약\n\n- 첫째 근거\n- 둘째 근거', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
   api(`event: run_started\ndata: ${JSON.stringify({ run_id: 'r1' })}\n\nevent: completed\ndata: ${JSON.stringify(done)}\n\n`)
@@ -816,6 +887,39 @@ it('restores saved approval after closing and reopening a tab and after a fresh 
   expect(writes).toHaveLength(1)
 })
 
+it.each([false, true])('refreshes approval after a case deletion and preserves the lock on failure=%s', async fails => {
+  const stored: ApprovalDto[] = [{ id: 7, message_id: 101, candidate_part: '1N5391G', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  const writes = candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  network((path, init) => {
+    if (path === '/api/approved-cases') return Response.json(stored.map(item => ({ id: item.case_id, approval_id: item.id, candidate_part: item.candidate_part, verdict: item.verdict })))
+    if (path === '/api/approved-cases/41' && init.method === 'DELETE') {
+      if (fails) return failure('UNAVAILABLE', '삭제 실패', 503)
+      stored.splice(0)
+      return new Response(null, { status: 204 })
+    }
+    return base(path, init)
+  })
+  const Cases = (await vi.importActual<typeof import('../components/ApprovedCases')>('../components/ApprovedCases')).default
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /><Cases /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  expect(await screen.findByText('다른 후보가 승인됨')).toBeInTheDocument()
+  fireEvent.click(await screen.findByRole('button', { name: '1N5391G 사례 삭제' }))
+  fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
+  if (fails) {
+    expect(await screen.findByText(/사례를 삭제하지 못했습니다/)).toBeInTheDocument()
+    expect(screen.getByText('다른 후보가 승인됨')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '검토하고 승인' })).toBeNull()
+    expect(writes).toHaveLength(0)
+  } else {
+    await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: '검토하고 승인' }))
+    expect(await screen.findByText('승인됨')).toBeInTheDocument()
+    expect(writes).toHaveLength(1)
+    expect(writes[0].body).toMatchObject({ candidate_part: 'SS34L' })
+  }
+})
+
 it('restores the saved project quote for the selected approval after a fresh page mount', async () => {
   const stored: ApprovalDto[] = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }]
   candidateApi(false, id => candidateRun(id), stored)
@@ -838,7 +942,8 @@ it('restores the saved project quote for the selected approval after a fresh pag
   const panel = screen.getByRole('tabpanel')
   expect(await within(panel).findByText('견적 SS34L × 100')).toBeInTheDocument()
   expect(within(panel).queryByText('견적 OTHER × 999')).toBeNull()
-  expect(within(panel).queryByRole('button', { name: '견적 열기' })).toBeNull()
+  expect(within(panel).queryByRole('button', { name: '견적 저장' })).toBeNull()
+  expect(within(panel).getByRole('button', { name: '새 견적 작성' })).toBeEnabled()
   view.unmount()
   view = renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
@@ -861,7 +966,7 @@ it('keeps quote creation disabled while saved project quotes are still loading',
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
   const panel = screen.getByRole('tabpanel')
-  const quoteButton = await within(panel).findByRole('button', { name: '견적 열기' })
+  const quoteButton = await within(panel).findByRole('button', { name: '견적 저장' })
   expect(quoteButton).toBeDisabled()
   fireEvent.click(quoteButton)
   expect(quoteCreates).toEqual([])
@@ -886,9 +991,9 @@ it('rechecks quotes after a lookup failure before allowing quote creation', asyn
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
   const panel = screen.getByRole('tabpanel')
-  const quoteButton = await within(panel).findByRole('button', { name: '견적 열기' })
-  await waitFor(() => expect(quoteButton).toBeEnabled())
-  fireEvent.click(quoteButton)
+  const retryButton = await within(panel).findByRole('button', { name: '견적 이력 다시 조회' })
+  expect(within(panel).getByRole('button', { name: '견적 저장' })).toBeDisabled()
+  fireEvent.click(retryButton)
   expect(await within(panel).findByText('견적 SS34L × 100')).toBeInTheDocument()
   expect(quoteReads).toBe(2)
   expect(quoteCreates).toEqual([])
@@ -911,10 +1016,11 @@ it('does not create a quote when the failed lookup cannot be rechecked', async (
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
   const panel = screen.getByRole('tabpanel')
-  const quoteButton = await within(panel).findByRole('button', { name: '견적 열기' })
-  await waitFor(() => expect(quoteButton).toBeEnabled())
-  fireEvent.click(quoteButton)
-  expect(await within(panel).findByRole('alert')).toHaveTextContent('견적을 저장하지 못했습니다.')
+  const retryButton = await within(panel).findByRole('button', { name: '견적 이력 다시 조회' })
+  fireEvent.click(retryButton)
+  await waitFor(() => expect(quoteReads).toBe(2))
+  expect(within(panel).getByRole('alert')).toHaveTextContent('견적 이력을 불러오지 못했습니다.')
+  expect(within(panel).getByRole('button', { name: '견적 저장' })).toBeDisabled()
   expect(quoteReads).toBe(2)
   expect(quoteCreates).toEqual([])
 })
@@ -1154,7 +1260,7 @@ it('shows concise part links and opens the chosen candidate checks and evidence 
   fireEvent.click(second)
   expect(await within(screen.getByRole('tabpanel')).findByRole('heading', { name: '1N5819' })).toHaveFocus()
   expect(within(screen.getByRole('tabpanel')).getByText('20 V')).toBeInTheDocument()
-  expect(within(screen.getByRole('tabpanel')).getByText('문서에 없는 값: VF')).toBeInTheDocument()
+  expect(within(screen.getByRole('region', { name: '승인 전에 필요한 확인' })).getByText('허용 전압 강하')).toBeInTheDocument()
   expect(within(screen.getByRole('tabpanel')).getByText('r1-1N5819.pdf')).toBeInTheDocument()
   expect(within(screen.getByRole('tabpanel')).queryByText('r1-SS34L.pdf')).toBeNull()
   expect(within(screen.getByRole('tabpanel')).queryByRole('heading', { name: '근거' })).toBeNull()
@@ -1411,4 +1517,212 @@ it('blocks the composer while the run waits for conditions', async () => {
   fireEvent.keyDown(box, { key: 'Enter' })
   await new Promise(resolve => setTimeout(resolve, 100))
   expect(runs).toHaveLength(1)
+})
+
+it.each(['missing', 'unverified'])('blocks positive candidate with required condition %s', async mode => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    const candidate = run.result.judgement.shown[0]
+    Object.assign(candidate, mode === 'missing' ? { missing: ['v_in_max'] } : { checks: [{ code: 'VRRM', tier: 'required', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인 전')
+  await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeDisabled())
+})
+
+it('restores a saved quote when the workbench mounts again', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  const quotes: { id: number; approval_id: number; part_number: string; quantity: number }[] = []
+  network((path, init) => {
+    if (path === '/api/projects/1/quotes') return Response.json(quotes)
+    if (path === '/api/approvals/7/quotes' && init.method === 'POST') {
+      const quote = { id: quotes.length + 1, approval_id: 7, part_number: 'SS34L', quantity: JSON.parse(String(init.body)).quantity }
+      quotes.push(quote)
+      return Response.json(quote, { status: 201 })
+    }
+    return base(path, init)
+  })
+  const show = () => renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  show()
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  fireEvent.change(await screen.findByRole('spinbutton', { name: '수량' }), { target: { value: '25' } })
+  fireEvent.click(screen.getByRole('button', { name: '견적 저장' }))
+  expect(await screen.findByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(quotes).toHaveLength(1)
+  cleanup()
+  show()
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  expect(await screen.findByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(quotes).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: '새 견적 작성' }))
+  expect(quotes).toHaveLength(1)
+  fireEvent.change(screen.getByRole('spinbutton', { name: '수량' }), { target: { value: '3' } })
+  fireEvent.click(screen.getByRole('button', { name: '견적 저장' }))
+  expect(await screen.findByText('견적 SS34L × 3')).toBeInTheDocument()
+  expect(quotes).toHaveLength(2)
+  fireEvent.change(screen.getByRole('combobox', { name: '저장된 견적' }), { target: { value: '1' } })
+  expect(screen.getByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(quotes).toHaveLength(2)
+})
+
+it('exposes price lookup for the approved candidate without price_parts', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => ({ ...candidateRun(id), result: { ...candidateRun(id).result, price_parts: [] } }), stored)
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  expect(screen.getByRole('button', { name: '가격·재고 조회' })).toBeInTheDocument()
+})
+
+
+it('blocks new quote saving after history lookup fails and recovers through GET only', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  let fails = true
+  const writes: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    if (path === '/api/projects/1/quotes') return fails ? failure('UNAVAILABLE', '조회 실패', 503) : Response.json([{ id: 1, approval_id: 7, part_number: 'SS34L', quantity: 25 }])
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  expect(await screen.findByText(/견적 이력을 불러오지 못했습니다/)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '견적 저장' })).toBeDisabled()
+  fails = false
+  fireEvent.click(screen.getByRole('button', { name: '견적 이력 다시 조회' }))
+  expect(await screen.findByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(writes).toEqual([])
+})
+
+it('looks up the server-approved part and quantity only on click and saves quantity without price fields', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', part_number: 'SS34L-ORDER', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  const prices: string[] = [], quotes: unknown[] = []
+  network((path, init) => {
+    if (path.startsWith('/api/prices?')) {
+      prices.push(path)
+      return Response.json({ available: true, source: '모의 판매처', fetched_at: '2026-11-16T00:00:00Z', parts: [{ part_number: 'SS34L-ORDER', manufacturer: '예시', availability: '모의', product_url: null, price_breaks: [], estimate: { quantity: 25, break_quantity: 10, unit_price: '0.10', total: '2.50', currency: 'USD' } }] })
+    }
+    if (path === '/api/approvals/7/quotes') { quotes.push(JSON.parse(String(init.body))); return Response.json({ id: 1, approval_id: 7, part_number: 'SS34L-ORDER', quantity: 25 }, { status: 201 }) }
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  fireEvent.change(screen.getByRole('spinbutton', { name: '수량' }), { target: { value: '25' } })
+  expect(prices).toEqual([])
+  fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
+  expect(await screen.findByText('2.50 USD')).toBeInTheDocument()
+  expect(prices).toEqual(['/api/prices?parts=SS34L-ORDER&quantity=25'])
+  fireEvent.click(screen.getByRole('button', { name: '견적 저장' }))
+  expect(await screen.findByText('견적 SS34L-ORDER × 25')).toBeInTheDocument()
+  expect(quotes).toEqual([{ quantity: 25 }])
+  expect(prices).toHaveLength(1)
+})
+
+
+it('explains missing circuit inputs beside the disabled approval button without duplicate items or writes', async () => {
+  const writes = candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { missing: ['v_in_max', 'i_max', 'v_in_max', 'future_input'] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(guidance).toHaveTextContent('입력 전원 최대 전압')
+  expect(guidance).toHaveTextContent('다이오드 최대 순방향(부하) 전류')
+  expect(guidance).toHaveTextContent('예: 12 V')
+  expect(guidance).toHaveTextContent('예: 1 A')
+  expect(guidance).toHaveTextContent('future_input')
+  expect(within(guidance).getAllByText('입력 전원 최대 전압')).toHaveLength(1)
+  expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: '검토하고 승인' })).toHaveAttribute('aria-describedby', guidance.id)
+  expect(writes).toEqual([])
+})
+
+it.each([
+  ['시험 조건이 다르거나 적혀 있지 않음', '후보 데이터시트'],
+  ['원래 부품의 같은 시험 조건 값 없음', '원래 부품의 데이터시트'],
+  ['빠진 값: v_in_max', '회로값'],
+  ['회로 전류를 몰라 그 전류의 VF를 볼 수 없음', '순방향 전류'],
+])('explains the required specification and next check for %s', async (why, action) => {
+  const writes = candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { checks: [{ code: 'VRRM', tier: 'required', result: 'unverified', why, threshold: 15, op: '>=', unit: 'V', condition: 'TA=25°C' }, { code: 'IR', tier: 'conditional', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(guidance).toHaveTextContent('반복 최대 역전압 (VRRM)')
+  expect(guidance).toHaveTextContent('15 V')
+  expect(guidance).toHaveTextContent('TA=25°C')
+  expect(guidance).toHaveTextContent(action)
+  expect(guidance).not.toHaveTextContent('누설 전류 (IR)')
+  expect(writes).toEqual([])
+})
+
+it('keeps unknown specification codes explicit and does not invent a value or unit', async () => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { checks: [{ code: 'FUTURE_SPEC', tier: 'required', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(guidance).toHaveTextContent('FUTURE_SPEC')
+  expect(guidance).toHaveTextContent('후보 데이터시트')
+  expect(guidance).not.toHaveTextContent('예: 12 V')
+})
+
+it('does not block approval or show missing-required guidance for an optional unverified check', async () => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { checks: [{ code: 'IR', tier: 'conditional', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+  expect(screen.queryByRole('region', { name: '승인 전에 필요한 확인' })).toBeNull()
+})
+
+
+it('keeps approval guidance collapsed by default and toggles without losing the question draft or writing', async () => {
+  const writes = candidateApi(false, id => {
+    const run = candidateRun(id)
+    Object.assign(run.result.judgement.shown[0], { missing: ['v_in_max', 'v_in_max'], checks: [{ code: 'VRRM', tier: 'required', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const guidance = await screen.findByRole('region', { name: '승인 전에 필요한 확인' })
+  const details = guidance.querySelector('details')!
+  expect(details).not.toHaveAttribute('open')
+  expect(guidance).toHaveTextContent('입력 1개 · 사양 1개')
+  expect(within(guidance).getByText('입력 전원 최대 전압')).not.toBeVisible()
+  const input = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '작성 중인 회로 조건' } })
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(details).toHaveAttribute('open')
+  expect(within(guidance).getByText('입력 전원 최대 전압')).toBeVisible()
+  fireEvent.click(within(guidance).getByText('승인 전에 필요한 확인'))
+  expect(details).not.toHaveAttribute('open')
+  expect(input).toHaveValue('작성 중인 회로 조건')
+  expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
+  expect(writes).toEqual([])
 })

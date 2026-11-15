@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-export type ApprovalDto = { id: number; message_id: number; candidate_part: string; verdict: string; case_id: number | null; created_at?: string }
+export type ApprovalDto = { id: number; message_id: number; candidate_part: string; part_number?: string; verdict: string; case_id: number | null; created_at?: string }
 export type QuoteDto = { id: number; approval_id: number; part_number: string; quantity: number; created_at?: string }
 export type ApprovedCaseDto = { id: number; approval_id: number; candidate_part: string; verdict: string; created_at?: string }
 

@@ -63,7 +63,7 @@ export default function EmailActionPage({ purpose }: { purpose: 'signup' | 'rese
   const lead = done || !validToken ? undefined : purpose === 'signup' ? '사용할 비밀번호를 설정하면 가입이 완료됩니다.' : '다른 곳에서 사용하지 않는 비밀번호로 설정해 주세요.'
   return <AuthCard title={title} lead={lead} links={<><Link to="/login">로그인</Link><Link to="/privacy">개인정보처리방침</Link></>}>
     {done ? <p className="notice" role="status">{purpose === 'signup' ? '가입이 완료되었습니다. 로그인해 주세요.' : '비밀번호가 변경되었습니다. 기존 로그인은 해제되었으니 다시 로그인해 주세요.'}</p>
-      : validToken ? <form onSubmit={event => void submit(event)}>
+      : validToken ? <form data-refresh-blocked={busy} onSubmit={event => void submit(event)}>
         <label className="field"><span>새 비밀번호(12자 이상)</span><input className="input" type="password" autoComplete="new-password" required minLength={12} maxLength={2048} autoFocus aria-invalid={showPasswordIssue || undefined} aria-describedby="new-password-policy" value={password} onChange={event => setPassword(event.target.value)} />
           <span id="new-password-policy" className="field-hint" role="status">{showPasswordIssue ? passwordIssue : ''}</span></label>
         <label className="field"><span>새 비밀번호 확인</span><input className="input" type="password" autoComplete="new-password" required maxLength={2048} aria-invalid={mismatch || undefined} aria-describedby="password-mismatch" value={confirmation} onChange={event => setConfirmation(event.target.value)} />
@@ -72,7 +72,7 @@ export default function EmailActionPage({ purpose }: { purpose: 'signup' | 'rese
       </form>
         : token || purpose === 'signup' ? <div className="notice" role="alert"><p>유효한 메일 링크가 없습니다. 이메일을 다시 요청해 주세요.</p>
           {purpose === 'signup' ? <Link className="btn" to="/signup">인증 메일 다시 요청</Link> : <button className="btn" onClick={() => { setToken(''); setError(null) }}>재설정 메일 다시 요청</button>}</div>
-          : <form onSubmit={event => void request(event)}>
+          : <form data-refresh-blocked={busy} onSubmit={event => void request(event)}>
             <p className="login-lead">비밀번호로 가입한 계정의 이메일을 입력하세요. Google로만 가입했다면 Google 로그인을 이용해 주세요.</p>
             <label className="field"><span>이메일</span><input className="input" type="email" autoComplete="username" required maxLength={100} autoFocus value={email} onChange={event => setEmail(event.target.value)} /></label>
             {sent && <p className="notice" role="status">재설정 가능한 계정이라면 안내 메일을 보냈습니다. 스팸함도 확인해 주세요. 재요청은 60초 뒤 가능합니다.</p>}

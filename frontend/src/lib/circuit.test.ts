@@ -16,6 +16,25 @@ test('대상 부품이 닿는 넷과 이웃만 뽑고 같은 이웃은 한 번�
 test('LED는 다이오드 목록에 넣지 않는다', () => {
   expect(project.connections.parts!.filter(isDiode).map(part => part.ref)).toEqual(['D1'])
 })
+
+test.each([
+  { value: 'STAT', footprint: '', description: 'Light emitting diode' },
+  { value: 'STAT', footprint: 'LED_SMD:LED_0805_2012Metric' },
+  { value: 'RED', footprint: '', description: 'Red LEDs' },
+  { value: 'STAT', footprint: '', description: '발광 다이오드' },
+  { value: 'LED0805', footprint: '' },
+  { value: '7SEG_3641BS_CA', footprint: 'footprints:7SEG_3641BS' },
+])('값·설명·풋프린트의 LED/표시기를 판정 대상에서 제외한다: %j', metadata => {
+  expect(isDiode({ ref: 'D3', ...metadata })).toBe(false)
+})
+
+test.each(['1N4148', 'D_Schottky', ''])('메타데이터가 부족한 일반 다이오드는 기존대로 허용한다: %s', value => {
+  expect(isDiode({ ref: 'D1', value, footprint: 'Diode_SMD:D_SOD-123', description: 'Schottky barrier rectifier' })).toBe(true)
+})
+
+test('LED 구동 용도 설명을 가진 정류 다이오드를 LED로 오인하지 않는다', () => {
+  expect(isDiode({ ref: 'D1', value: 'SS34', footprint: 'Diode_SMD:D_SMA', description: 'Schottky diode for LED backlight' })).toBe(true)
+})
 test('판정이 없는 결과와 위험한 출처 주소를 걸러 낸다', () => {
   expect(candidatesOf({ judgement: {} } as ResultDto)).toEqual([])
   expect(citationHref({ source_url: 'javascript:alert(1)' })).toBe('')

@@ -1,11 +1,39 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
-import { focusManager, onlineManager } from '@tanstack/react-query'
+import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, expect, it, vi } from 'vitest'
 import PriceLookup from './PriceLookup'
 import { failure, network, priceResult } from '../test/network'
 import { renderWithQueries } from '../test/projects'
 
 afterEach(() => { vi.unstubAllGlobals(); focusManager.setFocused(undefined); onlineManager.setOnline(true) })
+
+it('shows a server estimate for the requested quantity and waits for another click when quantity changes', async () => {
+  const result = { ...priceResult, parts: [{ ...priceResult.parts[0], estimate: { quantity: 25, break_quantity: 10, unit_price: '0.10', total: '2.50', currency: 'USD' } }] }
+  const fetchPrice = vi.fn((_path: string) => Response.json(result))
+  network(fetchPrice)
+  const { client, rerender } = renderWithQueries(<PriceLookup parts={['SS34']} quantity={25} />)
+  expect(fetchPrice).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
+  expect(await screen.findByText('2.50 USD')).toBeInTheDocument()
+  expect(fetchPrice.mock.calls[0][0]).toBe('/api/prices?parts=SS34&quantity=25')
+  rerender(<QueryClientProvider client={client}><PriceLookup parts={['SS34']} quantity={100} /></QueryClientProvider>)
+  expect(screen.queryByText('2.50 USD')).toBeNull()
+  expect(fetchPrice).toHaveBeenCalledTimes(1)
+  fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
+  await waitFor(() => expect(fetchPrice).toHaveBeenCalledTimes(2))
+  expect(fetchPrice.mock.calls[1][0]).toBe('/api/prices?parts=SS34&quantity=100')
+})
+
+it('does not query with an invalid quantity and explains an unavailable estimate', async () => {
+  const fetchPrice = vi.fn(() => Response.json({ ...priceResult, parts: [{ ...priceResult.parts[0], estimate: null }] }))
+  network(fetchPrice)
+  const { client, rerender } = renderWithQueries(<PriceLookup parts={['SS34']} quantity={0} />)
+  expect(screen.getByRole('button', { name: '가격·재고 조회' })).toBeDisabled()
+  expect(fetchPrice).not.toHaveBeenCalled()
+  rerender(<QueryClientProvider client={client}><PriceLookup parts={['SS34']} quantity={25} /></QueryClientProvider>)
+  fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
+  expect(await screen.findByText(/계산을 보류했습니다/)).toBeInTheDocument()
+})
 
 it.each(['focus', 'reconnect', 'invalidate'])('does not query again on %s after a button-triggered lookup', async event => {
   const fetchPrice = vi.fn(() => Response.json(priceResult))

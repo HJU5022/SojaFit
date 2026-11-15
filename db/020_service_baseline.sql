@@ -173,7 +173,7 @@ END $$;
 CREATE TABLE approvals (
     id             BIGSERIAL PRIMARY KEY,
     user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    message_id     BIGINT NOT NULL UNIQUE REFERENCES messages(id) ON DELETE CASCADE,
+    message_id     BIGINT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
     -- [왜] 승인 JSON 안에 묻혀 있던 값 3개를 칸으로 꺼낸다(견적 · 승인 사례 목록이 JSON을 파싱하지 않고 읽게 하고, 그 두 표의 스냅샷 복사본을 없앤다).
     candidate_part TEXT NOT NULL CONSTRAINT ck_approvals_candidate_part CHECK (char_length(candidate_part) BETWEEN 1 AND 100),
     verdict        TEXT NOT NULL CONSTRAINT ck_approvals_verdict CHECK (verdict IN ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT')),
@@ -183,6 +183,7 @@ CREATE TABLE approvals (
     UNIQUE (id, user_id)
 );
 CREATE INDEX ix_approvals_user ON approvals(user_id);
+CREATE INDEX ix_approvals_message ON approvals(message_id);
 
 CREATE TABLE quotes (
     id          BIGSERIAL PRIMARY KEY,

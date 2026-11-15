@@ -43,7 +43,12 @@ function dummyCircuitsPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), dummyCircuitsPlugin()],
+  plugins: [react(), dummyCircuitsPlugin(), {
+    name: 'sojafit-build-version',
+    apply: 'build',
+    // 고정 경로 로고만 바뀐 배포도 열린 탭에서 감지한다.
+    transformIndexHtml: () => [{ tag: 'meta', attrs: { name: 'sojafit-build', content: new Date().toISOString() } }],
+  }],
   server: { proxy: { '/api': 'http://localhost:8000' } },
   test: { environment: 'jsdom', css: true, setupFiles: ['./src/test/setup.ts'] },
 })

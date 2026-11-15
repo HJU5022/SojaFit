@@ -2,6 +2,7 @@ import { MotionConfig } from 'motion/react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
+import DeploymentUpdate from './components/DeploymentUpdate'
 import AdminUsersPage from './pages/AdminUsersPage'
 import EmailActionPage from './pages/EmailActionPage'
 import LandingPage from './pages/LandingPage'
@@ -13,6 +14,7 @@ import WorkbenchPage from './pages/WorkbenchPage'
 
 export default function App() {
   return <MotionConfig reducedMotion="user"><AuthProvider>
+    <DeploymentUpdate />
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />

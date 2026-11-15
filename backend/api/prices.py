@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from backend import auth
+from backend.judge.pricing import price_estimate
 from backend.services import mouser
 
 router = APIRouter(prefix='/api', tags=['prices'])
@@ -24,12 +25,21 @@ class PriceBreak(BaseModel):
     currency: str | None
 
 
+class PriceEstimate(BaseModel):
+    quantity: int
+    break_quantity: int
+    unit_price: str
+    total: str
+    currency: str
+
+
 class PricePart(BaseModel):
     part_number: str | None
     manufacturer: str | None
     price_breaks: list[PriceBreak]
     availability: str | None
     product_url: str | None
+    estimate: PriceEstimate | None = None
 
 
 class PricesAvailable(BaseModel):
@@ -55,8 +65,9 @@ def price_unavailable(reason: str) -> dict:
     return {"available": False, "source": mouser.SOURCE, "reason": reason, "message": message, "parts": []}
 
 
-@router.get("/prices", dependencies=[Depends(auth.current_user_id)], response_model=PricesAvailable | PricesUnavailable)
-def prices(response: Response, parts: str = Query(min_length=1, max_length=450, description="쉼표로 나눈 품번 1~10개")):
+@router.get("/prices", dependencies=[Depends(auth.current_user_id)], response_model=PricesAvailable | PricesUnavailable, response_model_exclude_unset=True)
+def prices(response: Response, parts: str = Query(min_length=1, max_length=450, description="쉼표로 나눈 품번 1~10개"),
+           quantity: int | None = Query(default=None, ge=1, le=100000)):
     """로그인한 사용자에게 후보 품번의 Mouser 가격·재고를 요청 때 한 번 조회해 돌려준다(SPEC 4절).
 
     [주의] ADR 0009: 결과는 이 응답으로만 내보내고 저장 · 캐시 · 로그하지 않는다. 그래서 이 함수는 아무것도 로그에 쓰지 않고,
@@ -71,6 +82,10 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
     if os.getenv("DEMO_MODE", "1") == "1":
         return price_unavailable("demo_mode")  # SPEC 7절: 데모 모드는 Mouser 칸을 비운다
     try:
-        return {"available": True, **mouser.search_parts(names)}
+        found = mouser.search_parts(names)
+        if quantity is not None:
+            for part in found['parts']:
+                part['estimate'] = price_estimate(part, names, quantity)
+        return {"available": True, **found}
     except mouser.MouserError as error:
         return price_unavailable(error.kind)  # [주의] 오류를 로그에 쓰지 않는다. 종류만 화면에 알린다

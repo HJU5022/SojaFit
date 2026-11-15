@@ -41,13 +41,14 @@ class Approval(BaseModel):
     id: int
     message_id: int
     candidate_part: str
+    part_number: str
     verdict: Approvable
     case_id: int  # 함께 만든 승인 사례 id
     created_at: datetime
 
 
 class SavedApproval(Approval):
-    case_id: int | None  # 사례를 삭제해도 사람 승인은 남는다.
+    case_id: int | None  # 응답 형식은 유지하며 조회에는 활성 사례가 있는 승인만 반환한다.
 
 
 class Quote(BaseModel):

@@ -287,7 +287,7 @@ it.each(['projectId=1&targetRef=R1', 'projectId=1'])('does not enter a new revie
     expect(outOfScope).toBeDisabled()
     expect(screen.getByRole('textbox', { name: '질문' })).toBeInTheDocument()
   } else {
-    expect(await screen.findByText(/현재 다이오드만 판정합니다/)).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('R1은(는) 현재 판정 범위 밖입니다.')
     expect(screen.queryByRole('textbox', { name: '질문' })).toBeNull()
     expect(screen.getAllByRole('button', { name: '부품 고르기' }).length).toBeGreaterThan(0)
   }

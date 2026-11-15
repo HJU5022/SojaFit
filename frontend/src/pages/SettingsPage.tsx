@@ -73,7 +73,7 @@ export default function SettingsPage() {
       <p className="page-note">저장하면 다음 검토에서 참고 정보로 함께 보입니다.</p>
       {facts.isPending && <div className="skeleton" role="status"><span className="sr-only">설정을 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
       {readError ? <div className="notice" role="alert"><p {...requestIdProps(readError)}>설정을 불러오지 못했습니다. {errorMessage(readError)}</p><button className="btn" disabled={busy} onClick={() => void reload()}>다시 불러오기</button></div> : null}
-      <form className="form-grid" onSubmit={event => { event.preventDefault(); save() }}>
+      <form className="form-grid" data-refresh-managed data-refresh-blocked={busy || Boolean(saved && (Object.keys(form) as ProfileKind[]).some(kind => form[kind] !== saved[kind]))} onSubmit={event => { event.preventDefault(); save() }}>
         <label className="field"><span>{LABELS.affiliation}</span><input className="input" maxLength={100} value={form.affiliation} disabled={locked} placeholder="예: 한빛전자 회로팀" onChange={event => setForm(current => ({ ...current, affiliation: event.target.value }))} /></label>
         {select('job_role', JOB_ROLES)}{select('mounting_preference', MOUNTING)}
         <div className="form-actions"><button className="btn btn-primary" disabled={locked}>저장</button>{notice && <span role="status">{notice}</span>}</div>

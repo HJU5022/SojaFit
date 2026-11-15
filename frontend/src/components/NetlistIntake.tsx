@@ -19,7 +19,7 @@ export default function NetlistIntake({ question, setQuestion, hasCircuit, onAsk
     else if (hasCircuit) onAsk(question)
     else attachments.setError(new Error('회로 검토를 시작하려면 넷리스트를 첨부해 주세요.'))
   }
-  return <section className="review netlist-intake" aria-label="프로젝트 채팅">
+  return <section className="review netlist-intake" aria-label="프로젝트 채팅" data-refresh-blocked={Boolean(question || files.length || attachments.busy)}>
     {attachments.dragging && <div className="attachment-drop-guide" role="status" aria-label="파일 놓기"><Paperclip aria-hidden="true" /><p>.net·.txt 파일 하나를 놓으면 채팅에 첨부됩니다.</p></div>}
     <ChatPane context="intake" input={input} composer={<>
       {attachments.error ? <div className="notice notice-dismissible" role="alert" {...requestIdProps(attachments.error)}><p>{errorMessage(attachments.error)}</p><button type="button" className="icon-btn" aria-label="첨부 안내 닫기" onClick={() => attachments.setError(null)}><X aria-hidden="true" /></button></div> : null}
