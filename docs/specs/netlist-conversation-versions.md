@@ -1,6 +1,10 @@
 # 넷리스트 없는 프로젝트와 대화별 회로 버전
 
-- 상태: 사용자 요청에 따른 STH 구현 작업서. 루트 SPEC 4·8.5 반영은 조장 검토 제안.
+- 상태: 현행(구현 작업서). 서버 쪽은 구현·반영됐다(SPEC 4절 `POST /api/projects/{id}/netlist`). 화면 부분의 파일 이름은 11-16 새 화면 교체 전 것이다
+- 기준일: 2026-11-14(문서 안의 마지막 날짜)
+- 기준 커밋: 기록 없음
+- 정본 여부: 정본(빈 프로젝트 · 중복 확인 · 대화별 회로 버전의 계약). 경로 목록은 [SPEC.md](../../SPEC.md) 4절
+- 관련 문서: [local-live-api.md](local-live-api.md), [frontend/src/SRC.md](../../frontend/src/SRC.md)
 - 사용자 결정: 다른 넷리스트를 붙여도 같은 프로젝트 안에서 새 회로 버전·새 대화로 이어간다. 사이드바 압축은 시안만 제시하고 적용하지 않는다.
 
 ## Why
@@ -29,7 +33,7 @@
 - POST /api/projects/{id}/netlist multipart file 한 개(.net·.txt, UTF-8 KiCad export, 비어 있지 않은 5MiB 이하): 인증·Origin·기존 메모리 수신 상한 재사용. 정규화 연결/해시/파서 버전만 저장하고 {project, thread_id} 반환. 새 버전과 새 대화 생성은 같은 트랜잭션이며 기존 대화는 변경하지 않는다.
 - DB: project_circuit_versions에 프로젝트별 불변 버전 저장, circuits는 최신 버전, threads.circuit_version으로 버전 고정. 기존 회로/대화는 v1으로 backfill. 실행 시작·재개·회로 상세의 모든 읽기 경로가 버전 고정을 따른다. FK cascade·RLS/권한 회수 유지.
 - GET /api/projects/{id}?thread_id=UUID로 소유 대화의 회로 상세 조회. 다른 프로젝트/사용자 대화는404. Project DTO에 circuit_version(없음0)을 포함한다.
-- 프런트는 기존 api/projects·Workbench·Review·ChatPane·useConversation을 재사용한다. 파일은 run 요청에 넣지 않고 위 파싱 API를 먼저 사용한다. 요청 중 중복 전송/분석 방지, 실패 시 원문 유지. 전송 성공 후 새 문맥으로 이동하며 원래 ref를 새 파일의 대상으로 추정하지 않는다.
+- 프런트(11-14 옛 화면 기준)는 기존 api/projects·Workbench·Review·ChatPane·useConversation을 재사용했다. 새 화면은 `frontend/src/Workbench.tsx`의 첨부가 이 API를 부른다. 파일은 run 요청에 넣지 않고 위 파싱 API를 먼저 사용한다. 요청 중 중복 전송/분석 방지, 실패 시 원문 유지. 전송 성공 후 새 문맥으로 이동하며 원래 ref를 새 파일의 대상으로 추정하지 않는다.
 
 ## AC
 - Given 같은 계정의 같은 이름 또는 같은 파일 내용, When 확인 없이 생성, Then409·추가 저장0·안전한 소유 프로젝트 후보만 제공한다. 다른 계정의 같은 이름/파일은201이다.

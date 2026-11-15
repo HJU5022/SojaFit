@@ -1,10 +1,13 @@
 # 격리한 로컬 실제 API 실행
 
-- 상태: 로컬 실행·로그인·저장·실제 모델·외부 검색 응답 확인 (2026-11-15). KiCad 미설치 이미지의 공식 PDF 회로도 수신·정격 분석 통합 검증 완료.
-- 관련 정본: SPEC.md 4절 API·7절 데모, frontend/FRONTEND.md, db/DB.md
+- 상태: 현행. 로컬 실행·로그인·저장·실제 모델·외부 검색 응답 확인(2026-11-15). KiCad 미설치 이미지의 공식 PDF 회로도 수신·정격 분석 통합 검증 완료. 검증은 11-16 새 화면 교체 전 화면으로 했다
+- 기준일: 2026-11-15
+- 기준 커밋: 기록 없음(2026-11-15 통합 검증 환경 기준)
+- 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 4절 API · 7절 데모). 로컬 실제 API 실행 방식의 상세
+- 관련 문서: [frontend/FRONTEND.md](../../frontend/FRONTEND.md), [db/DB.md](../../db/DB.md), [netlist-conversation-versions.md](netlist-conversation-versions.md)
 
 ## Why
-로컬 5173은 dummy 화면이고 8000은 조회 전용 검증 서버여서 프로젝트 생성·실제 분석을 확인할 수 없다. 운영 DB에 연결하지 않고 정식 서비스 흐름을 확인해야 한다.
+(2026-11-15 당시) 로컬 5173은 더미 화면이고 8000은 조회 전용 검증 서버여서 프로젝트 생성·실제 분석을 확인할 수 없다. 운영 DB에 연결하지 않고 정식 서비스 흐름을 확인해야 한다.
 
 ## Goal
 - localhost:8010 한 출처에서 빌드한 화면과 backend.main:app 제공.
@@ -29,7 +32,7 @@
 - 로컬 로그인 정보는 .env.local의 LOCAL_LOGIN_EMAIL/LOCAL_LOGIN_PASSWORD에만 보관한다. 이 PC의 초기 일반 계정은 기존 해시 함수를 사용해 테스트 DB에만 생성한다. 새 환경에서는 `docker compose --env-file .env.local -f docker-compose.local.yml exec api python -m backend.auth`로 대화형 계정을 만든다.
 - 새 DB는 기존 db/*.sql과 backend.conversations.memory_service --setup으로 준비한다. 코퍼스는 기존 ingest의 --chunks-only로 넣고 해시가 일치하는 캐시 벡터/비트 코드를 검색 대상 행에만 COPY한다. --voyage는 표지까지 캐시가 있는 경우에만 쓸 수 있다. 적재 하위 프로세스의 공급자 키를 비우고 시작 과정에 유료 호출을 넣지 않는다.
 - 초기 계정은 기존 backend.auth의 비밀번호 해시/계정 생성 경로를 사용해 테스트 DB에만 만든다. 데모 로그인·인증 우회는 추가하지 않는다.
-- 로컬 이미지의 프런트 빌드에는 `VITE_LOCAL_ATTACHMENT_UI=1`을 넘긴다. 현재 실제 첨부 처리 계약은 [netlist-conversation-versions.md](netlist-conversation-versions.md)를 따른다. 파일 선택·드롭 후 전송하면 기존 파서로 검증하고 새 회로 버전·새 대화로 이어지며 실패 시 초안·첨부를 보존한다. 실제 API 분석과 외부 회로도 검색은 공급자 설정에 따라 과금된다. 업로드 넷리스트를 읽는 파서는 KiCad CLI가 필요하지 않으며, KiCad 원본을 PNG로 변환하는 기능만 로컬 범위에서 제외한다.
+- 로컬 이미지의 프런트 빌드에는 `VITE_LOCAL_ATTACHMENT_UI=1`을 넘긴다(`docker-compose.local.yml`, `Dockerfile` 빌드 인자). 11-16 새 화면의 소스는 `VITE_` 변수를 읽지 않아 이 값은 지금 효과가 없고 첨부 UI는 항상 보인다. 현재 실제 첨부 처리 계약은 [netlist-conversation-versions.md](netlist-conversation-versions.md)를 따른다. 파일 선택·드롭 후 전송하면 기존 파서로 검증하고 새 회로 버전·새 대화로 이어지며 실패 시 초안·첨부를 보존한다. 실제 API 분석과 외부 회로도 검색은 공급자 설정에 따라 과금된다. 업로드 넷리스트를 읽는 파서는 KiCad CLI가 필요하지 않으며, KiCad 원본을 PNG로 변환하는 기능만 로컬 범위에서 제외한다.
 - 2026-11-15 통합 검증 환경은 OSC Compose 프로젝트의 127.0.0.1:8011이다. 공식 PDF 회로도 수신과 LLM 정격 분석을 확인했다. 전용 8010 Compose의 검증 범위는 설정 검사다.
 
 ## AC
