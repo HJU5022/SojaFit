@@ -804,6 +804,7 @@ SojaFit (proj3-b)
     │   ├── RESEARCH.md     <- 폴더 설명
     │   ├── frontend-schematic-work-summary-2026-11-15.md <- 프런트 오류·회로도 검색 개선 17개 작업과 검증 범위 공유 보고서
     │   ├── schematic-search-verification-2026-11-15.md <- CDFER·다이오드 검색 실검증과 한도 소진 시점의 미검증 항목
+    │   ├── resolved-issues-summary-2026-11-15.md <- 회로도 검색·입력·판정·대화 기억의 해결·검증 완료 항목 공유 보고서
     │   ├── docker-cold-start-measurements.md  <- G2 빌드·첫 기능·첫 회로도·운영 응답 실측 비교
     │   ├── d9-outside-evidence-2026-11-11.md <- D9 근거 자료: 저장소 안으로 옮긴 원시 목록
     │   ├── grade-evidence-validation.md <- 1등급 2등급 3등급 근거 흐름과 검증 범위

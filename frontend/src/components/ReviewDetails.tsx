@@ -5,7 +5,7 @@ import { ChevronDown, CircleDashed, ExternalLink, FileText, ShieldCheck, X } fro
 import { getRun, listJudgeRoles } from '../api/conversations'
 import type { CandidateDto, CheckDto, CitationDto, ResultDto } from '../api/conversations'
 import type { CircuitPart } from '../api/projects'
-import { approveMessage, createQuote, listMessageApprovals } from '../api/quotes'
+import { approveMessage, createQuote, listMessageApprovals, listProjectQuotes } from '../api/quotes'
 import type { QuoteDto } from '../api/quotes'
 import type { ApiError } from '../api/client'
 import { errorMessage, requestIdProps } from '../api/client'
@@ -75,17 +75,21 @@ export function Checks({ candidate, resolved, showDocument = false }: { candidat
   </table></div>
 }
 
-function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto; messageId: number | null; reviewer: string }) {
+function Approval({ candidate, messageId, projectId, reviewer }: { candidate: CandidateDto; messageId: number | null; projectId: number; reviewer: string }) {
   const quantityId = useId()
   const client = useQueryClient()
   const saved = useQuery({ queryKey: ['message-approvals', messageId], queryFn: ({ signal }) => listMessageApprovals(messageId!, signal), enabled: messageId !== null, retry: false, refetchOnMount: 'always' })
   const approval = saved.data?.find(item => item.message_id === messageId && item.candidate_part === candidate.part && item.verdict === candidate.verdict)
   const other = !approval && saved.data?.[0]
   const checking = messageId !== null && (saved.isPending || saved.isFetching)
+  const quotes = useQuery({ queryKey: ['project-quotes', projectId], queryFn: ({ signal }) => listProjectQuotes(projectId, signal), enabled: Boolean(approval), retry: false, refetchOnMount: 'always' })
   const [quote, setQuote] = useState<QuoteDto | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const approvable = candidate.verdict !== 'NOT_VERIFIED' && candidate.verdict !== 'NOT_SUFFICIENT'
+  const blockedByConditions = Boolean(candidate.missing?.length) || (candidate.checks ?? []).some(check => check.tier === 'required' && check.result === 'unverified')
+  const savedQuote = quotes.data?.filter(item => item.approval_id === approval?.id).at(-1) ?? null
+  const displayedQuote = quote ?? savedQuote
   async function act(job: () => Promise<void>) { if (busy) return; setBusy(true); setError(null); try { await job() } catch (reason) { setError(reason) } finally { setBusy(false) } }
   async function approve() {
     try {
@@ -103,24 +107,32 @@ function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto;
   function openQuote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const quantity = Math.max(1, Math.floor(Number(new FormData(event.currentTarget).get('quantity'))) || 1)
-    void act(async () => setQuote(await createQuote(approval!.id, quantity)))
+    void act(async () => {
+      if (quotes.isError) {
+        const current = await quotes.refetch()
+        if (current.error) throw current.error
+        const existing = current.data?.filter(item => item.approval_id === approval!.id).at(-1)
+        if (existing) { setQuote(existing); return }
+      }
+      setQuote(await createQuote(approval!.id, quantity))
+    })
   }
   return <div className="approval">
     <p className="approval-state">{approval ? <ShieldCheck aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}{approval ? '승인됨' : checking ? '승인 상태 확인 중' : saved.error ? '승인 상태 확인 안 됨' : other ? '다른 후보가 승인됨' : '승인 전'}</p>
     {approval && <p className="property-note">{reviewer}</p>}
     {other && <p className="property-note">이 질문에서 승인한 후보: {other.candidate_part}</p>}
-    {quote && <p className="property-note">견적 {quote.part_number} × {quote.quantity}</p>}
-    {!approval && !other && <button className="btn btn-primary" disabled={busy || checking || Boolean(saved.error) || messageId === null || !approvable} onClick={() => void act(approve)}>{busy ? '저장 중' : '검토하고 승인'}</button>}
+    {displayedQuote && <p className="property-note">견적 {displayedQuote.part_number} × {displayedQuote.quantity}</p>}
+    {!approval && !other && <button className="btn btn-primary" disabled={busy || checking || Boolean(saved.error) || messageId === null || !approvable || blockedByConditions} onClick={() => void act(approve)}>{busy ? '저장 중' : '검토하고 승인'}</button>}
     {!approvable && <p className="property-note">이 판정은 승인 대상이 아닙니다.</p>}
     {saved.error && <div className="notice" role="alert" {...requestIdProps(saved.error)}><p>승인 상태를 불러오지 못했습니다. {errorMessage(saved.error)}</p><button className="btn" onClick={() => void saved.refetch()}>승인 상태 다시 확인</button></div>}
-    {approval && !quote && <form className="quote" onSubmit={openQuote}><label className="sr-only" htmlFor={quantityId}>수량</label><input id={quantityId} name="quantity" className="input" type="number" min={1} defaultValue={1} inputMode="numeric" /><button className="btn btn-primary" disabled={busy}>견적 열기</button></form>}
+    {approval && !displayedQuote && <form className="quote" onSubmit={openQuote}><label className="sr-only" htmlFor={quantityId}>수량</label><input id={quantityId} name="quantity" className="input" type="number" min={1} defaultValue={1} inputMode="numeric" /><button className="btn btn-primary" disabled={busy || quotes.isPending || quotes.isFetching}>견적 열기</button></form>}
     {error ? <p className="notice" role="alert" {...requestIdProps(error)}>{approval ? '견적을 저장하지 못했습니다. 견적 열기로 다시 시도해 주세요.' : '승인을 저장하지 못했습니다. 검토하고 승인으로 다시 시도해 주세요.'} {errorMessage(error)}</p> : null}
   </div>
 }
 
 
-function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target, nets, counts, reviewer }: Context & {
-  tab: DetailTab; active: boolean; panelId: string; focus: boolean; onFocused: () => void; fallback?: ResultDto
+function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, projectId, target, nets, counts, reviewer }: Context & {
+  tab: DetailTab; active: boolean; panelId: string; focus: boolean; onFocused: () => void; fallback?: ResultDto; projectId: number
 }) {
   const panel = useRef<HTMLDivElement>(null)
   const details = useRef<HTMLHeadingElement>(null)
@@ -135,6 +147,7 @@ function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target
   const role = candidate?.role ?? judgement?.roles?.[0] ?? ''
   const roleName = (Array.isArray(roles.data) ? roles.data.find(item => item.code === role)?.name : '') || role
   const documents = documentEvidenceOf(result)
+  const packageCitation = candidate?.package_citation?.outline_page != null ? { ...candidate.package_citation, page: candidate.package_citation.outline_page } : candidate?.package_citation
   const resultLoading = run.isFetching && !result
   useEffect(() => {
     if (!active || !focus || !result) return
@@ -150,14 +163,14 @@ function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target
       </section>
       {candidate && <>
       <section className="property-group" aria-labelledby={`approval-heading-${panelId}`}><h2 id={`approval-heading-${panelId}`}>승인</h2>
-        {resultLoading ? <div className="skeleton" role="status"><span className="sr-only">승인할 결과를 기다리는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /></div> : candidate ? <Approval key={`${runId}-${candidate.part}`} candidate={candidate} messageId={run.data?.message_id ?? null} reviewer={reviewer} /> : <p className="property-note">판정 후 승인할 수 있습니다. 질문에 후보와 사용 조건을 입력해 주세요.</p>}
+        {resultLoading ? <div className="skeleton" role="status"><span className="sr-only">승인할 결과를 기다리는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /></div> : candidate ? <Approval key={`${runId}-${candidate.part}`} candidate={candidate} messageId={run.data?.message_id ?? null} projectId={projectId} reviewer={reviewer} /> : <p className="property-note">판정 후 승인할 수 있습니다. 질문에 후보와 사용 조건을 입력해 주세요.</p>}
       </section>
       <section className="property-group" aria-labelledby={`verdict-heading-${panelId}`}><h2 id={`verdict-heading-${panelId}`}>판정</h2><dl>
         <div><dt>결과</dt><dd>{candidate ? <span className={`dot tone-${VERDICT_TONE[candidate.verdict]}`}>{VERDICT_LABELS[candidate.verdict]}</span> : result ? '판정 없음' : '결과 대기'}</dd></div>
         {candidate && <div><dt>기판 수정</dt><dd>{candidate.board_change === true ? '필요' : candidate.board_change === false ? '필요 없음' : '확인 안 됨'}</dd></div>}
         {(judgement?.input_conditions ?? []).map(item => <div key={item.code}><dt>{INPUT_LABELS[item.code] ?? '추가 조건'}</dt><dd>{item.value}</dd></div>)}
       </dl>
-        {candidate.package_citation && <p className="property-note">패키지 근거: {citationHref(candidate.package_citation) ? <a href={citationHref(candidate.package_citation)} target="_blank" rel="noreferrer">{candidate.package_citation.document} {citationText(candidate.package_citation)}<span className="sr-only"> (새 탭)</span></a> : <span>{candidate.package_citation.document} {citationText(candidate.package_citation)}</span>}</p>}
+        {packageCitation && <p className="property-note">패키지 근거: {citationHref(packageCitation) ? <a href={citationHref(packageCitation)} target="_blank" rel="noreferrer">{packageCitation.document} {citationText(packageCitation)}<span className="sr-only"> (새 탭)</span></a> : <span>{packageCitation.document} {citationText(packageCitation)}</span>}</p>}
       </section>
       <section className="property-group" aria-labelledby={`checks-title-${panelId}`}><h2 id={`checks-title-${panelId}`}>조건 대조</h2>
         <Checks candidate={candidate} resolved showDocument />
@@ -184,9 +197,9 @@ function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target
   </div>
 }
 
-export default function ReviewDetails({ tabs, selected, open, onSelect, onClose, onDismiss, focus, onFocused, runId, result, ...context }: Context & {
+export default function ReviewDetails({ tabs, selected, open, onSelect, onClose, onDismiss, focus, onFocused, runId, result, projectId, ...context }: Context & {
   tabs: DetailTab[]; selected: DetailTab | null; onSelect: (tab: DetailTab | null) => void; onClose: (tab: DetailTab) => void; onDismiss: () => void;
-  open: boolean; focus: boolean; onFocused: () => void; runId: string; result?: ResultDto
+  open: boolean; focus: boolean; onFocused: () => void; runId: string; result?: ResultDto; projectId: number
 }) {
   const list = useRef<HTMLDivElement>(null)
   const refocus = useRef(false)
@@ -214,7 +227,7 @@ export default function ReviewDetails({ tabs, selected, open, onSelect, onClose,
       </div>)}
     </div>
     <button type="button" className="btn props-dismiss" onClick={onDismiss}>상세 패널 접기</button>
-    <DetailsPanel {...context} tab={base} panelId="detail-context" active={!selected} focus={false} onFocused={onFocused} fallback={result} />
-    {tabs.map((tab, index) => <DetailsPanel key={tab.key} {...context} tab={tab} panelId={`detail-${index}`} active={selected?.key === tab.key} focus={selected?.key === tab.key && focus} onFocused={onFocused} fallback={tab.runId === runId ? result : undefined} />)}
+    <DetailsPanel {...context} projectId={projectId} tab={base} panelId="detail-context" active={!selected} focus={false} onFocused={onFocused} fallback={result} />
+    {tabs.map((tab, index) => <DetailsPanel key={tab.key} {...context} projectId={projectId} tab={tab} panelId={`detail-${index}`} active={selected?.key === tab.key} focus={selected?.key === tab.key && focus} onFocused={onFocused} fallback={tab.runId === runId ? result : undefined} />)}
   </aside>
 }

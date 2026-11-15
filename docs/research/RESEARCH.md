@@ -9,6 +9,7 @@
 ## 파일
 - [frontend-schematic-work-summary-2026-11-15.md](frontend-schematic-work-summary-2026-11-15.md) — 프런트 오류·회로도 검색 개선 17개 작업의 문제·원인·해결·효과와 직접 검증/미검증 범위
 - [schematic-search-verification-2026-11-15.md](schematic-search-verification-2026-11-15.md) — CDFER 11장·1N4148 후보 실검증과 한도 소진으로 중단한 1N4007의 결과·한계
+- [resolved-issues-summary-2026-11-15.md](resolved-issues-summary-2026-11-15.md) — 회로도 검색·입력·판정·대화 기억의 해결·검증 완료 항목 공유 보고서
 - [docker-cold-start-measurements.md](docker-cold-start-measurements.md) — 11월 13~14일 Docker G2, 첫 기능·첫 회로도와 운영 첫 요청의 측정값·방법 출처
 - `db-redesign/` — 서비스 DB 재설계(11-11) 설계 문서 7개(이력)(`summary.md` 요약, `as-is-*` 현재 구조, `to-be-*` 목표 구조·영향 지도). 검증 스크립트는 `scripts/db/verify_redesign/`
 - `sojafit-domain-jobs-2026-11-12.md` — 도메인 유사 분야 채용 공고 72건(2026-11-12 기준): 역할·후보 그룹, 공고 링크, 분야별 한계
