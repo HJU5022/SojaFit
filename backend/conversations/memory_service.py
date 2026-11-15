@@ -141,6 +141,15 @@ def initialize(dsn):
         PostgresStore(conn, index=profile.INDEX if vector else None).setup()
 
 
+def has_pending_question(snapshot) -> bool:
+    """사용자의 조건 답을 기다리는 인터럽트가 실제로 남았는가.
+
+    [왜] 예외(502 · 503 · 504)로 멈춘 실행의 체크포인트에는 실패한 노드가 next로 남는다. next만 보면 그 대화가 영원히 조건 대기(409)로 막혔다.
+         같은 대화에 새 질문을 넣으면 남은 노드는 다시 돌지 않고 새 입력이 이어받는다(점검 B #2, InMemorySaver 실측).
+    """
+    return bool(snapshot.next and any(task.interrupts for task in getattr(snapshot, 'tasks', ())))
+
+
 class Conversations:
     def __init__(self, dsn, factory=None):
         from backend.services import demo
@@ -453,7 +462,7 @@ class Conversations:
         self._purge_expired()
         with self.locked(user, thread) as (conn, row):
             self._reconcile(conn, row)
-            if self.graph.get_state(self.config(thread)).next:
+            if has_pending_question(self.graph.get_state(self.config(thread))):
                 # [왜] 화면은 이 코드면 조건 입력 폼을 다시 보여 준다(ADR 0019). 다른 409는 문구만 보여 준다
                 raise ApiError(409, '먼저 요청한 조건에 답해주세요.', code='CONDITION_PENDING')
             history = conn.execute("SELECT content FROM messages WHERE thread_id=%s AND role='user' ORDER BY id", (thread,)).fetchall()
