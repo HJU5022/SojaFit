@@ -1153,4 +1153,6 @@
 - 확인 [실측]: 가짜 API(404 · 500)로 고치기 전 Enter 제출 1건 재현 → 고친 뒤 0건, 404에서 탭 2개 · 업로드 선택. 머지 HEAD에서 `uv run pytest -q` 실패 12건은 Mac 전용 `test_schematic_render.py`뿐(2472 passed), `tests/repo` 5 passed, `npm test` 22/22 · `format:check` · `build` 통과. 새 clone(`69b7be36`) 키 없는 기동: `/health` 200(87초, 빌드 포함), `http_smoke.py --demo --refusal` 28/28, 새 볼륨 `record_demo.py replay` "재생 결과가 기록과 같습니다", 저장소 Playwright 3 passed, 전체 흐름 스크립트(`walk.mjs`) 22/22. 점검용 compose 프로젝트 2개는 `down -v --rmi local`로 지움.
 - `docs/GATES.md` 줄 번호 참조 15개 대조: 13개는 정리 전후 같은 줄. `nodes.py:460` · `agents/docs.py:230` 2개는 정리 전(`76fadcb4`)에도 이미 다른 줄이었다. 변이 시험을 한 커밋(`9c32d12` 등)의 줄 번호라 고치지 않았다.
 - 확인 못 한 것: 실제 운영 모드(`DEMO_MODE=0`) 서버에서 새 프로젝트 만들기는 재배포 뒤 확인. 실제 모델 · Mouser · 메일 경로는 키 없는 데모라 해당 없음.
-- 다음: PR 머지 → main 기준 재배포 → 운영에서 새 프로젝트(업로드) 확인 → README · GATES 배포 리비전 줄 갱신 → 동결 커밋과 배포 리비전 코드 대조.
+- 배포 [실측]: PR #141 머지 `a0abece5`(04:31 KST)를 `git archive`로 내보내 `gcloud run deploy sojafit-api --source <폴더> --no-traffic --tag main-a0abece5 --revision-suffix main-a0abece5-1116`(276초). 0% 태그 주소에서 `/health` · `/login` · `/` · `/app` 200, 배포된 화면 번들에 새 프로젝트 창 수정(안내 문구 · '다시 시도' `type:"button"`) 확인, 환경변수 33개가 이전 리비전과 같음(`DEMO_MODE=0`). 04:36 KST 100% 전환, 운영 주소 4개 200. 배포 소스와 main의 `backend frontend db Dockerfile` 차이 0. 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-main76fadcb4-1116=100 --project=sojafit --region=asia-northeast3`. DB 마이그레이션 없음.
+- README · GATES · 제출 체크리스트의 배포 리비전 줄을 이 리비전으로 채움(별도 PR).
+- 다음: 운영 계정으로 새 프로젝트(업로드) 확인은 조장이 함. 24:00 동결 커밋과 배포 소스 코드 대조를 한 번 더.
