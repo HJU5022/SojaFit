@@ -15,7 +15,7 @@ import {
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
 import { unsupportedPartReason } from './circuit';
-import { NewProject, refreshNavigation } from './Projects';
+import { refreshNavigation } from './Projects';
 import { MissingInput, Reply } from './Reply';
 import { SchematicSection } from './Schematic';
 import type {
