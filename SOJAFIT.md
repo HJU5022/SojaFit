@@ -83,7 +83,7 @@ SojaFit (proj3-b)
 │   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘)
 │   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)
 │   │   ├── TESTS.md        <- 폴더 설명
-│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용 시험
+│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄 시험
 │   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
 │   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기 시험
 │   │   ├── demo.spec.ts    <- Playwright: 데모 로그인부터 승인·견적·설정까지의 브라우저 흐름(키 없는 데모 서버 필요)
@@ -96,7 +96,7 @@ SojaFit (proj3-b)
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
 │       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기
-│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사)
+│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄)
 │       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름
 │       ├── ui.tsx          <- 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식
 │       ├── Landing.tsx     <- 공개 랜딩

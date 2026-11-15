@@ -120,6 +120,14 @@ export type Quote = {
   thread_id?: string;
 };
 export type Approval = { id: number; candidate_part: string; verdict: Verdict; quotes?: Quote[] };
+/** GET /api/prices?quantity= 의 부품별 예상 금액. 품번·가격 구간·통화를 못 맞추면 서버가 null을 준다. */
+export type PriceEstimate = {
+  quantity: number;
+  break_quantity: number;
+  unit_price: string;
+  total: string;
+  currency: string;
+};
 export type Fact = { kind: string; value: string; text: string };
 export type User = { user_id: number; role: 'admin' | 'user'; email: string };
 export type SchematicChoice = {

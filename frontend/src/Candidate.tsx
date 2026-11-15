@@ -4,11 +4,14 @@ import { ArrowUpRight, Check, ChevronDown, Package, ShoppingCart } from 'lucide-
 import { api, ApiError } from './api';
 import {
   basisLabel,
+  estimateRows,
   explainNames,
   formatAmount,
   opLabel,
+  pricesPath,
   roundLongDecimals,
   safeLink,
+  validQuantity,
 } from './display';
 import { inputLabel } from './inputLabels';
 import {
@@ -23,7 +26,8 @@ import {
   useResource,
 } from './ui';
 import type { Approval, Candidate as CandidateType, Project, Result, Role } from './types';
-export function PriceLookup({ part }: { part: string }) {
+/** 누를 때만 가격·재고를 조회한다. quantity가 있으면 그 수량의 적용 구간·단가·예상 금액도 보인다. */
+export function PriceLookup({ part, quantity }: { part: string; quantity?: number }) {
   const [data, setData] = useState<any>(null),
     [error, setError] = useState<Error | null>(null),
     [loading, setLoading] = useState(false);
@@ -31,7 +35,7 @@ export function PriceLookup({ part }: { part: string }) {
     setLoading(true);
     setError(null);
     try {
-      setData(await api('/prices?parts=' + encodeURIComponent(part.replace(/^TSC\s+/, ''))));
+      setData(await api(pricesPath(part, quantity)));
     } catch (e) {
       setError(e as Error);
     } finally {
@@ -40,10 +44,13 @@ export function PriceLookup({ part }: { part: string }) {
   }
   return (
     <div className="price-lookup">
-      <button onClick={load} disabled={loading}>
+      <button onClick={load} disabled={loading || !validQuantity(quantity)}>
         <ShoppingCart size={16} />
         {loading ? '조회 중…' : '가격·재고 조회'}
       </button>
+      {!validQuantity(quantity) && (
+        <p role="status">수량을 1~100000 사이의 정수로 입력해 주세요.</p>
+      )}
       <ErrorBox error={error} retry={load} />
       {data &&
         (data.available ? (
@@ -61,6 +68,12 @@ export function PriceLookup({ part }: { part: string }) {
                       {b.quantity ?? '—'}개부터 · {b.price ?? '—'} {b.currency}
                     </p>
                   ))}
+                  {quantity !== undefined &&
+                    estimateRows(p.estimate).map(([label, value]) => (
+                      <p className="price-estimate" key={label}>
+                        <span>{label}</span> {value}
+                      </p>
+                    ))}
                   {safeLink(p.product_url) && (
                     <a href={safeLink(p.product_url)} target="_blank" rel="noreferrer">
                       판매처에서 보기 <ArrowUpRight size={14} />
@@ -322,7 +335,12 @@ export function CandidateDetails({
       <section>
         <h2>가격과 재고</h2>
         <p>데이터시트 판정과 별도로, 요청할 때 조회합니다.</p>
-        <PriceLookup part={c.part} />
+        {/* [왜] 승인한 뒤에는 아래 견적 수량으로 적용 구간·단가·예상 금액을 같이 계산한다. 수량이 바뀌면 새로 조회하도록 key를 바꾼다 */}
+        <PriceLookup
+          key={approval ? `${c.part}:${quantity}` : c.part}
+          part={c.part}
+          quantity={approval ? quantity : undefined}
+        />
       </section>
       <section className="approval-section">
         <h2>검토 후 승인</h2>

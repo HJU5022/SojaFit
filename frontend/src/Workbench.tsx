@@ -636,7 +636,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   {q.quantity.toLocaleString()}개 · {new Date(q.created_at).toLocaleString('ko-KR')}
                 </p>
                 <a href={`/app?project=${projectId}&thread=${q.thread_id}`}>검토로 돌아가기</a>
-                <PriceLookup part={q.part_number} />
+                <PriceLookup part={q.part_number} quantity={q.quantity} />
               </article>
             ))
           ) : (

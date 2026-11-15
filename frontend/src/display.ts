@@ -4,6 +4,7 @@
  * 출처: SPEC.md 3절(화면 표기), backend/judge/conditions.py(기준식 문법).
  */
 import { inputLabel, INPUT_LABELS } from './inputLabels.ts';
+import type { PriceEstimate } from './types.ts';
 
 /** 기준식의 kV · kI 여유 계수. backend/judge/conditions.py의 MARGINS와 같은 값이다. */
 const MARGIN_LABELS: Record<string, string> = {
@@ -151,4 +152,27 @@ export function withoutCorpusCitations(
     if (remaining.length === ids.length) return match;
     return remaining.length ? `${match.match(/^[ \t]*/)?.[0] ?? ''}[${remaining.join(', ')}]` : '';
   });
+}
+
+/** 견적 수량이 서버가 받는 범위(1~100000 정수)인지 본다. 수량을 안 정했으면(undefined) 괜찮다. */
+export function validQuantity(quantity?: number): boolean {
+  return (
+    quantity === undefined || (Number.isInteger(quantity) && quantity >= 1 && quantity <= 100000)
+  );
+}
+
+/** GET /api/prices 경로(/api는 api()가 붙인다). 수량이 있으면 서버가 구간 단가와 예상 금액(estimate)을 같이 계산한다. */
+export function pricesPath(part: string, quantity?: number): string {
+  const query = 'parts=' + encodeURIComponent(part.replace(/^TSC\s+/, ''));
+  return '/prices?' + query + (quantity === undefined ? '' : '&quantity=' + quantity);
+}
+
+/** 예상 금액 줄(이름, 값). estimate가 null이면 서버가 품번·가격 구간·통화를 맞추지 못한 것이라 계산을 보류했다고 알린다. */
+export function estimateRows(estimate: PriceEstimate | null | undefined): [string, string][] {
+  if (!estimate) return [['예상 금액', '품번·가격 구간·통화를 확인하지 못해 계산을 보류했습니다.']];
+  return [
+    ['적용 구간', `${estimate.break_quantity}개부터`],
+    ['적용 단가', `${estimate.unit_price} ${estimate.currency}`],
+    [`예상 금액 (${estimate.quantity}개)`, `${estimate.total} ${estimate.currency}`],
+  ];
 }

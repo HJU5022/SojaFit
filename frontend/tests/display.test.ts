@@ -13,6 +13,9 @@ import {
   sameOriginImage,
   withoutCorpusCitations,
   safeLink,
+  validQuantity,
+  pricesPath,
+  estimateRows,
 } from '../src/display.ts';
 import { inputPlaceholder } from '../src/inputLabels.ts';
 
@@ -145,4 +148,37 @@ test('inputPlaceholder는 코드 종류별 안내를 주고 모르는 코드는 
   assert.equal(inputPlaceholder('i_fault'), '예: 1 A');
   assert.equal(inputPlaceholder('pwm'), '예 또는 아니오');
   assert.equal(inputPlaceholder('unknown_code'), '아는 값을 입력해 주세요. 모르면 비워 두세요.');
+});
+
+test('validQuantity는 수량이 없거나 1~100000 정수일 때만 받는다', () => {
+  assert.equal(validQuantity(undefined), true);
+  assert.equal(validQuantity(1), true);
+  assert.equal(validQuantity(100000), true);
+  for (const bad of [0, -1, 100001, 2.5, Number.NaN]) assert.equal(validQuantity(bad), false);
+});
+
+test('pricesPath는 수량이 있을 때만 quantity를 붙이고 제조사 접두어를 뗀다', () => {
+  assert.equal(pricesPath('1N4007G'), '/prices?parts=1N4007G');
+  assert.equal(pricesPath('TSC 1N4007G', 250), '/prices?parts=1N4007G&quantity=250');
+  assert.equal(pricesPath('A B/C', 1), '/prices?parts=A%20B%2FC&quantity=1');
+});
+
+test('estimateRows는 구간·단가·금액 줄을 만들고 estimate가 없으면 보류 안내를 준다', () => {
+  const estimate = {
+    quantity: 250,
+    break_quantity: 100,
+    unit_price: '0.12',
+    total: '30.00',
+    currency: 'USD',
+  };
+  assert.deepEqual(estimateRows(estimate), [
+    ['적용 구간', '100개부터'],
+    ['적용 단가', '0.12 USD'],
+    ['예상 금액 (250개)', '30.00 USD'],
+  ]);
+  for (const none of [null, undefined]) {
+    const rows = estimateRows(none);
+    assert.equal(rows.length, 1);
+    assert.match(rows[0][1], /계산을 보류/);
+  }
 });
