@@ -1,4 +1,4 @@
-/** 제품 소개. 고정 설명 예시는 사용자 제공 브리프에서 왔고 실시간 판정이 아니다. */
+/** 제품 소개. 예시 수치는 기록된 데모 결과(data/demo/recordings/outcomes.json, 질문 v3-01)에서 옮긴 값이고 실시간 판정이 아니다. */
 import { useEffect, useState } from 'react';
 import { ArrowRight, FileText, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
 import { Brand, Badge, Disclaimer } from './ui';
@@ -54,11 +54,11 @@ export function Landing() {
           <div className="hero-sample" data-ui>
             <div className="sample-top">
               <span>다이오드 교체 검토</span>
-              <span>설명 예시</span>
+              <span>기록된 데모 결과 · v3-01</span>
             </div>
             <div className="sample-body">
               <div className="sample-circuit">
-                <span>D1 · 1N4001</span>
+                <span>ATtiny85 Time Switch · D1 · 1N4007RLG</span>
                 <svg viewBox="0 0 320 100" aria-label="D1 다이오드 교체 예시 연결" role="img">
                   <path
                     d="M20 50h105m70 0h105M125 20v60l70-30-70-30Zm70 0v60"
@@ -67,17 +67,17 @@ export function Landing() {
                     strokeWidth="2"
                   />
                   <text x="20" y="90">
-                    12 V
+                    15 V
                   </text>
                   <text x="265" y="90">
-                    1 A
+                    0.12 A
                   </text>
                 </svg>
-                <p>이 회로에 SS34L을 써도 될까요?</p>
+                <p>D1을 TSC 1N4007G로 바꿔도 될까요?</p>
               </div>
               <div className="sample-verdict">
                 <div>
-                  <strong>SS34L</strong>
+                  <strong>1N4007G</strong>
                   <Badge verdict="ROLE_SUFFICIENT" />
                 </div>
                 <p>회로가 요구하는 전압·전류 조건을 만족합니다.</p>
@@ -85,18 +85,29 @@ export function Landing() {
                   <div>
                     <dt>역전압</dt>
                     <dd>
-                      15 V 이상 <ArrowRight size={14} /> <b>40 V</b>
+                      18.75 V 이상 <ArrowRight size={14} /> <b>1000 V</b>
                       <Check size={16} />
                     </dd>
                   </div>
                   <div>
                     <dt>순방향 전류</dt>
                     <dd>
-                      1.43 A 이상 <ArrowRight size={14} /> <b>3 A</b>
+                      0.171 A 이상 <ArrowRight size={14} /> <b>1 A</b>
+                      <Check size={16} />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>서지 전류</dt>
+                    <dd>
+                      2 A 이상 <ArrowRight size={14} /> <b>30 A</b>
                       <Check size={16} />
                     </dd>
                   </div>
                 </dl>
+                <small>
+                  허용 전압강하를 알 수 없어 순방향 전압은 판정에서 뺐고, 패키지가 달라 기판 수정이
+                  필요합니다.
+                </small>
                 <Disclaimer />
               </div>
             </div>
@@ -119,7 +130,7 @@ export function Landing() {
             </div>
             <h3>
               {basis === 'role'
-                ? '12 V·1 A 회로에서 필요한 여유를 봅니다.'
+                ? '15 V·120 mA 회로에서 필요한 여유를 봅니다.'
                 : '원래 부품의 정격을 기준으로 비교합니다.'}
             </h3>
             {basis === 'role' ? (
@@ -127,17 +138,17 @@ export function Landing() {
                 <div className="equations">
                   <div>
                     <span>필요 역전압</span>
-                    <strong>12 V × 1.25</strong>
-                    <b>15 V 이상</b>
+                    <strong>15 V × 1.25</strong>
+                    <b>18.75 V 이상</b>
                   </div>
                   <div>
                     <span>필요 순방향 전류</span>
-                    <strong>1 A × 1.43</strong>
-                    <b>1.43 A 이상</b>
+                    <strong>0.12 A × 1.43</strong>
+                    <b>0.171 A 이상</b>
                   </div>
                 </div>
                 <p>
-                  SS34L: 40 V / 3 A <ArrowRight size={16} /> <Badge verdict="ROLE_SUFFICIENT" />
+                  1N4007G: 1000 V / 1 A <ArrowRight size={16} /> <Badge verdict="ROLE_SUFFICIENT" />
                 </p>
               </>
             ) : (
@@ -150,8 +161,8 @@ export function Landing() {
               </div>
             )}
             <small>
-              12 V·1 A 회로의 설명 예시입니다. 실제 후보 판정은 업로드한 회로와 서버 결과를
-              따릅니다.
+              ATtiny85 Time Switch의 기록된 데모 질문(v3-01) 결과입니다. 실제 후보 판정은 업로드한
+              회로와 서버 결과를 따릅니다.
             </small>
           </div>
         </section>
