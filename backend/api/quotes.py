@@ -47,7 +47,7 @@ class Approval(BaseModel):
 
 
 class SavedApproval(Approval):
-    case_id: int | None  # 사례를 삭제해도 사람 승인은 남는다.
+    case_id: int | None  # 응답 형식은 유지하며 조회에는 활성 사례가 있는 승인만 반환한다.
 
 
 class Quote(BaseModel):

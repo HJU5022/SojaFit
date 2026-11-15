@@ -814,6 +814,39 @@ it('restores saved approval after closing and reopening a tab and after a fresh 
   expect(writes).toHaveLength(1)
 })
 
+it.each([false, true])('refreshes approval after a case deletion and preserves the lock on failure=%s', async fails => {
+  const stored: ApprovalDto[] = [{ id: 7, message_id: 101, candidate_part: '1N5391G', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  const writes = candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  network((path, init) => {
+    if (path === '/api/approved-cases') return Response.json(stored.map(item => ({ id: item.case_id, approval_id: item.id, candidate_part: item.candidate_part, verdict: item.verdict })))
+    if (path === '/api/approved-cases/41' && init.method === 'DELETE') {
+      if (fails) return failure('UNAVAILABLE', '삭제 실패', 503)
+      stored.splice(0)
+      return new Response(null, { status: 204 })
+    }
+    return base(path, init)
+  })
+  const Cases = (await vi.importActual<typeof import('../components/ApprovedCases')>('../components/ApprovedCases')).default
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /><Cases /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  expect(await screen.findByText('다른 후보가 승인됨')).toBeInTheDocument()
+  fireEvent.click(await screen.findByRole('button', { name: '1N5391G 사례 삭제' }))
+  fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
+  if (fails) {
+    expect(await screen.findByText(/사례를 삭제하지 못했습니다/)).toBeInTheDocument()
+    expect(screen.getByText('다른 후보가 승인됨')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '검토하고 승인' })).toBeNull()
+    expect(writes).toHaveLength(0)
+  } else {
+    await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: '검토하고 승인' }))
+    expect(await screen.findByText('승인됨')).toBeInTheDocument()
+    expect(writes).toHaveLength(1)
+    expect(writes[0].body).toMatchObject({ candidate_part: 'SS34L' })
+  }
+})
+
 it('matches a persisted approval to its message instead of another question with the same part', async () => {
   candidateApi(true, id => candidateRun(id), [{ id: 1, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }])
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)

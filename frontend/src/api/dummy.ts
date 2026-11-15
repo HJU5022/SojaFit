@@ -209,6 +209,7 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   if (method === 'GET' && pathname === '/api/approved-cases') return json(approvedCase ? [approvedCase] : [])
   if (method === 'DELETE' && pathname === '/api/approved-cases/4') {
     approvedCase = null
+    approval = null
     return new Response(null, { status: 204 })
   }
   if (method === 'POST' && pathname === '/api/approvals/3/quotes' && approval) {

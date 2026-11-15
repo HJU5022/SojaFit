@@ -35,7 +35,7 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     from backend.conversations.repository import ConversationNotFound, ConversationRepository
     from backend.projects.netlist import PARSER_VERSION, normalize_netlist
     from backend.projects.repository import ProjectRepository
-    from backend.services.quote import QuoteNotFound, QuoteService
+    from backend.services.quote import InvalidApproval, QuoteNotFound, QuoteService
     owner, other = full_storage[0]
     connect = full_storage[1]
     projects, conversations, quotes = ProjectRepository(), ConversationRepository(), QuoteService()
@@ -51,7 +51,7 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     conversations.finish(owner, thread, run, 'completed', {
         'answer': 'SS34는 역할상 충분합니다.', 'question_type': 'candidate_judge',
         'evidence': [{'document': 'SS34.pdf', 'page': 2, 'table': 'RATINGS', 'row': 'VRRM', 'citation_number': '7'}],
-        'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]},
+        'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}, {'part': 'SS33', 'verdict': 'ROLE_SUFFICIENT'}]},
     })
     saved = conversations.get_run(owner, run)
     assert quotes.list_approvals(owner, saved['message_id']) == []
@@ -62,8 +62,7 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     approval = quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     assert quotes.list_approvals(owner, saved['message_id']) == [approval]
     assert set(quotes.list_approvals(owner, saved['message_id'])[0]) == {'id', 'message_id', 'candidate_part', 'verdict', 'case_id', 'created_at'}
-    # [왜] 같은 메시지를 다시 승인하면 UNIQUE(message_id)가 막아 승인 · 사례가 한 건으로 남는다(API는 409, db/020)
-    with pytest.raises(psycopg.errors.UniqueViolation): quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
+    with pytest.raises(InvalidApproval): quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     assert len(quotes.list_cases(owner)) == 1
     quote = quotes.create_quote(owner, approval['id'], 25)
     assert quote['part_number'] == 'SS34' and quote['quantity'] == 25
@@ -88,12 +87,81 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
 
     quotes.delete_case(owner, approval['case_id'])
     assert quotes.list_cases(owner) == []
-    assert quotes.list_approvals(owner, saved['message_id']) == [{**approval, 'case_id': None}]
+    assert quotes.list_approvals(owner, saved['message_id']) == []
+    with pytest.raises(QuoteNotFound): quotes.create_quote(owner, approval['id'], 1)
+    assert len(quotes.list_quotes(owner, project.id)) == 2
+    replacement = quotes.approve(owner, saved['message_id'], 'SS33', 'ROLE_SUFFICIENT')
+    assert replacement['id'] != approval['id']
+    assert quotes.list_approvals(owner, saved['message_id']) == [replacement]
+    assert quotes.create_quote(owner, replacement['id'], 3)['part_number'] == 'SS33'
+    with connect() as conn:
+        assert conn.execute('SELECT candidate_part,snapshot FROM approvals WHERE id=%s', (approval['id'],)).fetchone()[0] == 'SS34'
+    quotes.delete_case(owner, replacement['case_id'])
+    from concurrent.futures import ThreadPoolExecutor
+    def try_approve(part):
+        try:
+            return quotes.approve(owner, saved['message_id'], part, 'ROLE_SUFFICIENT')
+        except InvalidApproval:
+            return None
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        competing = list(pool.map(try_approve, ['SS33', 'SS34']))
+    assert sum(item is not None for item in competing) == 1
+    active = quotes.list_approvals(owner, saved['message_id'])
+    assert len(active) == 1
+    quotes.delete_case(owner, active[0]['case_id'])
+    assert quotes.approve(owner, saved['message_id'], active[0]['candidate_part'], 'ROLE_SUFFICIENT')['id'] != active[0]['id']
     projects.delete_owned(owner, project.id)
     with connect() as conn:
         counts = {name: conn.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(name))).fetchone()[0]
                   for name in ('projects', 'circuits', 'threads', 'runs', 'messages', 'approvals', 'quotes', 'approved_cases')}
     assert not any(counts.values())
+
+
+def test_approval_reselection_migration_is_idempotent_and_keeps_rows(full_storage):
+    with full_storage[1]() as conn:
+        conn.execute('DROP INDEX ix_approvals_message')
+        conn.execute('ALTER TABLE approvals ADD CONSTRAINT approvals_message_id_key UNIQUE(message_id)')
+        migration = Path('db/032_approval_reselection.sql').read_text(encoding='utf-8')
+        conn.execute(migration)
+        conn.execute(migration)
+        assert conn.execute("SELECT count(*) FROM pg_constraint WHERE conrelid='approvals'::regclass AND conname='approvals_message_id_key'").fetchone()[0] == 0
+        assert conn.execute("SELECT to_regclass(current_schema() || '.ix_approvals_message')").fetchone()[0]
+
+
+def test_http_case_deletion_unlocks_new_candidate_and_preserves_quote_history(full_storage):
+    from fastapi.testclient import TestClient
+    from backend.main import app
+    from backend.projects.repository import ProjectRepository
+    from backend.conversations.repository import ConversationRepository
+    owner, other = full_storage[0]
+    project = ProjectRepository().create_demo(owner, 'breadboard_supply', '승인 재선택')
+    repository = ConversationRepository()
+    thread = repository.create_thread(owner, project.id)
+    run, _ = repository.start(owner, thread, {'question': '후보 승인'})
+    repository.finish(owner, thread, run, 'completed', {'answer': '검토 결과', 'judgement': {'kind': 'judge', 'results': [
+        {'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}, {'part': 'SS33', 'verdict': 'ROLE_SUFFICIENT'}]}})
+    message = repository.get_run(owner, run)['message_id']
+    app.dependency_overrides[auth.current_user_id] = lambda: owner
+    app.dependency_overrides[auth.check_origin] = lambda: None
+    try:
+        web = TestClient(app, raise_server_exceptions=False)
+        first = web.post(f'/api/messages/{message}/approvals', json={'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'})
+        assert first.status_code == 201
+        approval = first.json()
+        quote = web.post(f"/api/approvals/{approval['id']}/quotes", json={'quantity': 2})
+        assert quote.status_code == 201
+        app.dependency_overrides[auth.current_user_id] = lambda: other
+        assert web.delete(f"/api/approved-cases/{approval['case_id']}").status_code == 404
+        app.dependency_overrides[auth.current_user_id] = lambda: owner
+        assert web.delete(f"/api/approved-cases/{approval['case_id']}").status_code == 204
+        assert web.get(f'/api/messages/{message}/approvals').json() == []
+        assert web.post(f"/api/approvals/{approval['id']}/quotes", json={'quantity': 1}).status_code == 404
+        second = web.post(f'/api/messages/{message}/approvals', json={'candidate_part': 'SS33', 'verdict': 'ROLE_SUFFICIENT'})
+        assert second.status_code == 201 and second.json()['id'] != approval['id']
+        assert web.post(f'/api/messages/{message}/approvals', json={'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}).status_code == 409
+        assert web.get(f'/api/projects/{project.id}/quotes').json() == [quote.json()]
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.parametrize('shown, number', [('TSC 1N4007G', '1N4007G'), ('1N4148 A0G', '1N4148-A0G'), ('SS34', 'SS34')])

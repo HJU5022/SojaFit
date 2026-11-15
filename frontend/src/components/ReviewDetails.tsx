@@ -83,6 +83,7 @@ function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto;
   const other = !approval && saved.data?.[0]
   const checking = messageId !== null && (saved.isPending || saved.isFetching)
   const [quote, setQuote] = useState<QuoteDto | null>(null)
+  const currentQuote = quote?.approval_id === approval?.id ? quote : null
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const approvable = candidate.verdict !== 'NOT_VERIFIED' && candidate.verdict !== 'NOT_SUFFICIENT'
@@ -109,11 +110,11 @@ function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto;
     <p className="approval-state">{approval ? <ShieldCheck aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}{approval ? '승인됨' : checking ? '승인 상태 확인 중' : saved.error ? '승인 상태 확인 안 됨' : other ? '다른 후보가 승인됨' : '승인 전'}</p>
     {approval && <p className="property-note">{reviewer}</p>}
     {other && <p className="property-note">이 질문에서 승인한 후보: {other.candidate_part}</p>}
-    {quote && <p className="property-note">견적 {quote.part_number} × {quote.quantity}</p>}
+    {currentQuote && <p className="property-note">견적 {currentQuote.part_number} × {currentQuote.quantity}</p>}
     {!approval && !other && <button className="btn btn-primary" disabled={busy || checking || Boolean(saved.error) || messageId === null || !approvable} onClick={() => void act(approve)}>{busy ? '저장 중' : '검토하고 승인'}</button>}
     {!approvable && <p className="property-note">이 판정은 승인 대상이 아닙니다.</p>}
     {saved.error && <div className="notice" role="alert" {...requestIdProps(saved.error)}><p>승인 상태를 불러오지 못했습니다. {errorMessage(saved.error)}</p><button className="btn" onClick={() => void saved.refetch()}>승인 상태 다시 확인</button></div>}
-    {approval && !quote && <form className="quote" onSubmit={openQuote}><label className="sr-only" htmlFor={quantityId}>수량</label><input id={quantityId} name="quantity" className="input" type="number" min={1} defaultValue={1} inputMode="numeric" /><button className="btn btn-primary" disabled={busy}>견적 열기</button></form>}
+    {approval && !currentQuote && <form className="quote" onSubmit={openQuote}><label className="sr-only" htmlFor={quantityId}>수량</label><input id={quantityId} name="quantity" className="input" type="number" min={1} defaultValue={1} inputMode="numeric" /><button className="btn btn-primary" disabled={busy}>견적 열기</button></form>}
     {error ? <p className="notice" role="alert" {...requestIdProps(error)}>{approval ? '견적을 저장하지 못했습니다. 견적 열기로 다시 시도해 주세요.' : '승인을 저장하지 못했습니다. 검토하고 승인으로 다시 시도해 주세요.'} {errorMessage(error)}</p> : null}
   </div>
 }

@@ -77,7 +77,7 @@ class QuoteService:
                             "WHERE m.id=%s AND m.role='assistant' AND p.user_id=%s", (message_id, user_id)).fetchone() is None:
                 raise QuoteNotFound
             rows = conn.execute('SELECT a.id,a.message_id,a.candidate_part,a.verdict,c.id,a.created_at FROM approvals a '
-                                'LEFT JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
+                                'JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
                                 'WHERE a.message_id=%s AND a.user_id=%s ORDER BY a.id', (message_id, user_id)).fetchall()
             return [{'id': r[0], 'message_id': r[1], 'candidate_part': r[2], 'verdict': r[3],
                      'case_id': r[4], 'created_at': r[5]} for r in rows]
@@ -92,6 +92,9 @@ class QuoteService:
                 raise QuoteNotFound
             if row[0] != 'completed':
                 raise InvalidApproval('완료된 판정만 승인할 수 있습니다.')
+            if conn.execute('SELECT 1 FROM approvals a JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
+                            'WHERE a.message_id=%s AND a.user_id=%s', (message_id, user_id)).fetchone():
+                raise InvalidApproval('이미 승인되었습니다.')
             snapshot = approval_snapshot(row[1] or {}, candidate_part, verdict)
             candidate = snapshot['candidate']
             # [왜] 승인 스냅샷은 approvals 한 곳에만 둔다(견적 · 승인 사례에 복사하지 않는다). 목록 · 견적이 읽는 값 3개는 칸으로 같이 저장한다
@@ -103,7 +106,9 @@ class QuoteService:
 
     def create_quote(self, user_id: int, approval_id: int, quantity: int):
         with auth.connection() as conn:
-            row = conn.execute("SELECT part_number,candidate_part,snapshot #>> '{candidate,part}' FROM approvals WHERE id=%s AND user_id=%s", (approval_id, user_id)).fetchone()
+            row = conn.execute("SELECT a.part_number,a.candidate_part,a.snapshot #>> '{candidate,part}' FROM approvals a "
+                               'JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
+                               'WHERE a.id=%s AND a.user_id=%s FOR SHARE OF c', (approval_id, user_id)).fetchone()
             if row is None:
                 raise QuoteNotFound
             part = row[0] or part_number(row[1] or row[2] or '')  # [주의] expand 뒤 contract 전에 옛 코드가 넣은 승인은 칸 3개가 모두 NULL이라 스냅샷의 후보 이름으로 폴백해 같은 규칙으로 계산한다. 견적에는 스냅샷을 복사하지 않는다
