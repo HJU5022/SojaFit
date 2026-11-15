@@ -1,7 +1,7 @@
 import type { ResultDto, RunDto, ThreadDetailDto } from './conversations'
 import type { Project } from './projects'
 import { dummyDemos, dummyProjects } from 'virtual:sojafit-dummy-circuits'
-import type { ApprovalDto, ApprovedCaseDto } from './quotes'
+import type { ApprovalDto, ApprovedCaseDto, QuoteDto } from './quotes'
 
 const REQUEST_ID = 'dummy-request'
 const NOW = '2026-11-09T00:00:00Z'
@@ -50,6 +50,8 @@ const result: ResultDto = {
 
 let approval: ApprovalDto | null = null
 let approvedCase: ApprovedCaseDto | null = null
+let nextApprovalId = 3
+const quotes: (QuoteDto & { projectId: number })[] = []
 // 올린 넷리스트(demo_id 없음) 프로젝트 하나를 더해 외부 원본 회로도 검색 화면을 볼 수 있게 한다.
 let projects: Project[] = [...structuredClone(dummyProjects), { ...structuredClone(dummyProjects[0]), id: Math.max(...dummyProjects.map(item => item.id)) + 1,
   name: 'ATtiny85 보드 (올린 넷리스트)', source_kind: 'upload', demo_id: null }]
@@ -202,19 +204,25 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   }
 
   if (method === 'POST' && pathname === '/api/messages/9/approvals') {
-    approval = { id: 3, message_id: 9, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 4 }
-    approvedCase = { id: 4, approval_id: 3, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT' }
+    const id = nextApprovalId++
+    approval = { id, message_id: 9, candidate_part: 'SS34L', part_number: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: id + 1 }
+    approvedCase = { id: id + 1, approval_id: id, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT' }
     return json(approval, 201)
   }
+  if (method === 'GET' && /^\/api\/messages\/\d+\/approvals$/.test(pathname)) return json(approval && pathname === `/api/messages/${approval.message_id}/approvals` ? [approval] : [])
+  const projectQuotes = pathname.match(/^\/api\/projects\/(\d+)\/quotes$/)
+  if (method === 'GET' && projectQuotes) return json(quotes.filter(item => item.projectId === Number(projectQuotes[1])).map(({ projectId: _projectId, ...item }) => item))
   if (method === 'GET' && pathname === '/api/approved-cases') return json(approvedCase ? [approvedCase] : [])
-  if (method === 'DELETE' && pathname === '/api/approved-cases/4') {
+  if (method === 'DELETE' && approvedCase && pathname === `/api/approved-cases/${approvedCase.id}`) {
     approvedCase = null
     approval = null
     return new Response(null, { status: 204 })
   }
-  if (method === 'POST' && pathname === '/api/approvals/3/quotes' && approval) {
+  if (method === 'POST' && approval && pathname === `/api/approvals/${approval.id}/quotes`) {
     const body = JSON.parse(String(init.body ?? '{}')) as { quantity?: number }
-    return json({ id: 5, approval_id: approval.id, part_number: approval.candidate_part, quantity: body.quantity ?? 1 }, 201)
+    const quote = { id: 5 + quotes.length, approval_id: approval.id, part_number: approval.part_number!, quantity: body.quantity ?? 1 }
+    quotes.push({ ...quote, projectId: threads.find(item => item.messages.some(message => message.id === approval?.message_id))?.project_id ?? projects[0].id })
+    return json(quote, 201)
   }
   if (method === 'GET' && pathname === '/api/prices') {
     const part = url.searchParams.get('parts')?.split(',')[0] || 'SS34L'

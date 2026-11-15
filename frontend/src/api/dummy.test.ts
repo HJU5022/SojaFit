@@ -126,9 +126,11 @@ it('keeps price data transient while approval, quote, and approved-case state ch
   expect(quote).toEqual({ id: 5, approval_id: approval.id, part_number: 'SS34L', quantity: 2 })
   expect(quote).not.toHaveProperty('price')
   expect(quote).not.toHaveProperty('availability')
+  expect(await json(await request('/api/projects/1/quotes'))).toEqual([quote])
 
   expect((await request(`/api/approved-cases/${approval.case_id}`, { method: 'DELETE' })).status).toBe(204)
   expect(await json(await request('/api/approved-cases'))).toEqual([])
+  expect(await json(await request('/api/projects/1/quotes'))).toEqual([quote])
 })
 
 it('returns a standard 404 without falling through and honors an already aborted request', async () => {

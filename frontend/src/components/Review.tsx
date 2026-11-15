@@ -249,7 +249,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
       onPointerMove={event => { if (event.currentTarget.hasPointerCapture(event.pointerId) && root.current) resizeProps(root.current.getBoundingClientRect().right - event.clientX) }}
       onDoubleClick={() => resizeProps(PROPS_DEFAULT)}
       onKeyDown={event => { if (event.key === 'ArrowLeft') { event.preventDefault(); resizeProps(propsWidth + 16) } else if (event.key === 'ArrowRight') { event.preventDefault(); resizeProps(propsWidth - 16) } }} />
-    <ReviewDetails tabs={detailTabs} selected={selected} open={detailsOpen} onSelect={tab => { setSelected(tab); setFocusDetails(false) }} onClose={closeDetail} onDismiss={dismissDetails}
+    <ReviewDetails projectId={projectId} tabs={detailTabs} selected={selected} open={detailsOpen} onSelect={tab => { setSelected(tab); setFocusDetails(false) }} onClose={closeDetail} onDismiss={dismissDetails}
       focus={focusDetails} onFocused={() => setFocusDetails(false)} runId={runId || ''} result={result} target={target} nets={nets} counts={counts} reviewer={reviewer} />
     </div>
 

@@ -10,6 +10,7 @@
 | 파일 | 확인하는 것 |
 |---|---|
 | `JUDGE.md` | 이 문서 |
+| `test_judge_pricing.py` | 가상 가격 구간 선택·Decimal 곱셈, 다른 품번·혼합 통화·모호한 가격의 계산 보류 |
 | `test_judge_conditions.py` | 기준식 문법(사칙 연산, kV, kI, `orig.<코드>`), 빠진 값, 규칙 모양 검사(slot 포함), 물어볼 값 목록 |
 | `test_judge_rules_file.py` | 실제 규칙 파일 `backend/judge/rules/roles.yaml`의 모든 역할이 읽히고 문법에 맞는지, R04 제너의 VZ 범위(`vz_min`·`vz_max`) 판정과 범위가 없을 때 최대 VZ 비교 |
 | `test_judge_sheet_conditions.py` | 사양 표의 실제 조건 글과 카드 읽기가 쓴 조건 글('IZT = 20 mA', '@ rated VR; TJ = 25°C', 'IPP = 27.0 A')을 읽고 시험 조건으로 행 고르기 |

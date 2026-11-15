@@ -41,6 +41,7 @@ class Approval(BaseModel):
     id: int
     message_id: int
     candidate_part: str
+    part_number: str
     verdict: Approvable
     case_id: int  # 함께 만든 승인 사례 id
     created_at: datetime

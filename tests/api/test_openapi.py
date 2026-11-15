@@ -132,7 +132,7 @@ JUDGED = {'answer': '대체할 수 있습니다.', 'question_type': 'candidate_j
 # 화면이 읽는 칸(frontend/src/api/*.ts의 타입). 응답 모델이 칸을 지우면 아래 시험이 깨진다
 USER_ID, ENABLED, OK = {'user_id'}, {'enabled'}, {'ok'}
 ACCOUNT = {'id', 'email', 'role', 'is_active'}
-APPROVAL = {'id', 'message_id', 'candidate_part', 'verdict', 'case_id', 'created_at'}
+APPROVAL = {'id', 'message_id', 'candidate_part', 'part_number', 'verdict', 'case_id', 'created_at'}
 QUOTE = {'id', 'approval_id', 'part_number', 'quantity', 'created_at'}
 CASE = {'id', 'approval_id', 'candidate_part', 'verdict', 'created_at'}
 RESULT = {'answer', 'status', 'stage', 'question_type', 'evidence', 'judgement', 'price_parts', 'refusal', 'interrupt',
@@ -151,8 +151,8 @@ CASES = [
     ('patch', '/api/admin/users/8', {'is_active': False}, {'admin_set_active': lambda *a: None}, None, OK),
     ('get', '/api/demo-circuits', None, {}, None, {'id', 'name', 'schematic'}),
     ('post', '/api/messages/9/approvals', {'candidate_part': '1N5819', 'verdict': 'SPEC_EQUIVALENT'}, {},
-     [('completed', JUDGED), (3, NOW), (4,)], APPROVAL),
-    ('get', '/api/messages/9/approvals', None, {}, [(1,), [(3, 9, '1N5819', 'SPEC_EQUIVALENT', None, NOW)]], APPROVAL),
+     [('completed', JUDGED), None, (3, NOW), (4,)], APPROVAL),
+    ('get', '/api/messages/9/approvals', None, {}, [(1,), [(3, 9, '1N5819', 'SPEC_EQUIVALENT', None, NOW, '1N5819')]], APPROVAL),
     ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [('1N5819', '1N5819'), (5, NOW)], QUOTE),
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW)]], QUOTE),
     ('get', '/api/approved-cases', None, {}, [[(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW)]], CASE),

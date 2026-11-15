@@ -34,6 +34,7 @@
 - 820px 이하에서는 표가 카드로 쌓이고 레일이 접힙니다. 상세 탭은 오른쪽 패널로 열리며 접기/Escape로 채팅에 돌아옵니다. 제목·회로·대화는 함께 스크롤하고 상세 패널만 별도 스크롤을 유지합니다.
 
 ## 파일
+- 견적 흐름(2026-11-16): `ReviewDetails`는 프로젝트 견적 GET으로 이력/현재 승인 견적을 복원하고 조회와 새 작성·저장을 구분한다. 필수 조건 미확인 후보는 화면에서도 승인할 수 없다. `PriceLookup`은 승인 식별 품번·수량을 사용자 클릭 때만 조회해 서버 계산 estimate를 화면에서만 표시하며 견적 POST는 수량만 보낸다.
 - `components/DeploymentUpdate.tsx` · `components/DeploymentUpdate.test.tsx` — 정적 HTML 버전 확인·명시적 적용 안내와 초안/첨부/작업 중 갱신 차단 회귀. 화면의 `data-refresh-blocked` 표식과 열린 대화상자·미저장 입력을 확인하며 값은 저장소에 복사하지 않는다.
 - `components/ChatPane.tsx` — 제목·회로·대화를 함께 담는 스크롤, 하단 고정 입력창과 대화 끝 버튼.
 - `components/NetlistIntake.tsx` — 빈 프로젝트·부품 선택 전의 채팅 입력, 파일만 전송·질문 초안과 부품 선택 연결.

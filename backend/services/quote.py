@@ -76,11 +76,11 @@ class QuoteService:
             if conn.execute("SELECT 1 FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id "
                             "WHERE m.id=%s AND m.role='assistant' AND p.user_id=%s", (message_id, user_id)).fetchone() is None:
                 raise QuoteNotFound
-            rows = conn.execute('SELECT a.id,a.message_id,a.candidate_part,a.verdict,c.id,a.created_at FROM approvals a '
+            rows = conn.execute('SELECT a.id,a.message_id,a.candidate_part,a.verdict,c.id,a.created_at,a.part_number FROM approvals a '
                                 'JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
                                 'WHERE a.message_id=%s AND a.user_id=%s ORDER BY a.id', (message_id, user_id)).fetchall()
             return [{'id': r[0], 'message_id': r[1], 'candidate_part': r[2], 'verdict': r[3],
-                     'case_id': r[4], 'created_at': r[5]} for r in rows]
+                     'case_id': r[4], 'created_at': r[5], 'part_number': r[6] or part_number(r[2])} for r in rows]
 
     def approve(self, user_id: int, message_id: int, candidate_part: str, verdict: str):
         with auth.connection() as conn:
@@ -102,7 +102,8 @@ class QuoteService:
                                     (user_id, message_id, Jsonb(snapshot), candidate['part'], candidate['verdict'], candidate['part_number'])).fetchone()
             case = conn.execute('INSERT INTO approved_cases(user_id,approval_id) VALUES (%s,%s) RETURNING id', (user_id, approval[0])).fetchone()
             return {'id': approval[0], 'message_id': message_id, 'candidate_part': candidate_part,
-                    'verdict': snapshot['candidate']['verdict'], 'case_id': case[0], 'created_at': approval[1]}
+                      'verdict': snapshot['candidate']['verdict'], 'case_id': case[0], 'created_at': approval[1],
+                      'part_number': candidate['part_number']}
 
     def create_quote(self, user_id: int, approval_id: int, quantity: int):
         with auth.connection() as conn:

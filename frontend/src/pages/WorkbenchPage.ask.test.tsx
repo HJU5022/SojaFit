@@ -1320,3 +1320,113 @@ it('blocks the composer while the run waits for conditions', async () => {
   await new Promise(resolve => setTimeout(resolve, 100))
   expect(runs).toHaveLength(1)
 })
+
+it.each(['missing', 'unverified'])('blocks positive candidate with required condition %s', async mode => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    const candidate = run.result.judgement.shown[0]
+    Object.assign(candidate, mode === 'missing' ? { missing: ['v_in_max'] } : { checks: [{ code: 'VRRM', tier: 'required', result: 'unverified' }] })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인 전')
+  await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeDisabled())
+})
+
+it('restores a saved quote when the workbench mounts again', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  const quotes: { id: number; approval_id: number; part_number: string; quantity: number }[] = []
+  network((path, init) => {
+    if (path === '/api/projects/1/quotes') return Response.json(quotes)
+    if (path === '/api/approvals/7/quotes' && init.method === 'POST') {
+      const quote = { id: quotes.length + 1, approval_id: 7, part_number: 'SS34L', quantity: JSON.parse(String(init.body)).quantity }
+      quotes.push(quote)
+      return Response.json(quote, { status: 201 })
+    }
+    return base(path, init)
+  })
+  const show = () => renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  show()
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  fireEvent.change(await screen.findByRole('spinbutton', { name: '수량' }), { target: { value: '25' } })
+  fireEvent.click(screen.getByRole('button', { name: '견적 저장' }))
+  expect(await screen.findByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(quotes).toHaveLength(1)
+  cleanup()
+  show()
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  expect(await screen.findByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(quotes).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: '새 견적 작성' }))
+  expect(quotes).toHaveLength(1)
+  fireEvent.change(screen.getByRole('spinbutton', { name: '수량' }), { target: { value: '3' } })
+  fireEvent.click(screen.getByRole('button', { name: '견적 저장' }))
+  expect(await screen.findByText('견적 SS34L × 3')).toBeInTheDocument()
+  expect(quotes).toHaveLength(2)
+  fireEvent.change(screen.getByRole('combobox', { name: '저장된 견적' }), { target: { value: '1' } })
+  expect(screen.getByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(quotes).toHaveLength(2)
+})
+
+it('exposes price lookup for the approved candidate without price_parts', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => ({ ...candidateRun(id), result: { ...candidateRun(id).result, price_parts: [] } }), stored)
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  expect(screen.getByRole('button', { name: '가격·재고 조회' })).toBeInTheDocument()
+})
+
+
+it('blocks new quote saving after history lookup fails and recovers through GET only', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  let fails = true
+  const writes: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    if (path === '/api/projects/1/quotes') return fails ? failure('UNAVAILABLE', '조회 실패', 503) : Response.json([{ id: 1, approval_id: 7, part_number: 'SS34L', quantity: 25 }])
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  expect(await screen.findByText(/견적 이력을 불러오지 못했습니다/)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '견적 저장' })).toBeDisabled()
+  fails = false
+  fireEvent.click(screen.getByRole('button', { name: '견적 이력 다시 조회' }))
+  expect(await screen.findByText('견적 SS34L × 25')).toBeInTheDocument()
+  expect(writes).toEqual([])
+})
+
+it('looks up the server-approved part and quantity only on click and saves quantity without price fields', async () => {
+  const stored = [{ id: 7, message_id: 101, candidate_part: 'SS34L', part_number: 'SS34L-ORDER', verdict: 'ROLE_SUFFICIENT', case_id: 41 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = globalThis.fetch
+  const prices: string[] = [], quotes: unknown[] = []
+  network((path, init) => {
+    if (path.startsWith('/api/prices?')) {
+      prices.push(path)
+      return Response.json({ available: true, source: '모의 판매처', fetched_at: '2026-11-16T00:00:00Z', parts: [{ part_number: 'SS34L-ORDER', manufacturer: '예시', availability: '모의', product_url: null, price_breaks: [], estimate: { quantity: 25, break_quantity: 10, unit_price: '0.10', total: '2.50', currency: 'USD' } }] })
+    }
+    if (path === '/api/approvals/7/quotes') { quotes.push(JSON.parse(String(init.body))); return Response.json({ id: 1, approval_id: 7, part_number: 'SS34L-ORDER', quantity: 25 }, { status: 201 }) }
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await screen.findByText('승인됨')
+  fireEvent.change(screen.getByRole('spinbutton', { name: '수량' }), { target: { value: '25' } })
+  expect(prices).toEqual([])
+  fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
+  expect(await screen.findByText('2.50 USD')).toBeInTheDocument()
+  expect(prices).toEqual(['/api/prices?parts=SS34L-ORDER&quantity=25'])
+  fireEvent.click(screen.getByRole('button', { name: '견적 저장' }))
+  expect(await screen.findByText('견적 SS34L-ORDER × 25')).toBeInTheDocument()
+  expect(quotes).toEqual([{ quantity: 25 }])
+  expect(prices).toHaveLength(1)
+})

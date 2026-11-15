@@ -61,7 +61,7 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
         with pytest.raises(QuoteNotFound): quotes.list_approvals(user, message)
     approval = quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     assert quotes.list_approvals(owner, saved['message_id']) == [approval]
-    assert set(quotes.list_approvals(owner, saved['message_id'])[0]) == {'id', 'message_id', 'candidate_part', 'verdict', 'case_id', 'created_at'}
+    assert set(quotes.list_approvals(owner, saved['message_id'])[0]) == {'id', 'message_id', 'candidate_part', 'part_number', 'verdict', 'case_id', 'created_at'}
     with pytest.raises(InvalidApproval): quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     assert len(quotes.list_cases(owner)) == 1
     quote = quotes.create_quote(owner, approval['id'], 25)

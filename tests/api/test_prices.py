@@ -100,3 +100,19 @@ def test_call_cap_and_mouser_failure_return_the_empty_shape(mouser_calls, monkey
     mouser_calls.status = 503
     body = get("1N4148").json()
     assert body["available"] is False and body["reason"] == "http" and body["parts"] == [] and len(mouser_calls.requests) == 1
+
+
+def test_quantity_estimate_is_transient_exact_and_owned_by_requested_part(mouser_calls, caplog):
+    caplog.set_level(logging.DEBUG)
+    web = TestClient(app)
+    response = web.get('/api/prices', params={'parts': 'FAKE-SS34', 'quantity': 25})
+    assert response.status_code == 200 and response.headers['cache-control'] == 'no-store'
+    assert response.json()['parts'][0]['estimate'] == {
+        'quantity': 25, 'break_quantity': 1, 'unit_price': '7.77', 'total': '194.25', 'currency': 'XXX'}
+    mismatch = web.get('/api/prices', params={'parts': 'SS34', 'quantity': 25})
+    assert mismatch.json()['parts'][0]['estimate'] is None
+    assert '194.25' not in caplog.text and '7.77' not in caplog.text
+    count = len(mouser_calls.requests)
+    for quantity in ['0', '100001', '1.5']:
+        assert web.get('/api/prices', params={'parts': 'SS34', 'quantity': quantity}).status_code == 422
+    assert len(mouser_calls.requests) == count
