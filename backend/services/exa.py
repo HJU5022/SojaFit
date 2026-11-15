@@ -292,7 +292,7 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
                 docs.append({**row, 'chunk_id': f'W{len(docs)+1}', 'file': title,
                              'title': title, 'source_type': 'external_web', 'source_url': url,
                              'retrieved_at': datetime.now(timezone.utc).isoformat()})
-            if docs or len(seen) >= MAX_DOWNLOADS:  # L4: 검증된 행이 나온 PDF가 있으면 다음 PDF를 받지 않는다
+            if len(docs) == MAX_RESULTS or len(seen) >= MAX_DOWNLOADS:
                 break
     return docs
 
