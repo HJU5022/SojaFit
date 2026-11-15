@@ -29,7 +29,6 @@ MAX_DISCOVERY_BYTES = 25 * 1024**2
 
 _API = frozenset({"api.github.com"})
 _RAW = frozenset({"raw.githubusercontent.com"})
-_DOWNLOAD_HOSTS = _API | _RAW | {"codeload.github.com"}
 _SHA = re.compile(r"[a-fA-F0-9]{40}")
 _GITHUB_API_CACHE = _Cache(128, 16 * 1024**2, lambda entry: entry[1], 900, time.monotonic)
 _EXCLUDED = re.compile(r"datasheet|application[-_ ]?note|block[-_ ]?diagram|(?:^|[/_. -])(?:pcb|layout|renders?|rendering|3d|photo|preview|partial|detail|pinout|old|deprecated|obsolete|draft|backup|archive|archived|stage|excerpt|subsystem|section|fragment)(?:$|[/_. -])", re.I)
