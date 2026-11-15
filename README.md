@@ -362,6 +362,20 @@ SojaFit/
 - **넣지 않는 데이터시트**: 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트는 받지 않는다. 이 회사 부품은 링크만 보여 준다.
 - **회로**: 평가·시연용 회로 5종은 라이선스를 확인한 공개 KiCad 프로젝트(MIT, CC BY-SA 3.0·4.0)다. 원 저장소와 커밋은 [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md)에 있다.
 
+### 제3자 소프트웨어 · 라이선스
+
+| 대상 | 쓰는 곳 | 라이선스 | 근거 |
+|---|---|---|---|
+| KiCad 10(`kicad-cli`) | 원본 회로도 변환 전용 `renderer` 이미지(`Dockerfile`의 `renderer` target, 공식 `ppa:kicad/kicad-10.0-releases`의 `kicad=10.0.*`). 기본 API 이미지에는 넣지 않고 `INCLUDE_KICAD=1`로 빌드할 때만 들어간다(선택). KiCad를 고치지 않고 실행 파일(`kicad-cli`)로 부른다 | GPL-3.0-or-later | [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) |
+| KiCad 라이브러리(심볼 · 풋프린트 · 3D) | 위 `kicad` 패키지에 딸려 와 변환할 때 쓰인다. 저장소에 복사해 두지 않았다 | CC-BY-SA 4.0, KiCad 라이브러리 예외(라이브러리 부품을 쓴 설계에는 그 라이선스를 강제하지 않는다)가 붙는다 | KiCad 프로젝트의 라이선스 안내 `[문서]`. 이 저장소에 원문 사본은 없다(확인 못 함) |
+| 외부 공개 회로도(검색 결과로 화면에 보이는 것) | 사용자가 회로도 검색을 누를 때 확인된 공개 저장소의 고정 commit에서 받아 그림으로 렌더한다. 저장소에 넣지 않는다 | 저장소마다 다르다. 화면이 출처(`attribution`) · 라이선스(`license`) · 원본 링크를 그림 옆에 같이 보인다. 라이선스를 확인하지 못한 자료는 `NOASSERTION`을 일괄 허용하지 않는다 | [`backend/projects/PROJECTS.md`](backend/projects/PROJECTS.md), `frontend/src/components/Schematic.tsx` |
+| 평가 · 데모용 공개 회로 | 저장소에 사본이 있다 | 프로젝트마다 MIT · CC BY-SA 3.0 · 4.0 등 | [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md) |
+| TSC 데이터시트 | 위 데이터 절 | 사이트 약관: 정보 · 비상업 목적, 고치지 않고 고지 · 출처 유지 | [`data/corpus/CORPUS.md`](data/corpus/CORPUS.md) |
+
+- **이 저장소 자체의 라이선스**: 루트에 `LICENSE` · `NOTICE` 파일이 없다(2026-11-16 `ls`로 확인). 저장소 사용을 허락하는 라이선스를 정해 두지 않았다. 저장소는 팀 비공개(`aihuman-7th/proj3-b`)이고 과제 제출용이다.
+- KiCad GPL 고지: 렌더러는 `docker compose --profile schematic up`이나 별도 서비스로 돌려 API가 HTTP로 부른다. 이 이미지를 공개로 배포할 때의 GPL 의무(소스 제공 · 고지)는 따로 검토하지 않았다(확인 못 함).
+- Python · npm 의존성의 라이선스는 `uv.lock` · `frontend/package-lock.json`에 있고 하나씩 대조하지 않았다.
+
 ### 안전
 
 - 같은 동작은 보장하지 않는다. 판정은 문서 근거가 있을 때만 내고, 값이 없거나 시험 조건이 다르면 "문서로 확인 안 됨"으로 둔다.
