@@ -1,7 +1,7 @@
 # assets
 
 ## 역할
-- 넣는 것: `/assets`에서 제공하는 승인된 브랜드 이미지. Vite는 빌드 때 `dist/assets`로 복사하고 FastAPI는 기존 StaticFiles 경로로 제공한다.
+- 넣는 것: `/assets`에서 제공하는 승인된 브랜드 이미지와, 새 프로젝트 창이 내려 주는 공개 라이선스 샘플 넷리스트(`samples/`). Vite는 빌드 때 `dist/assets`로 복사하고 FastAPI는 기존 StaticFiles 경로로 제공한다. 샘플 넷리스트는 코드가 `/assets/samples/` 경로로 링크하므로 옮기지 않는다.
 - 넣지 않는 것: React 소스, 사용자 업로드, API 데이터, 서버 설정, 비밀값.
 
 ## 파일
