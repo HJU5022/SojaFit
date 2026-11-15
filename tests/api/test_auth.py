@@ -902,6 +902,11 @@ def test_env_example_starts_keyless_and_lists_every_variable_the_code_reads(monk
     for name, value in values.items():
         monkeypatch.setenv(name, value)
     auth.validate_auth_configuration()  # 빈 AUTH_SECRET도 데모 모드에서는 통과
+    assert 'DEMO_REPLAY' in text.split('\nDEMO_MODE=1')[0]  # 실제 모드로 바꾸는 안내가 DEMO_REPLAY도 0으로 바꾸라고 말한다
+    from backend.services import demo
+    monkeypatch.setenv('DEMO_MODE', '0')
+    with pytest.raises(ValueError):  # DEMO_REPLAY=1을 둔 채 DEMO_MODE만 0으로 바꾸면 서버가 못 뜬다: 안내 문구가 필요한 이유
+        demo.enabled()
     assert all(re.search(rf'^#? ?{name}=', text, re.M) for name in ('WEB_PREFETCH', 'KICAD_CLI', 'LANGFUSE_HOST'))
 
 
