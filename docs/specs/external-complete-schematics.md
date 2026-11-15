@@ -144,7 +144,7 @@ gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAcco
 | 2. 이름·이미지 확인 | 회로도 표식이 없는 사진·PCB·배선·데이터시트와 모델·변형이 다른 후보, 축약 도면을 제외한다. 검색어와 제목·게시 페이지·원본 URL 및 PDF 본문을 대조한다. 이름 일치를 우선하고, 제조사 공식 회로도 이미지가 안내서 PDF보다 앞선다 | `backend/projects/external_circuit_search.py`, `backend/projects/schematic_render.py` |
 | 3. 출처 표시 | 확인된 제조사 공식 도메인의 게시 페이지와 해당 제조사 원본의 연결을 확인하면 `manufacturer_official`, 2등급으로 표시한다. 그 밖의 공개 웹 자료는 `public_web`, 등급 미지정으로 표시한다. 공개 GitHub 저장소 검증 경로는 후보가 없거나 무효일 때 계속 사용할 수 있다 | `backend/projects/external_circuit_search.py`, `backend/projects/external_schematic.py` |
 | 4. 파일 검증·변환 | 각 후보의 HTTPS·공개 IP·형식·크기를 제한하고 연결 IP를 DNS 검증 결과에 고정한다. 모델 식별과 원본 SHA-256을 확인해 PNG로 변환한다. 다중 페이지 PDF는 목차를 제외한 회로도 표시 페이지만 반환한다. 일시적인 원본 요청 오류는 검색 전체에서 최대 1회 재시도하며, 한 후보가 호출 제한에 걸리면 다음 후보를 검사한다 | `backend/projects/schematic_discovery.py`, `backend/projects/schematic_render.py`, `backend/projects/external_schematic.py` |
-| 5. 결과 선택 | 첫 유효 후보와 함께 최대 5개의 이름·출처 후보를 전달한다. 사용자가 다른 후보를 선택하면 서버가 같은 검색 결과에 포함된 URL인지 검사한 후 파일을 다시 검증한다 | `backend/projects/external_schematic.py`, `frontend/src/components/Schematic.tsx` |
+| 5. 결과 선택 | 첫 유효 후보와 함께 최대 5개의 이름·출처 후보를 전달한다. 사용자가 다른 후보를 선택하면 서버가 같은 검색 결과에 포함된 URL인지 검사한 후 파일을 다시 검증한다 | `backend/projects/external_schematic.py`, `frontend/src/Schematic.tsx` |
 
 - 공개 GitHub 저장소 후보의 PNG·PDF 이미지는 고정 커밋의 `raw.githubusercontent.com` 원본에서 받는다. 제조사 페이지가 연결한 공식 GitHub 파일은 해당 원본 URL에서 받으며, 재조회 시 SHA-256이 달라지면 버린다. 그 밖의 공개 웹 후보는 검색으로 확인한 원본 URL에서 받는다.
 - 제조사 도메인 보강 검색은 검색어에서 식별한 Adafruit·SparkFun·Seeed·Arduino·Pololu·Olimex·Raspberry Pi·PJRC의 공식 도메인으로 제한한다. 제조사 페이지의 GitHub 자료는 허용한 공식 조직의 직접 링크만 원본으로 취급한다.
@@ -199,7 +199,7 @@ gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAcco
 
 ## 화면
 
-작업대의 원본 회로도 창(`frontend/src/components/Schematic.tsx`)에서 사용자가 이름을 입력하고 검색 버튼을 누르면 이 API를 호출한다. 여러 출처가 검색되면 후보 목록에서 다른 원본을 선택할 수 있다.
+작업대의 원본 회로도 창(`frontend/src/Schematic.tsx`)에서 사용자가 이름을 입력하고 검색 버튼을 누르면 이 API를 호출한다. 여러 출처가 검색되면 후보 목록에서 다른 원본을 선택할 수 있다.
 
 - 검색어 칸의 처음 값은 프로젝트 이름이다. 프로젝트 응답에 넷리스트 제목·보드 이름이 없다. 사용자가 고칠 수 있다.
 - 검색은 버튼을 눌러야 보낸다(자동 호출 없음). 같은 검색어는 5분 동안 다시 보내지 않는다. 검색 중에는 버튼이 꺼진다.
