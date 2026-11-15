@@ -234,7 +234,10 @@ export function ApprovedCases() {
       )}
       {remove !== null && (
         <Modal title="승인 사례를 삭제할까요?" close={() => setRemove(null)}>
-          <p>사례 목록에서 삭제합니다. 기존 승인과 견적은 유지됩니다.</p>
+          <p>
+            승인을 취소하고 사례를 삭제합니다. 기존 견적은 이력으로 남고, 같은 검토에서 후보를 다시
+            승인할 수 있습니다.
+          </p>
           <button
             className="primary"
             onClick={async () => {

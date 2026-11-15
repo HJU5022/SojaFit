@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { ArrowUpRight, Check, ChevronDown, Package, ShoppingCart } from 'lucide-react';
 import { api, ApiError } from './api';
+import { approvalState } from './approval';
 import {
   basisLabel,
   estimateRows,
@@ -142,7 +143,7 @@ export function CandidateDetails({
     [error, setError] = useState<Error | null>(null),
     [quantity, setQuantity] = useState(100),
     [notice, setNotice] = useState('');
-  const approval = saved.data?.find((a) => a.candidate_part === c.part),
+  const { own: approval, other } = approvalState(saved.data, c),
     approvable =
       ['IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'].includes(c.verdict) &&
       result.status === 'completed';
@@ -386,6 +387,16 @@ export function CandidateDetails({
                 {q.part_number} · {q.quantity.toLocaleString()}개 · 저장된 견적
               </p>
             ))}
+          </>
+        ) : other ? (
+          <>
+            <p className="approved-mark">
+              <Check size={17} /> 다른 후보가 승인됨
+            </p>
+            <p>
+              이 검토에서 승인한 후보: {other.candidate_part}. 다른 후보로 바꾸려면 승인 사례에서 그
+              사례를 삭제한 뒤 다시 승인하세요.
+            </p>
           </>
         ) : approvable ? (
           <button
