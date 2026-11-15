@@ -753,9 +753,9 @@ SojaFit (proj3-b)
     │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
     │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
     │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
-    │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 흐름
+    │   ├── dummy-full-flow.md  <- (폐기·이력) 옛 화면의 개발 전용 더미 모드 흐름
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
-    │   ├── frontend-screen-redesign.md <- 프론트엔드 화면 구성
+    │   ├── frontend-screen-redesign.md <- (이력) 11-16 교체 전 프런트엔드 화면 구성
     │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
     │   └── external-complete-schematics.md <- 공개 프로젝트 완성 회로도

@@ -1,10 +1,10 @@
 # 개발 전용 전체 더미 흐름
 
-- 상태: 현행
+- 상태: 폐기(2026-11-16 새 화면에 더미 모드가 없다). 옛 화면 기준의 이력으로만 남긴다
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
-- 정본 여부: 정본(`npm run dev:dummy` 더미 모드의 동작)
-- 관련 문서: [circuit-context-diagram.md](circuit-context-diagram.md), [frontend/e2e/E2E.md](../../frontend/e2e/E2E.md)
+- 정본 여부: 없음. `npm run dev:dummy`와 `frontend/e2e/`는 새 화면에서 없어졌고([frontend/FRONTEND.md](../../frontend/FRONTEND.md) "새 화면으로 교체"), 키 없는 흐름은 서버의 `DEMO_MODE` · `DEMO_REPLAY`가 맡는다([evaluator-demo-readiness.md](evaluator-demo-readiness.md)). 브라우저 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md)
+- 관련 문서: [circuit-context-diagram.md](circuit-context-diagram.md)
 
 ## Why
 
