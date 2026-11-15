@@ -179,6 +179,7 @@ SojaFit (proj3-b)
 │   │       └── docs.py     <- RAG 에이전트: 검색 → 근거 채점+답 쓰기(LLM 1번) → 다시 찾기 1번 → 인용 검사
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
+│   │   ├── pricing.py      <- 조회 응답만 사용하는 수량 구간 선택·Decimal 예상 금액 계산
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
 │   │   ├── sheet_conditions.py  <- 시험 조건 글 읽기와 같은 조건인지 비교
 │   │   ├── pdf_claims.py   <- 공식 PDF 인용 문장의 품번·값·단위를 원문 셀과 대조
@@ -322,6 +323,7 @@ SojaFit (proj3-b)
 │   ├── 029_email_account_security.sql <- 인증 시각·일회성 메일 토큰·발송 한도 표 추가(기존 계정 보존)
 │   ├── 030_google_onboarding.sql <- 새 기준선의 명시적 Google 가입·재확인 연결과 관리자 승인 대기 표
 │   ├── 031_circuit_versions.sql <- 프로젝트 회로 버전 보존·기존 대화 backfill·대화별 버전 고정
+│   ├── 032_approval_reselection.sql <- 승인·견적 이력을 보존한 사례 삭제 후 재승인용 제약 변경
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -637,6 +639,7 @@ SojaFit (proj3-b)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
+│   │   ├── test_judge_pricing.py <- 가상 가격의 구간·정확한 곱셈·모호한 값 거절 시험
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산
 │   │   ├── test_judge_rules_file.py  <- 실제 규칙 파일 23개 검사

@@ -21,6 +21,7 @@ DB로 원자적으로 차감한다(`_budget`, db/020_service_baseline.sql). 공�
 기록 파일이 없으면 503, 확인을 통과했는데 기록에 없는 호출(ReplayMiss)도 503으로 이유를 보인다.
 """
 import argparse
+import re
 import os
 import math
 import time
@@ -79,6 +80,21 @@ def _conversation_history(contents, *, max_chars=MAX_CONVERSATION_HISTORY_CHARS)
         selected.append(content)
         size += extra
     return list(reversed(selected))
+
+
+def _require_supported_target(connections, target):
+    part = next((p for p in connections.get('components', connections.get('parts', [])) if p['ref'] == target), None)
+    if part is None:
+        raise HTTPException(422, '회로에 없는 대상 부품입니다.')
+    identifiers = ' '.join(part.get(key) or '' for key in ('value', 'footprint'))
+    description = (part.get('description') or '').strip()
+    led_description = re.search(r'light[\s-]*emitting[\s-]*diode|발광\s*다이오드|^(?:(?:red|green|blue|white|yellow|amber|orange|rgb)\s+)?leds?$', description, re.I)
+    if re.search(r'(^|[^a-z0-9])leds?(?=$|[^a-z])', identifiers, re.I) or led_description or re.match(r'LED\d', target, re.I):
+        raise HTTPException(422, f'{target}은(는) LED로 식별됩니다. 현재 LED 대체 판정은 지원하지 않습니다. 일반 다이오드를 선택해 주세요.')
+    if re.search(r'(^|[^a-z0-9])(?:7|seven)[\s_-]*seg(?:ment)?', identifiers, re.I):
+        raise HTTPException(422, f'{target}은(는) 표시기로 식별됩니다. 현재 표시기 대체 판정은 지원하지 않습니다. 일반 다이오드를 선택해 주세요.')
+    if not re.match(r'D\d', target, re.I):
+        raise HTTPException(422, f'{target}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.')
 
 
 @lru_cache(maxsize=1)
@@ -400,8 +416,7 @@ class Conversations:
         connections = pinned['connections']
         # React 정규화 회로는 parts, 데모 회로는 components다.
         connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
-        if target not in {p['ref'] for p in connections['components']}:
-            raise HTTPException(422, '회로에 없는 대상 부품입니다.')
+        _require_supported_target(connections, target)
         if self.mode == 'demo':
             from backend.services import demo
             # [왜] run 스트림을 열기 전에 거른다(공통 오류 JSON). 기록이 없으면 503, 기록한 회로 · 대상 · 질문이 아니면 422
@@ -461,6 +476,7 @@ class Conversations:
         # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
         self._purge_expired()
         with self.locked(user, thread) as (conn, row):
+            _require_supported_target(row['connections'], row['target'])
             self._reconcile(conn, row)
             if has_pending_question(self.graph.get_state(self.config(thread))):
                 # [왜] 화면은 이 코드면 조건 입력 폼을 다시 보여 준다(ADR 0019). 다른 409는 문구만 보여 준다
@@ -511,6 +527,7 @@ class Conversations:
         with self.locked(user, thread) as (conn, row):
             if version != row['version']:
                 raise HTTPException(409, '새 결과의 조건 질문을 다시 확인하세요.')
+            _require_supported_target(row['connections'], row['target'])
             snapshot = self.graph.get_state(self.config(thread))
             if not snapshot.next:
                 raise HTTPException(409, '재개할 조건 질문이 없습니다.')

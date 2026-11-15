@@ -22,6 +22,68 @@ from backend.graph.state import AgentState
 NET = '(export (components (comp (ref "D1") (value "SS34"))) (nets (net (name "VCC") (node (ref "D1") (pin "1")))))'
 
 
+@pytest.mark.parametrize('part', [
+    {'ref': 'D3', 'value': 'STAT', 'description': 'Light emitting diode'},
+    {'ref': 'D3', 'value': 'STAT', 'footprint': 'LED_SMD:LED_0805_2012Metric'},
+    {'ref': 'D3', 'value': '7SEG_3641BS_CA'},
+    {'ref': 'R1', 'value': '510R'},
+])
+def test_unsupported_target_rejected_before_analysis_writes_or_model_calls(monkeypatch, part):
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    class Connection:
+        def execute(self, query, params):
+            assert 'project_circuit_versions' in query, 'Unsupported target must not create an analysis thread'
+            return SimpleNamespace(fetchone=lambda: {'connections': {'parts': [part], 'nets': []}})
+
+    @contextmanager
+    def connection():
+        yield Connection()
+
+    service = object.__new__(Conversations)
+    service.mode = 'live'
+    monkeypatch.setattr(service, 'connection', connection)
+    monkeypatch.setattr(service, '_hold_account', lambda *args: None)
+    with pytest.raises(HTTPException) as caught:
+        service.ensure_thread(1, str(uuid4()), 'test.net', {}, part['ref'], '대체 후보를 찾아 주세요.')
+    assert caught.value.status_code == 422
+    assert part['ref'] in caught.value.detail
+    assert '지원하지 않습니다' in caught.value.detail or '판정 범위 밖' in caught.value.detail
+
+
+@pytest.mark.parametrize('part', [
+    {'ref': 'D1', 'value': 'SS34', 'description': 'Schottky diode for LED backlight'},
+    {'ref': 'D1', 'value': 'D_Schottky'},
+    {'ref': 'D1', 'value': ''},
+])
+def test_generic_diodes_remain_supported(part):
+    from backend.conversations.memory_service import _require_supported_target
+    _require_supported_target({'components': [part]}, 'D1')
+
+
+@pytest.mark.parametrize('method', ['message', 'resume'])
+def test_legacy_led_analysis_is_blocked_before_graph_access(monkeypatch, method):
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    @contextmanager
+    def locked(*args):
+        yield None, {'connections': {'parts': [{'ref': 'D3', 'value': 'STAT', 'description': 'Light emitting diode'}]}, 'target': 'D3', 'version': 1}
+
+    service = object.__new__(Conversations)
+    service.graph = SimpleNamespace(get_state=lambda *args: pytest.fail('Unsupported target must not reach the graph'))
+    monkeypatch.setattr(service, 'locked', locked)
+    monkeypatch.setattr(service, '_purge_expired', lambda: None)
+    with pytest.raises(HTTPException) as caught:
+        if method == 'message':
+            service.message(1, 'old-thread', '대체 후보를 찾아 주세요.')
+        else:
+            service.resume(1, 'old-thread', {}, None, 1)
+    assert caught.value.status_code == 422
+    assert 'LED' in caught.value.detail
+
+
 def fake_graph(saver, store):
     def judge(state):
         if '조건 질문' in state['question']:

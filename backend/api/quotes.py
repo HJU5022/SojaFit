@@ -41,6 +41,7 @@ class Approval(BaseModel):
     id: int
     message_id: int
     candidate_part: str
+    part_number: str
     verdict: Approvable
     case_id: int  # 함께 만든 승인 사례 id
     created_at: datetime
@@ -55,7 +56,7 @@ class Quote(BaseModel):
 
 
 class SavedApproval(Approval):
-    case_id: int | None  # 사례를 삭제해도 사람 승인은 남는다.
+    case_id: int | None  # 응답 형식은 유지하며 조회에는 활성 사례가 있는 승인만 반환한다(사례를 지우면 승인 기록은 남아도 목록에서 빠져 다시 승인할 수 있다).
     quotes: list[Quote]  # [왜] 새로고침 뒤 화면이 이 승인의 마지막 견적을 다시 보여 준다(가격 칸 없음, ADR 0009)
 
 

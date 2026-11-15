@@ -96,6 +96,29 @@ def test_head_screen_returns_html_headers_without_body(frontend_client):
     assert response.content == b""
 
 
+@pytest.mark.parametrize("path", ["/login", "/app", "/index.html"])
+@pytest.mark.parametrize("method", ["get", "head"])
+def test_html_is_not_cached(frontend_client, path, method):
+    response = getattr(frontend_client, method)(path)
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_fixed_assets_revalidate_even_after_304(frontend_client, built_frontend):
+    (built_frontend / "assets/sojafit-icon.svg").write_text("<svg></svg>")
+    response = frontend_client.get("/assets/sojafit-icon.svg")
+    assert response.headers["cache-control"] == "no-cache"
+    cached = frontend_client.get("/assets/sojafit-icon.svg", headers={"If-None-Match": response.headers["etag"]})
+    assert cached.status_code == 304
+    assert cached.headers["cache-control"] == "no-cache"
+    (built_frontend / "assets/sojafit-icon.svg").write_text("<svg>new deployment</svg>")
+    updated = frontend_client.get("/assets/sojafit-icon.svg", headers={"If-None-Match": response.headers["etag"]})
+    assert updated.status_code == 200
+    assert "new deployment" in updated.text
+    assert frontend_client.head("/assets/sojafit-icon.svg").headers["cache-control"] == "no-cache"
+    assert "cache-control" not in frontend_client.get("/api/not-a-route").headers
+
+
 def test_api_methods_keep_downstream_status(frontend_client):
     assert frontend_client.post("/api/not-a-route").status_code == 404
     assert frontend_client.head("/api/not-a-route").status_code == 404

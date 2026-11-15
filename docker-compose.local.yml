@@ -1,4 +1,4 @@
-# 실제 API용 로컬 환경. 기본 데모 Compose와 합치지 않고 이 파일만 지정한다.
+# 실제 API용 로컬 환경. KiCad를 빌드하거나 실행하지 않는다. 이 파일만 지정한다.
 # docker compose --env-file .env.local -f docker-compose.local.yml up -d --build
 name: sojafit-sth-local
 
@@ -8,6 +8,7 @@ services:
       context: .
       args:
         VITE_LOCAL_ATTACHMENT_UI: "1"
+        INCLUDE_KICAD: "0"
     image: sojafit:sth-local
     ports:
       - "127.0.0.1:8010:8000"
@@ -20,7 +21,7 @@ services:
       DEMO_MODE: "0"
       DEMO_REPLAY: "0"
       THREADS_ENABLED: "1"
-      KICAD_RENDERER_URL: http://renderer:8000
+      KICAD_RENDERER_URL: ""
       RAG_VECTOR_TYPE: halfvec
       GOOGLE_AUTH_ENABLED: "0"
       PYTHON_DOTENV_DISABLED: "1"
@@ -35,14 +36,13 @@ services:
         condition: service_healthy
       thread-setup:
         condition: service_completed_successfully
-      renderer:
-        condition: service_started
 
   thread-setup:
     build:
       context: .
       args:
         VITE_LOCAL_ATTACHMENT_UI: "1"
+        INCLUDE_KICAD: "0"
     image: sojafit:sth-local
     environment:
       DATABASE_URL: postgresql://local_app@db:5432/local_app
@@ -52,12 +52,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
-  renderer:
-    build:
-      context: .
-      target: renderer
-    image: sojafit:sth-renderer
 
   db:
     image: pgvector/pgvector:pg16
