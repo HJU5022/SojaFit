@@ -56,6 +56,26 @@ def render_facts(facts: Facts) -> list[str]:
     return lines
 
 
+_REFERENCE_WORDS = re.compile(
+    r"(?:아까|방금|이전|앞서|전에|앞의|지난|그\s*(?:부품|회로|조건|설계)|"
+    r"처음\s*(?:말|적|입력|소개|제시)|과거\s*(?:사용자|제가|입력|조건)|"
+    r"설계\s*[A-Za-z가-힣0-9]+\s*(?:의|조건|그|에서|로|으로)|"
+    r"나머지|그대로|위\s*조건|기존\s*조건)"
+)
+
+
+def _history_for_reference(state: dict) -> list[str]:
+    """Resolve explicit deictic references without making history current evidence."""
+    question = str(state.get('question') or '')
+    history = state.get('conversation_history') or []
+    if not history or not _REFERENCE_WORDS.search(question):
+        return []
+    # The conversation service already applies the shared 20,000-character
+    # bound. Do not add a message-count cutoff here: early user corrections
+    # must remain available when a later request explicitly recalls them.
+    return [str(item) for item in history if str(item).strip()]
+
+
 def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> str:
     """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
     part = state.get('target_part') or {}
@@ -74,6 +94,10 @@ def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> 
             lines.append(f"- task {r.task} [{r.agent} · {t.get('kind', '')}] goal: {t.get('goal', '')} → {r.status}"
                          + (f" (reason {r.reason.value})" if r.reason else '') + f': {r.summary}'
                          + (f"; missing: {', '.join(r.missing)}" if r.missing else ''))
+    history = _history_for_reference(state)
+    if history:
+        lines += ['', 'Conversation history (reference context only; never current evidence):']
+        lines += [f'- {item}' for item in history]
     return '\n'.join(lines) + memory_context(state.get('approved_memories') or [])
 
 
@@ -114,7 +138,9 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
 
 def payload(state: dict, task: dict) -> dict:
     """Send 꾸러미: 서브에이전트는 메모장 전체가 아니라 지시서와 필요한 입력만 받는다(컨텍스트 분리)."""
-    base = {'task': task, 'question': state['question'], 'conditions': state.get('conditions', ''),
+    base = {'task': task, 'question': state['question'],
+            'conversation_history': list(state.get('conversation_history') or []),
+            'conditions': state.get('conditions', ''),
             'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
     if state.get('approved_memories'):
         base['approved_memories'] = state['approved_memories']

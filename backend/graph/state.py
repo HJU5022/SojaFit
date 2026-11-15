@@ -18,6 +18,7 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     """줄기 그래프의 공용 메모장. 칸 묶음별 주석이 어느 노드가 채우는지 알려 준다."""
     # ── 입력 (사용자가 넣는 것) ──
     input: str      # 사용자 원문: 회로·넷리스트 경로·대상·사용 조건·질문. 끝까지 바뀌지 않는다
+    conversation_history: list[str]  # 현재 질문과 분리한 이전 사용자 입력. 답변·승인 기록은 포함하지 않는다
     user_id: str    # API가 로그인 세션에서 검증해 넘긴 사용자 id. thread 소유권 검사는 API 경계에서 한다
     connections: dict  # API가 소유권·업로드 검증을 마친 회로 연결. 클라이언트 state는 받지 않는다
     run_version: int   # 서버가 발급한 승인 대상 결과 버전

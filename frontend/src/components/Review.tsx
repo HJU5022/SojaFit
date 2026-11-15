@@ -249,7 +249,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
       onDoubleClick={() => resizeProps(PROPS_DEFAULT)}
       onKeyDown={event => { if (event.key === 'ArrowLeft') { event.preventDefault(); resizeProps(propsWidth + 16) } else if (event.key === 'ArrowRight') { event.preventDefault(); resizeProps(propsWidth - 16) } }} />
     <ReviewDetails tabs={detailTabs} selected={selected} open={detailsOpen} onSelect={tab => { setSelected(tab); setFocusDetails(false) }} onClose={closeDetail} onDismiss={dismissDetails}
-      focus={focusDetails} onFocused={() => setFocusDetails(false)} runId={runId || ''} result={result} target={target} nets={nets} counts={counts} reviewer={reviewer} />
+      focus={focusDetails} onFocused={() => setFocusDetails(false)} runId={runId || ''} result={result} projectId={projectId} target={target} nets={nets} counts={counts} reviewer={reviewer} />
     </div>
 
   </div>

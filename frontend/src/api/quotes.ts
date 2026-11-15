@@ -8,6 +8,7 @@ export const approveMessage = (messageId: number, candidatePart: string, verdict
   method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ candidate_part: candidatePart, verdict }),
 })
 export const listMessageApprovals = (messageId: number, signal?: AbortSignal) => apiFetch<ApprovalDto[]>(`/api/messages/${messageId}/approvals`, { signal, cache: 'no-store' })
+export const listProjectQuotes = (projectId: number, signal?: AbortSignal) => apiFetch<QuoteDto[]>(`/api/projects/${projectId}/quotes`, { signal, cache: 'no-store' })
 export const createQuote = (approvalId: number, quantity: number, signal?: AbortSignal) => apiFetch<QuoteDto>(`/api/approvals/${approvalId}/quotes`, {
   method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity }),
 })

@@ -1,7 +1,7 @@
 import type { ResultDto, RunDto, ThreadDetailDto } from './conversations'
 import type { Project } from './projects'
 import { dummyDemos, dummyProjects } from 'virtual:sojafit-dummy-circuits'
-import type { ApprovalDto, ApprovedCaseDto } from './quotes'
+import type { ApprovalDto, ApprovedCaseDto, QuoteDto } from './quotes'
 
 const REQUEST_ID = 'dummy-request'
 const NOW = '2026-11-09T00:00:00Z'
@@ -50,6 +50,8 @@ const result: ResultDto = {
 
 let approval: ApprovalDto | null = null
 let approvedCase: ApprovedCaseDto | null = null
+let approvalProjectId: number | null = null
+let quotes: (QuoteDto & { project_id: number })[] = []
 // 올린 넷리스트(demo_id 없음) 프로젝트 하나를 더해 외부 원본 회로도 검색 화면을 볼 수 있게 한다.
 let projects: Project[] = [...structuredClone(dummyProjects), { ...structuredClone(dummyProjects[0]), id: Math.max(...dummyProjects.map(item => item.id)) + 1,
   name: 'ATtiny85 보드 (올린 넷리스트)', source_kind: 'upload', demo_id: null }]
@@ -156,7 +158,7 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     const thread = threads.find(item => item.id === threadMatch[1])
     if (!thread) return notFound()
     threads = threads.filter(item => item.id !== thread.id)
-    if (approval && thread.messages.some(message => message.id === approval?.message_id)) { approval = null; approvedCase = null }
+    if (approval && thread.messages.some(message => message.id === approval?.message_id)) { approval = null; approvedCase = null; approvalProjectId = null; quotes = [] }
     runs = runs.filter(item => item.thread_id !== thread.id)
     return new Response(null, { status: 204 })
   }
@@ -204,6 +206,7 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   if (method === 'POST' && pathname === '/api/messages/9/approvals') {
     approval = { id: 3, message_id: 9, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 4 }
     approvedCase = { id: 4, approval_id: 3, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT' }
+    approvalProjectId = threads.find(thread => thread.messages.some(message => message.id === 9))?.project_id ?? null
     return json(approval, 201)
   }
   if (method === 'GET' && pathname === '/api/approved-cases') return json(approvedCase ? [approvedCase] : [])
@@ -213,7 +216,14 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   }
   if (method === 'POST' && pathname === '/api/approvals/3/quotes' && approval) {
     const body = JSON.parse(String(init.body ?? '{}')) as { quantity?: number }
-    return json({ id: 5, approval_id: approval.id, part_number: approval.candidate_part, quantity: body.quantity ?? 1 }, 201)
+    const quote = { id: 5, approval_id: approval.id, part_number: approval.candidate_part, quantity: body.quantity ?? 1 }
+    if (approvalProjectId !== null) quotes = [...quotes, { ...quote, project_id: approvalProjectId }]
+    return json(quote, 201)
+  }
+  const quoteProjectMatch = pathname.match(/^\/api\/projects\/(\d+)\/quotes$/)
+  if (method === 'GET' && quoteProjectMatch) {
+    const projectId = Number(quoteProjectMatch[1])
+    return projects.some(item => item.id === projectId) ? json(quotes.filter(item => item.project_id === projectId).map(({ project_id: _projectId, ...quote }) => quote)) : notFound()
   }
   if (method === 'GET' && pathname === '/api/prices') {
     const part = url.searchParams.get('parts')?.split(',')[0] || 'SS34L'

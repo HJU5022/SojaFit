@@ -57,6 +57,29 @@ TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이�
 USER_TOKENS_FULL = f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_TOKENS:,} 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 SERVICE_TOKENS_FULL = f'오늘 서비스 전체 분석 사용량(하루 {SERVICE_DAILY_TOKENS:,} 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 
+MAX_CONVERSATION_HISTORY_CHARS = 20_000
+
+
+def _conversation_history(contents, *, max_chars=MAX_CONVERSATION_HISTORY_CHARS):
+    """이전 사용자 입력을 질문과 분리해, 온전한 항목 단위로 최근 문맥만 만든다.
+
+    질문 개수로 자르지 않고 문자 상한만 적용한다. 답변·승인 기록은 호출자가
+    넘기지 않으므로 이 함수의 입력은 messages의 user content만 허용한다.
+    """
+    selected = []
+    size = 0
+    for content in reversed(contents):
+        content = str(content)
+        extra = len(content) + (1 if selected else 0)
+        if selected and size + extra > max_chars:
+            break
+        if not selected and len(content) > max_chars:
+            selected.append(content[-max_chars:])
+            break
+        selected.append(content)
+        size += extra
+    return list(reversed(selected))
+
 
 @lru_cache(maxsize=1)
 def _token_budget_class():
@@ -440,9 +463,11 @@ class Conversations:
                 conn.execute("UPDATE threads SET version=%s,status='RUNNING',retries=0,input_record=%s WHERE id=%s",
                              (version, Jsonb({'version': version, 'question': text, 'conditions': conditions, 'resumes': []}), thread))
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
-            # 이전 사용자 입력만 조건 문맥으로 쓴다. 모델 답변을 측정값의 근거로 되먹이지 않는다.
-            context = '\n'.join(r['content'] for r in history[-12:])[-20000:]
-            inputs = {'input': f'이전 사용자 입력:\n{context}\n현재 질문:\n{content}' if context else content,
+            # 현재 질문과 이전 사용자 입력을 별도 칸으로 보낸다. 이전 질문을
+            # 현재 질문 문자열에 붙이면 회로 역할·조건이 섞이므로, 모델의 현재
+            # 입력은 항상 이번 요청만 보게 한다.
+            conversation_history = _conversation_history([r['content'] for r in history])
+            inputs = {'input': content, 'conversation_history': conversation_history,
                       'connections': row['connections'], 'circuit': row['filename'], 'target': row['target'],
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,
                       # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
