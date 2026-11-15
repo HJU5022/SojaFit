@@ -1,8 +1,8 @@
 # SojaFit SPEC
 
 - 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: `6707002`
+- 기준일: 2026-11-16 (4절 API 표 · 오류 코드 · 화면 경로 · 노드별 모델을 `76fadcb4`의 코드와 대조해 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
+- 기준 커밋: `76fadcb4`(위에서 대조한 부분), 나머지 `6707002`
 - 정본 여부: 정본(기능 · API 경로 · 오류 코드 · 한도 · 인증 규칙). 다른 문서와 내용이 다르면 이 문서를 따른다
 - 관련 문서: [README.md](README.md), [EVAL_REPORT.md](EVAL_REPORT.md), [docs/GATES.md](docs/GATES.md), `docs/reference/team-contract.md`(담당과 수정 경로), `docs/adr/`(바뀐 결정의 이유)
 
@@ -183,8 +183,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     |---|---|---|---|---|---|
     | `GET /api/demo-circuits` | 로그인 · 데모 모드 | - | 200 `list[DemoCircuit]` `[{id, name, schematic}]` | 404(데모 모드 아님) | 넷리스트 없이 공개 데모 회로 5종으로 시작(2단계). 404이면 화면은 오류 안내 없이 업로드만 두고, 원본 회로도 창은 모든 프로젝트에 웹 검색을 보인다 |
     | `GET /api/projects` | 로그인 | - | 200 `list[ProjectSummary]` | | 내 프로젝트(회로) 목록(2단계) |
-    | `POST /api/projects` | 로그인 · 데모 모드 | `CreateProject` `{demo_id, name}` | 201 `Project`(`connections` 포함) | 422 | 데모 회로로 프로젝트를 만듦(2단계) |
-    | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
+    | `POST /api/projects` | 로그인(`demo_id`를 줄 때만 데모 모드) | `CreateProject` `{name, demo_id?}` + 선택 쿼리 `allow_duplicate` | 201 `Project`(`demo_id`를 주면 `connections` 포함, 생략하면 회로 없는 빈 프로젝트) | 404(데모 모드 아닌데 `demo_id`) · 409 `CONFLICT`(같은 사용자의 같은 이름이나 같은 회로) · 422 | 빈 프로젝트나 데모 회로 복제로 프로젝트를 만듭니다(2단계). 빈 프로젝트에는 `POST /api/projects/{id}/netlist`로 넷리스트를 올립니다 |
+    | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name`, 선택 쿼리 `allow_duplicate` | 201 `Project` | 400 형식 · 409 `CONFLICT`(같은 이름 또는 같은 파일 내용) · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일). 409의 `details.duplicates`는 최대 5개 `{id, name, matches: [name \| netlist]}`이고, `allow_duplicate=true`면 확인 없이 만듭니다 |
     | `POST /api/projects/{id}/netlist` | 로그인 | multipart `file`(`.net` 또는 `.txt`, UTF-8, 5 MiB 이하) | 201 `ImportNetlistResponse` `{project, thread_id}` | 400 형식 · 404 · 413 크기 · 422 | 이미 만든 프로젝트에 넷리스트를 올리면 그 프로젝트의 회로를 바꾸고(`circuits.version` +1) 새 대화(thread)를 만듭니다. 작업대의 첨부가 부릅니다. 이 경로는 모델을 부르지 않습니다 |
     | `GET /api/projects/{id}` | 로그인 | 쿼리 `thread_id`(선택) | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
     | `PATCH /api/projects/{id}` | 로그인 | `RenameProject` `{name 1~200자}` | 200 `Project` | 404 · 422 | 프로젝트 이름 바꾸기 |
