@@ -104,6 +104,8 @@ it('provides realistic requirement and candidate values for the approval demo', 
 
 it('keeps price data transient while approval, quote, and approved-case state changes', async () => {
   const request = await freshDummy()
+  const thread = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
+  await request(`/api/threads/${thread.id}/runs`, { method: 'POST', body: JSON.stringify({ question: 'D1 대체 검토', target_ref: 'D1' }) })
   const approvalResponse = await request('/api/messages/9/approvals', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT' }),
@@ -126,6 +128,10 @@ it('keeps price data transient while approval, quote, and approved-case state ch
   expect(quote).toEqual({ id: 5, approval_id: approval.id, part_number: 'SS34L', quantity: 2 })
   expect(quote).not.toHaveProperty('price')
   expect(quote).not.toHaveProperty('availability')
+  expect(await json(await request('/api/projects/1/quotes'))).toEqual([quote])
+  const projects = await json(await request('/api/projects')) as unknown as { id: number }[]
+  const otherProject = projects.find(item => item.id !== 1)!
+  expect(await json(await request(`/api/projects/${otherProject.id}/quotes`))).toEqual([])
 
   expect((await request(`/api/approved-cases/${approval.case_id}`, { method: 'DELETE' })).status).toBe(204)
   expect(await json(await request('/api/approved-cases'))).toEqual([])

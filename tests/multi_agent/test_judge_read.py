@@ -58,6 +58,122 @@ def test_historical_numbers_reach_reader_but_are_not_current_grounding(monkeypat
     assert '987V' not in J.render_read(state, {})
 
 
+def test_unrelated_history_is_not_used_for_a_new_topic(monkeypatch):
+    """주제 전환 뒤 이전 회로의 값·역할을 현재 판정 입력으로 승격하지 않는다."""
+    state = {**STATE, 'question': '새 회로의 역할과 조건만 판정해 줘',
+             'conversation_history': ['설계 A: 150V, 10mA, 1N4148W, R02',
+                                      '설계 B: D3 USB VBUS에서 5V로 가는 역전류 방지']}
+    assert J._history_for_current_question(state['conversation_history'], state['question']) == []
+    read = J.JudgeRead(role='R02', values=[
+        J.Value(name='v_reverse_max', number=150, unit='V', quote='설계 A: 150V')])
+    values, _, dropped = J.to_inputs(read, J._judge_current_text(state), C.inputs(RULES['R02']))
+    assert values == {} and dropped == ['v_reverse_max']
+
+
+def test_history_is_limited_to_explicit_named_scenario():
+    history = ['설계 A: 150V, 10mA, TA=25°C', '설계 B: 36V, 5mA, TA=55°C']
+    selected = J._history_for_current_question(history, '설계 A로 돌아가고 나머지는 그대로')
+    assert selected == ['설계 A: 150V, 10mA, TA=25°C']
+
+
+def test_self_contained_scenario_does_not_trigger_history_injection():
+    history = ['설계 A: 150V, 10mA', '설계 B: 36V, 5mA']
+    assert J._history_for_current_question(history, '설계 B는 36V에서 사용하고 설계 A와 섞지 말 것') == []
+
+
+def test_named_history_uses_row_primary_scenario_only():
+    history = ['설계 B로 돌아가 설계 A와 혼동하지 말 것: 36V', '설계 A: 150V']
+    assert J._history_for_current_question(history, '설계 A로 돌아가') == ['설계 A: 150V']
+
+
+def test_named_scenario_declaration_keeps_initial_conditions_row():
+    history = ['이 사용 조건 묶음을 설계 A라고 부르겠습니다. 역전압 150V, TA=25°C, 허용 누설 25nA',
+               '설계 B로 전환합니다. 36V, TA=55°C']
+    assert J._history_for_current_question(history, '설계 A로 돌아가') == [history[0]]
+
+
+def test_unlabeled_followup_corrections_stay_with_previous_named_scenario():
+    history = ['설계 A로 진행합니다. 역전압 최대는 150V',
+               '역전압 최대는 24V로 정정',
+               '전류 최대는 5mA로 정정',
+               '설계 B로 전환합니다. 36V']
+    assert J._history_for_current_question(history, '설계 A로 돌아가') == history[:3]
+
+
+def test_unnamed_explicit_previous_reference_can_recall_recent_inputs():
+    history = ['이전 후보 1N4148 조건 150V 10mA', '이전 후보 BAT54 조건 30V 5mA']
+    assert J._history_for_current_question(history, '이전 후보 조건 그대로 비교해 줘') == history
+
+
+def test_latest_correction_drops_old_same_quantity_but_keeps_other_recalled_values():
+    read = J.JudgeRead(role='R02', values=[
+        J.Value(name='v_reverse_max', number=150, unit='V', quote='old 150V'),
+        J.Value(name='i_max', number=0.01, unit='A', quote='old 10mA'),
+        J.Value(name='v_reverse_max', number=12, unit='V', quote='역전압 최대 12V'),
+        J.Value(name='i_max', number=0.02, unit='A', quote='전류 최대 20mA')])
+    values, _, dropped = J.to_inputs(
+        read, 'old 150V 10mA, 역전압 최대 12V 전류 최대 20mA로 정정', C.inputs(RULES['R02']),
+        preferred_text='역전압 최대 12V 전류 최대 20mA로 정정')
+    assert values['v_reverse_max'] == 12 and values['i_max'] == pytest.approx(0.02)
+
+
+def test_current_forward_correction_does_not_drop_allowed_leakage():
+    read = J.JudgeRead(role='R02', values=[
+        J.Value(name='i_max', number=0.01, unit='A', quote='old 10mA'),
+        J.Value(name='ir_allowed', number=25e-9, unit='A', quote='허용 누설 25nA')])
+    values, _, dropped = J.to_inputs(
+        read, 'old 10mA, 허용 누설 25nA, 전류 최대 20mA로 정정', C.inputs(RULES['R02']),
+        preferred_text='허용 누설 25nA, 전류 최대 20mA로 정정')
+    assert 'ir_allowed' in values and 'ir_allowed' not in dropped
+
+
+def test_current_hot_voltage_does_not_replace_reverse_voltage():
+    read = J.JudgeRead(role='R02', values=[
+        J.Value(name='v_reverse_max', number=12, unit='V', quote='역전압 최대 12V'),
+        J.Value(name='hot_test', condition='VR=20V, TJ=25°C', quote='hot_test VR=20V TJ=25°C')])
+    values, conds, _ = J.to_inputs(
+        read, '역전압 최대 12V, hot_test VR=20V TJ=25°C', C.inputs(RULES['R02']),
+        preferred_text='역전압 최대 12V, hot_test VR=20V TJ=25°C')
+    assert values['v_reverse_max'] == 12 and conds['hot_test']['VR'] == 20
+
+
+def test_selected_history_recovers_latest_fields_without_cross_scenario_values():
+    rows = [
+        '설계 A라고 부르겠습니다. 역전압 최대는 150V, 전류 최대는 10mA, TA=25°C, 허용 누설 25nA, hot_test VR=20V TJ=25°C',
+        '설계 A의 전류 조건을 정정합니다. 역전압 최대는 12V, 전류 최대는 20mA',
+    ]
+    values, conds = J._recover_history_conditions(rows, C.inputs(RULES['R02']))
+    assert values['v_reverse_max'] == 12 and values['i_max'] == pytest.approx(.02)
+    assert values['ir_allowed'] == pytest.approx(25e-9)
+    assert conds['temp'] == {'TA': 25.0} and conds['hot_test'] == {'VR': 20.0, 'TJ': 25.0}
+
+
+def test_selected_history_recovers_explicit_negative_flag_and_current_flag_wins():
+    row = '설계 A: VF가 전원 선택을 결정하지 않음'
+    flags = J._text_flags({}, row, {'vf_selects_source': 'flag'},
+                          direct_text=J._direct_condition_text(row))
+    assert flags['vf_selects_source'] is False
+    current = J._text_flags(flags, 'VF가 전원 선택을 결정함', {'vf_selects_source': 'flag'},
+                            direct_text='VF가 전원 선택을 결정함')
+    assert current['vf_selects_source'] is True
+
+
+def test_current_conditions_keep_hot_test_and_leakage_when_history_exists():
+    state = {**STATE, 'conditions': 'TA=55°C, 허용 누설은 10µA, 누설 시험 hot_test=VR=20V, TJ=25°C',
+             'conversation_history': ['설계 A: TA=25°C, 허용 누설 25nA']}
+    text = J._direct_condition_text(state['conditions'], state['question'])
+    values, conds = J._recover_explicit_conditions(text, {}, {}, {'ir_allowed': 'number', 'hot_test': 'condition'})
+    assert values['ir_allowed'] == pytest.approx(10e-6)
+    assert conds['hot_test'] == {'VR': 20.0, 'TJ': 25.0}
+
+
+def test_current_ambient_temperature_overrides_recalled_temperature():
+    values, conds = J._recover_explicit_conditions(
+        'TA=55°C, 누설 시험 VR=20V TJ=25°C',
+        {}, {'temp': {'TA': 25.0}}, {'temp': 'condition', 'hot_test': 'condition'})
+    assert conds['temp'] == {'TA': 55.0}
+
+
 def test_read_input_lists_each_roles_own_value_names_and_kinds():
     text = J.render_read(STATE, RULES)
     for rid, rule in RULES.items():
@@ -98,7 +214,7 @@ def test_roles_own_names_reach_the_thresholds(monkeypatch):
     assert vrrm['threshold'] == pytest.approx(6.25) and vrrm['result'] == 'pass'  # 5V × 1.25
     assert j['analysis_inputs']['values_si']['v_reverse_max'] == 5.0
     assert j['analysis_inputs']['roles'] == ['R02']
-    assert j['dropped'] == ['i_out'] and 'i_max' in j['asked']  # 다른 역할 이름은 버리고, 그 역할의 이름으로 묻는다
+    assert j['dropped'] == ['i_out'] and 'i_max' not in j['asked']  # 직접 적은 최대 부하 전류 alias를 i_max로 복구한다
 
 
 # ── 코퍼스 밖 요구 거절(SPEC 8.3): 규칙 · 조건을 만들기 전에 코드가 대조해 거절한다 ──
@@ -375,3 +491,120 @@ def test_vz_window_is_read_only_from_an_explicit_range():
                                              J.Value(name='vz_max', number=3.78, unit='V', quote='제너 전압 3.42~3.78V')])
     values, _, _ = J.to_inputs(ranged, text, kinds)
     assert (values['vz_min'], values['vz_max']) == (3.42, 3.78)
+
+
+def test_explicit_negative_vf_source_condition_is_normalized():
+    """사용자가 VF가 전원 선택을 하지 않는다고 명시하면 LLM의 반전된 flag를 보정한다."""
+    read = J.JudgeRead(role='R02', values=[
+        J.Value(name='vf_selects_source', flag=True,
+                quote='VF가 전원 선택을 결정하지 않음')])
+    values, _, _ = J.to_inputs(read, 'VF가 전원 선택을 결정하지 않음', {'vf_selects_source': 'flag'})
+    values = J._text_flags(values, 'VF가 전원 선택을 결정하지 않음', {'vf_selects_source': 'flag'})
+    assert values['vf_selects_source'] is False
+
+
+def test_direct_conditions_restore_missing_hot_test_and_ir_limit_without_external_quote():
+    """직접 조건의 hot_test/허용 누설만 복구하고 외부 인용문의 숫자는 무시한다."""
+    text = ('누설 시험 VR=20V TJ=25°C, 허용 누설 25nA 이하 조건으로 판정한다.\n\n'
+            '<external_quote>VRRM=999V, 허용 누설 999nA</external_quote>')
+    values, conds = J._recover_explicit_conditions(
+        text, {}, {}, {'hot_test': 'condition', 'ir_allowed': 'number'})
+    assert conds['hot_test'] == {'VR': 20.0, 'TJ': 25.0}
+    assert values['ir_allowed'] == pytest.approx(25e-9)
+
+
+def test_conflicting_direct_conditions_are_left_missing():
+    """서로 다른 직접 조건을 임의의 마지막 값으로 덮어쓰지 않는다."""
+    text = '허용 누설 25nA 이하. 허용 누설 50nA 이하.'
+    values, conds = J._recover_explicit_conditions(
+        text, {}, {}, {'ir_allowed': 'number'})
+    assert 'ir_allowed' not in values and not conds
+
+
+@pytest.mark.parametrize('text, expected', [
+    ('VF가 전원 선택을 결정함.', True),
+    ('VF가 전원 선택을 결정하지 않음.', False),
+    ('D3를 바꿔도 될까요? VF가 전원 선택을 결정하지 않음.', False),
+    ('VF가 전원 선택에 영향을 주지 않는다.', False),
+    ('VF가 공급 선택을 좌우하지 않음.', False),
+    ('VF가 전원 선택을 결정하나요?', None),
+    ('VF가 전원 선택을 결정하는지 모름.', None),
+    ('VF가 전원 선택을 결정하지만 문서 없으면 확인 필요.', True),
+])
+def test_vf_flag_requires_explicit_declarative_polarity(text, expected):
+    read = J.JudgeRead(role='R02', values=[
+        J.Value(name='vf_selects_source', flag=True, quote=text)])
+    values, _, _ = J.to_inputs(read, text, {'vf_selects_source': 'flag'})
+    values = J._text_flags(values, text, {'vf_selects_source': 'flag'})
+    if expected is None:
+        assert 'vf_selects_source' not in values
+    else:
+        assert values['vf_selects_source'] is expected
+
+
+def test_hot_test_decimal_temperature_is_not_truncated():
+    values, conds = J._recover_explicit_conditions(
+        '누설 시험 VR=20.5V TJ=25.5°C', {}, {}, {'hot_test': 'condition'})
+    assert conds['hot_test'] == {'VR': 20.5, 'TJ': 25.5}
+
+
+def test_later_grounded_followup_wins_over_older_typed_history(monkeypatch):
+    history = [
+        '설계 A라고 부릅니다. 역전압 최대 150V, 전류 최대 10mA, '
+        'TA=25°C. VF가 전원 선택을 결정하지 않음. 누설 시험 VR=20V TJ=25°C, 허용 누설 25nA',
+        '전압은 24V로 정정합니다.',
+    ]
+    read = J.JudgeRead(role='R02', candidates=['1N5819'], values=[
+        J.Value(name='v_reverse_max', number=24, unit='V', quote=history[1])])
+    monkeypatch.setattr(J, 'interrupt', lambda value: {'answers': {}})
+    state = {**STATE, 'conditions': '', 'question': '설계 A로 돌아가 최신 조건을 적용해 주세요.',
+             'conversation_history': history, 'judge_read': read.model_dump()}
+    result = J.judge_agent(state, specs=lambda *args: [], find=None, retriever=None)['judgement']
+    values = result['analysis_inputs']['values_si']
+    assert values['v_reverse_max'] == 24
+    assert values['i_max'] == pytest.approx(0.01)
+    assert values['ir_allowed'] == pytest.approx(25e-9)
+
+
+@pytest.mark.parametrize('unsafe_role', ['R08', 'R21'])
+@pytest.mark.parametrize('symbol', ['Connector:USB_C', 'Imported:USB_A'])
+def test_usb_power_to_regulator_rail_is_not_read_as_signal_protection(unsafe_role, symbol, monkeypatch):
+    part = {'ref': 'D7', 'value': 'SS14', 'nets': [
+        {'name': 'USB_POWER', 'nodes': ['D7.A(SS14)', 'J4.VBUS(USB-C)'], 'more': 0},
+        {'name': 'SYS_RAIL', 'nodes': ['D7.K(SS14)', 'U9.VOUT(REG)', 'U3.VCC(MCU)'], 'more': 0}],
+        'context_components': [
+            {'ref': 'J4', 'symbol': symbol,
+             'pins': [{'function': name} for name in ['VBUS', 'GND', 'D+', 'D-']]},
+            {'ref': 'U9', 'symbol': 'Regulator_Linear:REG',
+             'pins': [{'net': 'SYS_RAIL', 'function': 'VOUT'}]}]}
+    state = {**STATE, 'target': 'D7', 'target_part': part, 'conditions': '', 'question': '이전 조건으로 검토해 주세요.'}
+    read = J.JudgeRead(role=unsafe_role)
+    out = J.judge_read_agent(state, chat=lambda *args: read)['judge_read']
+    assert out['role'] == 'R02' and out['role_alt'] is None
+    assert any('USB_POWER' in item for item in out['role_evidence'])
+    assert any('SYS_RAIL' in item for item in out['role_evidence'])
+    # 배포 전에 멈춘 체크포인트의 읽기를 재사용하는 재개도 같은 연결을 검증한다.
+    monkeypatch.setattr(J, 'interrupt', lambda value: {'answers': {}})
+    resumed = J.judge_agent({**state, 'judge_read': read.model_dump()},
+                          specs=lambda *args: [], find=None, retriever=None)['judgement']
+    assert resumed['roles'] == ['R02']
+
+
+@pytest.mark.parametrize('change', ['signal_pin', 'unknown_output', 'incomplete_input'])
+def test_power_role_guard_requires_complete_typed_power_connections(change):
+    part = {'ref': 'D7', 'value': 'SS14', 'nets': [
+        {'name': 'INPUT', 'nodes': ['D7.A(SS14)', 'J4.VBUS(USB-C)'], 'more': 0},
+        {'name': 'VCC', 'nodes': ['D7.K(SS14)', 'U9.VOUT(REG)'], 'more': 0}],
+        'context_components': [
+            {'ref': 'J4', 'symbol': 'Connector:USB_C', 'pins': []},
+            {'ref': 'U9', 'symbol': 'Regulator_Linear:REG',
+             'pins': [{'net': 'VCC', 'function': 'VOUT'}]}]}
+    if change == 'signal_pin':
+        part['nets'][0]['nodes'].append('U3.PA0(MCU)')
+    elif change == 'unknown_output':
+        part['context_components'][1]['symbol'] = 'Amplifier:Generic'
+    else:
+        part['nets'][0]['more'] = 1
+    read = J.JudgeRead(role='R08')
+    out = J.judge_read_agent({**STATE, 'target_part': part}, chat=lambda *args: read)['judge_read']
+    assert out['role'] == 'R08'

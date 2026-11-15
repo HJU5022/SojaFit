@@ -9,6 +9,7 @@ export const approveMessage = (messageId: number, candidatePart: string, verdict
 })
 // 새로고침 뒤 승인·견적 상태를 서버에서 복원한다. 승인마다 그 견적(id 순)이 붙고 가격은 어디에도 없다.
 export const listMessageApprovals = (messageId: number, signal?: AbortSignal) => apiFetch<(ApprovalDto & { quotes: QuoteDto[] })[]>(`/api/messages/${messageId}/approvals`, { signal, cache: 'no-store' })
+export const listProjectQuotes = (projectId: number, signal?: AbortSignal) => apiFetch<QuoteDto[]>(`/api/projects/${projectId}/quotes`, { signal, cache: 'no-store' })
 export const createQuote = (approvalId: number, quantity: number, signal?: AbortSignal) => apiFetch<QuoteDto>(`/api/approvals/${approvalId}/quotes`, {
   method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity }),
 })

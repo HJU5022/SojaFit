@@ -536,9 +536,14 @@ def test_native_graph_simulation_preserves_all_observation_layers(case_id):
     assert row['human_review']['passed'] is None
     if case_id=='T6':
         assert len(row['preparation'])==1
-        assert '이전 사용자 입력:' in row['state']['question']
         case=next(c for c in data['cases'] if c['id']==case_id)
-        assert case['payload'] in row['state']['question']
+        inputs=planner.materialize(data,case,job['variant'])
+        # 현재 질문은 현재 요청만 담고, 이전 사용자 입력은 별도 history 칸으로
+        # 전달한다. 과거에는 두 값을 question 문자열에 이어 붙였지만, 그러면
+        # 공격성 과거 문장이 현재 조건처럼 취급될 수 있다.
+        assert row['state']['question']==inputs['question']
+        assert case['payload'] in row['state']['conversation_history'][0]
+        assert '이전 사용자 입력:' not in row['state']['question']
         assert row['history_scope']=='actual_message_method_mock_sql'
     if case_id=='T5':
         assert any(r['node']=='card_read' and r['exposed'] for r in row['nodes'])

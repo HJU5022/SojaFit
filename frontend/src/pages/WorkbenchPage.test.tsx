@@ -8,7 +8,7 @@ import { renderWithQueries } from '../test/projects'
 import { QueryClient } from '@tanstack/react-query'
 
 vi.mock('../auth/AuthProvider', () => ({ useAuth: () => ({ user, logout: vi.fn() }) }))
-vi.mock('../components/Review', () => ({ default: () => null }))
+vi.mock('../components/Review', () => ({ default: ({ initialQuestion }: { initialQuestion?: string }) => <div data-testid="review-mock" data-initial-question={initialQuestion ?? ''} /> }))
 vi.mock('../components/ApprovedCases', () => ({ default: () => null }))
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
@@ -300,6 +300,21 @@ it.each(['projectId=1&targetRef=R1', 'projectId=1'])('does not enter a new revie
     expect(screen.queryByRole('textbox', { name: '질문' })).toBeNull()
     expect(screen.getAllByRole('button', { name: '부품 고르기' }).length).toBeGreaterThan(0)
   }
+})
+
+it('does not forward a draft for a different part when selecting a diode row', async () => {
+  const found = { ...made(null, '초안 시험'), connections: { parts: [{ ref: 'D1', value: '1N4148', footprint: '' }, { ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
+  network(path => {
+    if (path === '/api/demo-circuits') return Response.json([])
+    if (path === '/api/projects') return Response.json([found])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(found)
+    return Response.json([])
+  })
+  open('projectId=1')
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: 'R1을 다른 저항으로 바꾸고 싶습니다.' } })
+  fireEvent.click(await screen.findByRole('button', { name: /D1.*1N4148/ }))
+  expect(await screen.findByTestId('review-mock')).toHaveAttribute('data-initial-question', '')
 })
 
 it('offers retry when an out-of-scope saved conversation cannot be loaded', async () => {

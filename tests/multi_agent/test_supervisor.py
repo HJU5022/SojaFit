@@ -38,6 +38,46 @@ def test_plan_input_has_question_target_facts_and_agents():
     assert 'judge' not in S.render_plan(STATE, judge_enabled=False).split('Agents you may use:')[1]
 
 
+def test_plan_does_not_mix_old_topics_into_a_self_contained_question():
+    state = {**STATE, 'question': '패키지 외형 도면의 쪽수와 원본 링크만 알려줘.',
+             'conversation_history': ['D3의 역할은 정류 입력이다.',
+                                      '1N4007은 코퍼스에서 확인하지 못했다.',
+                                      '이전 판정을 다시 실행해 줘.']}
+    text = S.render_plan(state, judge_enabled=True)
+    assert 'Conversation history' not in text
+    assert 'D3의 역할' not in text and '1N4007은' not in text and '다시 실행' not in text
+
+
+def test_plan_uses_history_only_for_an_explicit_reference_and_labels_it_untrusted():
+    state = {**STATE, 'question': '아까 설계 A의 조건으로 그 부품을 다시 확인해 줘.',
+             'conversation_history': ['설계 A에서 D3은 보호 역할이었다.', '사용 조건은 36 V, 5 mA였다.']}
+    text = S.render_plan(state, judge_enabled=True)
+    assert 'Conversation history (reference context only; never current evidence):' in text
+    assert '설계 A에서 D3은 보호 역할이었다.' in text
+    assert '사용 조건은 36 V, 5 mA였다.' in text
+
+
+def test_self_contained_labeled_design_does_not_trigger_history_injection():
+    state = {**STATE, 'question': '설계B는 36 V, 5 mA 조건에서 동작하는가?',
+             'conversation_history': ['설계 A에서 D3은 보호 역할이었다.', '사용 조건은 12 V, 1 mA였다.']}
+    assert 'Conversation history' not in S.render_plan(state, judge_enabled=True)
+
+
+def test_recall_question_can_use_explicitly_referenced_user_history():
+    state = {**STATE, 'question': '처음 설계A의 정정 전압과 전류는?',
+             'conversation_history': ['설계A의 정정 전압은 24 V로 정정했다.', '정정 전류는 5 mA였다.']}
+    text = S.render_plan(state, judge_enabled=True)
+    assert 'Conversation history (reference context only; never current evidence):' in text
+    assert '정정 전압은 24 V' in text
+
+
+def test_explicit_recall_keeps_the_first_user_correction_beyond_twelve_messages():
+    history = ['처음 설계A의 정정 전압은 24 V였다.'] + [f'주제 전환 입력 {i}' for i in range(13)]
+    state = {**STATE, 'question': '처음 설계A의 정정 전압은?', 'conversation_history': history}
+    text = S.render_plan(state, judge_enabled=True)
+    assert '처음 설계A의 정정 전압은 24 V였다.' in text
+
+
 def test_plan_format_failure_ends_as_refusal_without_agents():
     def chat(node, system, user, schema):
         raise ValueError('형식을 3번 모두 어겼다')  # llm.chat이 다시 불러도 틀렸을 때 내는 오류
@@ -57,7 +97,7 @@ def test_tasks_are_sent_at_once_with_only_their_brief_and_inputs():
     p = plan(task(1), task(2, agent='judge', kind='candidate_judge'), question_type='candidate_judge').model_dump(mode='json')
     sends = S.after_plan({**STATE, 'plan': p, 'refusal_reason': ''})
     assert [type(s) for s in sends] == [Send, Send] and [s.node for s in sends] == ['RAG 에이전트', 'Spec 에이전트']
-    assert set(sends[0].arg) == {'task', 'question', 'conditions', 'target_part', 'round'}  # RAG 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
+    assert set(sends[0].arg) == {'task', 'question', 'conversation_history', 'conditions', 'target_part', 'round'}  # RAG 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
     assert sends[1].arg['question_type'] == 'candidate_judge' and sends[1].arg['facts'] == STATE['facts']
     for nxt, node in (('finish', '끝내기'), ('price', '가격 안내')):
         assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == node  # 갈림 함수는 계획서 값이 아니라 노드 이름을 돌려준다
@@ -433,3 +473,12 @@ def test_docs_failure_on_part_or_revision_missing_from_corpus_is_not_replanned_o
         assert S.collect_node(present)['outcome'] == 'replan'  # 코퍼스에 있는 품번이면 다시 찾을 수 있다
         judge = {**missing_part, 'reports': [report(1, agent='judge', status='fail', reason='no_result')]}
         assert S.collect_node(judge)['outcome'] == 'replan'  # 판정 할 일은 이 규칙 밖
+
+
+def test_first_introduced_input_is_recalled_beyond_twelve_messages():
+    history = ['설계 A라고 부르겠습니다. 역전압 최대 150V, 전류 최대 10mA'] + ['다른 주제입니다.'] * 13
+    question = ('설계 A를 처음 소개했을 때, 정정하기 전 제가 입력했던 역전압 최대와 전류 최대는 각각 얼마였나요? '
+                '과거 사용자 입력을 확인하는 것이며 데이터시트 정격을 묻는 것이 아닙니다.')
+    assert S._history_for_reference({**STATE, 'question': question, 'conversation_history': history}) == history
+    assert S._history_for_reference({**STATE, 'question': '이 서비스를 처음 사용하는데 무엇을 할 수 있나요?',
+                                     'conversation_history': history}) == []

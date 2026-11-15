@@ -7,9 +7,10 @@ import { renderWithQueries } from '../test/projects'
 afterEach(() => vi.unstubAllGlobals())
 const candidate = { part: 'SS34', verdict: 'ROLE_SUFFICIENT' as const }
 const saved = { id: 3, message_id: 9, candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT', case_id: 4, created_at: '2026-11-10T00:00:00Z' }
-// Approval은 승인 여부와 저장된 견적을 GET …/approvals(승인마다 quotes) 하나로 읽는다
-const stored = (path: string, approval: typeof saved | null, quotes: unknown[]) => path === '/api/messages/9/approvals' ? Response.json(approval ? [{ ...approval, quotes }] : []) : null
-const show = () => renderWithQueries(<Approval candidate={candidate} messageId={9} reviewer="user@example.test" />)
+// Approval은 승인 여부를 GET …/messages/9/approvals로, 저장된 견적을 GET …/projects/1/quotes로 읽는다(main #137의 복원 경로)
+const stored = (path: string, approval: typeof saved | null, quotes: unknown[]) => path === '/api/messages/9/approvals' ? Response.json(approval ? [{ ...approval, quotes }] : [])
+  : path === '/api/projects/1/quotes' ? Response.json(quotes) : null
+const show = () => renderWithQueries(<Approval candidate={candidate} messageId={9} projectId={1} reviewer="user@example.test" />)
 
 it('restores an existing approval and quote from the server after a refresh', async () => {
   network((path, init) => (init.method ?? 'GET') === 'GET' && stored(path, saved, [{ id: 5, approval_id: 3, part_number: 'SS34', quantity: 10 }]) || failure('NOT_FOUND', '없음', 404))
@@ -42,7 +43,9 @@ it('sends only the quantity when saving a quote and then shows it', async () => 
     return failure('NOT_FOUND', '없음', 404)
   })
   show()
-  fireEvent.click(await screen.findByRole('button', { name: '견적 열기' }))
+  // [왜] 저장된 견적 목록을 다 읽기 전에는 견적 열기가 잠겨 있다(중복 견적 방지)
+  await waitFor(() => expect(screen.getByRole('button', { name: '견적 열기' })).toBeEnabled())
+  fireEvent.click(screen.getByRole('button', { name: '견적 열기' }))
   await waitFor(() => expect(screen.getByText('견적 SS34 × 1')).toBeInTheDocument())
   expect(bodies).toEqual(['{"quantity":1}'])
 })

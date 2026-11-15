@@ -85,6 +85,29 @@ def make_thread(app, user, target='D1'):
     return thread
 
 
+def test_message_keeps_current_input_separate_from_unbounded_user_history(runtime, monkeypatch):
+    """서비스 경계가 12개 임의 절단 없이 현재 질문과 이전 사용자 입력을 분리한다."""
+    app, (owner, _), _ = runtime
+    thread = make_thread(app, owner)
+    seen = []
+
+    def capture(_conn, _thread, inputs, _budget, _request_id=''):
+        seen.append(inputs)
+
+    monkeypatch.setattr(app, '_invoke', capture)
+    for index in range(14):
+        app.message(owner, thread, f'현재 질문 {index}', conditions=f'조건 {index}')
+
+    assert len(seen) == 14
+    assert seen[0]['conversation_history'] == []
+    assert seen[0]['input'] == '사용 조건: 조건 0\n현재 질문 0'
+    assert seen[13]['input'] == '사용 조건: 조건 13\n현재 질문 13'
+    assert len(seen[13]['conversation_history']) == 13
+    assert seen[13]['conversation_history'][0] == '사용 조건: 조건 0\n현재 질문 0'
+    assert seen[13]['conversation_history'][-1] == '사용 조건: 조건 12\n현재 질문 12'
+    assert '현재 질문 13' not in '\n'.join(seen[13]['conversation_history'])
+
+
 def test_import_keeps_waiting_analysis_pinned_and_ensure_uses_pinned_circuit(runtime, monkeypatch):
     from backend import auth
     from backend.projects.repository import ProjectRepository

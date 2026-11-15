@@ -96,6 +96,48 @@ class JudgeRead(BaseModel):
         return code.group(0) if code else ''
 
 
+_RECALL_WORDS = re.compile(r'돌아가|돌아와|이전|앞서|아까|지난|그대로|정정|회상|최신|같은\s*(?:설계|시나리오)', re.I)
+_SCENARIO = re.compile(r'(?:설계|시나리오)\s*([^\s,.;:!?]+)', re.I)
+
+
+def _scenario_labels(text: str) -> list[str]:
+    return [re.sub(r'(?:이라고|라고|으로|로|의|를|을|이|가|은|는)$', '', x).upper() for x in _SCENARIO.findall(text or '')]
+
+
+def _judge_current_text(state: dict) -> str:
+    """현재 요청의 조건·질문만 반환한다.
+
+    대화 이력은 별도 상태 필드이며 숫자 grounding의 근거가 아니다. 입력 경계가
+    아직 갱신되지 않은 호출도 안전하게 처리하도록 기존 conditions/question만 읽는다.
+    """
+    return '\n'.join(x for x in (state.get('conditions', ''), state.get('question', '')) if x)
+
+
+def _history_for_current_question(history: list[str] | None, question: str = '') -> list[str]:
+    """명시적인 시나리오 회상 요청에 한해 같은 이름의 이력만 선택한다."""
+    rows = [x for x in (history or []) if isinstance(x, str) and x.strip()]
+    if not rows or not _RECALL_WORDS.search(question or ''):
+        return []
+    labels = set(_scenario_labels(question)[:1])
+    if not labels:
+        # "이전 후보/조건 그대로"처럼 이름을 다시 쓰지 않은 명시적 회상은
+        # 최근 사용자 입력만 참조한다. 새 주제 질문에는 위의 회상 신호가 없다.
+        # memory_service가 이미 전체 이력을 문자 상한으로 제한한다.
+        return rows
+    selected = []
+    active = False
+    for row in rows:
+        row_labels = _scenario_labels(row)
+        # 한 이력이 "설계 B로 돌아가 A와 섞지 말라"고 말해도, 그 행의
+        # 첫 설계명이 기준이다. 다른 설계명이 문장에 언급됐다는 이유로
+        # 여러 시나리오를 동시에 주입하지 않는다.
+        if row_labels:
+            active = row_labels[0] in labels
+        if active:
+            selected.append(row)
+    return selected
+
+
 def render_read(state: dict, rules: dict) -> str:
     """읽기 LLM에 줄 user 글: 역할 목록(이름 · 알아보는 법 · 그 역할이 받는 값 이름과 종류), 대상 주변 회로, 사용 조건, 질문."""
     part = state.get('target_part') or {}
@@ -112,6 +154,53 @@ def render_read(state: dict, rules: dict) -> str:
     return '\n'.join(lines)
 
 
+def _power_backfeed_evidence(part: dict) -> list[str]:
+    """완전한 USB 전원 입력과 정전압 출력 넷 사이의 역류 방지 연결만 확인한다."""
+    ref = str(part.get('ref') or '')
+    if not ref:
+        return []
+    def terminal(net, pins):
+        return any(re.match(rf'^{re.escape(ref)}\.(?:{pins})(?=\(|$)', node, re.I)
+                   for node in net.get('nodes', []))
+    nets = part.get('nets') or []
+    anodes = [n for n in nets if terminal(n, 'A|ANODE')]
+    cathodes = [n for n in nets if terminal(n, 'K|C|CATHODE')]
+    if len(anodes) != 1 or len(cathodes) != 1:
+        return []
+    anode, cathode = anodes[0], cathodes[0]
+    components = {c.get('ref'): c for c in part.get('context_components') or []}
+    inputs = [node for node in anode.get('nodes', []) if not node.startswith(ref + '.')]
+    if anode.get('more', 0) or not inputs:
+        return []
+    for node in inputs:
+        component = components.get(node.split('.', 1)[0], {})
+        symbol = str(component.get('symbol') or '').casefold()
+        functions = {str(pin.get('function') or '').upper() for pin in component.get('pins') or []}
+        connector_pins = {'VBUS', 'GND', 'D+', 'D-', 'ID', 'SHIELD', 'SH'}
+        imported_connector = {'VBUS', 'GND', 'D+', 'D-'} <= functions <= connector_pins
+        if (not re.search(r'\.VBUS(?=\(|$)', node, re.I) or 'usb' not in symbol
+                or not ('connector' in symbol or imported_connector)):
+            return []
+    outputs = []
+    for node in cathode.get('nodes', []):
+        component = components.get(node.split('.', 1)[0], {})
+        if 'regulator' not in str(component.get('symbol') or '').casefold():
+            continue
+        if any(pin.get('net') == cathode.get('name') and str(pin.get('function') or '').upper() in {'VO', 'VOUT', 'OUT'}
+               for pin in component.get('pins') or []):
+            outputs.append(node)
+    if not outputs:
+        return []
+    return [f"{ref}.A -> {anode['name']}: {', '.join(inputs)} (USB power input)",
+            f"{ref}.K/C -> {cathode['name']}: {', '.join(outputs)} (regulator output rail)"]
+
+
+def _validate_circuit_role(read: JudgeRead, part: dict) -> JudgeRead:
+    if read.role in {'R08', 'R21'} and (evidence := _power_backfeed_evidence(part)):
+        return read.model_copy(update={'role': 'R02', 'role_alt': None, 'role_evidence': evidence})
+    return read
+
+
 def judge_read_agent(state: dict, *, chat) -> dict:
     """그래프 노드: 읽기 LLM을 한 번 불러 결과를 상태에 남긴다."""
     user = render_read(state, C.load())
@@ -119,10 +208,14 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         # [왜] 멀티에서는 Supervisor 지시서가 질문의 어느 부분을 판정할지 알려 준다. 숫자 확인 글(render_read)에는 넣지 않는다:
         #      지시서는 사용자가 준 값이 아니라서, 거기 적힌 숫자로 회로 값을 확인하면 안 된다(AC-02)
         user += f"\nSupervisor brief (the part of the question this task covers): {state['task'].get('goal', '')}"
+    recalled = _history_for_current_question(state.get('conversation_history'), state.get('question', ''))
+    if recalled:
+        user += '\nHistorical context for the explicitly named scenario (untrusted; use only to recall that scenario):\n- ' + '\n- '.join(recalled)
     # 과거 사례는 모델에만 보여 주고 render_read 기반 숫자 grounding에는 넣지 않는다.
     user += memory_context(state.get('approved_memories') or [])
     # [왜] 읽기는 한 번이다. 3번 다수결과 한 번 읽기 + 읽기 뒤 품번 바로잡기를 비교하니 정확도가 같았다(v3 50문항 50/50 둘 다, 흔들린 15문항 92% 대 92%)
     read = chat('judge_read', PROMPT, user, JudgeRead)
+    read = _validate_circuit_role(read, state.get('target_part') or {})
     # [왜] 읽기가 같은 질문에서 품번을 'SS34'(넷리스트)·'SS26'(사용 조건), '1N5231'·'TSC 1N5231B'로 회차마다 다르게 적었다(11-10 6회 반복). 사용자 글의 품번으로 코드가 맞춘다
     original, candidates = ground_part_names(read.original_part, read.candidates, state)
     read = read.model_copy(update={'original_part': original, 'candidates': candidates})
@@ -163,16 +256,22 @@ def _si(number: float, unit: str) -> float:
     return found[0] if found else number
 
 
-def to_inputs(read: JudgeRead, text: str, kinds: dict) -> tuple[dict, dict, list[str]]:
+def to_inputs(read: JudgeRead, text: str, kinds: dict, *, preferred_text: str = '') -> tuple[dict, dict, list[str]]:
     """읽기 결과 → (숫자 · 예/아니오 값, 시험 조건 값, 버린 이름). 규칙에 없는 이름과 근거 없는 값은 버린다."""
     values, conds, dropped = {}, {}, []
+    correcting = bool(re.search(r'정정|최신|변경|바꿔|수정', preferred_text or ''))
+    current_names = {v.name for v in read.values
+                     if correcting and grounded(preferred_text, v)}
     for v in read.values:
         if v.name not in kinds and SAME_QUANTITY.get(v.name) in kinds:
             v = v.model_copy(update={'name': SAME_QUANTITY[v.name]})  # 같은 자리 두 역할의 같은 양을 다른 이름으로 읽은 경우
         kind = kinds.get(v.name)
         # [왜] 읽기가 구매 규격 '공칭 제너 전압 3.3V, 공차 ±2%'를 vz_min · vz_max = 3.3V로도 읽어, 사양 조건에 더해 '최소 VZ ≥ 3.3 · 최대 VZ ≤ 3.3'이
         #      걸려 실제 3.3V 제너가 모두 불충족이 됐다(v3-13, Sonnet 31a3aa3 1세트 · Haiku 4a61fd0 2세트, 사전 등록 #48). 범위가 없는 인용은 버린다
-        if kind is None or not grounded(text, v) or (v.name in RANGE_ONLY and not NUM_RANGE.search(v.quote)):
+        # 최신 정정은 같은 입력 이름의 오래된 인용만 대체한다. 전압/전류
+        # 단위가 같다는 이유로 hot_test, ir_allowed 같은 다른 필드를 지우지 않는다.
+        stale = correcting and v.name in current_names and _norm(v.quote) not in _norm(preferred_text)
+        if kind is None or not grounded(text, v) or stale or (v.name in RANGE_ONLY and not NUM_RANGE.search(v.quote)):
             dropped.append(v.name)
         elif kind == 'flag' and v.flag is not None:
             values[v.name] = v.flag
@@ -261,7 +360,7 @@ def _collapse_float_boundary_conditions(conditions: list[dict]) -> list[dict]:
     return out
 
 
-def _text_flags(values: dict, text: str, kinds: dict[str, str]) -> dict:
+def _text_flags(values: dict, text: str, kinds: dict[str, str], *, direct_text: str | None = None) -> dict:
     """판정 읽기가 놓친 명시적 플래그를 원문에서 보완한다.
 
     숫자·역할을 LLM 출력으로 새로 추정하지 않고, 질문에 명시된 PWM 유무처럼
@@ -276,7 +375,110 @@ def _text_flags(values: dict, text: str, kinds: dict[str, str]) -> dict:
             out['pwm'] = False
         elif has_pwm:
             out['pwm'] = True
+    if kinds.get('vf_selects_source') == 'flag':
+        flag_text = direct_text if direct_text is not None else text
+        clauses = [clause for clause in re.split(r'(?<=[.。!?])\s+|\n+', flag_text)
+                   if re.search(r'(?:VF|순방향\s*전압)', clause, re.I)]
+        explicit = []
+        saw_unknown = False
+        for clause in clauses:
+            if not re.search(r'전원\s*선택|공급\s*선택', clause, re.I):
+                continue
+            if re.search(r'\?|여부를?\s*모|하는지\s*모|알\s*수\s*없|모르', clause, re.I):
+                saw_unknown = True
+                continue
+            negative = bool(re.search(r'결정\s*하지\s*않|결정\s*안|영향을?\s*주지\s*않|좌우하지\s*않|아니|않음', clause, re.I))
+            positive = bool(re.search(r'결정\s*(?:함|한다|합니다|하여)|영향을?\s*(?:줌|준다|있음)', clause, re.I)) and not negative
+            if negative != positive:
+                explicit.append(not negative)
+        if explicit and all(flag == explicit[0] for flag in explicit):
+            # 사용자의 명시 문장이 LLM flag보다 우선한다. 서로 모순인 문장만 확인으로 남긴다.
+            out['vf_selects_source'] = explicit[0]
+        elif len(explicit) > 1:
+            out.pop('vf_selects_source', None)
+        elif saw_unknown:
+            out.pop('vf_selects_source', None)
     return out
+
+
+def _direct_condition_text(conditions: str = '', question: str = '') -> str:
+    """조건 보완에 사용할 직접 입력만 남긴다.
+
+    회로/netlist 렌더링과 외부 인용문은 숫자 근거가 아니다. 외부 인용 블록은
+    제거하여 그 안의 수치를 조건으로 승격하지 않는다.
+    """
+    text = '\n'.join(x for x in (conditions, question) if x)
+    # 외부 자료 경계는 특정 공급자/시험 ID가 아니라 일반 인용·코드·태그 경계로 처리한다.
+    text = re.sub(r'```.*?```', '', text, flags=re.S)
+    text = re.sub(r'<([A-Za-z][\w:-]*)\b[^>]*>.*?</\1\s*>', '', text, flags=re.I | re.S)
+    text = re.sub(r'^\s*>.*$', '', text, flags=re.M)
+    return text
+
+
+def _recover_explicit_conditions(text: str, values: dict, conds: dict, kinds: dict) -> tuple[dict, dict]:
+    """직접 적은 hot_test·허용 누설만 복구한다.
+
+    같은 항목에 서로 다른 값을 두 번 적으면 임의로 마지막 값을 고르지 않고
+    누락 상태로 남겨 기존 interrupt/확인 경로를 사용한다.
+    """
+    text = _direct_condition_text(text)
+    values, conds = dict(values), dict(conds)
+    if kinds.get('temp') == 'condition':
+        # 현재 동작 온도는 회상된 조건보다 우선한다. hot_test 안의 TJ는
+        # temp(주변 동작 온도)가 아니므로 독립적인 TA/TC만 사용한다.
+        matches = re.findall(r'\b(TA|TC)\s*=\s*(\d+(?:\.\d+)?)\s*°?\s*C', text, re.I)
+        if matches:
+            parsed = [{'TA' if name.upper() == 'TA' else 'TC': float(number)} for name, number in matches]
+            if all(item == parsed[0] for item in parsed):
+                conds['temp'] = parsed[0]
+            else:
+                conds.pop('temp', None)
+    if kinds.get('hot_test') == 'condition':
+        matches = re.findall(r'(?:누설\s*시험|hot_test)\s*[:：]?\s*([^。\n!?]+)', text, re.I)
+        parsed = [S.parse(m) for m in matches]
+        parsed = [p for p in parsed if p]
+        if parsed and all(p == parsed[0] for p in parsed):
+            # 현재 본문이 명시한 시험 조건은 모델이 회상한 오래된 조건보다 우선한다.
+            conds['hot_test'] = parsed[0]
+        elif len(parsed) > 1:
+            conds.pop('hot_test', None)
+    if kinds.get('ir_allowed') == 'number':
+        matches = re.findall(r'(?:허용\s*(?:역)?누설|ir_allowed)\s*(?:전류)?\s*(?:은|=|:)?\s*(\d+(?:\.\d+)?)\s*([munpµμ]?A)', text, re.I)
+        parsed = [_si(float(number), unit) for number, unit in matches]
+        parsed = [p for p in parsed if p is not None]
+        if parsed and all(math.isclose(p, parsed[0], rel_tol=1e-12, abs_tol=0.0) for p in parsed):
+            values['ir_allowed'] = parsed[0]
+        elif len(parsed) > 1:
+            values.pop('ir_allowed', None)
+    aliases = {
+        'v_reverse_max': r'(?:v_reverse_max|최대\s*역전압|역전압\s*최대)\s*(?:(?:은|는)|=|:)?\s*(\d+(?:\.\d+)?)\s*(V)',
+        'i_max': r'(?:i_max|최대\s*(?:부하\s*)?전류|전류\s*최대)\s*(?:(?:은|는)|=|:)?\s*(\d+(?:\.\d+)?)\s*([munpµμ]?A)',
+    }
+    for name, pattern in aliases.items():
+        if kinds.get(name) != 'number':
+            continue
+        matches = [_si(float(number), unit or 'V') for number, unit in re.findall(pattern, text, re.I)]
+        if matches and all(math.isclose(item, matches[0], rel_tol=1e-12, abs_tol=0.0) for item in matches):
+            values[name] = matches[0]
+        elif len(matches) > 1:
+            values.pop(name, None)
+    return values, conds
+
+
+def _recover_history_conditions(rows: list[str], kinds: dict, *, read: JudgeRead | None = None) -> tuple[dict, dict]:
+    """선택된 동일 시나리오의 사용자 행을 시간순으로 합친다."""
+    values, conds = {}, {}
+    for row in rows:
+        direct = _direct_condition_text(row)
+        if read is not None:
+            # 읽기의 인용도 해당 사용자 행에 근거할 때만 시간순으로 반영한다.
+            # 앞 행의 명시 별칭이 뒤 행의 유효한 정정을 덮지 않게 한다.
+            row_values, row_conds, _ = to_inputs(read, direct, kinds)
+            values.update(row_values)
+            conds.update(row_conds)
+        values, conds = _recover_explicit_conditions(row, values, conds, kinds)
+        values = _text_flags(values, direct, kinds, direct_text=direct)
+    return values, conds
 
 
 def _role_present(role: str, rule: dict, values: dict, conds: dict, text: str) -> set[str]:
@@ -722,7 +924,8 @@ def display_inputs(values: dict, conds: dict) -> list[dict]:
 def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:
     """그래프 노드: 코퍼스 밖 요구면 거절 사유로 보고하고, 아니면 빠진 값을 한 번 묻고 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
     rules = C.load()
-    read = JudgeRead.model_validate(state['judge_read'])
+    # 재개 시 읽기 LLM은 다시 부르지 않지만 고정 회로의 연결 검증은 유지한다.
+    read = _validate_circuit_role(JudgeRead.model_validate(state['judge_read']), state.get('target_part') or {})
     revision_text = ' '.join([state.get('conditions', ''), state.get('question', '')])
     editions = requested_revisions(revision_text)
     references = []
@@ -735,7 +938,13 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         return {'path': ['판정'], 'reports': (state.get('reports') or []) + [_report('fail', f'cannot judge from the corpus: {why}', reason=reason)]}
     part = state.get('target_part') or {}
     # [왜] 숫자 확인은 질문 · 사용 조건 · 대상 주변 회로 글로만 한다. 역할 목록(rules)의 알아보는 법 글에 있는 숫자는 사용자가 준 값이 아니다(AC-02)
-    text = '\n'.join([state.get('conditions', ''), state.get('question', ''), render_read(state, {})])
+    current_text = _judge_current_text(state)
+    recalled = _history_for_current_question(state.get('conversation_history'), state.get('question', ''))
+    # 회상 요청일 때만 같은 이름의 이력을 grounding에 보탠다. 주제 전환이나
+    # 일반 질문에서는 과거 역할·숫자가 현재 값으로 승격되지 않는다.
+    history_text = '\n'.join(recalled)
+    text = '\n'.join(x for x in (current_text, history_text, render_read(state, {})) if x)
+    direct_text = _direct_condition_text(current_text)
     roles = [r for r in (read.role, read.role_alt) if r and r != 'other']
     base = {'roles': roles, 'role_evidence': read.role_evidence, 'results': [], 'shown': [], 'unverified': [], 'terms': [],
             'capped': False, 'dropped': [], 'asked': []}
@@ -744,8 +953,27 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                 'reports': (state.get('reports') or []) + [_report('partial', 'role outside the 23 roles: no judging rule')]}
     roles = _prefer_role_from_load(roles, rules, text)
     kinds = {k: v for r in roles for k, v in C.inputs(rules[r]).items()}
-    values, conds, dropped = to_inputs(read, text, kinds)
-    values = _text_flags(values, text, kinds)
+
+    def resolve_inputs(input_kinds: dict) -> tuple[dict, dict, list[str]]:
+        if recalled:
+            # 모델이 초기 행만 회상하거나 일부 필드를 생략해도, 선택된 동일
+            # 시나리오의 사용자 행을 시간순으로 합친다. 현재 직접 인용은 마지막에 우선한다.
+            history_values, history_conds = _recover_history_conditions(recalled, input_kinds, read=read)
+            _, _, old_dropped = to_inputs(read, history_text, input_kinds)
+            current_values, current_conds, current_dropped = to_inputs(
+                read, current_text, input_kinds, preferred_text=current_text)
+            merged_values = {**history_values, **current_values}
+            merged_conds = {**history_conds, **current_conds}
+            dropped_values = old_dropped + current_dropped
+        else:
+            merged_values, merged_conds, dropped_values = to_inputs(
+                read, text, input_kinds, preferred_text=current_text)
+        merged_values = _text_flags(merged_values, text, input_kinds, direct_text=direct_text)
+        merged_values, merged_conds = _recover_explicit_conditions(
+            direct_text, merged_values, merged_conds, input_kinds)
+        return merged_values, merged_conds, dropped_values
+
+    values, conds, dropped = resolve_inputs(kinds)
     auto_selected = False
     if len(roles) > 1 and read.role_evidence:
         complete = [r for r in roles if not _required_missing(rules[r], _role_present(r, rules[r], values, conds, text))]
@@ -756,8 +984,7 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             roles = complete
             auto_selected = True
             kinds = {k: v for k, v in C.inputs(rules[roles[0]]).items()}
-            values, conds, dropped = to_inputs(read, text, kinds)
-            values = _text_flags(values, text, kinds)
+            values, conds, dropped = resolve_inputs(kinds)
     if auto_selected:
         asked = list(dict.fromkeys(_required_missing(rules[roles[0]], set(values) | set(conds))))
     else:
