@@ -152,7 +152,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처는 `docs/reference/team-contract.md`를 따른다(9절).
 - HTTP API: 동작(메서드 + 경로) 50개, 경로 42개입니다. `/openapi.json`(`/docs`)에 동작 43개(경로 35개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 12개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 40개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/types.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
-  - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 25개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
+  - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 26개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
     | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
@@ -185,7 +185,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/projects` | 로그인 | - | 200 `list[ProjectSummary]` | | 내 프로젝트(회로) 목록(2단계) |
     | `POST /api/projects` | 로그인 · 데모 모드 | `CreateProject` `{demo_id, name}` | 201 `Project`(`connections` 포함) | 422 | 데모 회로로 프로젝트를 만듦(2단계) |
     | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
-    | `GET /api/projects/{id}` | 로그인 | - | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
+    | `POST /api/projects/{id}/netlist` | 로그인 | multipart `file`(`.net` 또는 `.txt`, UTF-8, 5 MiB 이하) | 201 `ImportNetlistResponse` `{project, thread_id}` | 400 형식 · 404 · 413 크기 · 422 | 이미 만든 프로젝트에 넷리스트를 올리면 그 프로젝트의 회로를 바꾸고(`circuits.version` +1) 새 대화(thread)를 만듭니다. 작업대의 첨부가 부릅니다. 이 경로는 모델을 부르지 않습니다 |
+    | `GET /api/projects/{id}` | 로그인 | 쿼리 `thread_id`(선택) | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
     | `PATCH /api/projects/{id}` | 로그인 | `RenameProject` `{name 1~200자}` | 200 `Project` | 404 · 422 | 프로젝트 이름 바꾸기 |
     | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 멈춘 run은 막지 않음, 위 대화 삭제와 같은 기준) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
     | `GET /api/judge/roles` | 로그인 | - | 200 `list[RoleLabel]` `[{code, name}]` | | 역할 23개 이름(5절 `roles.yaml`), 역할 코드 표시와 역할 선택 interrupt(4단계) |
