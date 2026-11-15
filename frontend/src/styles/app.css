@@ -395,7 +395,8 @@ input[type='radio'] { margin: 0; }
 .login-links { display: flex; flex-wrap: wrap; gap: 4px 16px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12px; line-height: 18px; }
 .login-links a, .land-foot a, .privacy-page a:not(.btn, .brand) { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
 .field-hint { min-height: 18px; color: var(--ink-2); font-size: 12px; line-height: 18px; }
-select.input { appearance: auto; }
+select.input { appearance: auto; color-scheme: dark; }
+select.input option { color: var(--ink); background-color: var(--surface); }
 textarea.input { height: auto; padding-block: 8px; resize: vertical; }
 
 /* 작업대 밖의 로그인 후 화면. 랜딩과 같은 머리, 작업대와 같은 글자 크기를 쓴다. */

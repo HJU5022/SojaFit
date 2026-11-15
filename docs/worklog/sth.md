@@ -1,3 +1,10 @@
+## 2026-11-15 검색 대상 옵션 목록 대비 수정
+- 원인/변경: 밝은 글자를 상속한 native select의 펼친 옵션 배경이 명시되지 않아 실제 Windows Chrome 목록이 밝거나 비치는 배경으로 표시됐다. 기존 root의 dark 설정은 유지하고 select.input에도 color-scheme:dark를 명시했으며 option에 --ink/--surface를 적용했다. native 선택 강조·포커스·동작은 유지한다. CSS 두 규칙과 기존 작업서 AC만 수정했고 주요 SPEC 반영은 조장 검토 제안이다.
+- 과정/검증: Impeccable 런처는 캐시 폴더 쓰기 권한 부재로 실행되지 않아 기존 design.md·polish/craft-floor를 직접 적용했다. CSS만 바꾸는 낮은 영향 변경으로 구현을 복제하는 새 단위 시험은 추가하지 않았다. npm run test:run →11파일/263통과(9.30초), npm run build -- --logLevel error →TypeScript·Vite 통과. 실제 localhost:8010 Chrome에서 같은 선택 목록을 수정 전 재현하고, 반영/새로고침 뒤 일반 항목의 짙은 배경·밝은 글자와 OS 선택 강조를 시각 확인했다. 검색 버튼은 누르지 않았다. 데스크톱 native 목록 펼침을 확인했으며 별도 모바일/다른 OS·방향키 선택 재검증은 미실행이다.
+- 로컬 반영: 현재 API 이미지를 상속한 COPY-only sojafit:select-contrast-20261115-192033을 --pull=false/--network=none으로 빌드했다. 실행 API에는 assets를 먼저, index.html을 마지막에 반영해 재시작0회. API/DB/renderer ID·시작 시각·전체 환경(토큰 포함)·DB볼륨 동일, 전체 backend/db 파일 hash 동일, 제공 index SHA256 일치·health/login200. 재생성용 sojafit:sth-local도 검증 이미지로 지정했다. DB/운영/외부 공급자·유료 API·커밋·푸시 변경/호출0이다.
+- 증빙: 저장소 밖 select-contrast-8010-20261115-192033에 기존 정적파일 백업·컨텍스트·결과를 두고 같은 증빙 상위 폴더의 select-contrast-after.png에 실제 수정된 옵션 목록을 보관했다. 사용자 브라우저의 다른 탭은 조작하지 않았으며 검색어 입력·검색 전송은 하지 않았다. 반영 확인을 위해 해당 앱 화면은 새로고침했다.
+- 커밋/푸시 준비: STH의 CSS·작업서·기록3파일만 포함한다. 커밋 전 npm run test:run 263통과(7.87초), TypeScript·Vite 빌드 통과를 재확인했다. 실제 인덱스의 공급자 토큰/JWT/개인키/충돌표시 패턴·로컬 비밀값 대조·임시/금지 경로 검사를 통과해야 커밋한다(Gitleaks 미설치로 미실행). git fetch --no-tags origin STH로 원격 상태를 갱신했으며 실제 push·PR 등록은 실행하지 않는다.
+
 ## 2026-11-15 회로도 변경 로컬 커밋 준비
 - 요청/분리: 누적 회로도 변경을 STH에 로컬 커밋한다. 공급자 한도 후 중복 조회 차단과 키워드 검색/명시 후보 선택/접힘 안내를 두 목적의 커밋으로 나누며 공유 코드·작업서·기록은 각 목적에 맞는 부분만 인덱스에 넣는다. 원본 작업 파일과 앞선 로컬 반영 기록은 유지하고 푸시는 하지 않는다.
 - 최종 재검증: PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q tests/projects/test_external_schematic.py·test_schematic_discovery.py·test_external_circuit_search.py·test_official_schematic.py·test_schematic_render.py 및 tests/api/test_external_circuits.py·tests/repo/test_repo_layout.py →490통과(20.29초). frontend npm run test:run →11파일/263통과(8.30초), npm run build -- --logLevel error →TypeScript·Vite 통과. 유료 공급자/DB/운영/동결 평가 호출은 실행하지 않았다.
