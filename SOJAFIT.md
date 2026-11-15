@@ -666,6 +666,7 @@ SojaFit (proj3-b)
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
 │   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
 │   │   ├── test_import_human_review.py <- 사람 채점 시트 변환의 파싱 · 채움 · 일치율 · 원본 보존(합성 시트)
+│   │   ├── test_chunk_source_check.py <- 청크-원본 대조의 같은 쪽 다른 행 값 변이 시험(합성 표 128건: 쪽 검사 0 · 행 검사 전부 탐지, 깨끗한 12건 통과)
 │   │   ├── test_check_injection_result.py <- 저장한 실측03의 기준 통과와 변이(작업 수 · 상태 · 판정 · 노출) 실패
 │   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
 │   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사
@@ -705,7 +706,7 @@ SojaFit (proj3-b)
 │   │   ├── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
 │   │   ├── stage_report.py  <- run_gate 결과의 단계별 p50 · p95 · 호출당 · 문항당 비용 집계(진짜 중앙값 · 가장 가까운 순위 p95)
 │   │   ├── approval_wait_report.py  <- 사람 대기(재개 · 승인)를 서버 처리 시간과 떼어 DB 시각에서 읽는 읽기 전용 보고
-│   │   ├── chunk_source_check.py  <- 표·수치 청크 표본을 원본 PDF 같은 쪽과 대조(D10 증거)
+│   │   ├── chunk_source_check.py  <- 표·수치 청크 표본을 원본 PDF 같은 쪽과 대조(D10 증거). `--rows`는 같은 행·열 칸 값까지 대조
 │   │   └── tally_codex_v3.py  <- Codex v3 50건 답을 정답과 규칙으로 대조한 집계
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
