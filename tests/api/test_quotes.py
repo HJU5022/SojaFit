@@ -85,7 +85,7 @@ def test_mutations_require_origin_and_case_delete_is_explicit(monkeypatch):
 
 def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
     monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
-    # [왜] 같은 메시지를 두 번 승인하면 DB의 UNIQUE(message_id)가 UniqueViolation을 내고, 승인은 한 건으로 남은 채 409다(db/020)
+    # [왜] 같은 메시지에 활성 승인이 있으면 서비스가 InvalidApproval을 내 409다(032 이후 DB의 UNIQUE(message_id)는 없다). 옛 DB의 UniqueViolation도 같은 409로 받는다
     # [왜] 409 둘 다 ALREADY_APPROVED라 화면은 승인을 다시 보내지 않는다(ADR 0019)
     for error, status, code in [(QuoteNotFound(), 404, 'NOT_FOUND'), (InvalidApproval('no'), 409, 'ALREADY_APPROVED'),
                                 (psycopg.errors.UniqueViolation(), 409, 'ALREADY_APPROVED')]:
