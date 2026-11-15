@@ -6,7 +6,7 @@ import socket
 from backend.projects.external_circuit_search import GitHubRepositoryRef
 from backend.projects import schematic_discovery as discovery
 from backend.projects.schematic_discovery import download_bounded, inspect_github_candidates, inspect_github_repository
-from backend.projects.schematic_source import ALLOWED_LICENSES, ExternalSchematicInvalidSource, ExternalSchematicRateLimited
+from backend.projects.schematic_source import ALLOWED_LICENSES, ExternalSchematicInvalidSource, ExternalSchematicRateLimited, ExternalSchematicUpstreamError
 
 REF = GitHubRepositoryRef("o", "r", "https://github.com/o/r")
 SHA, TREE = "a" * 40, "b" * 40
@@ -428,6 +428,34 @@ def test_public_download_connects_to_checked_ip_with_original_tls_name(monkeypat
     assert str(seen[0].url) == "https://93.184.216.34/schematic.png"
     assert seen[0].headers["host"] == "example.org"
     assert seen[0].extensions["sni_hostname"] == "example.org"
+
+
+def test_download_deadline_stops_a_slow_dripping_body_but_the_default_has_none(monkeypatch):
+    """점검 A #7: 조각마다 읽기 timeout만 있으면 느리게 흘리는 서버가 스레드를 오래 붙잡는다. 인자를 줄 때만 전체 마감을 건다."""
+    import time
+    monkeypatch.setattr(discovery.socket, "getaddrinfo", lambda host, port, **kwargs:
+                        [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))])
+    sent = []
+
+    def drip():
+        for _ in range(40):
+            time.sleep(0.02)
+            sent.append(1)
+            yield b"x"
+
+    class Transport(httpx.BaseTransport):
+        def handle_request(self, request):
+            sent.clear()
+            return httpx.Response(200, content=drip(), headers={"content-type": "text/html"})
+
+    kwargs = dict(max_bytes=100, allowed_hosts=frozenset({"example.org"}))
+    with httpx.Client(transport=Transport(), trust_env=False) as client:
+        started = time.monotonic()
+        with pytest.raises(ExternalSchematicUpstreamError):
+            download_bounded("https://example.org/p.html", client=client, deadline_seconds=0.1, **kwargs)
+        assert time.monotonic() - started < 0.6 and len(sent) < 40  # 40조각(0.8초)을 다 기다리지 않는다
+        data, _ = download_bounded("https://example.org/p.html", client=client, **kwargs)  # 마감 인자가 없으면 예전처럼 끝까지 읽는다
+    assert data == b"x" * 40
 
 
 def test_public_download_rejects_private_dns_before_connection(monkeypatch):

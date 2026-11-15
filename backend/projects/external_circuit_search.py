@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import time
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from itertools import zip_longest
@@ -122,8 +123,11 @@ def github_repository_ref(value: object) -> GitHubRepositoryRef | None:
     return GitHubRepositoryRef(owner, repo, f"https://github.com/{owner}/{repo}")
 
 
-def read_bounded_body(response: httpx.Response, max_bytes: int) -> bytes:
-    """Read an identity-encoded response without decompressing untrusted content."""
+def read_bounded_body(response: httpx.Response, max_bytes: int, *, deadline: float | None = None) -> bytes:
+    """Read an identity-encoded response without decompressing untrusted content.
+
+    deadline(time.monotonic() 기준)을 넘기면 TimeoutError를 낸다. 기본은 마감 없음: 정당하게 오래 걸리는 렌더 응답(90초)이 같은 함수를 쓴다.
+    """
     length = response.headers.get("content-length")
     if length is not None and not 0 <= int(length) <= max_bytes:
         raise ValueError("invalid length")
@@ -132,6 +136,8 @@ def read_bounded_body(response: httpx.Response, max_bytes: int) -> bytes:
     chunks = [response.content] if response.is_stream_consumed else response.iter_raw()
     data = bytearray()
     for chunk in chunks:
+        if deadline is not None and time.monotonic() > deadline:
+            raise TimeoutError("deadline")  # [왜] 읽기 timeout은 조각 하나마다라 15초마다 1바이트씩 흘리면 끝나지 않는다
         if len(data) + len(chunk) > max_bytes:
             raise ValueError("response too large")
         data.extend(chunk)
@@ -402,6 +408,9 @@ def _page_asset_host_allowed(asset_url: str, page_url: str) -> bool:
     return _same_publisher_host(asset_host, page_host) or _official_github_asset(asset_url, page_url) is not None
 
 
+PAGE_DEADLINE_SECONDS = 30  # 공개 웹 HTML 한 페이지를 받는 데 쓰는 전체 시간 상한(점검 A #7)
+
+
 def _page_assets(page_url: str, *, client: httpx.Client, required: bool = False,
                  require_schematic_context: bool = False) -> tuple[tuple[str, str], ...]:
     """Fetch one public HTML page, bounded, to locate its schematic asset."""
@@ -413,7 +422,7 @@ def _page_assets(page_url: str, *, client: httpx.Client, required: bool = False,
         body, mime = download_bounded(
             page_url, max_bytes=512 * 1024,
             allowed_hosts=frozenset({urlsplit(page_url).hostname or ""}), client=client,
-            phase="page_html",
+            phase="page_html", deadline_seconds=PAGE_DEADLINE_SECONDS,
         )
         if "text/html" not in mime.lower():
             return ()
@@ -609,7 +618,8 @@ def _raspberrypi_portal_schematics(query: str, *, client: httpx.Client) -> tuple
     from backend.projects.schematic_source import ExternalSchematicInvalidSource
     url = 'https://pip.raspberrypi.com/search?q=' + quote(query, safe='')
     body, mime = download_bounded(url, max_bytes=512 * 1024,
-        allowed_hosts=frozenset({'pip.raspberrypi.com'}), client=client, phase='official_product_search')
+        allowed_hosts=frozenset({'pip.raspberrypi.com'}), client=client, phase='official_product_search',
+        deadline_seconds=PAGE_DEADLINE_SECONDS)
     if 'text/html' not in mime:
         return ()
     parser = _SchematicPageParser()
@@ -764,7 +774,7 @@ def search_component_repositories(query: str, limit: int = 5, *, client: httpx.C
             try:
                 body, mime = download_bounded(url, max_bytes=512 * 1024,
                                              allowed_hosts=frozenset({urlsplit(url).hostname}),
-                                             client=client, phase="page_html")
+                                             client=client, phase="page_html", deadline_seconds=PAGE_DEADLINE_SECONDS)
                 if mime != "text/html":
                     continue
                 html = body.decode("utf-8", "replace")
