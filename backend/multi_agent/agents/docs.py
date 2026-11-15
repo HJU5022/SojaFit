@@ -28,7 +28,6 @@ from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_dig
 from backend.services.exa import OTHER_MANUFACTURER, SearchBudgetExhausted, slot_in_use
 from backend.graph.nodes import NOT_FOUND, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search, unsupported_numbers
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
-from backend.multi_agent.supervisor import corpus_absent
 from backend.multi_agent.revisions import requested_revisions, revision_matches, revisions_for_part
 from backend.rag.units import to_si
 from backend.rag.card_read import read_code_values
@@ -529,31 +528,6 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             # [왜] 그 정격의 품번이 표에 없다. 거절을 정하지 않고 다시 찾을 사유로 올린다(재계획이 조건을 고쳐 볼 수 있다)
             return report('fail', 'no part in the spec table has the described ratings', reason=Reason.NO_RESULT)
         looked_up = f"; parts with the described ratings: {', '.join(filter_parts)}"
-    def web_terms(terms: str) -> str:
-        # Keep a user's manufacturer constraint even if the Supervisor abbreviates the task.
-        for maker, pattern in (('Infineon', r'인피니언|\binfineon(?![A-Za-z])'),
-                               ('TSC', r'대만반도체|타이완\s*세미|대만\s*세미|대만\s*반도체|\btsc\b|taiwan\s*semi')):
-            if re.search(pattern, question, re.I) and maker.casefold() not in terms.casefold():
-                terms += ' ' + maker
-        for revision in requested_revisions(revision_text):
-            if revision not in terms.upper().split():
-                terms += ' ' + revision
-        return terms
-
-    early_web = early_fallback = None
-    if (web_search is not None and task.kind != 'role' and not other_maker and web_parts and task.query.strip()
-            and corpus_absent(payload.get('facts'))):
-        # [왜] 품번 · 판본이 코퍼스에 없다고 코드가 확인했으면 내부 검색은 거의 헛수고이고 웹 공식 검색(2등급)만 근거가 된다.
-        #      내부 검색은 그대로 하되(주문 코드 변형처럼 코드 대조가 틀릴 수 있다) 공식 검색을 처음부터 함께 출발시키고, 내부가 실패하면 그 결과를 받는다
-        #      (사전 등록 「코퍼스 밖 품번 · 판본 웹 공식 검색 병렬 출발」). 내부가 충분하면 받은 결과는 버린다
-        # [주의] 검색어에 LLM의 next_query를 못 쓴다(task.query + 제조사 · 판본 덧붙임). 참고(3등급)는 공식 검색이 예산을 잡기 전에 같은 규칙으로 가린다
-        early_terms = web_terms(task.query.strip())
-        start_fallback = web_search_fallback is not None and not slot_in_use(2)
-        early_pool = ThreadPoolExecutor(max_workers=2)
-        early_web = early_pool.submit(contextvars.copy_context().run, web_search, web_parts, early_terms)
-        if start_fallback:
-            early_fallback = early_pool.submit(contextvars.copy_context().run, web_search_fallback, web_parts, early_terms)
-        early_pool.shutdown(wait=False)
     max_searches = int(os.getenv('DOCS_MAX_SEARCHES', str(MAX_SEARCHES)) or MAX_SEARCHES)  # [왜] A/B용. 기본은 MAX_SEARCHES(2)
     for _ in range(max(1, max_searches)):  # [왜] 검색은 할 일마다 2번까지(AGENTS 6, MULTI_AGENT.md "구조 결정"의 상한)
         docs = []
@@ -632,12 +606,19 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                  or trr_condition_gap(current_question, shown))
     if ((web_search is not None or web_search_fallback is not None)
             and task.kind != 'role' and needs_web and (not other_maker or web_search_fallback is not None)):
-        terms = web_terms(result.next_query.strip() if result and result.next_query.strip() else query or task.query)
-        if early_web is not None:
-            terms = early_terms  # [왜] 미리 출발한 공식 검색이 쓴 검색어를 그대로 기록한다(LLM의 next_query는 쓰지 못함)
+        terms = (result.next_query.strip() if result and result.next_query.strip() else query or task.query)
+        # Keep a user's manufacturer constraint even if the Supervisor abbreviates the task.
+        for maker, pattern in (('Infineon', r'인피니언|\binfineon(?![A-Za-z])'),
+                               ('TSC', r'대만반도체|타이완\s*세미|대만\s*세미|대만\s*반도체|\btsc\b|taiwan\s*semi')):
+            if re.search(pattern, question, re.I) and maker.casefold() not in terms.casefold():
+                terms += ' ' + maker
         requested = {p.upper() for p in web_parts}
         revisions = requested_revisions(revision_text)
-        if early_web is None and web_search_fallback is not None and not slot_in_use(2):
+        for revision in revisions:
+            if revision not in terms.upper().split():
+                terms += ' ' + revision
+        early_fallback = None
+        if web_search_fallback is not None and not slot_in_use(2):
             # [왜] 참고(3등급) 검색은 공식(2등급) 결과를 기다릴 이유가 거의 없다. v3에서 웹을 쓴 31문항 모두 3등급까지 갔다(11-14 P1).
             #      공식 검색과 함께 출발시키고, 원래 3등급을 부르던 자리에서 결과만 받는다. 공식 근거를 쓰거나 공식 예산이 소진되면 받은 결과는 버린다.
             #      다른 에이전트가 이미 공식 예산을 쓰는 중이면(그러면 3등급을 부르지 않는 규칙) 미리 출발시키지 않는다
@@ -646,8 +627,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             early_fallback = fallback_pool.submit(contextvars.copy_context().run, web_search_fallback, web_parts, terms)
             fallback_pool.shutdown(wait=False)
         try:
-            external_raw = (early_web.result() if early_web is not None  # 예외(예산 소진 포함)는 여기서 원래처럼 올라온다
-                            else web_search(web_parts, terms) if web_search is not None else [])
+            external_raw = web_search(web_parts, terms) if web_search is not None else []
         except SearchBudgetExhausted as error:
             # A concurrent official lookup is a request-budget boundary, not a
             # genuine empty search.  In particular, do not spend grade 3 to

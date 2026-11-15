@@ -118,9 +118,8 @@ def payload(state: dict, task: dict) -> dict:
             'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
     if state.get('approved_memories'):
         base['approved_memories'] = state['approved_memories']
-    base['facts'] = state.get('facts') or {}  # [왜] 문서 에이전트도 코퍼스 밖 품번 · 판본 여부를 알아야 웹 공식 검색을 미리 출발시킨다(11-15)
     if task['agent'] == 'judge':
-        base.update(conditions=state.get('conditions', ''), target=state.get('target', ''),
+        base.update(conditions=state.get('conditions', ''), target=state.get('target', ''), facts=state.get('facts') or {},
                     question_type=task['kind'],  # [왜] 판정 코드는 question_type으로 판정 · 찾기를 가른다. 할 일 종류가 그 값이다
                     mount_preference=state.get('mount_preference') or '')  # [왜] 기억 읽기가 읽은 선호 실장 방식. Spec 에이전트만 쓴다(찾기 순서)
     return base
@@ -144,12 +143,6 @@ def final_reports(state: dict) -> list[TaskReport]:
     return [TaskReport.model_validate(r) for r in (state.get('final_reports') or state.get('reports') or [])]
 
 
-def corpus_absent(facts: dict | None) -> bool:
-    """`품번·판 확인` 사실이 "질문의 품번이 모두 코퍼스에 없음" 또는 "요청 판본 중 코퍼스에 없는 것이 있음"인가(코드 대조라 주문 코드 변형은 틀릴 수 있다)."""
-    facts = Facts(**(facts or {}))
-    return bool((facts.parts and not any(facts.parts.values())) or (facts.revisions and not all(facts.revisions.values())))
-
-
 def corpus_dead_end(state: dict) -> bool:
     """문서 할 일을 다시 돌려도 근거가 나올 수 없는가: 품번이 모두 코퍼스에 없거나 요청 판본이 없고, 웹 공식 예산도 이미 썼다(또는 웹이 꺼짐).
 
@@ -157,7 +150,9 @@ def corpus_dead_end(state: dict) -> bool:
          Supervisor · 검색에 3~5초를 더 쓰고 같은 거절로 끝났다(11-14 P1 v3-32~38 · v3-45~50, 사전 등록 「코퍼스에 없는 품번 · 판본이면 재계획하지 않기」)
     """
     from backend.services import exa
-    return corpus_absent(state.get('facts')) and (not exa.enabled() or exa.slot_in_use(2))
+    facts = Facts(**(state.get('facts') or {}))
+    absent = (facts.parts and not any(facts.parts.values())) or (facts.revisions and not all(facts.revisions.values()))
+    return bool(absent) and (not exa.enabled() or exa.slot_in_use(2))
 
 
 def collect_node(state: dict) -> dict:

@@ -28,7 +28,7 @@
 
 - 노드별 모델: `backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 정본이고, 선정 이유는 ADR 0014·0017이다.
 - 상한(질문당): 할 일 수, 재계획, Supervisor LLM 호출, 서브에이전트 실행, 문서 할 일의 검색 횟수는 `contracts.py`의 `MAX_TASKS`, `MAX_REPLANS`, `MAX_SUPERVISOR_CALLS`, `MAX_AGENT_RUNS`, `MAX_SEARCHES`다. 넘으면 거절한다.
-- 재계획: `답 모으기`가 다시 해 볼 만한 실패(사유가 `RETRY_REASONS`이거나 없음)나 계획의 `replan` 표시를 보고 재계획 횟수가 `MAX_REPLANS` 미만이면 `Supervisor`로 되돌린다(`supervisor.py` `collect_node`). 확정 거절 사유는 되돌리지 않는다. 다시 해 볼 실패가 모두 문서 할 일이고, 질문의 품번이 모두 코퍼스에 없거나 요청 판본이 코퍼스에 없으며, 웹이 꺼졌거나 그 요청의 공식 웹 예산을 이미 썼으면 되돌리지 않는다(`corpus_dead_end`, 두 번째 바퀴가 같은 거절로 끝나 3~5초만 더 썼다, 11-14). 같은 사실 조건(`corpus_absent`)이면 문서 에이전트(`agents/docs.py`)가 웹 공식 검색을 내부 검색과 함께 출발시키고 내부가 실패했을 때 그 결과를 받는다(Send 꾸러미의 `facts`, 11-15).
+- 재계획: `답 모으기`가 다시 해 볼 만한 실패(사유가 `RETRY_REASONS`이거나 없음)나 계획의 `replan` 표시를 보고 재계획 횟수가 `MAX_REPLANS` 미만이면 `Supervisor`로 되돌린다(`supervisor.py` `collect_node`). 확정 거절 사유는 되돌리지 않는다. 다시 해 볼 실패가 모두 문서 할 일이고, 질문의 품번이 모두 코퍼스에 없거나 요청 판본이 코퍼스에 없으며, 웹이 꺼졌거나 그 요청의 공식 웹 예산을 이미 썼으면 되돌리지 않는다(`corpus_dead_end`, 두 번째 바퀴가 같은 거절로 끝나 3~5초만 더 썼다, 11-14).
 - 판정 길(`Spec 에이전트`)은 사양 값 도구(`specs`, `find`)와 체크포인터가 있어야 켜지고, 없이 켜면 `build.py`가 `ValueError`를 낸다. 서비스는 카드 도구(`backend/rag/card_specs.py`, `backend/rag/card_find.py`)를 넘긴다.
 - 사용자 사실 기억: `mount_preference`는 판정 할 일의 Send 꾸러미에만 들어가고 찾기에서 질문이 실장 방식을 말하지 않았을 때 같은 판정 안의 후보 순서만 바꾼다(`backend/judge/verdict.py` `rank`의 `preferred`). 평가 실행기는 Store 없이 compile해 빈 값이다.
 - 승인 사례: 상태에 `approved_memories` 칸과 `memory_refs` 처리가 남아 있지만 서비스가 새 분석 입력에 빈 목록을 넣는다(`conversations/memory_service.py:442`). 승인 사례는 서비스 응답에 영향을 주지 않는다.
