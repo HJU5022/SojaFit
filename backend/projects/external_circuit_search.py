@@ -6,11 +6,16 @@ import os
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
+from itertools import zip_longest
 from urllib.parse import quote, unquote, urljoin, urlsplit
 
 import httpx
 
 LOGGER = logging.getLogger(__name__)
+
+# Keep enough independent discovery candidates for noisy public indexes to avoid
+# hiding a valid repository behind the first page of unrelated results.
+MAX_COMPONENT_REPOSITORIES = 24
 
 
 class ExternalCircuitSearchError(RuntimeError):
@@ -175,6 +180,7 @@ _MANUFACTURER_ALIASES = {
 _KOREAN_PRODUCT_ALIASES = {
     "라즈베리파이": "Raspberry Pi",
     "피코": "Pico",
+    "다이오드": "diode",
 }
 
 
@@ -184,6 +190,26 @@ def canonical_product_query(query: str) -> str:
     query = re.sub(r"라즈베리\s+파이", "Raspberry Pi", query)
     return re.sub(r"[가-힣]+", lambda match: _KOREAN_PRODUCT_ALIASES.get(
         match.group(), match.group()), query)
+
+
+_DIODE_EVIDENCE = ("diode", "schottky", "rectifier", "zener", "다이오드")
+_DIODE_CONFLICTS = ("radio", "transceiver", "receiver", "walkie", "ham", "무전기", "라디오")
+
+
+def component_context(query: str) -> str | None:
+    """Return the narrow component intent carried by a search query."""
+    text = query.casefold()
+    return "diode" if any(term in text for term in _DIODE_EVIDENCE) else None
+
+
+def component_evidence_matches(query: str, text: str) -> bool:
+    """Require component evidence and reject a conflicting product family."""
+    if component_context(query) != "diode":
+        return True
+    tokens = set(re.findall(r"[a-z0-9]+|[가-힣]+", str(text).casefold()))
+    if any(marker in tokens for marker in _DIODE_CONFLICTS):
+        return False
+    return any(marker in tokens for marker in _DIODE_EVIDENCE)
 
 
 _OFFICIAL_GITHUB_OWNERS = {
@@ -452,13 +478,14 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
             return _search_public_schematics(query, limit, client=owned,
                                              include_domains=include_domains, search_text=search_text)
     query_text = canonical_product_query(query.strip())
+    component = component_context(query_text)
     query_tokens = {token.casefold() for token in re.findall(r"[A-Za-z0-9]+|[가-힣]+", query_text) if len(token) > 1}
     model_tokens = {token for token in query_tokens if any(char.isdigit() for char in token)}
     try:
         with client.stream(
             "POST", "https://api.exa.ai/search", timeout=20, follow_redirects=False,
             headers={"x-api-key": key, "Accept-Encoding": "identity"},
-            json={"query": search_text or f"{query_text} schematic circuit diagram original PDF PNG SVG",
+            json={"query": search_text or f"{query_text}{' diode application circuit' if component == 'diode' else ''} schematic circuit diagram original PDF PNG SVG",
                   "numResults": min(10, max(limit * 2, 5)),
                   **({"includeDomains": list(include_domains)} if include_domains else {}),
                   "contents": {"highlights": True, "extras": {"imageLinks": 5}}},
@@ -480,7 +507,11 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
         context = " ".join([title, *(value for value in highlights if isinstance(value, str))])
         context_tokens = {token.casefold() for token in re.findall(
             r"[A-Za-z0-9]+|[가-힣]+", context + " " + urlsplit(page_url).path)}
-        if query_tokens and len(query_tokens & context_tokens) < min(2, len(query_tokens)):
+        required_tokens = model_tokens if component == "diode" else query_tokens
+        if required_tokens and len(required_tokens & context_tokens) < min(2, len(required_tokens)):
+            continue
+        if component == "diode" and not component_evidence_matches(
+                query_text, f"{context} {page_url}"):
             continue
         candidates: list[tuple[str, str]] = []
         if _asset_kind(page_url, context):
@@ -645,18 +676,36 @@ def search_manufacturer_schematics(query: str, limit: int = 5, *, client: httpx.
     return tuple(found)
 
 
-def search_github_repositories(query: str, limit: int = 5, *, client: httpx.Client | None = None) -> tuple[GitHubRepositoryRef, ...]:
-    if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= 5:
+def _component_repository_ref(value):
+    """File search hits nominate a repository, never a trusted schematic URL."""
+    if root := github_repository_ref(value):
+        return root
+    url = safe_public_https_url(value, allowed_hosts=frozenset({"github.com"}))
+    if not url:
+        return None
+    parsed = urlsplit(url)
+    if parsed.query or parsed.fragment:
+        return None
+    match = re.fullmatch(r"/([A-Za-z0-9-]+)/([A-Za-z0-9_.-]+)/(?:blob|tree)/[^/]+/.+", parsed.path)
+    if not match or any(piece in {".", ".."} for piece in parsed.path.split("/")):
+        return None
+    return github_repository_ref(f"https://github.com/{match[1]}/{match[2]}")
+
+
+def search_github_repositories(query: str, limit: int = 5, *, client: httpx.Client | None = None,
+                               include_files: bool = False, search_text: str | None = None) -> tuple[GitHubRepositoryRef, ...]:
+    if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= MAX_COMPONENT_REPOSITORIES:
         raise ValueError("검색어 또는 결과 수가 유효하지 않습니다.")
     key = _require_external_search_configuration()
     if client is None:
         with httpx.Client(trust_env=False) as owned:
-            return search_github_repositories(query, limit, client=owned)
+            return search_github_repositories(query, limit, client=owned,
+                                              include_files=include_files, search_text=search_text)
     try:
         with client.stream(
             "POST", "https://api.exa.ai/search", timeout=20, follow_redirects=False,
             headers={"x-api-key": key, "Accept-Encoding": "identity"},
-            json={"query": f"{query.strip()} complete schematic KiCad open hardware GitHub",
+            json={"query": search_text or f"{query.strip()} complete schematic KiCad open hardware GitHub",
                   "numResults": limit, "includeDomains": ["github.com"]},
         ) as response:
             response.raise_for_status()
@@ -667,7 +716,7 @@ def search_github_repositories(query: str, limit: int = 5, *, client: httpx.Clie
         raise ExternalCircuitSearchError("외부 회로 검색 요청 또는 응답 처리에 실패했습니다.") from None
     found = {}
     for item in rows:
-        ref = github_repository_ref(item.get("url"))
+        ref = (_component_repository_ref if include_files else github_repository_ref)(item.get("url"))
         if ref:
             found.setdefault(ref.repository_url.casefold(), ref)
         if len(found) == limit:
@@ -675,3 +724,78 @@ def search_github_repositories(query: str, limit: int = 5, *, client: httpx.Clie
     LOGGER.info("schematic_search_candidates", extra={"phase": "github", "raw_result_count": len(rows),
                                                      "candidate_count": len(found)})
     return tuple(found.values())
+
+
+def search_component_repositories(query: str, limit: int = 5, *, client: httpx.Client | None = None) -> tuple[GitHubRepositoryRef, ...]:
+    """Discover component-bearing projects through repository search and a BOM index.
+
+    Index pages nominate repositories only; placed components, license and commit
+    are verified later from the original repository, never trusted from the index.
+    """
+    if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= MAX_COMPONENT_REPOSITORIES:
+        raise ValueError("invalid component search")
+    if client is None:
+        with httpx.Client(trust_env=False) as owned:
+            return search_component_repositories(query, limit, client=owned)
+    terms = re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)*", query.casefold())
+    part_query = " ".join(term for term in terms if any(char.isdigit() for char in term))
+    if not part_query:
+        return ()
+    from backend.projects.schematic_discovery import download_bounded
+    indexed = {}
+    try:
+        with client.stream("POST", "https://api.exa.ai/search", timeout=20, follow_redirects=False,
+                           headers={"x-api-key": _require_external_search_configuration(), "Accept-Encoding": "identity"},
+                           json={"query": part_query, "numResults": MAX_COMPONENT_REPOSITORIES,
+                                 "includeDomains": ["hardlabs.io"]}) as response:
+            response.raise_for_status()
+            rows = json.loads(read_bounded_body(response, 512 * 1024))["results"]
+        if not isinstance(rows, list):
+            raise ValueError()
+        pages = []
+        for row in rows:
+            url = _safe_url(row.get("url")) if isinstance(row, dict) else None
+            if url and urlsplit(url).hostname in {"hardlabs.io", "www.hardlabs.io"} and url.startswith("https://") and url not in pages:
+                pages.append(url)
+        for url in pages[:MAX_COMPONENT_REPOSITORIES]:
+            try:
+                body, mime = download_bounded(url, max_bytes=512 * 1024,
+                                             allowed_hosts=frozenset({urlsplit(url).hostname}),
+                                             client=client, phase="page_html")
+                if mime != "text/html":
+                    continue
+                html = body.decode("utf-8", "replace")
+                if not all(re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", html, re.I)
+                           for term in part_query.split()):
+                    continue
+                parser = _SchematicPageParser()
+                parser.feed(html)
+                for link, _ in parser.links:
+                    ref = github_repository_ref(link)
+                    if ref:
+                        indexed.setdefault(ref.repository_url.casefold(), ref)
+                        break
+            except (ValueError, RuntimeError, httpx.HTTPError):
+                continue
+    except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        pass  # An index outage must not disable independent repository discovery.
+    groups = [tuple(indexed.values())]
+    failed = False
+    for search_text in (None, f'"{part_query}" kicad_sch circuit'):
+        try:
+            groups.append(search_github_repositories(part_query, MAX_COMPONENT_REPOSITORIES,
+                                                     client=client, include_files=True,
+                                                     search_text=search_text))
+        except (ExternalCircuitSearchConfigurationError, ExternalCircuitSearchDisabled):
+            raise
+        except ExternalCircuitSearchError:
+            failed = True
+    found = {}
+    # Interleave independent discovery paths so an index cannot fill every slot.
+    for row in zip_longest(*groups):
+        for ref in row:
+            if ref:
+                found.setdefault(ref.repository_url.casefold(), ref)
+    if not found and failed:
+        raise ExternalCircuitSearchError("외부 회로 검색 요청 또는 응답 처리에 실패했습니다.")
+    return tuple(found.values())[:limit]

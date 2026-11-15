@@ -1,8 +1,8 @@
 # 공개 프로젝트 완성 회로도
 
 - 상태: 현행
-- 기준일: 2026-11-13
-- 기준 커밋: STH 3d8edff의 로컬 수정(미커밋)
+- 기준일: 2026-11-15
+- 기준 커밋: STH 07cff382의 로컬 수정과 PR134 통합(미커밋)
 - 정본 여부: 정본(공개 프로젝트 완성 회로도 API). 경로·오류 코드의 제품 수준 목록은 [SPEC.md](../../SPEC.md)
 - 관련 문서: [backend/projects/PROJECTS.md](../../backend/projects/PROJECTS.md)
 
@@ -15,7 +15,7 @@
 - 이름으로 발견한 공개 회로도 파일의 시트, 게시 페이지, 원본 URL, 출처와 확인 가능한 라이선스를 반환한다. 공개 저장소가 출처이면 커밋도 반환한다.
 - 15분 동안 같은 검색의 외부 호출을 재사용한다.
 - 적용 범위는 백엔드 API와 작업대 원본 회로도 창이다.
-- 범위 밖: 데이터시트의 부분 응용 회로, 블록도, 제품 사진, PCB 렌더링 반환. 검증된 완성 회로도가 없을 때 회로 생성·대체 이미지. LLM·Mouser·DigiKey·Nexar·DB 사용.
+- 범위 밖: 데이터시트의 부분 응용 회로, 블록도, 제품 사진, PCB 렌더링 반환. 검증된 완성 회로도가 없을 때 회로 생성·대체 이미지. LLM·Mouser·DigiKey·Nexar 호출과 검색 결과의 DB 저장.
 
 ## What
 
@@ -33,6 +33,9 @@
 기능 활성 조건: `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY` 값 있음, `AUTH_SECRET` 32바이트 이상(`backend/projects/external_schematic.py:212-216,36-39`).
 
 ## How
+
+- 프로젝트 원본 모드는 `project_id/circuit_version/thread_id` 소유 snapshot을 사용한다. 별도 제품·다이오드 참고 검색은 `reference_only=true`이며 프로젝트 문맥과 함께 지정하면 422다. `component_type=diode`는 참고 조회와 194자 이하 검색어에만 허용한다. 화면은 프로젝트 원본을 기본값으로 유지하고 참고 모드에서는 업로드 회로와 동일한 회로라는 뜻이 아님을 알린다. 쿼리 캐시도 문맥과 모드별로 분리한다.
+- KiCad 원격 렌더러에는 고정 공개 source와 `include_netlist=true`만 보낸다. 업로드 원본·부품·연결은 보내지 않는다. 렌더러는 같은 선택 계층의 실제 CLI export를 정규화해 PNG 시트와 함께 `connections`로 반환한다. API가 응답 크기·PNG·시트 수와 전체 부품/핀 연결 대응을 검증한다. 연결 누락·불일치·잘못된 형식은 원본 승인에 쓰지 않고, 참조 끝 숫자만 바뀐 같은 회로와 복잡한 대칭 구조는 기존 제한된 완전 대응 검사로 유지한다. 이전 renderer 응답은 참고 조회에만 쓸 수 있다.
 
 ### 업로드 회로와 외부 회로도의 동일성
 
@@ -68,11 +71,41 @@
 - 이미지 영역 우측 상단의 고정 맞춤 아이콘은 100%와 중앙 위치를 함께 복원하며 이미100%인 상태에서도 동작한다. 방향키 이동, +/− 확대/축소, Home 맞춤을 키보드로 제공하며 아이콘에는 접근 가능한 이름을 둔다. 다중 시트의 배율·이동·맞춤은 각각 독립적이다. 확대·축소/드래그/맞춤은 외부 검색을 호출하지 않는다.
 - AC: Given 같은 시트의100/75/50/200% 배율, When 변경, Then 표시 영역의 너비/높이는 유지되고 이미지만 변형된다. Given 드래그/방향키로 이동한 이미지, When 맞춤, Then 중앙/100%로 복원한다. Given 포인터 취소·오른쪽 클릭·다른 포인터, When 이동, Then 활성 이동이 남거나 시작되지 않는다. 로컬 이미지/모의 응답으로 검증한다.
 
+### OSC와 main 통합 시 유지하는 계약
+
+- 작업대의 화면 구성과 이미지 확대·이동은 main을 기준으로 유지한다. 질문 접수 실패 시 초안·첨부를 보존하고 서버 실행 접수 후에도 새로 입력한 초안을 지우지 않는다. 첨부는 서버의 단일 파일 계약에 맞추며 다이오드 외 부품은 새 판정을 시작하지 않고 저장된 기록은 읽을 수 있게 한다.
+- 다이오드 검색은 `component_type=diode`로 제품·보드 검색과 구분한다. 실제 배치 품번과 다이오드 구조를 검증하며, SS33 무전기처럼 품번만 같은 자료는 제외한다. 일반 `Device:D`와 사용자 정의 다이오드는 실제 연결·핀 근거가 있으면 검사한다.
+- 외부 다이오드 검색은 공식·공개 웹 후보를 먼저 검증하고, 정상 결과가 없으면 BOM·독립 GitHub 검색 경로에서 최대 24개 저장소를 검사한다. 여러 완전한 원본과 자체 계층이 완전한 하위 회로를 고정 commit·root별로 구분해 선택할 수 있게 한다. discovery는 최대 128파일·파일당 4MiB·총 25MiB로 제한한다. 렌더링은 검증한 선택 계층만 직접 다운로드하며 파일당 10MiB·총 25MiB·최대 20시트로 제한한다. 라이선스·누락·순환·출처·SSRF 검증은 유지한다.
+- main의 비회로도 이미지·자료 유형·공식 링크·제품 변형·전압 검증과 404 원인 구분을 유지한다. 후보 선택은 검증된 원본에 한정하며 실패한 원본을 다른 회로로 바꾸지 않는다. 일부 원본 검사·렌더링이 한도·외부 오류로 실패하면 오류와 재시도 정보를 보존하고, 정상 후보를 유지하되 Retry-After 또는 60초 후 같은 검색의 후보·선택 캐시를 재검사한다.
+- 출처·원본 링크는 이미지 위에 표시한다. 제조사 공식 여부와 커뮤니티 라이선스 선언은 별개의 문구로 안내한다. KiCad 10 전용 renderer는 API 이미지와 분리한다.
+- AC: Given main의 제품·이미지 검증 및 확대·이동 회귀와 OSC의 다이오드 검색·후보 선택·초안·첨부 회귀, When 통합본을 검사, Then 양쪽 테스트가 함께 통과하고 8011의 실제 API·화면 결과와 외부 한도로 미검증된 항목을 구분해 기록한다.
+
+### Renderer 구성과 배포 안내
+
+- API 최종 이미지는 KiCad를 포함하지 않는다. `Dockerfile`의 `renderer` target이 KiCad 10과 `/health`, `/render`를 제공하며, API는 `KICAD_RENDERER_URL`이 있을 때 KiCad 원본만 이 서비스로 보낸다. API 이미지와 renderer 이미지는 서로 다른 Cloud Run 서비스로 배포한다.
+- 선택 KiCad 파일 다운로드의 한도 오류는 자료 손상으로 분류하지 않는다. renderer는 한도 오류를 `503`과 제한된 `Retry-After`로 전달하며, API도 기존의 `503`/`Retry-After` 계약을 유지한다. 일반 변환 장애와 잘못된 원본의 `422`는 별도로 처리한다.
+- 로컬 Compose의 기본값은 `KICAD_RENDERER_URL=http://renderer:8000`이지만 `renderer`는 `schematic` profile이다. 회로도 원본 경로까지 재현하려면 `docker compose --profile schematic up --build`를 사용한다. 기본 `docker compose up`은 API·DB 데모 경로다.
+- Cloud Run의 API 환경변수 `KICAD_RENDERER_URL`에는 renderer의 HTTPS 서비스 URL만 넣는다. Cloud Run에서 실행될 때 API는 metadata server에서 그 URL을 audience로 한 ID token을 받아 `Authorization: Bearer`로 호출한다. renderer는 비공개로 두고 API 서비스 계정에 renderer의 `roles/run.invoker`를 부여해야 한다. 이 문서의 명령은 예시이며 실제 Cloud Run 배포·호출은 수행하지 않았다.
+
+예시 명령(자리표시자만 사용): Artifact Registry 저장소·Cloud Run의 프로젝트/리전·서비스 계정은 미리 준비한다. 두 컨테이너는 8000 포트로 실행하므로 배포에도 `--port 8000`을 지정한다. API의 DB·인증·Exa 환경변수와 Secret 설정은 기존 배포 설정을 유지하며, 아래 명령은 renderer 연결에 필요한 부분만 보여준다. `RENDERER_SERVICE_URL`은 renderer 배포 후 출력되는 실제 HTTPS 서비스 URL로 바꾼다.
+
+```bash
+docker build --target renderer -t REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-renderer:TAG .
+docker build -t REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-api:TAG .
+docker push REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-renderer:TAG
+docker push REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-api:TAG
+gcloud run deploy sojafit-renderer --image REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-renderer:TAG --port 8000 --no-allow-unauthenticated --service-account RENDERER_SERVICE_ACCOUNT
+gcloud run deploy sojafit-api --image REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-api:TAG --port 8000 --update-env-vars KICAD_RENDERER_URL=RENDERER_SERVICE_URL --service-account API_SERVICE_ACCOUNT
+gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAccount:API_SERVICE_ACCOUNT --role roles/run.invoker
+```
+
+배포 플래그와 서비스 간 ID token의 audience·metadata server 방식은 [Cloud Run container deployment](https://cloud.google.com/run/docs/deploying), [Cloud Run service-to-service authentication](https://cloud.google.com/run/docs/authenticating/service-to-service), [gcloud run deploy reference](https://cloud.google.com/sdk/gcloud/reference/run)를 따른다. Compose profile 사용법은 [Docker Compose profiles](https://docs.docker.com/compose/how-tos/profiles/)를 따른다.
+
 ### API
 
 | 경로 | 동작 | 근거 |
 |---|---|---|
-| `GET /api/external-circuits/schematics?q=&source_url=` | 이름으로 찾은 회로도와 순서가 있는 `images`(`sheet`, `url`), 다른 검색 후보 `choices`를 반환한다. `source_url`은 선택 사항이며 같은 검색의 Exa 후보에 포함된 URL일 때만 허용한다. `q`는 trim 후 2~200자 | `backend/api/external_circuits.py` |
+| `GET /api/external-circuits/schematics?q=&source_url=&component_type=diode` | 이름으로 찾은 회로도와 순서가 있는 `images`(`sheet`, `url`), 다른 검색 후보 `choices`를 반환한다. `source_url`은 선택 사항이며 같은 검색의 검증된 후보 URL일 때만 허용한다. `component_type=diode`도 선택 사항이며 지정하면 검색어는 trim 후 2~194자다. 일반 검색어는 2~200자다 | `backend/api/external_circuits.py` |
 | `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}` | 같은 로그인 세션에서 PNG 반환. 임의 외부 URL은 받지 않는다 | `backend/api/external_circuits.py:75-86` |
 
 두 경로 모두 로그인이 필요하다. 응답 헤더는 `Cache-Control: private, no-store`다. PNG는 `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`을 더한다.
@@ -90,7 +123,7 @@
 - 공개 GitHub 저장소 후보의 PNG·PDF 이미지는 고정 커밋의 `raw.githubusercontent.com` 원본에서 받는다. 제조사 페이지가 연결한 공식 GitHub 파일은 해당 원본 URL에서 받으며, 재조회 시 SHA-256이 달라지면 버린다. 그 밖의 공개 웹 후보는 검색으로 확인한 원본 URL에서 받는다.
 - 제조사 도메인 보강 검색은 검색어에서 식별한 Adafruit·SparkFun·Seeed·Arduino·Pololu·Olimex·Raspberry Pi·PJRC의 공식 도메인으로 제한한다. 제조사 페이지의 GitHub 자료는 허용한 공식 조직의 직접 링크만 원본으로 취급한다.
 - PDF는 전체 회로도 파일의 시트를 목표 300 DPI로 변환한다. 여러 페이지의 일반 안내서는 회로도 표시 페이지를 식별할 때만 그 페이지를 반환한다. 시트당 출력은 4,000만 픽셀 이내다.
-- KiCad 원본은 저장소 압축본을 임시 디렉터리에 풀어 `kicad-cli`로 PDF로 내보낸 뒤 같은 방식으로 렌더링한다. 운영 이미지는 `kicad`를 설치한다(`backend/projects/schematic_render.py:194-310`, `Dockerfile:16`).
+- KiCad 원본은 검증한 선택 계층의 파일만 고정 commit에서 직접 다운로드해 임시 디렉터리에 배치하고 `kicad-cli`로 PDF로 내보낸 뒤 PNG로 렌더링한다. `asset_paths`가 없는 기존 source만 제한된 저장소 압축본 경로를 사용한다. 운영 renderer 이미지가 KiCad 10을 설치하고 기본 API 이미지는 설치하지 않는다(`backend/projects/schematic_render.py`, `Dockerfile`).
 - SVG는 허용 요소 목록에 없는 요소, 외부 참조, 스크립트, 이벤트 속성을 거절한다(`backend/projects/schematic_render.py:43`).
 - 다중 시트 프로젝트는 모든 시트를 순서대로 반환한다. 원본과 시트 수가 다르면 그 후보를 버린다(`backend/projects/external_schematic.py:154-155`).
 - 구형 `.sch`는 프로젝트가 제공한 전체 PNG·SVG·PDF가 있을 때 지원한다. KiCad 9.0.2로 구형 원본을 직접 내보낼 때 배치된 심볼이 빠진 사례가 있다(설계 시점 관찰, 재측정하지 않음).
@@ -127,7 +160,8 @@
 | Exa 응답 | 공개 웹 검색 512 KiB, GitHub 검색 256 KiB | `backend/projects/external_circuit_search.py` |
 | GitHub 저장소·커밋 응답 | 각 256 KiB | `backend/projects/schematic_discovery.py:352` |
 | GitHub 재귀 트리 응답 | 2 MiB, 항목 5,000개 | `backend/projects/schematic_discovery.py:111,368` |
-| 원본 EDA 파일 | 파일당 4 MiB, 합계 12 MiB, 최대 20개 | `backend/projects/schematic_discovery.py:370,383-385` |
+| discovery 원본 EDA 파일 | 파일당 4 MiB, 합계 25 MiB, 최대 128개 | `backend/projects/schematic_discovery.py` |
+| 렌더링할 선택 계층 | 파일당 10 MiB, 합계 25 MiB, 최대 20시트 | `backend/projects/schematic_render.py` |
 | PNG·SVG 이미지 | 10 MiB | `backend/projects/schematic_render.py:30` |
 | PDF | 20 MiB, 20쪽 | `backend/projects/schematic_render.py:31,35` |
 | 저장소 압축본 | 압축 25 MiB, 해제 100 MiB, 항목 5,000개 | `backend/projects/schematic_render.py:32-34` |
@@ -143,7 +177,7 @@
 
 - 검색어 칸의 처음 값은 프로젝트 이름이다. 프로젝트 응답에 넷리스트 제목·보드 이름이 없다. 사용자가 고칠 수 있다.
 - 검색은 버튼을 눌러야 보낸다(자동 호출 없음). 같은 검색어는 5분 동안 다시 보내지 않는다. 검색 중에는 버튼이 꺼진다.
-- 검색어가 2자 미만이거나 200자 초과이면 버튼이 꺼지고 규칙 문구를 보인다. API를 부르지 않는다.
+- 검색어가 2자 미만이거나 일반 검색에서 200자 초과(다이오드 검색에서 194자 초과)이면 버튼이 꺼지고 규칙 문구를 보인다. API를 부르지 않는다.
 - `images`의 모든 시트를 순서대로 보이고 각 시트에 출처·라이선스·원본 링크(`source_url`)와 게시 페이지를 붙인다. 공식 여부를 확인할 수 없는 출처는 등급 미지정으로 표시한다.
 - 이미지 요청이 실패하면(서명 900초 만료 포함) "다시 검색하기"로 새 서명 주소를 받는다.
 
@@ -169,7 +203,7 @@
    - 제조사 원본을 고르는 단계도 검색업체 제목만 믿지 않고 실제 게시 페이지의 파일별 연결·원본 파일명·PDF 본문으로 요청 제품을 확인한다. Raspberry Pi는 공식 포털 제품 검색 GET과 정확히 일치한 카테고리 GET을 최대1회씩 사용해 설계 파일을 보완 발견한다. 제품별 URL/카테고리 ID는 등록하지 않고 크기/HTTPS/공개 IP/허용 호스트/429 경계를 유지한다.
    - Given 유형 표식이 없는 공개 PNG/SVG, When 완성 회로도 후보를 검증, Then 제품명·파일명·검색 제목·HTML title/H1만으로 승인하지 않고 안전하게 조회한 게시 페이지의 회로도 섹션(h2 이하의 하위 제목 포함)·이미지 대체문구·직접 링크 문구가 해당 파일을 회로도로 연결해야 한다. h1 회로도 제목은 해당 파일 경로에도 회로도 표식이 있을 때만 섹션 근거로 사용한다. 단일 이미지와 같은 figure/table의 명시적 figcaption/caption/th 회로도 설명도 인정하되, 복수 이미지나 다른 컨테이너의 설명을 빌려 쓰지 않는다. 다른 파일 링크·다른 섹션·근거 없는 이미지 직접 URL과 부품 배치도는 거절한다. 페이지의 429/외부 장애는 기존 오류 계약으로 유지한다. EDA 원본과 연계된 기존 GitHub 경로·정상 PDF는 유지하고, 이미지 크기나 제조사 여부만으로 거절하지 않는다. 추가 AI 호출 없이 근거 없는 정상 이미지도 보수적으로 제외될 수 있으며, 게시 내용 자체의 진실성까지 보장하지 않는다. SPEC 4절 반영은 조장 검토 제안이다.
    - Given 심벌/부품 라이브러리·핀배치·풋프린트·블록도 유형의 URL 경로 또는 명시적 자료 제목, When 경로에 schematic 표식이 있거나 확장자가 없어도 후보 추출·원본 검사, Then 완성 회로도 후보에서 제외하고 원본을 내려받지 않는다. 같은 도메인의 정상 회로도와 작은 PNG·PDF·SVG는 보존하며 이미지 크기/핀 수만으로 제외하지 않는다. SPEC 4절 반영은 조장 검토 제안이다.
-   - 선택 목록은 요청 모델·문서 종류·원본 해시·전체 시트 PNG 변환까지 통과한 후보만 최대 5개 반환한다. 데이터시트·다른 모델·변환 실패·조회 실패 후보는 표시하지 않는다. 같은 검색의 검증 결과를 15분 재사용하며 후보 선택마다 전체 다운로드를 반복하지 않는다. Pico·Pico W·Pico 2·Pico 2 W는 원본 파일과 PDF 본문에서 세대·무선 여부가 일치해야 한다. 정상 후보가 1개이면 그 도면만 표시한다. SPEC 4절 반영은 조장 검토 제안이다.
+   - 선택 목록은 요청 모델·문서 종류·원본 해시·전체 시트 PNG 변환까지 통과한 후보만 반환한다. 공식·공개 웹은 최대5개, 커뮤니티는 최대24개 저장소에서 검사한 독립 root 후보를 제공한다. 데이터시트·다른 모델·변환 실패·조회 실패 후보는 표시하지 않는다. 같은 검색의 검증 결과를 15분 재사용하며 후보 선택마다 전체 다운로드를 반복하지 않는다. Pico·Pico W·Pico 2·Pico 2 W는 원본 파일과 PDF 본문에서 세대·무선 여부가 일치해야 한다. 정상 후보가 1개이면 그 도면만 표시한다. SPEC 4절 반영은 조장 검토 제안이다.
    - Given 제조사가 지정된 검색(예: Pololu DRV8833), When 모델명만 같은 제조사 미확인 자료를 검사, Then 기존 제조사 별칭 중 요청한 제조사를 뒷받침하는 메타데이터·PDF 본문 근거가 없으면 거절한다. RPi/Raspberry Pi 및 Teensy/PJRC 같은 지원 별칭과 공식 CDN·공개 미러의 실제 제품 근거는 보존한다. 이는 픽셀 의미 분류가 아니며 제조사를 잘못 주장한 문서까지 보증하지 않는다. SPEC 반영은 조장 검토 제안이다.
    - Given 지원 제조사/보드 계열 이름으로 검색(예: Teensy 4.0), When 파일명이 DNMS/noise measuring·weather station·with Arduino처럼 요청하지 않은 프로젝트/용도를 식별, Then 본문·검색 제목에 보드 모델명이 있어도 보드 내부 원본 후보로 승인하지 않고 다운로드 전 거절한다. 파일의 프로젝트 식별어를 검색 대상과 대조하며 특정 DNMS URL/호스트만 차단하지 않는다. 정상 공개 미러·CamelCase·일반 도면/출판 표기·버전·제조사 파일명 별칭·숫자형 자산 이름은 기존 근거/모델 관문과 함께 보존한다. 일반 사용자 정의 프로젝트에는 상용 보드 전용 파일명 제한을 확장하지 않는다. DNMS 자체를 명시적으로 검색하는 경우는 별도 프로젝트 원본 요청으로 취급한다. 모든 픽셀 의미를 판별하는 규칙은 아니며 파일 정체성이 모호한 자료의 잔여 위험은 유지한다. SPEC 반영은 조장 검토 제안이다.
    - 검색어와 원본 메타데이터의 `RPi`·`Raspberry Pi`·지원 한국어 이름은 관련도 계산에서 같은 이름으로 정규화한다. `RPI-PICO`처럼 파일명에 약칭이 있는 도면이 제목만 일치하는 부속 보드들 때문에 후보 5개 상한에서 밀려나지 않아야 한다. 제조사 출처 등급·모델 변형 식별·원본 검증 관문은 유지한다. SPEC 4절의 상세 검색 규칙 반영은 조장 검토 제안이다.
@@ -187,7 +221,7 @@
 ## 한계
 
 - 모든 부품에 공개 완성 회로도가 있다는 보장은 없다.
-- 로컬 개발 환경에는 `kicad-cli`가 없다. KiCad 원본 변환 경로는 운영 이미지에서만 실행된다. 컨테이너 검증 결과는 이 저장소에 기록이 없다(미확인).
+- API 이미지에는 `kicad-cli`가 없다. 별도 renderer target의 KiCad 10을 사용하며 로컬 Compose도 해당 서비스를 연결한다. 원격 연결 누락·불일치는 원본으로 승인하지 않는다. 컨테이너와 실제 화면의 통합 검증은 [작업 기록](../worklog/sth.md)의 2026-11-15 PR134 항목을 따른다.
 - GitHub 호출 한도: 익명 또는 `GITHUB_TOKEN` 한도를 따른다. 조직 OAuth App 자격 증명을 요청에 연결하는 코드는 없다.
 - 설계 시점의 외부 호출 검증(ATtiny85, LM7805 저장소 반환)은 저장소에 원시 기록이 없어 옮기지 않았다.
 - Exa의 색인과 공개 접근성에 따라 찾지 못하는 회로도가 있다. 모델명이나 변형을 확신할 수 없으면 다른 회로도로 대신하지 않는다. 회로도 파일명·PDF 본문에서 식별할 수 없는 실제 도면도 제외될 수 있다.

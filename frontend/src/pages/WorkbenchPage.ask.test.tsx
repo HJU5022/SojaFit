@@ -196,6 +196,118 @@ it('opens the review of the part named in the question and sends it once as the 
   expect(runs).toHaveLength(1)
 })
 
+it('preserves the sent draft when run acceptance fails before a run id is received', async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/projects/1/threads' && init.method === 'POST') return Response.json({ id: 't1', title: '', status: null, latest_run_id: null, target_ref: 'D1' })
+    if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: [], latest_run: null })
+    if (path === '/api/threads/t1/runs' && init.method === 'POST') return failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503)
+    return Response.json([])
+  })
+  renderWithQueries(<StrictMode><MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1']}><WorkbenchPage /></MemoryRouter></StrictMode>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: 'D1 질문 초안' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('잠시 후 다시 시도해 주세요.')
+  expect(input).toHaveValue('D1 질문 초안')
+})
+
+it('preserves the sent draft on an existing thread when run acceptance fails', async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json(savedThread())
+    if (path === '/api/threads/t1/runs' && init.method === 'POST') return failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503)
+    if (path === '/api/runs/run-t1') return Response.json(savedRun('run-t1'))
+    return Response.json([])
+  })
+  renderWithQueries(<StrictMode><MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter></StrictMode>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '기존 대화의 질문 초안' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('잠시 후 다시 시도해 주세요.')
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('기존 대화의 질문 초안')
+})
+
+it('keeps a new draft typed while run acceptance is pending', async () => {
+  let resolveRun!: (response: Response) => void
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/projects/1/threads' && init.method === 'POST') return Response.json({ id: 't1', title: '', status: null, latest_run_id: null, target_ref: 'D1' })
+    if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: [], latest_run: null })
+    if (path === '/api/threads/t1/runs' && init.method === 'POST') return new Promise<Response>(resolve => { resolveRun = resolve })
+    if (path === '/api/runs/r1') return Response.json(savedRun('r1'))
+    return Response.json([])
+  })
+  renderWithQueries(<StrictMode><MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1']}><WorkbenchPage /></MemoryRouter></StrictMode>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '첫 질문' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  const currentInput = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.change(currentInput, { target: { value: '다음 질문 초안' } })
+  await waitFor(() => expect(resolveRun).toBeTypeOf('function'))
+  await act(async () => { resolveRun(new Response('event: run_started\ndata: {"run_id":"r1"}\n\n', { headers: { 'Content-Type': 'text/event-stream' } })) })
+  await waitFor(() => expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('다음 질문 초안'))
+})
+
+it('keeps a forwarded first question in the current composer when run acceptance fails', async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/projects/1/threads' && init.method === 'POST') return Response.json({ id: 't1' })
+    if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: [], latest_run: null })
+    if (path === '/api/threads/t1/runs' && init.method === 'POST') return failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503)
+    return Response.json([])
+  })
+  renderWithQueries(<StrictMode><MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter></StrictMode>)
+  fireEvent.change(await screen.findByRole('textbox', { name: '질문' }), { target: { value: 'D1 첫 질문 초안' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('잠시 후 다시 시도해 주세요.')
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('D1 첫 질문 초안')
+})
+
+it('clears the accepted draft including whitespace once and preserves subsequent input', async () => {
+  let accept!: (response: Response) => void
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/projects/1/threads' && init.method === 'POST') return Response.json({ id: 't1' })
+    if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: [], latest_run: null })
+    if (path === '/api/threads/t1/runs' && init.method === 'POST') return new Promise<Response>(resolve => { accept = resolve })
+    if (path === '/api/runs/r1') return Response.json(savedRun('r1'))
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.change(await screen.findByRole('textbox', { name: '질문' }), { target: { value: '  D1 질문 초안  ' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  await waitFor(() => expect(accept).toBeTypeOf('function'))
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('  D1 질문 초안  ')
+  await act(async () => { accept(new Response(`event: run_started\ndata: {"run_id":"r1"}\n\nevent: completed\ndata: ${JSON.stringify(savedRun('r1').result)}\n\n`)) })
+  await waitFor(() => expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue(''))
+  fireEvent.change(screen.getByRole('textbox', { name: '질문' }), { target: { value: '다음 질문은 유지' } })
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('다음 질문은 유지')
+})
+
+it('preserves the draft when the run request fails with a network error', async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json(savedThread())
+    if (path === '/api/runs/run-t1') return Response.json(savedRun('run-t1'))
+    if (path === '/api/threads/t1/runs' && init.method === 'POST') throw new TypeError('Failed to fetch')
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  await screen.findByText('run-t1 저장된 답변')
+  fireEvent.change(input, { target: { value: '네트워크 오류에도 보존할 질문' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('요청을 처리하지 못했습니다.')
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('네트워크 오류에도 보존할 질문')
+})
+
 it('explains a question without a part number and sends nothing', async () => {
   api()
   await ask('다이오드를 바꿔도 되나요?')
@@ -252,6 +364,24 @@ const savedThread = (id = 't1', projectId = 1, ref = 'D1') => ({ id, project_id:
   messages: [{ id: 1, run_id: `run-${id}`, role: 'user', content: `${id} 저장된 질문`, created_at: '' }] })
 const savedRun = (id: string) => ({ id, thread_id: id.replace('run-', ''), message_id: 2,
   result: { answer: `${id} 저장된 답변`, status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: '' } })
+
+it('keeps a saved non-diode conversation readable without offering new replacement questions', async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const writes: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json(savedThread('t1', 1, 'R1'))
+    if (path === '/api/runs/run-t1') return Response.json(savedRun('run-t1'))
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  expect(await screen.findByText('run-t1 저장된 답변')).toBeInTheDocument()
+  expect(screen.queryByRole('textbox', { name: '질문' })).toBeNull()
+  expect(screen.queryByRole('button', { name: '질문 보내기' })).toBeNull()
+  expect(screen.queryByRole('button', { name: /R1.*SS34/ })).toBeNull()
+  expect(writes).toEqual([])
+})
 
 it('loads earlier messages after a failed page request without losing selection, draft, or existing replies', async () => {
   const paths: string[] = []
@@ -785,19 +915,22 @@ it('attaches a dropped netlist anywhere on the active workbench without sending 
   expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
 })
 
-it('shares file validation with the picker and keeps valid files once from a mixed drop', async () => {
+it('rejects a multi-file drop without replacing the existing attachment or draft', async () => {
   candidateApi()
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   await screen.findByRole('button', { name: /SS34L.*상세 보기/ })
   const file = new File(['(export)'], 'board.net', { lastModified: 1 })
+  const input = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '기존 질문 초안' } })
   const picker = screen.getByRole('textbox', { name: '질문' }).closest('form')!.querySelector('input[type=file]')!
   fireEvent.change(picker, { target: { files: [file] } })
   fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [file, new File(['memo'], 'notes.txt'), new File(['x'], 'bad.pdf'), new File([], 'empty.net'), new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.net')] } })
   const attached = screen.getByRole('list', { name: '첨부한 파일' })
-  expect(within(attached).getAllByRole('listitem')).toHaveLength(2)
+  expect(within(attached).getAllByRole('listitem')).toHaveLength(1)
   expect(attached).toHaveTextContent('board.net')
-  expect(attached).toHaveTextContent('notes.txt')
-  expect(screen.getByRole('alert')).toHaveTextContent('5 MiB')
+  expect(attached).not.toHaveTextContent('notes.txt')
+  expect(screen.getByRole('alert')).toHaveTextContent('한 번에 하나')
+  expect(input).toHaveValue('기존 질문 초안')
   fireEvent.click(screen.getByRole('button', { name: '첨부 안내 닫기' }))
   expect(screen.queryByRole('alert')).toBeNull()
 })

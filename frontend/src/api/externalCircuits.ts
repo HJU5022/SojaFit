@@ -13,5 +13,5 @@ export type ExternalSchematicResult = {
 }
 export type SchematicContext = { projectId: number; circuitVersion: number; threadId?: string }
 // 각 시트 이미지(GET /api/external-circuits/schematics/{token}/{sheet})는 images[].url을 <img>가 같은 세션 쿠키로 불러온다.
-export const findSchematic = (q: string, signal?: AbortSignal, sourceUrl?: string, context?: SchematicContext) =>
-  apiFetch<ExternalSchematicResult>(`/api/external-circuits/schematics?q=${encodeURIComponent(q)}${sourceUrl ? `&source_url=${encodeURIComponent(sourceUrl)}` : ''}${context ? `&project_id=${context.projectId}&circuit_version=${context.circuitVersion}${context.threadId ? `&thread_id=${encodeURIComponent(context.threadId)}` : ''}` : '&reference_only=true'}`, { signal })
+export const findSchematic = (q: string, signal?: AbortSignal, sourceUrl?: string, context?: SchematicContext, componentType?: 'diode') =>
+  apiFetch<ExternalSchematicResult>(`/api/external-circuits/schematics?q=${encodeURIComponent(q)}${sourceUrl ? `&source_url=${encodeURIComponent(sourceUrl)}` : ''}${context ? `&project_id=${context.projectId}&circuit_version=${context.circuitVersion}${context.threadId ? `&thread_id=${encodeURIComponent(context.threadId)}` : ''}` : '&reference_only=true'}${componentType ? `&component_type=${componentType}` : ''}`, { signal })

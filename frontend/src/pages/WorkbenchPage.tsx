@@ -61,6 +61,7 @@ export default function WorkbenchPage() {
   const [question, setQuestion] = useState('')
   const [askError, setAskError] = useState('')
   const [pending, setPending] = useState<{ ref: string; question: string } | null>(null) // 부품 목록에서 쓴 질문: 그 부품의 검토 화면이 열릴 때 한 번 보낸다
+  const previousProjectId = useRef<number | null>(projectId)
 
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false })
   const canReadProject = projectId !== null && projectId !== missingProjectId
@@ -76,6 +77,7 @@ export default function WorkbenchPage() {
   // 저장된 대화는 주소의 부품 선택값 없이도 열려야 한다. 대상은 서버 기록을 우선한다.
   const threadMismatch = Boolean(thread.data && thread.data.project_id !== projectId)
   const target = parts.find(part => part.ref === (threadId && !threadMismatch ? thread.data?.target_ref ?? targetRef : targetRef))
+  const blockedTarget = Boolean(target && !isDiode(target) && (!threadId || (thread.isSuccess && !thread.data?.target_locked)))
   const schematic = project.data?.source_kind === 'demo' ? demoList.find(demo => demo.id === project.data?.demo_id)?.schematic ?? null : null
   const query = filter.trim().toLowerCase()
   const filteredProjects = projectList.filter(item => item.name.toLowerCase().includes(query))
@@ -83,6 +85,11 @@ export default function WorkbenchPage() {
   const partGroups = [{ title: '판정 가능', eligible: true }, { title: '판정 범위 밖', eligible: false }]
   const clearError = useCallback(() => { errorVersion.current += 1; setError(null); setDuplicates([]) }, [])
   useEffect(() => { errorVersion.current += 1; setError(null); setMissingProjectId(null); return () => { errorVersion.current += 1 } }, [location.key])
+  useEffect(() => {
+    if (previousProjectId.current === projectId) return
+    previousProjectId.current = projectId
+    setQuestion(''); setAskError('')
+  }, [projectId])
   useEffect(() => {
     if (!navOpen) return
     function outside(event: PointerEvent) { if (event.target instanceof Node && !navigation.current?.contains(event.target)) setNavOpen(false) }
@@ -280,8 +287,8 @@ export default function WorkbenchPage() {
           return <section className={`part-group${group.eligible ? '' : ' part-group-secondary'}`} key={group.title} aria-label={group.title}>
             <div className="section-head"><h2>{group.title}<span className="group-count">{items.length}</span></h2><span>{group.eligible ? '다이오드' : '현재 다이오드만 판정합니다.'}</span></div>
             <table className="rows"><thead><tr><th scope="col">참조</th><th scope="col">값</th><th scope="col">풋프린트</th></tr></thead>
-              <tbody>{items.map(part => <tr key={part.ref} className={group.eligible ? undefined : 'dim-row'} onClick={() => { go({ projectId: String(projectId), targetRef: part.ref, ...(threadId && !thread.data?.target_locked ? { threadId } : {}) }); if (question.trim()) setPending({ ref: part.ref, question: question.trim() }) }}>
-                <th scope="row"><button>{part.ref}<span className="sr-only"> {part.value} 선택</span></button></th><td data-label="값">{part.value}</td><td data-label="풋프린트">{part.footprint.replace(/^import_input:/, '') || '넷리스트에 없음'}</td></tr>)}</tbody></table>
+              <tbody>{items.map(part => <tr key={part.ref} className={group.eligible ? undefined : 'dim-row'} onClick={group.eligible ? () => { go({ projectId: String(projectId), targetRef: part.ref, ...(threadId && !thread.data?.target_locked ? { threadId } : {}) }); if (question.trim()) setPending({ ref: part.ref, question: question.trim() }) } : undefined}>
+                <th scope="row"><button disabled={!group.eligible}>{part.ref}<span className="sr-only"> {part.value} {group.eligible ? '선택' : '판정 범위 밖'}</span></button></th><td data-label="값">{part.value}</td><td data-label="풋프린트">{part.footprint.replace(/^import_input:/, '') || '넷리스트에 없음'}</td></tr>)}</tbody></table>
           </section>
         })}
         {project.isPending && <div className="skeleton" role="status"><span className="sr-only">회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
@@ -289,9 +296,10 @@ export default function WorkbenchPage() {
         </>}
       </NetlistIntake>}
 
-      {projectId !== null && target && !threadMismatch && <Review key={`${projectId}:${project.data?.circuit_version ?? 1}`} projectId={projectId} demoId={project.data?.demo_id ?? null} target={target} nets={contextOf(project.data, target.ref)}
+      {projectId !== null && target && !threadMismatch && (isDiode(target) || !threadId || thread.isSuccess) && !blockedTarget && <Review key={`${projectId}:${project.data?.circuit_version ?? 1}`} projectId={projectId} demoId={project.data?.demo_id ?? null} target={target} nets={contextOf(project.data, target.ref)}
         counts={{ parts: parts.length, nets: project.data?.connections.nets.length ?? 0 }} threadId={threadId} reviewer={user.email} initialQuestion={pending?.ref === target.ref ? pending.question : undefined} onThread={onReviewThread} onAttach={importNetlist} />}
-      {projectId !== null && threadId && !target && thread.error && <div className="notice inset" role="alert"><p {...requestIdProps(thread.error)}>대화 기록을 불러오지 못했습니다. {errorMessage(thread.error)}</p><button className="btn" onClick={() => void thread.refetch()}>대화 다시 불러오기</button></div>}
+      {projectId !== null && blockedTarget && <p className="notice inset" role="alert">현재 다이오드만 판정합니다. <button className="btn" onClick={() => go({ projectId: String(projectId) })}>부품 고르기</button></p>}
+      {projectId !== null && threadId && (!target || !isDiode(target)) && thread.error && <div className="notice inset" role="alert"><p {...requestIdProps(thread.error)}>대화 기록을 불러오지 못했습니다. {errorMessage(thread.error)}</p><button className="btn" onClick={() => void thread.refetch()}>대화 다시 불러오기</button></div>}
       {threadId && threadMismatch && <p className="notice inset" role="alert">이 프로젝트의 검토 기록이 아닙니다. 왼쪽 검토 기록에서 다시 선택해 주세요.</p>}
       {projectId !== null && !target && threadId && project.data && thread.isSuccess && thread.data.target_locked && !threadMismatch && <p className="empty inset">이 검토의 대상 부품을 회로에서 찾지 못했습니다. <button className="btn" onClick={() => go({ projectId: String(projectId) })}>부품 고르기</button></p>}
     </main>

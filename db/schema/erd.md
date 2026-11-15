@@ -12,6 +12,8 @@ erDiagram
     approvals ||--o{ quotes : "approval_id+user_id (CASCADE)"
     approvals ||--o| approved_cases : "approval_id+user_id (CASCADE)"
     messages ||--o| approvals : "message_id (CASCADE)"
+    project_circuit_versions ||--o{ threads : "project_id+circuit_version (CASCADE)"
+    projects ||--o{ project_circuit_versions : "project_id (CASCADE)"
     projects ||--o{ threads : "project_id (CASCADE)"
     projects ||--o| circuits : "project_id (CASCADE)"
     runs ||--o{ messages : "run_id+thread_id (CASCADE)"
@@ -108,11 +110,23 @@ erDiagram
         text source_sha256
         text parser_version
         timestamptz created_at
+        int version
+    }
+    project_circuit_versions {
+        bigint project_id PK, FK
+        int version PK
+        jsonb connections
+        text source_sha256
+        text parser_version
+        text source_kind
+        text demo_id
+        timestamptz created_at
     }
     threads {
         uuid id PK
         bigint project_id FK
         timestamptz created_at
+        int circuit_version FK
     }
     runs {
         uuid id PK

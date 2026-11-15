@@ -20,6 +20,7 @@ services:
       DEMO_MODE: "0"
       DEMO_REPLAY: "0"
       THREADS_ENABLED: "1"
+      KICAD_RENDERER_URL: http://renderer:8000
       RAG_VECTOR_TYPE: halfvec
       GOOGLE_AUTH_ENABLED: "0"
       PYTHON_DOTENV_DISABLED: "1"
@@ -34,6 +35,8 @@ services:
         condition: service_healthy
       thread-setup:
         condition: service_completed_successfully
+      renderer:
+        condition: service_started
 
   thread-setup:
     build:
@@ -49,6 +52,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  renderer:
+    build:
+      context: .
+      target: renderer
+    image: sojafit:sth-renderer
 
   db:
     image: pgvector/pgvector:pg16

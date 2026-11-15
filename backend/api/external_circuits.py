@@ -130,10 +130,14 @@ def external_schematic_manifest(
     circuit_version: Annotated[int | None, Query(ge=1)] = None,
     thread_id: UUID | None = None,
     reference_only: bool = False,
+    component_type: Literal['diode'] | None = None,
 ):
     response.headers["Cache-Control"] = "private, no-store"
     project = _project_circuit(user_id, project_id, circuit_version, thread_id, reference_only)
+    if component_type is not None and (project is not None or len(q) > 194):
+        raise HTTPException(422, '다이오드 검색은 194자 이하 참고 자료 조회로만 사용할 수 있습니다.')
     manifest = (_schematic_call(find_external_schematic, q, source_url, connections=project.connections) if project else
+                _schematic_call(find_external_schematic, q, source_url, component_type) if component_type else
                 _schematic_call(find_external_schematic, q, source_url) if source_url is not None
                 else _schematic_call(find_external_schematic, q))
     scope = f'?project_id={project_id}&circuit_version={circuit_version}' if project else '?reference_only=true'
