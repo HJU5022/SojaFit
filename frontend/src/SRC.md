@@ -51,7 +51,8 @@
 - `pages/SignupPage.tsx` · `pages/EmailActionPage.tsx` — 가입 메일 요청, 메일 링크의 비밀번호 설정과 재설정.
 - `pages/PrivacyPage.tsx` — 개인정보처리방침(글은 이전과 같음).
 - `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록(맨 위 질문 칸이 질문 속 부품 번호의 검토를 열고 질문을 한 번 보낸다. 테스트 `WorkbenchPage.ask.test.tsx`), 새 프로젝트·원본 회로도·승인 사례 창. 대화 상세의 대상 부품을 주소의 선택값보다 우선해 복원하고, 프로젝트 불일치·조회 대기·오류·재시도를 구분한다. 원본 회로도 창은 예제 프로젝트에 저장된 그림을, 저장된 그림이 없는 프로젝트(올린 넷리스트, 예제 회로 목록이 404인 운영의 모든 프로젝트)에는 웹 검색을 보인다. 예제 회로 목록 응답 전에는 버튼을 숨기고, 목록이 404이면 오류 안내 없이 업로드 칸만 둔다. 테스트 `WorkbenchPage.test.tsx`.
-- `pages/SettingsPage.tsx` — 내 설정 3칸 저장·삭제, 계정 삭제.
+- `pages/SettingsPage.tsx` — 내 설정 3칸 저장·삭제, 계정 삭제. 최초 성공 조회와 변경 성공 뒤 명시적 최신 조회 때만 폼/비교 기준을 동기화하고 자동 갱신은 초안을 보존한다. 변경 성공 후 조회 실패는 초안과 조회 재시도를 유지하며 변경 요청을 다시 보내지 않는다.
+- `pages/SettingsPage.test.tsx` — 최초 조회 잠금·자동 갱신 초안 보존·변경 필드만 저장·저장/삭제 후 동기화·조회 실패 재시도 회귀.
 - `pages/AdminUsersPage.tsx` — 관리자 전용 계정 목록과 정지·정지 해제.
 - `components/Review.tsx` — 검토 대화·회로와 첨부/조건 입력의 조립. ChatPane에 채팅과 입력창을 넣고 ReviewDetails에 질문·품번별 상세 탭을 연결한다. 속성 칸 너비 조절과 문맥별 초기화. 회귀 `WorkbenchPage.ask.test.tsx`.
 - `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 포커스·재연결·재마운트 자동 재조회는 끄고 성공5분 캐시는 유지하며 만료/실패 재조회는 버튼으로만 시작한다. 테스트 `Schematic.test.tsx`.
