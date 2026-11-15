@@ -1,8 +1,8 @@
 # 필수 게이트 자기 점검
 
 - 상태: 현행
-- 기준일: 2026-11-14
-- 기준 커밋: `c24c007`(`main`). 배포 측정(G1 · G4)의 대상은 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다. `main`은 `574de79` 뒤 `c24c007`(OSC 회로도 작업)까지 갔고 아직 배포하지 않았다
+- 기준일: 2026-11-16
+- 기준 커밋: `7ba86325`(`main`, 현재 운영 리비전 `sojafit-api-main7ba86325-1115`의 소스). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다. 동결(11-16 24:00) 뒤 다시 배포하면 README와 G1의 리비전을 같이 고친다
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
 
@@ -16,7 +16,7 @@
 
 | 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
 |---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79` 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md)) |
+| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 현재 리비전 `main7ba86325-1115`의 로그인 뒤 점검 기록은 없다. 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: clone 시작 → `/health` 200 243.9초, 스모크 28/28. 한계는 G2 절) |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요 |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
@@ -31,7 +31,9 @@
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
 | 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
-| 리비전 `sojafit-api-574de79-rs`(소스 `main` `574de79`, 2026-11-13 12:07 KST 100% 전환, 현재 100%) 평가용 계정 25단계 | 배포 서버 · 실제 모델로 평가용 계정 A · B 로그인 200, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작(같은 이미지 다이제스트의 새 리비전), 같은 run 재개 200, 승인, 같은 승인 409, 견적, 계정 B의 접근 404. 통과 25 · 실패 0 · 건너뜀 0. 환경변수 32개(`EXA_WEB_SEARCH_ENABLED=1` 포함). 재개 요청을 이 리비전이 처리한 것은 서버 로그로 확인했다. 이 리비전은 `574de79`의 설정 그대로이며 `main` `c24c007`은 배포하지 않았다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md), [서버 로그 발췌](../evals/results/d10/deploy_574de79/restart_server_log_2026-11-13.txt), [smoke_..._2026-11-13_120624.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_120624.json) |
+| 현재 리비전 `sojafit-api-main7ba86325-1115`(소스 `main` `7ba86325`, 2026-11-15 22:29 KST 100% 전환, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정) | 이름 · 전환 시각 · 소스는 조장이 전달한 값이고 이 문서를 고치는 동안 `gcloud`로 직접 확인하지 않았다. 이 리비전의 로그인 뒤 25단계 점검은 기록이 없다(확인 못 함). 동결 뒤 다시 배포하면 이 행과 README를 같은 리비전으로 한 번에 고친다 | [README.md](../README.md) 표 |
+| 운영 시작 실패와 복구(2026-11-14 22:43 ~ 11-15 21:26 KST) | Secret Manager `EXA_API_KEY` 버전 1이 파기(DESTROYED)됐는데 서비스 설정이 그 버전을 고정해, 최소 인스턴스 0대인 운영 리비전 `574de79-rs`의 새 인스턴스가 시작하지 못했다(21:22 KST `/health` · `/login` · `/` 500). 같은 이미지에 `EXA_API_KEY:2`만 바꾼 리비전 `sojafit-api-574de79-exa2`를 21:26 KST에 100%로 돌려 복구했고, 22:29 KST에 위 현재 리비전으로 바꿨다. 누가 · 왜 버전 1을 파기했는지는 확인하지 못했다 | `docs/worklog/jeongun.md` 11-15 항목 「운영 다운 복구」 |
+| 리비전 `sojafit-api-574de79-rs`(소스 `main` `574de79`, 2026-11-13 12:07 KST 100% 전환, 11-15 21:26 KST까지 100%) 평가용 계정 25단계 | 배포 서버 · 실제 모델로 평가용 계정 A · B 로그인 200, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작(같은 이미지 다이제스트의 새 리비전), 같은 run 재개 200, 승인, 같은 승인 409, 견적, 계정 B의 접근 404. 통과 25 · 실패 0 · 건너뜀 0. 환경변수 32개(`EXA_WEB_SEARCH_ENABLED=1` 포함). 재개 요청을 이 리비전이 처리한 것은 서버 로그로 확인했다. 이 리비전은 `574de79`의 설정 그대로다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md), [서버 로그 발췌](../evals/results/d10/deploy_574de79/restart_server_log_2026-11-13.txt), [smoke_..._2026-11-13_120624.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_120624.json) |
 | 리비전 `sojafit-api-574de79`(소스 `main` `574de79`) 로그인 없는 점검 | 2026-11-13 10:53 KST: `/health` 200(0.11초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34, `/api/auth/me` 401, `/api/auth/demo-login` 404(`DEMO_MODE=0`) | [unauth_checks_raw.txt](../evals/results/d10/deploy_574de79/unauth_checks_raw.txt) |
 | 리비전 `sojafit-api-fadde2a`(소스 `main` `fadde2a`, 2026-11-13) 인증 없는 점검 | 소스를 `git archive origin/main`으로 올려 `--no-traffic --tag main-fadde2a --revision-suffix fadde2a`로 만든 뒤(빌드 08:12~08:17 KST, 이미지 `sha256:95d6f571…`) 0% 점검 주소에서: `/health` 200(냉 기동 11.1초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), `/app`이 가리키는 주 JS 번들(`/assets/index-BFnytjKy.js`)에 `모두 모름으로 계속` · `원하는 정격도 적어 주세요` 문구가 둘 다 있음(새 화면이 이미지에 들어갔다), 오류 로그(심각도 ERROR 이상, 10분) 없음. 08:17 KST에 100% 전환. 공개 주소: `/health` 200(0.13초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 둘 다 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security: max-age=31536000`. 환경변수는 지정하지 않아 서비스의 기존 설정을 그대로 이었다. 측정 커밋 `ad8612e`와 `fadde2a` 사이에서 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`은 비어 있다. `ae3de0b`와 `fadde2a` 사이에는 `frontend/src` 2개 파일(예시 질문 · 안내 문구)과 문서만 바뀌었다. 이전 100% 리비전 `sojafit-api-ae3de0b`(11-13 08:07 KST 전환)가 되돌릴 대상이다 | `docs/worklog/jeongun.md` 11-13 항목 |
 | 리비전 `sojafit-api-ae3de0b`(소스 `main` `ae3de0b`, 2026-11-13) 인증 없는 점검 | 소스를 `git archive origin/main`으로 올려 `--no-traffic --tag main-ae3de0b --revision-suffix ae3de0b`로 만든 뒤(빌드 08:02~08:07 KST, 이미지 `sha256:618ad9a5…`) 0% 점검 주소에서: `/health` 200(냉 기동 12.3초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), `/app`이 가리키는 주 JS 번들(`/assets/index-BvxFKySW.js`)에 `모두 모름으로 계속` 문구 있음(새 화면이 이미지에 들어갔다), 오류 로그(심각도 ERROR 이상, 10분) 없음. 08:07 KST에 100% 전환. 공개 주소: `/health` 200(0.09초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security: max-age=31536000`. 환경변수는 지정하지 않아 서비스의 기존 설정을 그대로 이었다. `c9d2c36`과 `ae3de0b` 사이에서 `backend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`은 비어 있고 `frontend/src`(와 문서)만 바뀌었다: 질문 바로 시작 · 답변 전체 마크다운 표시 · 이전 답 유지 · 조건 질문 '모름' 처리 · 사용자 화면의 오류 코드 · 요청 ID 숨김 | `docs/worklog/jeongun.md` 11-13 항목 |
@@ -74,6 +76,7 @@
 
 | 항목 | 이유 |
 |---|---|
+| 현재 코드로 새 clone 기동 | 측정 대상 `ad8612e` 뒤에 `Dockerfile` · `docker-compose.yml` · `db/`가 바뀌었다: 회로 버전 SQL `031_circuit_versions.sql`(`2ba3e623`), KiCad 렌더러 분리(`75e602b4`: `renderer` target, `--profile schematic`), 로컬 실제 API 구성(`c3041b39`). 그 코드로 키 없는 새 clone 기동과 스모크를 다시 재지 않았다. 동결 커밋에서 다시 재야 한다(`db/031`은 새 볼륨에서 적용되는지도 확인) |
 | 평가자 환경에서의 기동 | 발표 때 평가자가 하는 실행은 이 측정과 별개다. 이 측정은 Mac 호스트의 docker-in-docker 1회(냉)다 |
 | WSL에서 11-13 측정 | 하지 않았다. WSL 값은 11-10 측정뿐이다 |
 | 11-13 측정의 반복 · 회선 속도 | 냉 1회 · 온 1회, 호스트 부하 5.62 → 8.21, 회선 속도 미측정([측정 문서](../evals/results/d10/startup_restart_isolation_2026-11-13.md) 한계) |
