@@ -1,5 +1,5 @@
 /** 이메일·Google·데모 인증 화면. 세션 발급은 API가 한다. 출처: SPEC 8.6절. */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { api } from './api';
 import { Brand, ErrorBox, Loading, navigate, useResource } from './ui';
@@ -9,9 +9,15 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
   const params = new URLSearchParams(location.search),
     finish = params.get('google') === 'finish';
   const pending = useResource<{ email: string }>(finish ? '/auth/google/onboarding' : null);
-  const token = params.get('token') ?? '',
-    signup = path.startsWith('/signup'),
-    reset = path.startsWith('/password-reset'),
+  // 메일 링크는 토큰을 #token=…에 싣는다(backend/services/mail.py). 읽은 뒤 주소와 방문 기록에서 지운다.
+  const [token] = useState(
+    () => new URLSearchParams(location.hash.slice(1)).get('token') ?? params.get('token') ?? '',
+  );
+  useEffect(() => {
+    if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+  }, []);
+  const signup = path.startsWith('/signup') || path === '/verify-email',
+    reset = path.startsWith('/password-reset') || path === '/reset-password',
     confirm = !!token || path.endsWith('/confirm');
   const [error, setError] = useState<Error | null>(null),
     [busy, setBusy] = useState(false),

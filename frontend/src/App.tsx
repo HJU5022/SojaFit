@@ -192,7 +192,10 @@ export default function App() {
     pathname === '/privacy' ||
     pathname === '/login' ||
     pathname.startsWith('/signup') ||
-    pathname.startsWith('/password-reset');
+    pathname.startsWith('/password-reset') ||
+    // 백엔드가 보내는 메일 링크: {AUTH_ORIGIN}/verify-email#token=… · /reset-password#token=… (backend/services/mail.py)
+    pathname === '/verify-email' ||
+    pathname === '/reset-password';
   useEffect(() => {
     if (!checking && !user && !publicPage && !error) navigate('/login', true);
     if (!checking && user && pathname === '/login') navigate('/app', true);
@@ -232,7 +235,7 @@ export default function App() {
         <Settings user={user} onLogout={logout} />
       ) : pathname === '/approved' ? (
         <ApprovedCases />
-      ) : pathname === '/admin' ? (
+      ) : pathname === '/admin' || pathname === '/admin/users' ? (
         user.role === 'admin' ? (
           <Admin />
         ) : (
