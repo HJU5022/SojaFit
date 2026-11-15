@@ -1,12 +1,9 @@
 /** 검토 결과 답·조건 입력 카드. 서버가 보낸 상태를 그리고 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { ArrowRight, MessageSquare } from 'lucide-react';
 import { statuses } from './api';
-import { explainAnswer } from './display';
 import { inputLabel } from './inputLabels';
-import { Badge, Disclaimer, ErrorBox, Source } from './ui';
+import { Badge, Disclaimer, ErrorBox, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
 import type { Candidate, DemoQuestion, Result, Role, Run } from './types';
 export function MissingInput({
@@ -148,13 +145,13 @@ export function Reply({
           <details className="full-answer">
             <summary>전체 답변 보기</summary>
             <div className="markdown">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{explainAnswer(r.answer)}</ReactMarkdown>
+              <Markdown>{r.answer}</Markdown>
             </div>
           </details>
         </>
       ) : r.answer ? (
         <div className="markdown">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{explainAnswer(r.answer)}</ReactMarkdown>
+          <Markdown>{r.answer}</Markdown>
         </div>
       ) : null}
       <ErrorBox error={r.error?.message ?? null} />

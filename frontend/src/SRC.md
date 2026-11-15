@@ -23,7 +23,7 @@
 - `circuit.ts` — 프로젝트 연결에서 부품 목록과 핀·넷 뽑기.
 - `display.ts` — 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수: 긴 소수는 유효숫자 3자리로(받은 값은 마우스를 올리면 보임), 판정 기준식(`v_in_max * kV`)은 한국어로, 링크는 http(s)만. 시험 `../tests/display.test.ts`.
 - `inputLabels.ts` — 판정 입력 코드(회로 값 이름)의 화면 이름. 이름과 뜻은 `backend/judge/rules/roles.yaml` 머리말과 짝이다.
-- `ui.tsx` — 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식.
+- `ui.tsx` — 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식. `Markdown`은 서버 답을 그리되 그림과 http(s) 아닌 링크는 글자로만 보인다.
 - `Landing.tsx` — 공개 랜딩.
 - `Auth.tsx` — 로그인·가입·비밀번호 재설정·Google 계정 연결.
 - `Account.tsx` — 내 설정·승인 사례·관리자 계정·개인정보 안내.

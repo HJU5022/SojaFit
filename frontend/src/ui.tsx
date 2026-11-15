@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AlertCircle, ArrowUpRight, CircuitBoard, LoaderCircle, X } from 'lucide-react';
 import { api, verdicts } from './api';
-import { safeLink } from './display';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { explainAnswer, markdownUrl, safeLink } from './display';
 import { partsOf, pinsOf } from './circuit';
 import type { Citation, Project, Verdict } from './types';
 export function navigate(url: string, replace = false) {
@@ -205,5 +207,31 @@ export function Circuit({ project, target }: { project: Project | null; target: 
         <p>다이오드를 선택하면 연결을 표시합니다.</p>
       )}
     </div>
+  );
+}
+
+/**
+ * 서버 답(마크다운)을 그린다. 그림은 그리지 않고(모델 글이 브라우저에 임의 주소를 받게 하지 않는다),
+ * http(s)가 아닌 링크(javascript: · mailto: · 상대 주소)는 링크 없이 글자로만 보인다. HTML은 react-markdown이 글자로 처리한다.
+ */
+export function Markdown({ children }: { children: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      urlTransform={markdownUrl}
+      disallowedElements={['img']}
+      components={{
+        a: ({ href, children: label }) =>
+          href ? (
+            <a href={href} target="_blank" rel="noreferrer noopener">
+              {label}
+            </a>
+          ) : (
+            <span>{label}</span>
+          ),
+      }}
+    >
+      {explainAnswer(children)}
+    </ReactMarkdown>
   );
 }

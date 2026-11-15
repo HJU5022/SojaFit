@@ -1,6 +1,5 @@
 /** 프로젝트·대화·실행 작업대. 서버의 고정 회로 버전과 결과를 사용한다. 출처: SPEC 4·7·8절. */
 import { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { ArrowRight, Paperclip, Plus, Send, Square, Trash2, X } from 'lucide-react';
 import { api, ApiError, statuses, streamRun } from './api';
 import {
@@ -8,6 +7,7 @@ import {
   Disclaimer,
   ErrorBox,
   Loading,
+  Markdown,
   Modal,
   navigate,
   partsOf,
@@ -441,7 +441,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                               />
                             ) : (
                               <div key={a.id} className="markdown">
-                                <ReactMarkdown>{a.content}</ReactMarkdown>
+                                <Markdown>{a.content}</Markdown>
                               </div>
                             ),
                           )}
