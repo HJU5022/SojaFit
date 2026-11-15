@@ -213,9 +213,11 @@ def test_demo_replay_takes_only_recorded_first_questions_and_recorded_resume(run
     q = recorded_demo(monkeypatch, tmp_path, {'answers': {'VIN_MAX': '12'}, 'role': ''})
     circuit = demo.connections(q['netlist'])
     thread = seed_thread(app, a, connections=circuit)
-    with pytest.raises(HTTPException) as error:
-        app.ensure_thread(a, thread, '프로젝트', circuit, 'C1')  # 회로에는 있지만 기록한 대상이 아니다
-    assert error.value.status_code == 422 and '[demo-x]' in error.value.detail
+    # [왜] #139: 다이오드가 아닌 부품(C1)과 LED(LED2)는 기록 대조 전에 지원 대상 검사가 거른다. 기록하지 않은 다이오드 대상은 tests/services/test_demo_replay.py가 본다
+    for target, reason in (('C1', '현재 판정 범위 밖'), ('LED2', 'LED로 식별')):
+        with pytest.raises(HTTPException) as error:
+            app.ensure_thread(a, thread, '프로젝트', circuit, target)
+        assert error.value.status_code == 422 and reason in error.value.detail
     with pytest.raises(HTTPException) as error:
         app.ensure_thread(a, thread, '프로젝트', circuit, 'D1', question='기록에 없는 질문')  # React run은 스트림 전에 여기서 거른다
     assert error.value.status_code == 422
