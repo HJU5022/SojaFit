@@ -1094,3 +1094,11 @@
 - 정리: 실패한 리비전 `sojafit-api-7ba8632`의 태그 `main-7ba8632`를 지웠다(남아 있으면 서비스 Ready가 False). 리비전 자체와 빌드된 main 이미지(`sha256:3ebfa703…`)는 남겨 두었다.
 - 확인 못 한 것: 로그인 뒤 분석 · 웹 근거 경로(유료 호출이라 하지 않음). 누가 · 왜 버전 1을 파기했는지. 다른 비밀값의 고정 버전은 모두 enabled였다.
 - 다음: main `7ba86325` 배포는 보류 중이다. main API 이미지는 KiCad를 빼고(`INCLUDE_KICAD=0`) `KICAD_RENDERER_URL`의 렌더러(`sojafit-osc-kicad-renderer`, 11-13 이미지)로 보내는데, 그 렌더러가 main의 `include_netlist` 요청을 지원하는지 모른다. 렌더러 재배포 여부를 정한 뒤 진행한다.
+
+## 2026-11-16 표·수치 청크 대조에 같은 쪽 다른 행 값 검사 추가 (브랜치 `jeongun`)
+- 목적: 강사 11/13 코멘트(축 ②)의 "11/16까지 같은 쪽 다른 행으로 바뀐 오류를 잡는 검사를 더하라"에 대응. 사전 등록 `evals/guides/preregister.md` 2026-11-15 항목(구현 전에 커밋).
+- 바꾼 파일: `scripts/eval/chunk_source_check.py`(`--rows` · `--out`, `row_check`, 쪽 검사를 `page_check`로 꺼냄 — 계산은 그대로), `tests/evals/test_chunk_source_check.py`(신규 7개), 결과 `evals/results/d10/chunk_source_check_rows_2026-11-16/`(신규), 폴더 설명 `scripts/eval/EVAL.md` · `tests/evals/EVALS.md` · `evals/results/d10/README.md`, `SOJAFIT.md` 트리 2줄.
+- 명령: `uv run python scripts/eval/chunk_source_check.py --rows`(21초, 같은 시드 1116 · 칸당 3개), `uv run pytest -q tests/evals/test_chunk_source_check.py`.
+- 결과 [실측]: 기존 폴더 출력과 기존 필드 123건 전부 같음(같은 표본). 행 검사 117 일치 · 0 불일치 · 6 미확인(tvs · zener electrical의 부품 행 표). 합성 변이 128건(다른 행 72 · 다른 열 8 · 다른 행 단위 48): 쪽 검사 0건, 행 검사 128건 탐지, 깨끗한 12건 통과. 실제 표본 변이 113건: 같은 쪽 다른 행 103건 중 쪽 검사 0 · 6줄 창 18 · 행 검사 103, 같은 행 다른 열 10건 중 행 검사 10.
+- 확인 못 한 것: 부품 행(Device) 표 형식(6건 미확인), 조건 칸 안 숫자만 바뀐 오류, 선 없는 표, `page_grids` 어댑터 단위 시험(원본 PDF가 저장소 밖), 123개 전수 눈 대조(손 대조 6건), PDF sha256 대조. 표본은 전체 표 행의 약 0.3%.
+- 다음: 부품 행 표 지원 여부는 정운 결정. `docs/deliverables/failure_analysis.md` 91번 줄(검사기 한계 83~86%)에 이번 결과를 반영할지도 정운 결정(이 작업에서는 고치지 않음). 푸시 · PR 없음.
