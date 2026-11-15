@@ -11,7 +11,7 @@ erDiagram
     agent_threads ||--o{ agent_messages : "thread_id (CASCADE)"
     approvals ||--o{ quotes : "approval_id+user_id (CASCADE)"
     approvals ||--o| approved_cases : "approval_id+user_id (CASCADE)"
-    messages ||--o| approvals : "message_id (CASCADE)"
+    messages ||--o{ approvals : "message_id (CASCADE)"
     project_circuit_versions ||--o{ threads : "project_id+circuit_version (CASCADE)"
     projects ||--o{ project_circuit_versions : "project_id (CASCADE)"
     projects ||--o{ threads : "project_id (CASCADE)"
@@ -147,7 +147,7 @@ erDiagram
     approvals {
         bigint id PK
         bigint user_id FK
-        bigint message_id FK, UK
+        bigint message_id FK
         text candidate_part
         text verdict
         text part_number

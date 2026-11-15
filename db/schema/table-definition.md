@@ -430,7 +430,7 @@
 |---|---|---|---|---|
 | `id` | bigint | NOT NULL | nextval('approvals_id_seq'::regclass) | 승인 번호 |
 | `user_id` | bigint | NOT NULL |  | 승인한 사용자 |
-| `message_id` | bigint | NOT NULL |  | 승인한 어시스턴트 메시지(고유, 메시지당 1건) |
+| `message_id` | bigint | NOT NULL |  | 승인한 어시스턴트 메시지(조회 색인 ix_approvals_message). 사례를 지우면 같은 메시지를 다시 승인할 수 있어 활성 승인을 하나로 지키는 것은 DB 제약이 아니라 서비스 코드(run 행 잠금과 활성 사례 검사)다 |
 | `candidate_part` | text | NOT NULL |  | 승인한 후보 품번의 **표시 이름**(판정 결과가 보여 준 그대로. 예 'TSC 1N4007G'). 승인 JSON에서 꺼낸 칸 |
 | `verdict` | text | NOT NULL |  | 승인한 판정 IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT. 승인 JSON에서 꺼낸 칸 |
 | `part_number` | text | NOT NULL |  | 견적용 **식별 품번**: 제조사 이름(TSC 등)을 떼고 남은 공백(주문 코드)은 '-'(예 '1N4007G', '1N4148-A0G'). 승인 JSON에서 꺼낸 칸 |
@@ -441,7 +441,6 @@
 |---|---|---|
 | `approvals_pkey` | PK | `PRIMARY KEY (id)` |
 | `approvals_id_user_id_key` | UNIQUE | `UNIQUE (id, user_id)` |
-| `approvals_message_id_key` | UNIQUE | `UNIQUE (message_id)` |
 | `approvals_message_id_fkey` | FK | `FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE` |
 | `approvals_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
 | `approvals_snapshot_check` | CHECK | `CHECK (((jsonb_typeof(snapshot) = 'object'::text) AND (NOT quote_snapshot_has_forbidden_key(snapshot))))` |
@@ -452,8 +451,8 @@
 | 인덱스 | 정의 |
 |---|---|
 | `approvals_id_user_id_key` | `UNIQUE btree (id, user_id)` |
-| `approvals_message_id_key` | `UNIQUE btree (message_id)` |
 | `approvals_pkey` | `UNIQUE btree (id)` |
+| `ix_approvals_message` | `btree (message_id)` |
 | `ix_approvals_user` | `btree (user_id)` |
 
 ## `public.quotes`
