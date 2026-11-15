@@ -36,7 +36,7 @@ class QuoteBody(BaseModel):
     quantity: int = Field(ge=1, le=100000)
 
 
-# 응답 본문. 칸은 backend/services/quote.py가 만드는 dict와 frontend/src/api/quotes.ts의 타입과 같다. 가격 · 재고 칸은 없다
+# 응답 본문. 칸은 backend/services/quote.py가 만드는 dict와 frontend/src/api.ts의 타입과 같다. 가격 · 재고 칸은 없다
 class Approval(BaseModel):
     id: int
     message_id: int

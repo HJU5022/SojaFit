@@ -2,7 +2,7 @@
 
 - 경로: `POST /api/auth/login` · `POST /api/auth/signup`(가입 메일 요청) · `POST /api/auth/signup/confirm` · `POST /api/auth/password-reset` · `POST /api/auth/password-reset/confirm` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(데모 두 경로만 `DEMO_MODE=1`에서 제공) ·
   `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback|pending|onboarding` · `POST /api/auth/google/signup|link`(Google 가입 · 로그인, 명시적 가입·비밀번호 재확인 연결).
-- 화면 쪽 짝: `frontend/src/api/auth.ts`.
+- 화면 쪽 짝: `frontend/src/api.ts`.
 하지 않는 일: 비밀번호 · 세션 · 잠금 · 가입 한도 · Google 신원 확인(`backend/auth.py`), 탈퇴(`backend/api/profile.py`),
   관리자 계정 관리(`backend/api/admin.py`), Uvicorn 접속 로그의 쿼리 지우기(`backend/logs.py`의 `hide_query`).
 출처: SPEC.md 4절 · 8.6절, docs/specs/login-auth.md, docs/specs/google-admin-login.md.
@@ -32,7 +32,7 @@ GOOGLE_PENDING_COOKIE = "sojafit_google_pending"
 
 
 # 성공 응답 본문(`response_model`). [주의] response_model은 선언하지 않은 칸을 응답에서 지우고, 선언한 칸이 없으면 500이다.
-# 칸은 각 경로가 지금 돌려주는 dict와 frontend/src/api/*.ts의 타입에서 옮겼다(tests/api/test_openapi.py가 대조한다)
+# 칸은 각 경로가 지금 돌려주는 dict와 frontend/src/types.ts의 타입에서 옮겼다(tests/api/test_openapi.py가 대조한다)
 class UserId(BaseModel):
     """로그인 · 가입 · 데모 버튼 로그인 성공. 세션은 쿠키로 간다."""
 
@@ -146,7 +146,7 @@ def google_pending(request: Request):
 class Login(BaseModel):
     """로그인 요청 본문. 모르는 칸은 공통 422다."""
 
-    # [왜] 화면은 email · password만 보낸다(frontend/src/api/auth.ts). 예시는 /docs에 보이는 가짜 값이다
+    # [왜] 화면은 email · password만 보낸다(frontend/src/api.ts). 예시는 /docs에 보이는 가짜 값이다
     model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"email": "user@example.com", "password": "example-password"}]})
     # [왜] 길이 상한은 입력 크기를 제한해 scrypt 비용 증폭과 DB 값 길이 초과를 막는다
     email: str = Field(min_length=3, max_length=100)

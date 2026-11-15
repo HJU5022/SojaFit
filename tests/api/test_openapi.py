@@ -2,7 +2,7 @@
 
 - 역할: 요청 본문 모델마다 예시가 있고 그 예시가 실제로 통과하는지, 모르는 칸 금지, 업로드의 multipart 칸 문서,
   SSE 두 경로의 `text/event-stream` 설명, 204 · SSE가 아닌 성공 응답의 스키마가 비지 않았는지,
-  응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/api/*.ts의 타입)을 지우지 않는지 본다.
+  응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/types.ts의 타입)을 지우지 않는지 본다.
   동작 50개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
 - 하지 않는 일: 오류 응답 모양(test_health.py · test_errors.py), 가격 응답의 실제 칸(test_prices.py),
   업로드 수신 상한 · 오류 코드(test_projects.py), Swagger 화면 자체(서버를 띄우지 않는다).
@@ -129,7 +129,7 @@ NOW = datetime(2026, 11, 10, 9, 0, tzinfo=timezone.utc)
 THREAD, RUN = str(uuid4()), str(uuid4())
 JUDGED = {'answer': '대체할 수 있습니다.', 'question_type': 'candidate_judge',
           'judgement': {'kind': 'judge', 'results': [{'part': '1N5819', 'verdict': 'SPEC_EQUIVALENT'}]}}
-# 화면이 읽는 칸(frontend/src/api/*.ts의 타입). 응답 모델이 칸을 지우면 아래 시험이 깨진다
+# 화면이 읽는 칸(frontend/src/types.ts의 타입). 응답 모델이 칸을 지우면 아래 시험이 깨진다
 USER_ID, ENABLED, OK = {'user_id'}, {'enabled'}, {'ok'}
 ACCOUNT = {'id', 'email', 'role', 'is_active'}
 APPROVAL = {'id', 'message_id', 'candidate_part', 'verdict', 'case_id', 'created_at'}

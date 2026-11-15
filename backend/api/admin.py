@@ -1,7 +1,7 @@
 """관리자 계정 관리 HTTP 경계: `GET /api/admin/users`, `PATCH /api/admin/users/{target_id}`.
 
 - 관리자인지 · 대상이 일반 계정인지는 `backend/auth.py`(`admin_users` · `admin_set_active`)가 확인한다(아니면 403, 대상 없음 404).
-- 화면 쪽 짝: `frontend/src/api/admin.ts`.
+- 화면 쪽 짝: `frontend/src/api.ts`.
 하지 않는 일: 관리자 계정 만들기 · 지우기(운영자 CLI `python -m backend.auth`), Google 관리자 로그인(`backend/api/auth.py`).
 출처: SPEC.md 4절 · 8.6절, docs/specs/login-auth.md.
 """

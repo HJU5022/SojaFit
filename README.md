@@ -14,7 +14,7 @@
 | 배포 리비전 | `sojafit-api-main7ba86325-1115`(소스 `main` `7ba86325`, 2026-11-15 22:29 KST 100% 전환, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 동결(11-16 24:00) 뒤 다시 배포하면 이 줄과 [GATES](docs/GATES.md) G1을 같은 리비전으로 한 번에 고친다 | 리비전 이름 · 전환 시각 · 소스는 조장이 전달한 값이고 이 문서를 고치는 동안 `gcloud`로 직접 확인하지 않았다. 평가용 계정 A · B 25단계(로그인, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작, 같은 run 재개, 승인, 같은 승인 다시(409), 견적, 계정 B의 접근 404)는 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`, 11-13)에서 통과(실패 0 · 건너뜀 0)했고, 지금 리비전에서 같은 점검을 했다는 기록은 없다(확인 못 함). 하지 않은 것: Google 로그인 왕복, 이메일 가입 왕복. 11-14 22:43 ~ 11-15 21:26 KST에는 고정해 둔 `EXA_API_KEY` 비밀 버전이 파기돼 새 인스턴스가 시작하지 못했다([GATES](docs/GATES.md) G1). 증거: [evals/results/d10/deploy_574de79/](evals/results/d10/deploy_574de79/README.md), [docs/GATES.md](docs/GATES.md) G1 · G4 |
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
 | 기준 커밋 | `7ba86325`(`main`) | 이 문서가 기술하는 코드의 기준이다. 배포 리비전의 소스와 같다. 동결 커밋(11-16 24:00)이 정해지면 이 줄을 그 커밋으로 고치고, 배포 소스와 같은 코드인지 `git diff --stat <배포 소스> <동결 커밋> -- backend frontend db Dockerfile`로 확인한다 |
-| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
+| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
 | 시연 영상 | 영상 파일 없음. 초안 스크립트 [`docs/deliverables/demo_script.md`](docs/deliverables/demo_script.md) | 정상 1 + 실패(거절) 1, 3분 이내 |
 
 ```bash
@@ -297,11 +297,12 @@ KiCad 원본 회로도를 그림(PNG)으로 바꾸는 일만 하는 별도 서�
 
 ### 화면 개발 서버
 
-compose 이미지는 React 화면을 빌드해 api에 넣으므로 위 명령만으로 화면이 뜬다. 화면을 고치며 볼 때는 API를 `localhost:8000`에 띄워 둔 채 Vite 개발 서버를 쓴다(`/api` 요청을 `localhost:8000`으로 넘김). 명령과 시험은 [`frontend/FRONTEND.md`](frontend/FRONTEND.md)에 있다.
+compose 이미지는 React 화면을 빌드해 api에 넣으므로 위 명령만으로 화면이 뜬다. 화면을 고치며 볼 때는 API를 `localhost:8000`에 띄워 둔 채 Vite 개발 서버를 쓴다(`/api` 요청을 `localhost:8000`으로 넘기고, 백엔드의 Origin 검사(`AUTH_ORIGIN`)를 통과하도록 프록시가 Origin을 `http://localhost:8000`으로 바꿔 보낸다). 명령과 시험은 [`frontend/FRONTEND.md`](frontend/FRONTEND.md)에 있다.
 
 ```bash
-cd frontend && npm ci && npm run dev   # 화면 개발 서버
-npm run test:run                       # 화면 단위 시험
+cd frontend && npm ci && npm run dev   # 화면 개발 서버 http://localhost:5173
+npm test                               # 화면 단위 시험(node --test)
+npm run build                          # 타입 검사 + 빌드(frontend/dist)
 ```
 
 ### 테스트와 평가
