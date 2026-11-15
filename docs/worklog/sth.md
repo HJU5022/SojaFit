@@ -5,6 +5,13 @@
 - 재현/검증: 수정 전 프로젝트↔목록 및 프로젝트1↔2의 뒤로/앞으로 이동 검사2건에서 검색어가 남아 실패했다. 수정 후 같은 검사와 작업대46건 통과. 최종 npm run test:run ->11파일/257통과(7.85초), npm run build -- --logLevel error ->TypeScript·Vite 통과. PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q tests/repo/test_repo_layout.py ->5통과(0.50초). 전부 모의 HTTP·오프라인 검사였다.
 - 미확인/다음: 8010 이미지 반영·수정 후 브라우저 재현·실제 분석/유료 API·운영 DB·동결 평가 재측정·커밋·푸시는 하지 않았다.
 
+## 2026-11-15 가격·재고 자동 재조회 차단
+- 요청/범위: STH에서 가격·재고의 화면 복귀/재연결 자동 조회를 막고 버튼으로만 조회하게 수정했다. 앞선 설정·대화 삭제·로그인 복귀와 미커밋 변경은 보존했다. 실제 판매처·모델·유료 API·운영 DB·배포·커밋·푸시는 실행하지 않았다.
+- 원인/변경: PriceLookup의 enabled=open이 가격 창을 연 뒤 기본 focus/reconnect 및 캐시 무효화 재조회를 허용했다. enabled=false로 수동 조회만 허용하고 조회 열기와 다시 조회 버튼에서 refetch를 호출한다. 닫기는 조회하지 않으며 다시 열기는 명시적 새 조회다. 진행 중 수동 요청은 cancelRefetch=false로 불필요하게 취소·재시작하지 않는다. 기존 가격 DTO/no-store/오류 안내/요청 취소 signal/자동 재시도0은 유지했다.
+- 파일/문서: PriceLookup.tsx 수정, PriceLookup.test.tsx 추가. SRC.md와 SOJAFIT 트리에 새 테스트 한 줄을 등록하고 frontend-screen-redesign.md에 버튼 전용 조회 AC를 적었다. 주요 문서는 새 파일 트리 한 줄 예외만 반영하며 SPEC4/가격 조회 절의 자동 요청0 계약은 조장에게 PR 코멘트로 제안한다. API·의존성·데이터 파일 변경은 없다.
+- 재현/검증: 수정 전 focus/reconnect/invalidate 후 GET1 기대에 GET2 발생3건과 오류 뒤 자동 재조회1건이 실패했다. 수정 후 같은 검사와 명시적 닫기/다시 열기·오류 재시도까지 가격5건 통과. 최종 npm run test:run ->11파일/255통과(8.75초), npm run build -- --logLevel error ->TypeScript·Vite 통과. PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q tests/repo/test_repo_layout.py ->5통과(0.49초). 모든 HTTP는 모의 응답이었다.
+- 미확인/다음: 8010 이미지 반영·수정 후 실제 브라우저 재현·실제 판매처 응답·동결 평가 재측정은 하지 않았다. 검색어 히스토리 유입 문제는 이번 범위 밖으로 남긴다.
+
 ## 2026-11-15 설정 자동 갱신의 초안 덮어쓰기 방지
 - 요청/범위: STH에서 자동 재조회가 편집 중 폼을 덮는 문제를 수정했다. 앞선 최초 조회 잠금·대화 삭제·재로그인 복귀와 미커밋 기록을 보존했다. 가격 자동 재조회·검색어 히스토리 문제, API/DB/의존성은 이번에 변경하지 않았다.
 - 원인/변경: facts.data 변경 effect가 폼 전체를 다시 초기화하고, 저장 시 비교 기준도 자동 갱신된 서버 값으로 바뀌었다. 폼에 반영한 마지막 설정을 saved로 따로 보관해 최초 성공 조회 때만 초기화하고, 자동 조회는 저장된 설정 목록만 갱신한다. 저장은 saved에서 사용자가 바꾼 칸만 PATCH하므로 다른 탭이 바꾼 미편집 필드를 되돌리지 않는다.

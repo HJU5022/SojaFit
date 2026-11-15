@@ -58,7 +58,8 @@
 - `components/Review.tsx` — 검토 대화·회로와 첨부/조건 입력의 조립. ChatPane에 채팅과 입력창을 넣고 ReviewDetails에 질문·품번별 상세 탭을 연결한다. 속성 칸 너비 조절과 문맥별 초기화. 회귀 `WorkbenchPage.ask.test.tsx`.
 - `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 포커스·재연결·재마운트 자동 재조회는 끄고 성공5분 캐시는 유지하며 만료/실패 재조회는 버튼으로만 시작한다. 테스트 `Schematic.test.tsx`.
 - `components/ContextDiagram.tsx` — 대상 부품의 넷과 이웃을 그리는 SVG 개념도.
-- `components/PriceLookup.tsx` — 누를 때만 조회하는 가격·재고.
+- `components/PriceLookup.tsx` — 조회·재시도 버튼으로만 요청하는 가격·재고. 화면 복귀·재연결·캐시 갱신은 자동 요청하지 않고 닫기는 조회하지 않는다.
+- `components/PriceLookup.test.tsx` — 가격 조회·재시도 버튼과 화면 복귀·재연결·캐시 갱신의 자동 요청 차단 회귀.
 - `components/SafeMarkdown.tsx` — 최소 마크다운 렌더러(표·굵게·목록·인용, HTML·이미지·링크는 글자로만). 표시 콜백은 본문·굵은 글씨에 적용하고 코드 구간은 보존한다. 테스트 `SafeMarkdown.test.tsx`.
 - `components/ApprovedCases.tsx` — 승인 사례 목록과 확인 삭제.
 - `components/AuthCard.tsx` · `components/PageShell.tsx` — 로그인 계열 화면과 설정·관리 화면의 공통 틀.
