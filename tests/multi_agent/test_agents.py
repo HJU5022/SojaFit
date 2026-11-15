@@ -230,7 +230,7 @@ def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():
 
 
 def test_described_ratings_find_parts_with_those_exact_values_then_search_only_them():
-    calls, seen = [], []
+    calls = []
 
     def find(conditions, category, package, limit):
         calls.append((conditions, category, limit, package))
