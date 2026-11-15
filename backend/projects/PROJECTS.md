@@ -16,6 +16,8 @@ GitHub 라이선스 metadata의 deprecated GPL 식별자는 canonical SPDX 표�
 
 ## 파일
 
+검색어는 발견용 키워드로 취급하며 3자 이상 단어/품번의 앞부분도 대조한다. 숫자 부품 키워드는 실제 배치 정보에서 확인하고 전압/단위·출처·자료 유형·업로드 전체 연결 검증은 유지한다. 품번 없는 다이오드 용도 검색은 기존 GitHub 경로와 동일 상한을 사용한다. manifest의 검증된 choices를 먼저 표시하고 도면은 사용자가 선택한 뒤 표시하며, 후보 제목은 파일 식별정보를 포함한다.
+
 프로젝트 원본은 소유 회로 버전의 전체 연결과 일치한 native EDA만 제공한다. 원격 렌더러는 공개 후보의 실제 export 연결과 PNG를 반환하며, API가 업로드 연결과 대조한다. 업로드 연결은 외부 검색·렌더러에 보내지 않는다. 공개 PDF·이미지의 기존 원본/게시 내용 검사는 참고 검색에만 사용한다. 다이오드 참고 모드를 골라도 프로젝트 원본의 토큰·회로별 캐시·동일성 관문을 우회할 수 없다.
 
 - 생성(`create_empty/create_demo/create_upload`)은 계정 행 잠금 아래 이름/최신 원본 해시 중복을 확인한다. 기본 동작은 DuplicateProject와 소유 후보 최대5개이며 allow_duplicate=True만 별도 새 프로젝트를 허용한다. 원본과 해시는 공개하지 않고 이름 변경·기존 프로젝트의 버전 업로드는 이 생성 검사 대상이 아니다.
@@ -33,4 +35,4 @@ GitHub 라이선스 metadata의 deprecated GPL 식별자는 canonical SPDX 표�
 | `schematic.py` | 제한된 KiCad CLI PDF·netlist export와 별도 renderer HTTP 경계. 프로젝트 원본은 반환된 실제 후보 연결을 API에서 전체 대조 |
 | `schematic_discovery.py` | GitHub tree에서 EDA 원본과 연결된 전체 회로도 자산 찾기 |
 | `schematic_render.py` | 공개 PDF/SVG/PNG의 해시·회로도 페이지를 확인하고 제한된 크기와 해상도의 PNG로 렌더링 |
-| `schematic_source.py` | 검증된 외부 회로도 source DTO와 서비스 오류 형식 |
+| `schematic_source.py` | 검증된 외부 회로도 source DTO·서비스 오류와 호스트/인증별 제한 해제 시각. 제한 중 새 다운로드를 차단하며 최대128건의 프로세스 메모리만 사용 |

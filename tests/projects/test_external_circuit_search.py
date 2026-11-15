@@ -60,6 +60,45 @@ def test_diode_search_rejects_same_named_radio_and_keeps_component_application(q
     assert 'diode application circuit' in json.loads(requests[0].content)['query']
 
 
+def test_partial_component_keyword_keeps_matching_web_candidates_and_rejects_radio():
+    from backend.projects.external_circuit_search import search_public_schematics
+    client, _ = exa_client([
+        {'title': '1N4148 diode schematic', 'url': 'https://example.org/1n4148-diode-schematic.png'},
+        {'title': '1N4148 transceiver schematic', 'url': 'https://example.org/1n4148-radio-schematic.png'},
+    ])
+    with client:
+        result = search_public_schematics('1N414 diode', client=client)
+    assert [ref.source_url for ref in result] == ['https://example.org/1n4148-diode-schematic.png']
+
+
+@pytest.mark.parametrize('query,expected', [('Pico', 'Raspberry Pi Pico'), ('피코 W', 'Raspberry Pi Pico W'), ('Pico 2', 'Raspberry Pi Pico 2')])
+def test_pico_keyword_uses_existing_manufacturer_discovery(query, expected):
+    from backend.projects.external_circuit_search import canonical_product_query
+    assert canonical_product_query(query) == expected
+    assert canonical_product_query(expected) == expected
+
+
+def test_diode_purpose_keywords_use_bounded_repository_search_without_a_model_number(monkeypatch):
+    from backend.projects import external_circuit_search as search
+    calls = []
+    monkeypatch.setattr(search, 'search_github_repositories', lambda q, limit, **kwargs: calls.append((q, limit)) or ())
+    assert search.search_component_repositories('schottky diode', 5, client=object()) == ()
+    assert calls == [('schottky diode', 5)]
+
+
+def test_partial_part_keyword_uses_bom_index_only_as_repository_discovery(monkeypatch):
+    from backend.projects import external_circuit_search as search
+    monkeypatch.setattr(search, 'search_github_repositories', lambda *args, **kwargs: ())
+    def handle(request):
+        if request.method == 'POST':
+            return httpx.Response(200, json={'results': [{'url': 'https://hardlabs.io/project/test'}]})
+        return httpx.Response(200, headers={'content-type': 'text/html'},
+                              text='1N4148 diode <a href="https://github.com/owner/project">Source</a>')
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        found = search.search_component_repositories('1N414 diode', 5, client=client)
+    assert [repo.repository_url for repo in found] == ['https://github.com/owner/project']
+
+
 def test_component_repository_search_follows_bom_index_without_requiring_diode_in_repo_name():
     from backend.projects.external_circuit_search import search_component_repositories
     calls = []

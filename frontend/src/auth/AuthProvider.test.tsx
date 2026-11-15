@@ -2,11 +2,14 @@ import { StrictMode } from 'react'
 import { act, fireEvent, render as renderPlain, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, expect, it, vi } from 'vitest'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, dummyAuthEnabled, useAuth } from './AuthProvider'
+import RequireAuth from './RequireAuth'
+import LoginPage from '../pages/LoginPage'
 import { failure, network, user } from '../test/network'
 import { renderWithQueries as render } from '../test/projects'
 
-afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); sessionStorage.clear() })
 it('limits dummy authentication to explicit development-only settings', () => {
   expect(dummyAuthEnabled({ DEV: true, MODE: 'dummy' })).toBe(true)
   expect(dummyAuthEnabled({ DEV: true, MODE: 'development', VITE_DUMMY_AUTH: '1' })).toBe(true)
@@ -132,4 +135,117 @@ it('does not restore an old session response after password reset expires the se
   await act(async () => { finish!(Response.json(user)) })
   expect(screen.getByText('비로그인')).toBeInTheDocument()
   expect(screen.queryByText('사용자 7')).not.toBeInTheDocument()
+})
+
+const conversationUrl = '/app?projectId=12&threadId=saved-thread&targetRef=D2#message-9'
+const returnKey = 'sojafit:login-return'
+function loginNetwork(signedIn = false) {
+  const session = { signedIn, failures: 0 }
+  network(path => {
+    if (path === '/api/auth/me') return session.signedIn ? Response.json(user) : failure()
+    if (path === '/api/auth/login') {
+      if (session.failures-- > 0) return failure()
+      session.signedIn = true; return Response.json({ user_id: user.user_id })
+    }
+    if (path === '/api/auth/logout' || path === '/api/me') { session.signedIn = false; return Response.json({ ok: true }) }
+    if (path === '/api/auth/google/onboarding') return Response.json({ email: 'user@example.test' })
+    if (path === '/api/auth/google/signup' || path === '/api/auth/google/link') { session.signedIn = true; return Response.json({ user_id: user.user_id }) }
+    return Response.json({ enabled: false })
+  })
+  return session
+}
+function LoginLocation() { const at = useLocation(); return <output data-testid="login-location">{at.pathname}{at.search}{at.hash}</output> }
+function loginRoutes(entry = conversationUrl, state?: unknown) {
+  return render(<MemoryRouter initialEntries={[state ? { pathname: '/login', state } : entry]}><AuthProvider><LoginLocation /><Routes>
+    <Route path="/app" element={<RequireAuth><p>작업대</p><Session /></RequireAuth>} />
+    <Route path="/login" element={<LoginPage />} />
+  </Routes></AuthProvider></MemoryRouter>)
+}
+async function submitLogin() {
+  const button = await screen.findByRole('button', { name: '로그인' })
+  fireEvent.change(screen.getByRole('textbox', { name: '이메일' }), { target: { value: 'user@example.test' } })
+  fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'test-only' } })
+  fireEvent.submit(button.closest('form')!)
+}
+it.each([false, true])('returns to the project, conversation and message after login (expired session: %s)', async expired => {
+  const session = loginNetwork(expired)
+  const { client } = loginRoutes()
+  if (expired) {
+    await screen.findByText('작업대')
+    client.setQueryData(['projects'], [{ id: 12, name: '기존 캐시' }])
+    session.signedIn = false
+    fireEvent(window, new Event('sojafit:session-expired'))
+  }
+  await screen.findByRole('button', { name: '로그인' })
+  expect(screen.getByTestId('login-location')).toHaveTextContent(/^\/login$/)
+  expect(client.getQueryData(['projects'])).toBeUndefined()
+  session.failures = 1
+  await submitLogin()
+  expect(await screen.findByRole('alert')).toHaveTextContent('로그인하지 못했습니다.')
+  await submitLogin()
+  await screen.findByText('작업대')
+  expect(screen.getByTestId('login-location')).toHaveTextContent(conversationUrl)
+  expect(sessionStorage.getItem(returnKey)).toBeNull()
+})
+
+it('keeps the return address across a fresh login page after Google authentication', async () => {
+  const session = loginNetwork()
+  const view = loginRoutes()
+  await screen.findByRole('button', { name: '로그인' })
+  await waitFor(() => expect(sessionStorage.getItem(returnKey)).toBe(conversationUrl))
+  view.unmount()
+  session.signedIn = true
+  loginRoutes('/login')
+  await screen.findByText('작업대')
+  expect(screen.getByTestId('login-location')).toHaveTextContent(conversationUrl)
+  expect(sessionStorage.getItem(returnKey)).toBeNull()
+})
+
+it.each(['signup', 'link'])('returns to the conversation after Google %s finishes', async mode => {
+  loginNetwork()
+  sessionStorage.setItem(returnKey, conversationUrl)
+  loginRoutes('/login?google=finish')
+  const signup = await screen.findByRole('button', { name: 'Google 계정으로 가입' })
+  if (mode === 'signup') fireEvent.click(signup)
+  else {
+    fireEvent.change(screen.getByRole('textbox', { name: '이메일' }), { target: { value: 'user@example.test' } })
+    fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'test-only' } })
+    fireEvent.submit(screen.getByRole('button', { name: '기존 계정에 연결' }).closest('form')!)
+  }
+  await screen.findByText('작업대')
+  expect(screen.getByTestId('login-location')).toHaveTextContent(conversationUrl)
+  expect(sessionStorage.getItem(returnKey)).toBeNull()
+})
+
+it('returns using router state when tab storage is unavailable', async () => {
+  const read = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked') })
+  const write = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked') })
+  const remove = vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new Error('blocked') })
+  try {
+    loginNetwork()
+    loginRoutes()
+    await submitLogin()
+    await screen.findByText('작업대')
+    expect(screen.getByTestId('login-location')).toHaveTextContent(conversationUrl)
+  } finally { read.mockRestore(); write.mockRestore(); remove.mockRestore() }
+})
+
+it.each(['종료', '탈퇴'])('does not resume the old conversation after explicit %s', async button => {
+  loginNetwork(true)
+  loginRoutes()
+  await screen.findByText('작업대')
+  fireEvent.click(screen.getByRole('button', { name: button }))
+  await screen.findByRole('button', { name: '로그인' })
+  expect(sessionStorage.getItem(returnKey)).toBeNull()
+  await submitLogin()
+  await screen.findByText('작업대')
+  expect(screen.getByTestId('login-location')).toHaveTextContent(/^\/app$/)
+})
+
+it.each(['https://example.test/app', '//example.test/app', '/app/../../login', '/app\\evil', '/login', '/app?x=\n', '/app?x=\u007f'])('ignores unsafe return address %s', async returnTo => {
+  loginNetwork()
+  loginRoutes('/login', { returnTo })
+  await submitLogin()
+  await screen.findByText('작업대')
+  expect(screen.getByTestId('login-location')).toHaveTextContent(/^\/app$/)
 })

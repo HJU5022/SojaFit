@@ -7,11 +7,15 @@ import { fetchPrices } from '../api/prices'
 // 판매처 조회는 외부 호출이라 사용자가 누를 때만 한다.
 export default function PriceLookup({ parts }: { parts: string[] }) {
   const [open, setOpen] = useState(false)
-  const prices = useQuery({ queryKey: ['prices', parts.join(',')], queryFn: ({ signal }) => fetchPrices(parts, signal), enabled: open, retry: false, gcTime: 0 })
+  const prices = useQuery({ queryKey: ['prices', parts.join(',')], queryFn: ({ signal }) => fetchPrices(parts, signal), enabled: false, retry: false, gcTime: 0 })
+  function toggle() {
+    if (!open) void prices.refetch({ cancelRefetch: false })
+    setOpen(value => !value)
+  }
   return <div className="approval">
-    <button className="btn" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? '가격·재고 닫기' : '가격·재고 조회'}</button>
+    <button className="btn" aria-expanded={open} onClick={toggle}>{open ? '가격·재고 닫기' : '가격·재고 조회'}</button>
     {open && (prices.isPending ? <div className="skeleton" role="status"><span className="sr-only">가격과 재고를 조회하는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /></div>
-      : prices.error ? <div className="notice" role="alert"><p {...requestIdProps(prices.error)}>가격을 조회하지 못했습니다. {errorMessage(prices.error)}</p><button className="btn" onClick={() => void prices.refetch()}>다시 조회</button></div>
+      : prices.error ? <div className="notice" role="alert"><p {...requestIdProps(prices.error)}>가격을 조회하지 못했습니다. {errorMessage(prices.error)}</p><button className="btn" onClick={() => void prices.refetch({ cancelRefetch: false })}>다시 조회</button></div>
         : !prices.data.available ? <p className="property-note">{prices.data.message}</p>
           : <>
             {prices.data.parts.length === 0 && <p className="property-note">조회된 판매처 부품이 없습니다.</p>}

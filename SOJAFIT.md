@@ -119,6 +119,7 @@ SojaFit (proj3-b)
 │       │   ├── WorkbenchPage.test.tsx <- 예제 회로 목록(운영 404·데모·대기)에 따라 새 프로젝트 창과 원본 회로도 버튼(저장된 그림·웹 검색)이 맞게 보이는지 테스트
 │       │   ├── WorkbenchPage.ask.test.tsx <- 부품 목록의 질문 칸이 질문 속 부품 번호로 검토를 열고 질문을 한 번 보내는지, 번호가 없거나 범위 밖이면 안내만 하는지 테스트
 │       │   ├── SettingsPage.tsx <- 내 설정 3칸 저장·삭제, 확인 후 계정 삭제
+│       │   ├── SettingsPage.test.tsx <- 최초 조회 잠금·자동 갱신 초안 보존·변경 후 동기화 테스트
 │       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
@@ -127,6 +128,7 @@ SojaFit (proj3-b)
 │       │   ├── ReviewDetails.tsx <- 질문·부품별 상세 탭과 보존되는 판정·근거·승인 패널
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
+│       │   ├── PriceLookup.test.tsx <- 가격 조회 버튼·재시도와 화면 복귀·재연결 자동 조회 차단 테스트
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
 │       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
 │       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)

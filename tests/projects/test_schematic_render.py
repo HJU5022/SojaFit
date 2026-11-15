@@ -20,6 +20,12 @@ SOURCE = VerifiedSchematicSource("a/b", "a" * 40, "MIT", "a", "", "", "board.kic
                                  "png", ("board.png",), "board.kicad_sch")
 
 
+@pytest.fixture(autouse=True)
+def isolated_provider_limits(monkeypatch):
+    from backend.projects import schematic_source
+    monkeypatch.setattr(schematic_source, '_RATE_LIMITS', {})
+
+
 def test_diode_query_rejects_radio_transceiver_artifact():
     with pytest.raises(ExternalSchematicInvalidSource):
         render._verify_public_identity(

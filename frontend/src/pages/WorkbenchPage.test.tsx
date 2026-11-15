@@ -116,6 +116,50 @@ async function confirmDelete(label: string) {
   fireEvent.click(screen.getByRole('button', { name: `${label} 확인` }))
 }
 
+function pendingThreadDeletion() {
+  let resolve!: (response: Response) => void, removed = false
+  const records = ['t1', 't2'].map(id => ({ id, project_id: 1, title: `대화 ${id}`, target_ref: 'D1', target_locked: true, latest_run: null, messages: [], next_before_message_id: null }))
+  const remove = vi.fn(() => new Promise<Response>(finish => { resolve = finish }))
+  network((path, init) => {
+    if (init.method === 'DELETE') return remove()
+    if (path === '/api/projects') return Response.json([made(null)])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(made(null))
+    if (path === '/api/projects/1/threads') return Response.json(records.filter(item => !removed || item.id !== 't1'))
+    if (path.startsWith('/api/threads/')) return Response.json(records.find(item => path.endsWith(item.id)))
+    return Response.json([])
+  })
+  return { remove, finish: () => { removed = true; resolve(new Response(null, { status: 204 })) } }
+}
+function ThreadRoute() { const location = useLocation(); return <output data-testid="thread-route">{location.search}</output> }
+
+it('sends one deletion for repeated confirmation clicks and leaves the deleted current conversation', async () => {
+  const deletion = pendingThreadDeletion()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1&threadId=t1']}><ThreadRoute /><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: '대화 t1 삭제' }))
+  const confirm = screen.getByRole('button', { name: '대화 t1 삭제 확인' })
+  act(() => { fireEvent.click(confirm); fireEvent.click(confirm) })
+  expect(deletion.remove).toHaveBeenCalledTimes(1)
+  expect(screen.getByRole('button', { name: '대화 t1 삭제 중' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: '대화 t2 삭제' })).toBeDisabled()
+  await act(async () => { deletion.finish() })
+  await waitFor(() => expect(screen.getByTestId('thread-route')).toHaveTextContent(/^\?projectId=1&targetRef=D1$/))
+  expect(screen.queryByRole('button', { name: '검토 전: 대화 t1' })).toBeNull()
+  expect(screen.getByRole('button', { name: '대화 t2 삭제' })).toBeEnabled()
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
+it.each([false, true])('keeps another selected conversation after deletion (switched while pending: %s)', async switched => {
+  const deletion = pendingThreadDeletion()
+  renderWithQueries(<MemoryRouter initialEntries={[`/app?projectId=1&targetRef=D1&threadId=${switched ? 't1' : 't2'}`]}><ThreadRoute /><WorkbenchPage /></MemoryRouter>)
+  await confirmDelete('대화 t1 삭제')
+  if (switched) fireEvent.click(screen.getByRole('button', { name: '검토 전: 대화 t2' }))
+  await act(async () => { deletion.finish() })
+  await waitFor(() => expect(screen.queryByRole('button', { name: '검토 전: 대화 t1' })).toBeNull())
+  expect(screen.getByTestId('thread-route')).toHaveTextContent('threadId=t2')
+  expect(screen.getByRole('button', { name: '검토 전: 대화 t2' })).toHaveAttribute('aria-current', 'true')
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
 it.each(deletions)('dismisses the error for $label and shows a new failure on another attempt', async ({ query, label }) => {
   const remove = mutationApi(() => failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503))
   open(query)
@@ -160,6 +204,34 @@ function twoProjectApi() {
     return Response.json([])
   })
 }
+
+it('clears part and project search terms when browser history switches between a project and the list', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app']}><ProjectNavigationControls /><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: '첫 프로젝트' }))
+  fireEvent.change(await screen.findByRole('textbox', { name: '부품 찾기' }), { target: { value: '1N4148' } })
+  fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+  expect(await screen.findByRole('textbox', { name: '프로젝트 찾기' })).toHaveValue('')
+  expect(await screen.findByRole('button', { name: '첫 프로젝트' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '다른 프로젝트' })).toBeInTheDocument()
+  fireEvent.change(screen.getByRole('textbox', { name: '프로젝트 찾기' }), { target: { value: '첫' } })
+  fireEvent.click(screen.getByRole('button', { name: '다음 화면' }))
+  expect(await screen.findByRole('textbox', { name: '부품 찾기' })).toHaveValue('')
+  expect(screen.getByRole('button', { name: 'D1 1N4148 선택' })).toBeInTheDocument()
+})
+
+it('clears search terms on browser back and forward between different projects', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1', '/app?projectId=2']}><ProjectNavigationControls /><WorkbenchPage /></MemoryRouter>)
+  fireEvent.change(await screen.findByRole('textbox', { name: '부품 찾기' }), { target: { value: '1N4148' } })
+  fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+  expect(await screen.findByRole('textbox', { name: '부품 찾기' })).toHaveValue('')
+  expect(screen.getByRole('button', { name: '첫 프로젝트' })).toBeInTheDocument()
+  fireEvent.change(screen.getByRole('textbox', { name: '부품 찾기' }), { target: { value: 'D1' } })
+  fireEvent.click(screen.getByRole('button', { name: '다음 화면' }))
+  expect(await screen.findByRole('textbox', { name: '부품 찾기' })).toHaveValue('')
+  expect(screen.getByRole('button', { name: '다른 프로젝트' })).toBeInTheDocument()
+})
 
 it('clears the intake draft and error when switching projects', async () => {
   twoProjectApi()

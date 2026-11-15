@@ -20,6 +20,7 @@ from .schematic_source import (
     ALLOWED_LICENSES, ExternalSchematicConfigurationError, ExternalSchematicInvalidSource,
     ExternalSchematicRateLimited, ExternalSchematicUpstreamError, VerifiedSchematicSource,
     normalize_license_id,
+    provider_rate_limit, remember_provider_limit,
 )
 
 # Match the renderer's bounded selected-hierarchy input limit. This remains a
@@ -70,6 +71,8 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
             if not safe_public_https_url(url, allowed_hosts=allowed_hosts):
                 raise ExternalSchematicInvalidSource()
             parsed = urlsplit(url)
+            if limited := provider_rate_limit(parsed.hostname):
+                raise limited
             # Resolve once and connect to that inspected public address. Host and
             # TLS SNI retain the original hostname for certificate verification.
             mock = isinstance(client._transport, httpx.MockTransport)
@@ -106,10 +109,12 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                         response.headers.get("x-ratelimit-remaining") == "0" or "retry-after" in response.headers
                     )
                 ):
-                    raise ExternalSchematicRateLimited(
+                    limited = ExternalSchematicRateLimited(
                         _retry_after(response.headers), host=parsed.hostname,
                         phase=phase, status_code=response.status_code,
                     )
+                    remember_provider_limit(limited)
+                    raise limited
                 if response.status_code == 401 and parsed.hostname in _API:
                     raise ExternalSchematicConfigurationError()
                 if response.status_code in {404, 410, 451}:
@@ -497,7 +502,7 @@ def _matches_query(query, evidence, readme):
         return False
     placed = evidence.casefold()
     context = placed + "\n" + readme.casefold()
-    # Allow standard part suffixes (ATtiny85-20PU, LM7805CT) and 5 V / 5V spellings.
+    # Keywords may be prefixes; numeric models still require placed components.
     for term in terms:
         text = context
         quantity = re.fullmatch(r"(\d+)(mv|v|ma|a|hz|khz|mhz)", term)
@@ -505,17 +510,17 @@ def _matches_query(query, evidence, readme):
             pattern = quantity[1] + r"\s*" + quantity[2] + r"(?![a-z0-9])"
         elif re.search(r"[a-z]", term) and re.search(r"\d", term):
             text = placed
-            pattern = re.escape(term) + r"(?!\d)"
+            pattern = re.escape(term) + (r"(?!\d)" if len(term) < 3 else "")
             # A board README may identify an LM7805 using the KiCad L7805 symbol.
             if term == "lm7805" and _documents_7805(readme):
                 pattern = r"(?:lm7805|l7805)(?!\d)"
         else:
-            pattern = re.escape(term) + r"(?![a-z0-9])"
+            pattern = re.escape(term) + (r"(?![a-z0-9])" if len(term) < 3 else "")
         if not re.search(r"(?<![a-z0-9])" + pattern, text):
             return False
     if "diode" in terms:
         model_terms = [t for t in terms if t != "diode" and re.search(r"[a-z]", t) and re.search(r"\d", t)]
-        if model_terms and not any(re.search(r"diode:" + re.escape(t) + r"(?:[^a-z0-9]|$)", placed) for t in model_terms):
+        if model_terms and not any(re.search(r"diode:" + re.escape(t) + (r"(?:[^a-z0-9]|$)" if len(t) < 3 else ""), placed) for t in model_terms):
             return False
     return True
 

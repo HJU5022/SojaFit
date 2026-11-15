@@ -8,6 +8,12 @@ from backend import auth
 from backend.main import app
 
 
+@pytest.fixture(autouse=True)
+def isolated_provider_limits(monkeypatch):
+    from backend.projects import schematic_source
+    monkeypatch.setattr(schematic_source, '_RATE_LIMITS', {})
+
+
 @pytest.mark.parametrize('reason,message', [
     ('no_candidates', '검색 결과가 없습니다'), ('validation_failed', '후보를 찾았지만'),
 ])

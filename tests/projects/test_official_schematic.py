@@ -5,6 +5,12 @@ import httpx
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolated_provider_limits(monkeypatch):
+    from backend.projects import schematic_source
+    monkeypatch.setattr(schematic_source, '_RATE_LIMITS', {})
+
+
 def _enabled(monkeypatch):
     monkeypatch.setenv("EXA_WEB_SEARCH_ENABLED", "1")
     monkeypatch.setenv("DEMO_MODE", "0")
