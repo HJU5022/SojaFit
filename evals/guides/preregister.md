@@ -1,5 +1,12 @@
 # 사전 등록
 
+## 2026-11-15 speed-exp 후속 보정 · 측정 도구 결함과 순서 변경 (P2a 측정 전)
+- B1(웹 끔, 94b88025) 결과 [실측]: 50/50 통과, 실패 없음, 후보 판정 10/10, p50 5.7초, p95 11.4초, `model_env`는 `DEMO_MODE=0`, `EVAL_WEB`·`WEB_PREFETCH` 빈 값. Exa 요청 0건. Voyage 호출 34건(평균 0.38초), Haiku 호출 81건(평균 2.04초, Supervisor 1.68초·RAG 에이전트 2.68초·회로 읽기 2.64초), `search` 단계가 찍힌 문항 9개 평균 2.50초.
+- **결함**: B1의 요청 기록에 OpenRouter 호출이 없다. openai 3.x가 `httpx2`(httpx 포크)로 보내는데 측정 도구는 `httpx`만 가로챘다. 그래서 B1에서는 제공자 분포를 알 수 없다. 측정 도구를 `httpx2`까지 가로채도록 고쳤다(잘못된 키로 보낸 요청 1건이 기록됨을 확인, 비용 없음). B1 결과 파일은 도구와 무관하므로 그대로 쓴다.
+- 보정: P1 실행 조건(제공자 분포)은 "B1 기록" 대신 **도구를 고친 뒤의 첫 기준 run(B2)의 기록**으로 판단한다. P1을 아직 하나도 재지 않았으므로 판정에 영향이 없다. 90% 기준·"가장 짧은 제공자" 기준은 그대로다. B2에서 90% 아래이거나 제공자가 둘 이상이면 P1을 잰다.
+- 순서 변경: B1(끝남) → P2a → B2 → (P1a) → P2b → (P1b). P2는 OpenRouter 요청을 바꾸지 않으므로 P2a의 제공자 기록은 B2 판단을 보강하는 참고로만 쓴다.
+- P2 코드(`speed-exp-P2` 3dec5c33): 단위 시험 `tests/services/test_llm.py` 34건 통과(임시 컨테이너, pytest만 컨테이너 안에서 설치).
+
 ## 2026-11-15 speed-exp 후속 · 웹 끔에서 LLM·HTTP 레버 P1·P2 (B1 측정 전)
 - 목적: 웹 근거를 끈 경로에서 정확도를 잃지 않고 응답 시간을 줄이는 값싼 레버 둘을 잰다. 앞 실험(웹 켬 9 run)은 채택 0건이었다. 근거: 조사 보고서 `reports/SojaFit 응답 시간 10초 단축 방법.md`, 기준 A1~A3 결과(Supervisor 호출 평균 1.85초, RAG 에이전트 2.44초, 회로 읽기 2.76초, 내부 `search` 평균 약 1.95초).
 - 조건(모든 팔 동일, Docker `sojafit-exp:deps`, 8 CPU, 3GB, 컨테이너 하나씩): 동결 v3 50문항, `run_gate --sets 1 --keep-going` 1회 = 1 run. `DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0`. `EVAL_WEB`·`WEB_PREFETCH`·`EXA_WEB_SEARCH_ENABLED`는 설정하지 않는다(컨테이너 실행기가 .env의 해당 줄을 걸러낸다). 결과 `summary.model_env`에서 `DEMO_MODE=="0"`이고 `EVAL_WEB`·`WEB_PREFETCH`가 `"1"`이 아님을 확인한다. Exa 요청이 하나라도 생기면 중단한다(측정 도구가 요청을 보내기 전에 프로세스를 끝낸다, Exa 예산 $0).
