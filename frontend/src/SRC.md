@@ -27,9 +27,10 @@
 - `Landing.tsx` — 공개 랜딩.
 - `Auth.tsx` — 로그인·가입·비밀번호 재설정·Google 계정 연결.
 - `Account.tsx` — 내 설정·승인 사례·관리자 계정·개인정보 안내.
-- `Projects.tsx` — 프로젝트 목록과 새 프로젝트 창(데모 회로·넷리스트 업로드).
+- `Projects.tsx` — 프로젝트 목록과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 받기 링크).
 - `Workbench.tsx` — 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전.
 - `Reply.tsx` — 검토 결과 답과 조건 입력 카드.
+- `Schematic.tsx` — 원본 회로도 구역(작업대 왼쪽 열). 예제 프로젝트는 `/api/demo-circuits`의 저장된 도면(`/circuit-schematics/*.png`)과 출처·라이선스를, 모든 프로젝트는 버튼을 누를 때만 `GET /api/external-circuits/schematics`(프로젝트·회로 버전·대화 문맥을 보내 서버가 부품·핀 연결이 같다고 확인한 도면만 받음)로 웹 검색한다. 이미지는 같은 출처 경로만, 링크는 http(s)만 쓴다.
 - `Candidate.tsx` — 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회.
 - `styles.css` — 전체 스타일.
 - `vite-env.d.ts` — Vite 환경 타입.

@@ -128,3 +128,8 @@ export function safeLink(url?: string | null): string | undefined {
 export function markdownUrl(url: string): string {
   return safeLink(url) ?? '';
 }
+
+/** 같은 출처의 이미지 주소만 쓴다(`/circuit-schematics/…` · `/api/external-circuits/…`). 외부·프로토콜 상대(`//host`) 주소는 undefined. */
+export function sameOriginImage(url?: string | null): string | undefined {
+  return url && /^\/(?![/\\])/.test(url) ? url : undefined;
+}

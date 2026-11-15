@@ -125,6 +125,15 @@ export function NewProject({
             <small>.net · UTF-8 · 최대 5 MiB</small>
           </label>
         )}
+        {mode === 'upload' && (
+          <small>
+            넷리스트가 없다면{' '}
+            <a href="/assets/samples/attiny85-time-switch.net" download>
+              샘플 넷리스트 받기
+            </a>{' '}
+            (ATtiny85 Time Switch · UCSIG · MIT)
+          </small>
+        )}
         {mode === 'empty' && (
           <p>프로젝트를 만든 뒤 검토 입력창에서 .net 또는 .txt 파일을 첨부할 수 있습니다.</p>
         )}

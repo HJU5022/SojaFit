@@ -16,6 +16,7 @@ import {
 import { CandidateDetails, PriceLookup } from './Candidate';
 import { NewProject, refreshNavigation } from './Projects';
 import { MissingInput, Reply } from './Reply';
+import { SchematicSection } from './Schematic';
 import type {
   Candidate,
   DemoQuestion,
@@ -347,6 +348,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               </p>
             </div>
             <Circuit project={project.data} target={target} />
+            {project.data && <SchematicSection project={project.data} threadId={threadId} />}
             <div className="review-nav">
               <div>
                 <h2>검토 기록</h2>

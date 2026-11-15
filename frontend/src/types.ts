@@ -122,3 +122,24 @@ export type Quote = {
 export type Approval = { id: number; candidate_part: string; verdict: Verdict; quotes?: Quote[] };
 export type Fact = { kind: string; value: string; text: string };
 export type User = { user_id: number; role: 'admin' | 'user'; email: string };
+export type SchematicChoice = {
+  title: string;
+  source_url: string;
+  source_type: 'manufacturer_official' | 'public_web' | 'community';
+  revision: string | null;
+};
+/** GET /api/external-circuits/schematics 응답. 이미지는 images[].url을 <img>가 같은 세션 쿠키로 받는다. */
+export type ExternalSchematic = {
+  license: string;
+  attribution: string;
+  source_url: string;
+  source_type: 'manufacturer_official' | 'community' | 'public_web';
+  evidence_grade: 2 | 3 | null;
+  manufacturer: string | null;
+  model: string | null;
+  revision: string | null;
+  license_evidence_url: string | null;
+  images: { sheet: number; url: string }[];
+  choices: SchematicChoice[];
+  circuit_version: number | null;
+};

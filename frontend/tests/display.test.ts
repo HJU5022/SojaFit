@@ -10,6 +10,7 @@ import {
   formatNumber,
   markdownUrl,
   roundLongDecimals,
+  sameOriginImage,
   safeLink,
 } from '../src/display.ts';
 
@@ -101,4 +102,23 @@ test('opLabel과 explainNames는 서버 연산자와 회로 값 이름을 화면
     '빠진 값: 다이오드에서 허용하는 전압 강하, 온도',
   );
   assert.equal(explainNames('unknown_name 그대로'), 'unknown_name 그대로');
+});
+
+test('sameOriginImage는 같은 출처 경로만 허용한다', () => {
+  assert.equal(sameOriginImage('/circuit-schematics/a.png'), '/circuit-schematics/a.png');
+  assert.equal(
+    sameOriginImage('/api/external-circuits/schematics/t/0?reference_only=true'),
+    '/api/external-circuits/schematics/t/0?reference_only=true',
+  );
+  for (const bad of [
+    'https://evil.example/a.png',
+    '//evil.example/a.png',
+    '/\\evil.example',
+    'javascript:1',
+    '',
+    null,
+    undefined,
+  ]) {
+    assert.equal(sameOriginImage(bad), undefined, String(bad));
+  }
 });
