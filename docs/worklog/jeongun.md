@@ -1073,3 +1073,12 @@
 - 실행한 명령: P1과 같은 조건의 `run_gate --sets 2`.
 - 실제 결과: G1은 무효다. Exa 크레딧이 P1 set2의 v3-38부터 떨어져(HTTP 402 `NO_MORE_CREDITS`) 2등급 · 3등급 단계가 모두 약 0.2초였다(cdb16b1에 무효로 기록, P1 README에도 덧붙임).
 - 다음 할 일: 조장이 Exa 키를 바꿨고, 같은 조건으로 G2와 P1b를 재측정 진행 중이다(`evals/results/graph/2026-11-14-grade3-early/G2*`, `P1b*`). 끝나면 README · `preregister.md`에 결과와 채택 여부를 적는다. `EVAL_REPORT.md` 수치는 웹 최적화 재측정 뒤에 고친다(조장 결정 11-14).
+
+## 2026-11-15 코퍼스 밖 품번 · 판본 웹 공식 검색 병렬 출발 B1 (브랜치 `jeongun`, 68094e3 · 코드 커밋은 다음 항목)
+
+- 목적: 웹을 켠 p95를 줄이려고, 품번 · 판 확인이 "코퍼스에 없음"인 문항에서 2등급(과 3등급) 웹 검색을 문서 에이전트의 내부 검색과 같이 출발시킨다. 사전 등록 `evals/guides/preregister.md` 「2026-11-15 jeongun · 코퍼스 밖 품번 · 판본 웹 공식 검색 병렬 출발 (B′)」(커밋 68094e3).
+- 바꾼 것: `backend/multi_agent/agents/docs.py`(미리 출발 + 결과 재사용), `backend/multi_agent/supervisor.py`(`corpus_absent` 분리, `payload`가 문서 꾸러미에도 `facts` 전달), `SPEC.md` · `MULTI_AGENT.md` 각 1줄, 테스트 `tests/multi_agent/test_agents.py` 3건 · `test_supervisor.py` 꾸러미 칸 1곳.
+- 비교: R1(`evals/results/graph/2026-11-14-no-replan/R1/`, 같은 조건) 대비 대상 26건(v3-32~38 · v3-45~50) 평균 응답 시간 8.80초, 의미 있는 단축 기준 2초.
+- 예산: 2회 상한 1달러(OpenRouter LLM 비용 합). 앞 R1은 0.071달러였다.
+- 명령: `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 uv run python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-15-web-parallel/B1 --sets 2 --keep-going --p95 120` (로그 `B1.log`). 시작 전 Exa 요청 1번이 HTTP 200이어야 한다.
+- 중단 조건: Exa HTTP 402, OpenRouter 403, 비용 1달러 초과. 중단하면 재시도 없이(많아야 1번) 상황을 기록한다.
