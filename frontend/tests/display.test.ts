@@ -14,6 +14,7 @@ import {
   withoutCorpusCitations,
   safeLink,
 } from '../src/display.ts';
+import { inputPlaceholder } from '../src/inputLabels.ts';
 
 test('formatNumber는 긴 소수만 줄이고 정수·짧은 소수는 그대로 둔다', () => {
   assert.equal(formatNumber(0.17142857142857143), '0.171');
@@ -136,4 +137,12 @@ test('withoutCorpusCitations는 등록된 번호만 숨기고 나머지는 둔�
     '코드 a [미등록] [링크](https://x.example)',
   );
   assert.equal(withoutCorpusCitations('인용 [79]', []), '인용 [79]');
+});
+
+test('inputPlaceholder는 코드 종류별 안내를 주고 모르는 코드는 단위를 추정하지 않는다', () => {
+  assert.equal(inputPlaceholder('v_drop_allowed'), '예: 0.5 V');
+  assert.equal(inputPlaceholder('v_in_max'), '예: 12 V');
+  assert.equal(inputPlaceholder('i_fault'), '예: 1 A');
+  assert.equal(inputPlaceholder('pwm'), '예 또는 아니오');
+  assert.equal(inputPlaceholder('unknown_code'), '아는 값을 입력해 주세요. 모르면 비워 두세요.');
 });

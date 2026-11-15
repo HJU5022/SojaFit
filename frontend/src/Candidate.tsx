@@ -191,7 +191,7 @@ export function CandidateDetails({
             {result.judgement.input_conditions.map((v, i) => (
               <div key={i}>
                 <dt>{inputLabel(v.code)}</dt>
-                <dd>{v.value}</dd>
+                <dd>{roundLongDecimals(v.value)}</dd>
               </div>
             ))}
           </dl>

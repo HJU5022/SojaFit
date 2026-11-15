@@ -79,3 +79,33 @@ export const INPUT_LABELS: Record<string, string> = {
 export function inputLabel(code: string): string {
   return Object.hasOwn(INPUT_LABELS, code) ? INPUT_LABELS[code] : code;
 }
+
+const INPUT_PLACEHOLDERS: Record<string, string> = {
+  VF: '예: 0.4 V',
+  v_drop_allowed: '예: 0.5 V',
+  IR: '예: 10 µA',
+  ir_allowed: '예: 10 µA',
+  temp: '예: TA=25 °C',
+  hot_test: '예: TJ=125 °C',
+  vf_test: '예: IF=1 A, TJ=25 °C',
+  pulse_test: '예: IF=1 A, t=10 ms',
+  surge_test: '예: 8/20 µs',
+  c_hold: '예: 10 µF',
+  err_allowed: '예: 1 %',
+  // 서버의 숫자 답 파서는 '/'가 든 단위를 받지 않으므로 SI 기준 숫자로 안내한다.
+  droop_allowed: 'V/s 기준 숫자만 입력. 예: 0.1',
+  ns_np: '권선비를 숫자로 입력. 예: 0.5',
+  n_diodes: '개수를 숫자로 입력. 예: 2',
+  op_amp: '예 또는 아니오',
+};
+
+/** 입력칸 안내. 알 수 없는 코드는 단위를 추정하지 않는다. */
+export function inputPlaceholder(code: string): string {
+  if (Object.hasOwn(INPUT_LABELS, code)) {
+    if (INPUT_PLACEHOLDERS[code]) return INPUT_PLACEHOLDERS[code];
+    if (code.startsWith('v_') || code.startsWith('vz_')) return '예: 12 V';
+    if (code.startsWith('i_')) return '예: 1 A';
+    if (INPUT_LABELS[code].includes('(예/아니오)')) return '예 또는 아니오';
+  }
+  return '아는 값을 입력해 주세요. 모르면 비워 두세요.';
+}

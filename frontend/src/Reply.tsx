@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ArrowRight, MessageSquare } from 'lucide-react';
 import { statuses } from './api';
 import { withoutCorpusCitations } from './display';
-import { inputLabel } from './inputLabels';
+import { inputLabel, inputPlaceholder } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
 import type { Candidate, DemoQuestion, Result, Role, Run } from './types';
@@ -58,7 +58,7 @@ export function MissingInput({
               value={answers[code] ?? ''}
               onChange={(e) => setAnswers({ ...answers, [code]: e.target.value })}
               maxLength={200}
-              placeholder="값과 단위, 또는 모름"
+              placeholder={inputPlaceholder(code)}
             />
           </label>
         ))}
