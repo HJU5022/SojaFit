@@ -1,4 +1,4 @@
-"""LangGraph 검색 경계에서 사용하는 MCP 검색 오류 타입."""
+"""LangGraph 검색 경계의 MCP 검색기: stdio MCP 세션 재사용(`StdioMcpRetriever`), 응답 검증, 빈 결과와 장애를 구분하는 `RetrievalUnavailableError`."""
 import asyncio
 from concurrent.futures import TimeoutError as FutureTimeoutError
 from contextlib import asynccontextmanager

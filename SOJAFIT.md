@@ -116,7 +116,7 @@ SojaFit (proj3-b)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
 │   ├── main.py             <- FastAPI 진입점: 앱 조립만(수명·공통 오류 처리기·요청 ID·대화 본문 한도 미들웨어·api/ 라우터 등록·React 연결). 경로 함수는 api/에 (고정: Dockerfile이 실행)
-│   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
+│   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금·가입 한도, 데모 로그인, Google 가입·로그인과 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── auth_email.py       <- 이메일 소유 확인 가입·암호 재설정 토큰·발송 한도·세션 폐기
 │   ├── errors.py           <- 오류 응답 error.code 16개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
 │   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
@@ -124,7 +124,7 @@ SojaFit (proj3-b)
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── admin.py        <- 관리자 계정 목록·활성 상태 변경 API(/api/admin/users)
-│   │   ├── auth.py         <- 로그인·가입·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 관리자 로그인 경로
+│   │   ├── auth.py         <- 로그인·이메일 가입·비밀번호 재설정·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 가입·로그인 경로
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(GET /api/demo-questions). run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── health.py       <- 서비스 생존 확인 GET /health
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)

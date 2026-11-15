@@ -133,7 +133,7 @@ def delete_analysis_threads(conn, user, ids=None):
             deleted = cur.execute(sql.SQL('DELETE FROM sojafit_agent.{} WHERE thread_id IN (SELECT id::text FROM ({}) o)').format(
                 sql.Identifier(table), sql.SQL(owned)), params).rowcount
         counts['checkpoints'] = deleted
-    # 메시지 · 분석 사건은 thread FK cascade로 함께 지워진다. 화면 대화(public.threads)를 지우면 DB가 분석 thread와 checkpoint도 지우므로(db/028) 이 호출은 건수를 세고 먼저 지우는 용도다
+    # 메시지 · 분석 사건은 thread FK cascade로 함께 지워진다. 화면 대화(public.threads)를 지우면 DB가 분석 thread와 checkpoint도 지우므로(db/020_service_baseline.sql) 이 호출은 건수를 세고 먼저 지우는 용도다
     counts['analysis_threads'] = cur.execute(sql.SQL('DELETE FROM sojafit_agent.threads WHERE id IN ({})').format(sql.SQL(owned)), params).rowcount
     return counts
 
