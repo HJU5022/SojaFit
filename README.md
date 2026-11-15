@@ -217,11 +217,28 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 | 지표 | 값 | 조건 | 원시 결과 |
 |---|---|---|---|
 | 통과(정답 근거 인용 + 올바른 거절) | 50/50 (cited_gold 25 · correct_refusal 25) | 1세트, 커밋 `520988c`+작업 트리 변경, 11-12 | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
-| 응답 시간 | p50 4.9초 · p95 10.0초 | 위와 같음 | 위와 같음 |
+| 응답 시간 | p50 4.9초 · p95 10.0초 (`DEMO_MODE` 미기록) | 위와 같음 | 위와 같음. 조건별 값은 아래 "응답 시간(조건별)" |
 | 통과 · 무관 거절 · 지어낸 답 | 4세트 모두 50/50 · 25/25 · 0 | 사전 등록 #50, 커밋 `93a497c` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_4sets_93a497c.json` |
-| 응답 시간 p95 · 50문항 LLM 비용 | 8.6 ~ 8.9초 · $0.044 ~ 0.052 | 위와 같음 | 위와 같음 |
-| 동결 파일로 병합 뒤 2세트 | 50/50, p95 10.4 · 7.8초 | 커밋 `f2b914e` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_merged_2sets_f2b914e.json` |
+| 응답 시간 p95 · 50문항 LLM 비용 | 8.6 ~ 8.9초(`DEMO_MODE` 미기록) · $0.044 ~ 0.052 | 위와 같음 | 위와 같음 |
+| 동결 파일로 병합 뒤 2세트 | 50/50, p95 10.4 · 7.8초(`DEMO_MODE` 미기록) | 커밋 `f2b914e` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_merged_2sets_f2b914e.json` |
 | 단일 그래프 대비 | 48/50 | 단일 1세트, 커밋 `11dc216`+작업 트리 변경 | `evals/results/graph/2026-11-12-d9-v3-single/set1.json` |
+
+**응답 시간(조건별).** 모두 동결 v3 50문항 1세트(`run_gate`, 문항을 차례로 하나씩)이고 p50 · p95는 결과 파일 `summary`의 값 그대로다. 결과 파일에 `DEMO_MODE`가 기록된 것은 11-14 측정부터다. 그 앞 행은 "DEMO_MODE 미기록"이며, 코드 기본값이 1(검색이 BM25만)이라 같은 조건이라고 말할 수 없다. 실행 장소는 파일에 적혀 있지 않다(DB `postgres`, LLM `openrouter`만 기록). 경로는 `evals/results/graph/` 아래다.
+
+| 구분 | `DEMO_MODE` | 웹(`EVAL_WEB`) | 일자 · 코드 | 통과 | p50 | p95 | 결과 파일 |
+|---|---|---|---|---|---|---|---|
+| 옛 헤드라인 1 | 미기록 | 미기록 | 11-11 · `9634c5c`+작업 트리 변경 | 50/50 | 4.7 | 9.2 | `2026-11-11-speed-g-all/E-v3-50-warm-n5/set1.json` |
+| 옛 헤드라인 2(위 표의 값) | 미기록 | 미기록 | 11-12 · `520988c`+작업 트리 변경 | 50/50 | 4.9 | 10.0 | `2026-11-12-d9-improve2/set1.json` |
+| 옛 헤드라인 3 | 미기록(11-14 `2026-11-14-web-prefetch/README.md`는 1, BM25만이라고 적음) | 미기록 | 11-13 · `a3ad51e` | 50/50 | 3.7 | 8.1 | `2026-11-13-citecheck-v3/set1.json` |
+| 웹 끔 | 0 | 0 | 11-14 · `d7023cb` | 47/50 | 5.5 | 10.9 | `2026-11-14-web-prefetch/B0-web-off/set1.json` |
+| 웹 켬 · R1의 비교 기준 G2 set1 | 0 | 1 | 11-14 · `1df3f93` | 49/50 | 6.4 | 13.0 | `2026-11-14-grade3-early/G2/set1.json` |
+| 웹 켬 · G2 set2 | 0 | 1 | 11-14 · `1df3f93` | 49/50 | 5.3 | 13.3 | `2026-11-14-grade3-early/G2/set2.json` |
+| 웹 켬 · R1 set1(마지막 채택 구성) | 0 | 1 | 11-14 · `b790004` | 50/50 | 6.8 | 10.5 | `2026-11-14-no-replan/R1/set1.json` |
+| 웹 켬 · R1 set2 | 0 | 1 | 11-14 · `b790004` | 48/50 | 5.9 | 12.1 | `2026-11-14-no-replan/R1/set2.json` |
+
+- **p95 ≤ 10초(SPEC 3절 목표)는 일부 조건에서만 충족된다.** 10초 이내인 값(9.2 · 10.0 · 8.1)은 모두 `DEMO_MODE` 미기록 행이다. `DEMO_MODE=0`이 기록된 이 표의 행은 웹을 끈 쪽(10.9)도 넘었고, 웹 근거를 켠 행은 10.5 ~ 13.3초다. 웹을 끈 후속 측정 중 일부는 10초 안이다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절. 그 결과 파일은 이 저장소 브랜치에 없는 것을 포함한다).
+- 웹을 켜면 느린 쪽은 웹 근거를 찾는 문항이다. 거절해야 하는 문항도 웹 근거를 찾느라 시간이 든다(`2026-11-14-web-prefetch/README.md`). 운영 설정은 웹 켬(`EXA_WEB_SEARCH_ENABLED=1`)이다.
+- 같은 코드의 두 세트끼리도 p95가 0.3 ~ 1.6초 다르다(G2 13.0 · 13.3, R1 10.5 · 12.1). 속도 실험의 같은 코드 4회는 13.0 ~ 16.8초였다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절). 한 번의 값으로 1~2초 차이를 가리기 어렵다.
 
 검색 기준선(v1, 폐기한 설정): 관련 19문항, `text-embedding-3-small` 하이브리드(RRF) 문서 Recall@5 0.737 · MRR 0.649 · Page Hit@5 0.368, 벡터만 0.684 · 0.589 · 0.263, BM25만 0.263 · 0.195 · 0.211(`evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`). 현재 설정(`voyage-4-large` + `rerank-3`)의 R1 test 38문항 Page Recall@5는 0.579 → 0.908이다(EVAL_REPORT 1-4절). 개선 전후 비교와 실패 분석은 [EVAL_REPORT.md](EVAL_REPORT.md)에 있다.
 

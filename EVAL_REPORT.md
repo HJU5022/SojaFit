@@ -283,7 +283,7 @@ S0(기준점)은 #39 두 세트를 고친 채점기(`61a29f1`)로 다시 채점�
 | 구성 | 통과 | 지표 | 지연 | 조건 | 원시 |
 |---|---|---|---|---|---|
 | 단일(D4 `backend/graph/`) | 48/50 | cited_gold 23, correct_refusal 25, over_refusal 2(v3-18 · v3-19, 둘 다 정격 질문, `refusal_code` part_missing · not_found), 질문 종류 일치 25/25, LLM 호출 103 | p50 4.0초, p95 11.6초(행의 `latency_s`에서 올림(0.95n)번째 값으로 계산) | 커밋 `11dc216`+작업 트리 변경, 09:53 | `evals/results/graph/2026-11-12-d9-v3-single/set1.json` |
-| 멀티(D5 `backend/multi_agent/`) | 50/50 | cited_gold 25, correct_refusal 25 | p50 4.9초, p95 10.0초 | 커밋 `520988c`+작업 트리 변경 (3-D) | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
+| 멀티(D5 `backend/multi_agent/`) | 50/50 | cited_gold 25, correct_refusal 25 | p50 4.9초, p95 10.0초(`DEMO_MODE` 미기록, 조건별 값은 8.2절) | 커밋 `520988c`+작업 트리 변경 (3-D) | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
 | 단일, 판정 연습 44문항(동결 아님) | 40/44 | cited_gold 20, correct_refusal 20, over_refusal 3, wrong_citation 1, 질문 종류 일치 22/24 | p50 3.5초 | 커밋 `11dc216`+작업 트리 변경, 10:06 | `evals/results/graph/2026-11-12-d9-judge-dev-single/set1.json` |
 | 멀티, 판정 연습 44문항(동결 아님) | 41/44 | cited_gold 23, correct_refusal 18, hallucination_risk 2, over_refusal 1, 질문 종류 일치 24/24 | p50 4.4초 | 커밋 `11dc216`+작업 트리 변경, 10:13 | `evals/results/graph/2026-11-12-d9-judge-dev-multi/set1.json` |
 
@@ -546,16 +546,50 @@ uv run python -m scripts.eval.stage_report evals/results/graph/2026-11-11-d8-sta
 | 정확도 | 50/50 (관련 25 cited_gold · 무관 25 correct_refusal) |
 | Spec 후보 15 | n_docs 10 · 5 · 3 모두 15/15 cited_gold |
 | n_docs 10 전체 | 37/50은 무효 측정이다: 무관 13문항(v3-38 ~ v3-50)이 OpenRouter 429(`OpenAIRateLimitError`)로 실패해 점수가 없는 행이다(`evals/results/graph/2026-11-11-ndocs-acc/N10/set1.json`의 오류 행 13, 13개 모두 429). 정확도 비교에 쓰지 않는다 |
-| mean · p50 · p95 · max | 4.25 · 4.7 · 9.2 · 15.5초 |
+| mean · p50 · p95 · max | 4.25 · 4.7 · 9.2 · 15.5초(결과 파일에 `DEMO_MODE` 미기록) |
 | 원시 | `evals/results/graph/2026-11-11-speed-g-all/E-v3-50-warm-n5/` · 대비 `2026-11-11-ndocs-acc/` |
 
-D8 목표 문항 p95 ≤ 10초는 이 회차 정상 상태 기준에서 통과했다. 리비전 `27a410d`(`JUDGE_READ_VOTES` 기본 3, 현재 코드에는 없음)의 p95, RAGAS를 켠 p95, v3 50×2 공식 게이트는 측정하지 않았다(12절).
+D8 목표 문항 p95 ≤ 10초는 이 회차 정상 상태 기준에서 통과했다. 다만 이 결과 파일의 `summary.model_env`에 `DEMO_MODE`가 없어(코드 기본값 1 = 검색이 BM25만) 서비스 설정(`DEMO_MODE=0`)에서의 통과라고는 말하지 못한다. 조건별 값은 8.2절. 리비전 `27a410d`(`JUDGE_READ_VOTES` 기본 3, 현재 코드에는 없음)의 p95, RAGAS를 켠 p95, v3 50×2 공식 게이트는 측정하지 않았다(12절).
 
 ```bash
 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 \
   uv run --env-file .env python -m evals.runners.run_gate evals/dataset_v3.jsonl \
   --out evals/results/graph/<새폴더> --sets 1 --keep-going --p95 120
 ```
+
+### 8.2 응답 시간: 조건별 (2026-11-16 정리) `[실측]`
+
+헤드라인 p50 4.9 · p95 10.0초(3-D, `2026-11-12-d9-improve2`)와 8.1절 9.2초는 결과 파일에 `DEMO_MODE`가 없다. 코드 기본값이 1(검색이 BM25만)이라 서비스 설정(`DEMO_MODE=0`: Voyage 임베딩 + 리랭크)과 같은 조건이라고 말할 수 없어, 결과 파일이 있는 측정을 조건별로 나눠 적는다. 숫자는 각 결과 파일 `summary`의 `p50_s` · `p95_s` · `passed`를 그대로 옮겼고 다시 계산하지 않았다. 모두 동결 v3 50문항 1세트다. 실행 장소는 파일에 없다(DB `postgres`, LLM `openrouter`만 기록). 경로는 `evals/results/graph/` 아래다.
+
+| 구분 | `DEMO_MODE` | 웹 | 일자 · 코드 | 통과 | p50 | p95 | 결과 파일 | 비고 |
+|---|---|---|---|---|---|---|---|---|
+| 8.1절 기준선 | 미기록 | 미기록 | 11-11 · `9634c5c`+작업 트리 변경 | 50/50 | 4.7 | 9.2 | `2026-11-11-speed-g-all/E-v3-50-warm-n5/set1.json` | `GATE_WARMUP=1` |
+| 3-D 확인 재측정 | 미기록 | 미기록 | 11-12 · `520988c`+작업 트리 변경 | 50/50 | 4.9 | 10.0 | `2026-11-12-d9-improve2/set1.json` | README 헤드라인 |
+| 인용 숫자 검사 뒤 | 미기록 | 미기록 | 11-13 · `a3ad51e` | 50/50 | 3.7 | 8.1 | `2026-11-13-citecheck-v3/set1.json` | 11-14 `2026-11-14-web-prefetch/README.md`가 `DEMO_MODE=1`(BM25만)이라고 적음 |
+| 웹 끔 B0 | 0 | 0 | 11-14 · `d7023cb` | 47/50 | 5.5 | 10.9 | `2026-11-14-web-prefetch/B0-web-off/set1.json` | 실패 v3-02 · 08 · 41 |
+| 웹 켬 B1 set1 · set2 | 0 | 1 | 11-14 · `d7023cb` | 48/50 · 50/50 | 6.9 · 5.6 | 19.1 · 16.9 | `2026-11-14-web-prefetch/B1-web-on/set1.json` · `set2.json` | 미리 출발 끔 |
+| 웹 켬 A1 set1 · set2 | 0 | 1 | 11-14 · `4840a33` | 50/50 · 50/50 | 6.9 · 5.8 | 13.9 · 13.9 | `2026-11-14-web-prefetch/A1-web-on-prefetch/set1.json` · `set2.json` | 웹 미리 출발 채택 |
+| P1 set1 · set2 | 0 | 1 | 11-14 · `4714b2f` | 50/50 · 50/50 | 6.6 · 5.5 | 15.3 · 13.1 | `2026-11-14-docs-parallel/P1/set1.json` · `set2.json` | set2의 v3-38부터 Exa 402로 웹 근거 없이 잼 |
+| G1 set1 · set2 | 0 | 1 | 11-14 · `eb72d7c` | 50/50 · 50/50 | 6.3 · 5.7 | 10.3 · 11.6 | `2026-11-14-grade3-early/G1/set1.json` · `set2.json` | **무효**: Exa 402로 2 · 3등급 단계가 약 0.2초(`2026-11-14-grade3-early/README.md`) |
+| G2 set1 · set2 | 0 | 1 | 11-14 · `1df3f93` | 49/50 · 49/50 | 6.4 · 5.3 | 13.0 · 13.3 | `2026-11-14-grade3-early/G2/set1.json` · `set2.json` | R1의 비교 기준 |
+| P1b set1 | 0 | 1 | 11-14 · `4714b2f` | 50/50 | 6.5 | 12.7 | `2026-11-14-grade3-early/P1b/set1.json` | |
+| R1 set1 · set2 | 0 | 1 | 11-14 · `b790004` | 50/50 · 48/50 | 6.8 · 5.9 | 10.5 · 12.1 | `2026-11-14-no-replan/R1/set1.json` · `set2.json` | 마지막 채택 구성. set2 실패 v3-15 · v3-41([v3-15 경로 기록](evals/results/graph/2026-11-14-no-replan/v3-15_cap_path_2026-11-14.md)) |
+| web-parallel B1 set1 · set2 | 0 | 1 | 11-15 · `62610e8e` | 49/50 · 50/50 | 8.3 · 6.3 | 34.4 · 25.3 | `2026-11-15-web-parallel/B1/set1.json` · `set2.json` | 기각, 되돌림(2등급 단계가 R1의 1 ~ 2.5초에서 14 ~ 25초로 늘어남) |
+
+이 저장소 브랜치에 결과 파일이 없는 측정(숫자는 저장소 밖 보고서에서 옮김, 이 절에서 링크하지 않는다):
+
+| 측정 | 조건 | 값 | 출처 |
+|---|---|---|---|
+| 속도 실험 기준 4회(11-15 밤, Docker, 코드 같음) | `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`, 웹 켬 | 통과 49 · 49 · 48 · 49/50, p50 6.7 ~ 7.5, **p95 13.0 · 14.6 · 16.8 · 15.1초**(폭 3.8초) | 속도 실험 보고 `speed-exp.md` §3 |
+| 속도 실험 웹 끔 기준 3회(11-15 밤, Docker) | `DEMO_MODE=0`, 웹 끔 | 통과 50 · 49 · 50/50, p50 5.7 · 5.0 · 5.3, **p95 11.4 · 8.9 · 9.7초** | 같은 보고 후속(P1 · P2) §4 |
+| 버그 수정 전후(11-15 밤, 웹 끔) | `web-to-main` 브랜치 | 수정 전 50/50 · p50 4.3 · p95 9.1초, 수정 후 50/50 · 4.8 · 11.1초 | 버그 수정 세션 보고 `fix-for-main.md` 4절. 같은 코드의 p95 흔들림(3.8초)을 넘지 않아 수정 탓인지 구별 못 함 |
+
+읽는 법:
+
+- **p95 ≤ 10초(2절 목표)는 일부 조건에서만 충족된다.** `DEMO_MODE`가 기록된 유효한 웹 켬 측정은 모두 10.5 ~ 34.4초라 목표를 넘는다(위 표 R1 set1 10.5가 가장 낮다). 10초 이내인 값은 `DEMO_MODE` 미기록 행(9.2 · 10.0 · 8.1)과, 저장소 밖 보고에 있는 웹 끔 측정 일부(8.9 · 9.7 · 9.1초)뿐이다. 웹을 껐어도 B0(10.9), 속도 실험의 웹 끔 B1(11.4), 버그 수정 후(11.1)는 넘었다.
+- 웹을 켜면 느려지는 곳은 웹 근거를 쓰는 문항이다. 속도 실험 프로파일은 웹 문항 17개 평균 11.9초, 나머지 33개 평균 5.1초, 웹 문항 안에서 `grade2_datasheet` 3 ~ 5초와 그것을 감싼 `RAG 에이전트` 8 ~ 10초가 지배한다고 적었다(`speed-exp.md` §4). 거절해야 하는 문항도 웹 근거를 찾느라 시간이 든다(`2026-11-14-web-prefetch/README.md`).
+- 같은 코드의 반복에도 p95는 흔들린다: 같은 코드 4회 13.0 ~ 16.8초, 같은 파일의 두 세트끼리도 0.3 ~ 1.6초(G2 · R1). 문항 한두 개(v3-15 · v3-16 · v3-49)의 변동이 p95를 정한다(`speed-exp.md` §4). 한 번의 값으로 1 ~ 2초 차이를 가리기 어렵다.
+- 마지막 채택 구성의 웹 켬 p95를 10초 안으로 낮춘 레버는 없다. 11-14 ~ 15에 시험한 레버와 결과는 11장 약점 표(속도)에 있다.
 
 ## 9. 재현 명령
 
