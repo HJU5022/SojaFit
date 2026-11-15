@@ -45,7 +45,7 @@ SojaFit (proj3-b)
 │       ├── eval-live.yml   <- 버튼으로 돌리는 진짜 모델 v3 평가와 기준 검사(Secrets 키 사용, 유료)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
-├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정 (2026-11-16 새 화면으로 교체)
+├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정
 │   ├── FRONTEND.md         <- 폴더 설명
 │   ├── Dockerfile.recovery <- 운영 이미지 digest를 상속해 화면만 빌드·교체하는 복구용 이미지
 │   ├── package.json        <- npm 의존성과 실행 명령
@@ -81,7 +81,7 @@ SojaFit (proj3-b)
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
 │   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘)
-│   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)
+│   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)과 브라우저 시험(Playwright)
 │   │   ├── TESTS.md        <- 폴더 설명
 │   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄 시험
 │   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
@@ -92,15 +92,15 @@ SojaFit (proj3-b)
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- React 진입점·글꼴·스타일
-│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·작업대·설정·승인 사례·관리자)
-│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결
+│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·작업대·설정·승인 사례·관리자)
+│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·판정 5종과 실행 상태의 화면 표기
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
 │       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유
 │       ├── approval.ts     <- 승인 목록에서 후보의 승인 상태(이 후보 승인·다른 후보 승인) 가르기
 │       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄)
-│       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름
-│       ├── ui.tsx          <- 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식
+│       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내
+│       ├── ui.tsx          <- 경로 이동·자원 훅·공통 조각(로고·상태·판정 배지·창·근거 출처)·회로 도식·마크다운
 │       ├── Landing.tsx     <- 공개 랜딩
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
 │       ├── Account.tsx     <- 내 설정·승인 사례·관리자 계정·개인정보 안내
