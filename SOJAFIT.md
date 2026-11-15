@@ -727,7 +727,7 @@ SojaFit (proj3-b)
     │   ├── team-contract.md <- 아키텍처와 조원 계약서: 구조, 설계 질문 8개, 조원 간 계약, 결정 기록
     │   ├── glossary.md     <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
     │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
-    ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
+    ├── assets/             <- 문서에 넣는 구조도 이미지와 원본, 조사 문서의 검증 화면 캡처
     │   ├── ASSETS.md       <- 폴더 설명
     │   ├── schematic-cdfer-2026-11-15.jpg <- CDFER 원본 회로도 선택·출처 표시 실검증 화면
     │   ├── schematic-1n4148-2026-11-15.jpg <- 1N4148 OPBoard 후보 선택·출처 표시 실검증 화면
