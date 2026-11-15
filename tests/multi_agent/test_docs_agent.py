@@ -1037,6 +1037,28 @@ def test_limited_official_lookup_keeps_missing_trr_conditions_incomplete(grade):
     assert '일부 문서 작업은 완료되지 않았습니다' in single_node({'reports':[result]})['answer']
 
 
+@pytest.mark.parametrize(('query', 'status'), [('UF4007 zener impedance', 'partial'), ('UF4007 onsemi trr reverse recovery', 'fail')])
+def test_locked_official_slot_with_quiet_empty_search_ends_as_limit_reached_not_crash(query, status):
+    # 점검 A #1: 공식 예산을 다른 에이전트가 쓰는 중이라 3등급 미리 출발을 안 했는데, 공식 검색이 예산을 잡기 전에
+    # 예외 없이 []로 끝나면(허용 낱말 없음 · 타 제조사) early_fallback.result()가 None에서 AttributeError로 죽었다
+    from backend.services import exa
+    row = dict(chunk_id=7, file='UF4007.pdf', page=2, table='Electrical characteristics',
+               content='UF4007 reverse recovery time trr 75 ns', doc_parts=['UF4007'])
+    fallback_calls = []
+    with exa.request_scope():
+        exa._budget.get()['grade2'].acquire()
+        result = D.docs_agent(
+            {'question': 'UF4007의 역회복 시간은?',
+             'task': dict(id=1, agent='docs', kind='rating', goal='g', query=query, parts=['UF4007'])},
+            retriever=lambda *a, **k: [row],
+            chat=lambda *_: D.DocsAnswer(grade='partial', answer='UF4007의 trr은 75 ns입니다 [7].', missing=['다른 값']),
+            web_search=exa.search_grade2_evidence,
+            web_search_fallback=lambda *a: fallback_calls.append(True) or [])['reports'][0]
+    assert result['status'] == status and result['reason'] == 'limit_reached'
+    assert fallback_calls == []  # 공식 예산을 못 쓴 요청이 참고(3등급) 예산으로 메우지 않는다
+    assert any(item.get('status') == 'budget_exhausted' and item.get('grade') == 2 for item in result['searches'])
+
+
 # --- 인용 내용 검사: 번호 포함 여부뿐 아니라 숫자+단위가 인용한 근거 글에 있는지 본다 ---
 NUM_DOCS = [{'chunk_id': 7, 'content': 'VRRM | 1,000 | V ; IF 250 mA ; trr 75 ns'}]
 

@@ -734,6 +734,12 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             official_used = bool(selected) and web_result.grade != 'none'
             if prior is None or (official_used and web_result.answer.strip()):
                 result, shown = web_result, combined
+        if early_fallback is None and not official_used and web_search_fallback is not None and not grade2_budget_exhausted:
+            # [왜] 미리 출발을 안 했다는 것은 출발 때 공식(2등급) 예산을 다른 에이전트가 이미 쓰는 중이었다는 뜻이다. 공식 검색이 예산을 잡기 전에
+            #      예외 없이 []로 끝나도(허용 낱말 없음 · 타 제조사) 예산 소진과 같은 길로 보낸다(None.result()로 죽던 구멍, 2026-11-15 점검 A #1)
+            grade2_budget_exhausted = True
+            searches.append({'query': terms, 'parts': web_parts, 'provider': 'exa',
+                             'grade': 2, 'status': 'budget_exhausted'})
         if not official_used and not grade2_budget_exhausted and web_search_fallback is not None:
             try:
                 fallback_raw = early_fallback.result()  # 예외(예산 소진 포함)는 여기서 원래처럼 다시 올라온다
