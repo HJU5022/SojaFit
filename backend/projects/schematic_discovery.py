@@ -502,7 +502,7 @@ def _matches_query(query, evidence, readme):
         return False
     placed = evidence.casefold()
     context = placed + "\n" + readme.casefold()
-    # Allow standard part suffixes (ATtiny85-20PU, LM7805CT) and 5 V / 5V spellings.
+    # Keywords may be prefixes; numeric models still require placed components.
     for term in terms:
         text = context
         quantity = re.fullmatch(r"(\d+)(mv|v|ma|a|hz|khz|mhz)", term)
@@ -510,17 +510,17 @@ def _matches_query(query, evidence, readme):
             pattern = quantity[1] + r"\s*" + quantity[2] + r"(?![a-z0-9])"
         elif re.search(r"[a-z]", term) and re.search(r"\d", term):
             text = placed
-            pattern = re.escape(term) + r"(?!\d)"
+            pattern = re.escape(term) + (r"(?!\d)" if len(term) < 3 else "")
             # A board README may identify an LM7805 using the KiCad L7805 symbol.
             if term == "lm7805" and _documents_7805(readme):
                 pattern = r"(?:lm7805|l7805)(?!\d)"
         else:
-            pattern = re.escape(term) + r"(?![a-z0-9])"
+            pattern = re.escape(term) + (r"(?![a-z0-9])" if len(term) < 3 else "")
         if not re.search(r"(?<![a-z0-9])" + pattern, text):
             return False
     if "diode" in terms:
         model_terms = [t for t in terms if t != "diode" and re.search(r"[a-z]", t) and re.search(r"\d", t)]
-        if model_terms and not any(re.search(r"diode:" + re.escape(t) + r"(?:[^a-z0-9]|$)", placed) for t in model_terms):
+        if model_terms and not any(re.search(r"diode:" + re.escape(t) + (r"(?:[^a-z0-9]|$)" if len(t) < 3 else ""), placed) for t in model_terms):
             return False
     return True
 

@@ -313,6 +313,19 @@ def test_project_name_spelling_keeps_verified_native_schematic(query, readme):
     assert source is not None and source.asset_kind == 'kicad'
 
 
+@pytest.mark.parametrize('query', ['ATtiny8 dev board AMS111', 'ATtiny85 dev board AMS111', 'ATtiny85 dev boa AMS111'])
+def test_partial_keywords_match_placed_components_without_readme_model_substitution(query):
+    evidence = 'ATtiny85-20P AMS1117 Device:R'
+    assert discovery._matches_query(query, evidence, 'ATtiny85 development board')
+    assert not discovery._matches_query(query, 'ATtiny84-20P Device:R', 'ATtiny85 development board AMS1117')
+
+
+def test_partial_diode_number_still_requires_a_placed_diode():
+    assert discovery._matches_query('1N414 diode', '1N4148 Device:D diode:1N4148', '')
+    assert not discovery._matches_query('1N414 diode', '1N4148 Device:LED', '1N4148 diode project')
+    assert not discovery._matches_query('AMS117', 'AMS1117', '')
+
+
 @pytest.mark.parametrize('query,source,readme', [
     ('tiny850 Fan Control', BOARD, '# Tiny850FanControl'),
     ('tiny85 Fan Control', BOARD.replace(b'ATtiny85', b'ATtiny84'), '# Tiny85FanControl\nATtiny85'),

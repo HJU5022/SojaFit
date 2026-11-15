@@ -1,3 +1,29 @@
+## 2026-11-15 회로도 변경 로컬 커밋 준비
+- 요청/분리: 누적 회로도 변경을 STH에 로컬 커밋한다. 공급자 한도 후 중복 조회 차단과 키워드 검색/명시 후보 선택/접힘 안내를 두 목적의 커밋으로 나누며 공유 코드·작업서·기록은 각 목적에 맞는 부분만 인덱스에 넣는다. 원본 작업 파일과 앞선 로컬 반영 기록은 유지하고 푸시는 하지 않는다.
+- 최종 재검증: PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q tests/projects/test_external_schematic.py·test_schematic_discovery.py·test_external_circuit_search.py·test_official_schematic.py·test_schematic_render.py 및 tests/api/test_external_circuits.py·tests/repo/test_repo_layout.py →490통과(20.29초). frontend npm run test:run →11파일/263통과(8.30초), npm run build -- --logLevel error →TypeScript·Vite 통과. 유료 공급자/DB/운영/동결 평가 호출은 실행하지 않았다.
+- 후보: 기존 추적파일17개(코드·시험·계약·작업 기록). 환경 파일·빌드 산출물·Docker 이미지/컨텍스트·DB·캡처·임시 검증 스크립트는 제외한다. 신규파일·의존성·루트 주요 문서·평가셋 변경은 없다. 전체 핵심 변경이400줄 안팎을 넘으므로 두 목적의 로컬 커밋으로 분리하며 PR 작성 시 규모와 분리 근거를 명시한다.
+- 비밀값 검사: Gitleaks 실행 파일과 로컬 이미지가 없어 해당 도구 검사는 미실행이다. 실제 스테이징 blob에 공급자 토큰/JWT/개인키/충돌표시 패턴, 로컬 .env/.env.local 비밀값 메모리 대조 및 금지 파일 경로 검사를 적용한다. 검사 결과와 커밋 후 상태는 아래에 기록한다. 토큰값·비밀번호는 메시지/로그에 출력하지 않는다.
+- 선별/검사 결과: 후보17파일과 첫 인덱스11파일 모두 금지 경로0·로컬 비밀값16필드 대조 발견0·비밀값/충돌 패턴 발견0이며 작업 파일 바이트는 보존했다. 첫 인덱스만 투영한 격리 복사본에서도 관련 백엔드/API475통과(18.95초). 초기 복사본의 카탈로그·참조 회로/합성 넷리스트 누락으로 수집/시험이 실패했으나 HEAD의 필요한 fixture를 갖춘 뒤 같은 검사를 통과했다. 코드나 테스트 기대값은 바꾸지 않았다. 두 커밋 직전 실제 인덱스도 동일 검사를 다시 거치며 차분/인덱스가 달라지면 커밋하지 않는다.
+
+## 2026-11-15 회로도 검색 안내 접기·펼치기
+- 요청/범위: 사용자가 검색 대상 및 검색어 안내를 접거나 펼칠 수 있도록 요청했다. 두 안내를 기본 접힘 native details/summary로 제공하고 입력/분류/검색/후보 선택은 그대로 유지한다. 앞선 키워드 검색·연결 대조·한도 수정과 주요 문서/평가셋은 보존한다.
+- 변경 파일: frontend/src/components/Schematic.tsx, Schematic.test.tsx, styles/app.css, SRC.md, docs/specs/external-complete-schematics.md. 별도 상태·의존성·새 저장소 파일은 추가하지 않았다. 독립 토글, 펼친 상태의 모드 안내 갱신, 입력 보존·검색0을 새 회귀로 확인하고 기존 접근성 설명을 유지한다. summary의 키보드 포커스와 모바일 최소 터치 높이도 기존 디자인에 맞춘다.
+- 검증: 새 접힘 회귀의 구현 전1실패를 확인한 뒤, npm run test:run →11파일/263통과(6.53초), npm run build -- --logLevel error →TypeScript·Vite 통과. 백엔드 코드는 이번 접힘 변경에서 수정하지 않았다.
+- 로컬 반영 계획: 앞선 keyword-select 이미지/API1205f47e4795의 환경·DB·renderer·업무 행·전체 backend hash를 보존하고 frontend/dist만 상속한 로컬 이미지로 API를 교체한다. build --pull=false/--network=none 최대180초, readiness60초. 사용자가 앞서 로컬 결과 정리를 선택했으므로 로그인/실검색을 다시 요청하지 않으며 유료 호출·운영 배포·커밋·푸시0을 유지한다. 반영 결과는 아래에 갱신한다.
+- 반영 결과: sojafit:help-collapse-20261115-185948 로컬 이미지로 적용 성공. 환경·command·entrypoint, DB/renderer ID·시작 시각·볼륨과 기존 업무8표의 모든 행이 동일하고 running0이다. 전체 backend/*.py hash는 적용 전후 동일하며 이미지의 index.html이 검증한 빌드와 일치한다. git diff --check 통과. 저장소 밖 schematic-help-collapse-20261115에 테스트/빌드 로그·before/applied와 프런트만 담은 빌드 컨텍스트를 보관했다.
+- 한계: 로그인 이후 실제 접기/펼치기·모바일 화면 관찰과 외부 실검색은 사용자 선택에 따라 미실행이다. 로컬 DOM 회귀에서 기본 접힘·독립 토글·모드별 안내 갱신·입력 보존·요청0을 확인한 결과로 한정한다. 백엔드/동결 평가는 이번 UI 변경 뒤 반복하지 않았다. 커밋/푸시0.
+
+## 2026-11-15 세 분류 키워드 검색·명시적 후보 선택
+- 사용자 결정/계획: 세 분류 모두 키워드로 찾고 검증된 후보를 고른 뒤 도면을 표시한다. 이해도 우선 balanced/Ponytail/체계적 진단/계획 작성 지침으로 기존 작업서에 설계·수용 기준·구현 순서를 먼저 기록했다. 병행 공급자 한도 수정·앞선 안내 UI·주요 문서·동결 평가를 보존하고 새 의존성/브랜치/파일은 추가하지 않는다. 푸시하지 않는다.
+- 원인/수정: AMS111이 실제 AMS1117의 앞부분이어도 EDA 숫자 경계 검사에서 탈락했다. 검색/EDA/BOM 색인의 3자 이상 접두 키워드를 허용하고 숫자 없는 다이오드 용도는 기존 GitHub 경로를 사용한다. 실제 배치 다이오드/출처/자료 형식·전체 연결 대조를 유지한다. 기존 manifest/choices로 모든 모드의 1개 이상 후보를 먼저 표시하고 기본 후보는 추가 요청 없이 선택한다. 편집/모드/새 검색은 도면 선택을 초기화한다.
+- 검증 계획/상한: 관련 pytest·프런트 전체 시험/TypeScript/Vite, 실제 저장 원본의 접두 검색/정상·다른 배선 대조, 데스크톱/모바일 후보 선택을 확인한다. 로컬8010 적용은 현재 이미지/전체환경·DB/renderer·업무 행 해시를 보존하고 API만 교체한다. Docker build --network=none/--pull=false 최대180초, readiness60초. 실제 공개 검색은 원본 `ATtiny85 dev board AMS111`, 참고 `Pico`, 다이오드 `1N414` 각1문맥/Exa 최대12회·실패 뒤 반복0으로 제한한다. LLM/임베딩/분석/가격/운영 호출은0이며 실제 청구액은 미확인으로 남긴다.
+- 실행 중: 새 부분 키워드6회귀 실패 후 수정한 집중검사10통과. 새 UI3회귀 실패 후 후보 선택 화면38통과, 프런트 전체262통과/빌드 통과. 백엔드 첫 실행은 Windows 샌드박스에서 asyncio socketpair 생성 중 멈춰 전용 프로세스만 종료했다. 같은 검사를 faulthandler 로그로 진단해 샌드박스 소켓 제한을 확인한 뒤 로컬 권한 재실행은577통과/21skip(20.72초). 이후 추가 검증 결과를 아래에 갱신한다.
+- 최종 로컬 검증: BOM 접두 검색·Pico/Pico W/Pico2 별칭 회귀를 추가해 기존 제조사 포털을 유지했다. 최신 관련 pytest는581통과/21skip(20.32초), 프런트 전체262통과(7.73초), TypeScript/Vite 빌드 및 git diff --check 통과. 세 모드의 선택 전 이미지0/일치표시0, 명시 선택 후 전체 시트 표시, 기본 후보 선택 시 추가 요청0, 다른 후보 선택/실패·모드/입력/명시 재검색 초기화, 포커스/재연결 자동 검색 차단을 포함한다. 후보 파일명이 길 때 좁은 화면에서 줄바꿈하도록 기존 CSS에 두 규칙을 추가했다.
+- 실제 저장 자료 재생: 공개 ATtiny85 표본13부품/14net에서 `ATtiny85 dev board AMS1117`, `ATtiny85 dev board AMS111`, `ATtiny85`, `AMS111` 모두 키워드 대조 통과. 저장된 실제 공개 후보의 전체 연결 일치=true, 같은 부품의 두 핀을 바꾼 자료의 일치=false를 확인했다. 외부 새 검색/모의 성공 결과 주입과 구분한 오프라인 원본 재생이며 actual-source-replay.json에 결과를 남겼다.
+- 8010 반영: 기존b069146f0554/03acde9745a7 이미지·전체 환경을 보존하고 테스트한 backend3파일과 frontend/dist만 상속 이미지에 반영했다. 첫 Dockerfile의 raw sha256 FROM이 레지스트리 이미지명으로 해석돼 빌드 실패했고 API는 바뀌지 않았다. 로컬 태그의 실제 image ID를 대조한 FROM으로 정정해 같은 빌드/보존 절차를 통과했다. 새 로컬 태그 sojafit:keyword-select-20261115-185007/API1205f47e4795, 환경(토큰값 포함)·command·entrypoint 동일, DB/renderer ID·시작 시각·볼륨 동일, 변경 대상 외 backend hash 동일. 기존 업무8표의 모든 행 해시 보존·추가0·running0이다. 재생성 가능한 로컬 이미지로 반영했으며 운영 배포·커밋·푸시0.
+- 실제 화면/중단: 새 8010을 연 인앱 브라우저는 로그인 세션 만료로 로그인 화면까지 확인됐다. 기존 Chrome의 사용자 재현 O-01/AMS111 화면은 읽었지만 조작은 창 geometry/user-input 제한으로 진행하지 않았다. 사용자에게 직접 로그인을 요청했고 사용자가 "지금은 로컬 테스트 결과로 정리해줘"를 선택해 실제 검색/후보 선택/이미지 표시는 여기서 중단했다. 이번 작업의 Exa/LLM/임베딩/실검색 호출0이며 위 실검색 예산은 사용하지 않았다. 8010의 로그인 이후 세 모드 실제 재현과 좁은 화면 검증, 전체/동결 평가 재측정은 미실행이다.
+- 증빙: 저장소 밖 keyword-schematic-20261115에 실패/최종 테스트·빌드 로그, faulthandler 대기 스택, 실제 원본 재생 JSON, before/applied/after-ui 행 hash·런타임, 로컬 빌드 컨텍스트/보존 스크립트를 보관했다. 자격값/전체 환경은 파일·로그로 저장하지 않았다. 주요 SPEC4의 키워드 발견과 명시 선택 계약은 조장 검토 제안이며 루트 문서는 수정하지 않았다.
+
 ## 2026-11-15 공급자 제한 수정 8010 반영
 - 요청/계획: 테스트 DB와 GitHub 토큰을 유지하고 방금 수정한 공급자 제한 코드를 8010에 반영한다. 유료 호출·푸시는 하지 않는다. 현재 실행 이미지·전체 환경·DB/renderer ID·DB 볼륨·업무10테이블의 행 수/내용 해시·backend/db/frontend 정적파일 해시를 먼저 보존한다. 실행 중 분석0건에서 API만 교체하고, Docker build는 --pull=false --network=none/180초, API readiness는60초를 상한으로 한다. 외부 실검색·모델·평가 호출은 중단 조건 없이 실행하지 않는다.
 - 반영: 현재 컨테이너의 frontend/dist에는 별도 검색 입력 안내가 직접 반영돼 있어 런타임 자산을 그대로 보존했다. 실행 이미지 digest를 상속하고 현재 backend/dist 사본에 external_schematic.py·schematic_discovery.py·schematic_source.py 세 파일만 덮어쓴 COPY-only 이미지를 만들었다. 후보 이미지의 나머지 backend/db/화면 파일 해시가 전부 기존 런타임과 같음을 확인했다. 전체 환경은 메모리에서 그대로 전달했으며 GitHub 토큰·다른 비밀값은 출력하거나 파일에 저장하지 않았다.
@@ -12,6 +38,14 @@
 - 검증: PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q. 신규5건은 수정 전5실패/수정 후5통과. 토큰 교체 회귀1건도 수정 전실패를 확인한 뒤 보완했다. 첫 관련 전체 검사475통과/3실패는 테스트 간 공유 제한 상태 때문이었으며 각 모의 시나리오의 상태를 격리한 뒤 동일 실패3건 포함 집중14건 통과. 최종 tests/projects/test_external_schematic.py·test_schematic_discovery.py·test_external_circuit_search.py·test_official_schematic.py·test_schematic_render.py, tests/api/test_external_circuits.py, tests/repo/test_repo_layout.py 합계480통과(19.10초). 대기3300초/캐시900초, 제한 해제 후 복구, 다른 URL·호스트·인증, 정상 후보 보존, 128건 상한과 만료 정리를 모의 검증했다.
 - 최종 차분: git diff --check 통과. 추가 차분의 로컬 비밀값 대조/공급자 키 패턴 발견0건, evals 변경0건. 작업 중 별도로 추가된 Schematic 입력 안내·테스트와 작업서 절은 수정하지 않고 보존했다. 해당 UI의 검증 결과는 이번 백엔드 검사480건에 포함하지 않는다.
 - 제한: 8010에는 이번 코드 미반영. 실제 회로도 검색·모델·외부 유료 API·운영 DB·동결 평가셋 재측정·커밋·푸시 없음. 프로세스별 메모리이므로 재시작/여러 worker 사이의 전역 차단은 보장하지 않는다. 단일 API 실행 범위이며 공유 저장소가 필요해지면 확장한다.
+
+## 2026-11-15 회로도 검색 대상·입력 기준 안내
+- 요청/범위: 검색 대상별 목적·동일성 검사 여부와 검색어 기준·예시를 기존 검색 창에 표시한다. understanding-first fast·Ponytail·Impeccable 기준으로 Schematic.tsx/테스트/SRC와 기존 회로도 작업서만 보완했다. 별도 CSS·의존성·컴포넌트/API 변경은 없고 병행 백엔드 수정과 주요 문서·동결 평가셋을 보존했다. Impeccable 런처는 캐시 설치 권한이 없어 실행되지 않아 기존 frontend/design.md와 craft-floor 지침을 직접 적용했다.
+- 변경: 모드별 설명·기준·예시·placeholder, 정확한 모델/변형·품번·실제 포함 부품·참조 번호·대소문자·오타·길이·URL 입력 안내. aria-describedby로 선택칸/입력칸과 안내를 연결했다. 선택 변경 시 입력 보존·검색 요청0과 프로젝트 없는 참고 검색 안내도 확인한다. SPEC 4절 화면 안내 반영은 조장 검토 제안이며 루트 SPEC은 수정하지 않았다.
+- 실패→검증: 새 테스트2건은 구현 전 실패/기존33건 통과를 확인했다. 첫 실행은 샌드박스 Vite realpath EPERM으로 시작하지 못해 같은 명령을 로컬 권한으로 재실행했다. 구현 뒤 기존 길이 안내 문구 검사5건이 실패해 실제 길이·버튼 검사는 유지하고 입력의 접근성 설명 검사로 갱신했다. npm run test:run →11파일/259통과(7.88초), npm run build -- --logLevel error →TypeScript·Vite 통과. 새 기능의 두 회귀와 기존 후보 선택·캐시·모드 경계 검사를 포함한다.
+- 실제 화면: 기존 로그인된 localhost:8010에서 프로젝트 목록을 통해 검증용 프로젝트17(v3)을 열고 세 검색 대상을 전환했다. 설명·기준·예시·placeholder·200/194자 상한, 입력 보존을 확인했다. 1280px 화면과 390px 화면을 확인했고, 390px 세 모드 모두 안내/폼 가로 넘침0이었다. 검색 버튼·분석·모델·임베딩·유료 외부 검색은 호출하지 않았다. 최초 열린 과거 대화 링크는404여서 현재 프로젝트 목록을 통해 열었으며 프로젝트/버전/대화 데이터는 쓰지 않았다.
+- 로컬 반영/보존: 실행 API82cc15e68081의 frontend/dist를 저장소 밖 schematic-guide-20261115/runtime-before에 백업하고 테스트한 assets를 먼저, index.html을 마지막에 복사했다. HTTP200으로 제공된 index의 SHA256이 빌드와 일치하고 API/DB/renderer 컨테이너ID·이미지·시작 시각이 전후 동일했다. 컨테이너·DB·renderer·환경 재생성/재시작0이다. 현재 컨테이너의 정적 파일만 바뀌므로 향후 컨테이너 재생성 시 수정 소스로 이미지 재빌드가 필요하다. 운영 배포·커밋·푸시0.
+- 증빙/한계: 저장소 밖 schematic-guide-20261115에 세 모드 모바일·데스크톱 JPG, browser-observations.json, 런타임 전후/기존dist/제공index를 보관했다. 백엔드 전체 pytest·동결 평가·실검색 재검증은 안내 UI 변경 범위 밖으로 실행하지 않았다.
 
 ## 2026-11-15 로컬 8010 GitHub 토큰 반영
 - 요청: 사용자가 .env.local에 저장한 GITHUB_TOKEN을 8010에 반영하고 인증 적용을 확인한다. 토큰값 출력·유료 API·운영 DB 변경·푸시는 하지 않는다.

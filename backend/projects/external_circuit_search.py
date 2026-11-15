@@ -188,8 +188,9 @@ def canonical_product_query(query: str) -> str:
     """Recognize supported product aliases in queries and source metadata."""
     query = re.sub(r"(?<![a-z0-9])rpi(?![a-z0-9])", "Raspberry Pi", query, flags=re.I)
     query = re.sub(r"라즈베리\s+파이", "Raspberry Pi", query)
-    return re.sub(r"[가-힣]+", lambda match: _KOREAN_PRODUCT_ALIASES.get(
+    query = re.sub(r"[가-힣]+", lambda match: _KOREAN_PRODUCT_ALIASES.get(
         match.group(), match.group()), query)
+    return re.sub(r"^pico\b", "Raspberry Pi Pico", query, flags=re.I)
 
 
 _DIODE_EVIDENCE = ("diode", "schottky", "rectifier", "zener", "다이오드")
@@ -508,7 +509,9 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
         context_tokens = {token.casefold() for token in re.findall(
             r"[A-Za-z0-9]+|[가-힣]+", context + " " + urlsplit(page_url).path)}
         required_tokens = model_tokens if component == "diode" else query_tokens
-        if required_tokens and len(required_tokens & context_tokens) < min(2, len(required_tokens)):
+        matched_tokens = {term for term in required_tokens if any(
+            word == term or (len(term) >= 3 and word.startswith(term)) for word in context_tokens)}
+        if required_tokens and len(matched_tokens) < min(2, len(required_tokens)):
             continue
         if component == "diode" and not component_evidence_matches(
                 query_text, f"{context} {page_url}"):
@@ -740,7 +743,7 @@ def search_component_repositories(query: str, limit: int = 5, *, client: httpx.C
     terms = re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)*", query.casefold())
     part_query = " ".join(term for term in terms if any(char.isdigit() for char in term))
     if not part_query:
-        return ()
+        return search_github_repositories(query, limit, client=client, include_files=True)
     from backend.projects.schematic_discovery import download_bounded
     indexed = {}
     try:
@@ -765,7 +768,7 @@ def search_component_repositories(query: str, limit: int = 5, *, client: httpx.C
                 if mime != "text/html":
                     continue
                 html = body.decode("utf-8", "replace")
-                if not all(re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", html, re.I)
+                if not all(re.search(r"(?<![a-z0-9])" + re.escape(term) + (r"(?![a-z0-9])" if len(term) < 3 else ""), html, re.I)
                            for term in part_query.split()):
                     continue
                 parser = _SchematicPageParser()

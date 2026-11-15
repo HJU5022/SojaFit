@@ -637,7 +637,7 @@ class ExternalSchematicService:
             source, count = result[0]
         choices = self._choices_for(lookup_key)
         if not choices:
-            choices = tuple(ExternalSchematicChoice(item[0].model or item[0].source_file,
+            choices = tuple(ExternalSchematicChoice(' · '.join(dict.fromkeys(filter(None, (item[0].model, item[0].source_file)))),
                                                     item[0].source_url, item[0].source_type,
                                                     item[0].revision)
                             for item in verified_results if connections is not None or item[0].source_type != "community")
