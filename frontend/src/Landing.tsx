@@ -51,7 +51,7 @@ export function Landing() {
           <a className="button primary" href="/login">
             내 회로 검토하기 <ArrowRight size={18} />
           </a>
-          <div className="hero-sample" data-ui>
+          <div className="hero-sample">
             <div className="sample-top">
               <span>다이오드 교체 검토</span>
               <span>기록된 데모 결과 · v3-01</span>
@@ -119,7 +119,7 @@ export function Landing() {
             <br />이 회로에 필요한 조건.
           </h2>
           <p>같은 후보라도 무엇을 기준으로 보느냐에 따라 판단이 달라집니다.</p>
-          <div className="comparison" data-ui>
+          <div className="comparison">
             <div className="segmented" aria-label="비교 기준">
               <button aria-pressed={basis === 'original'} onClick={() => setBasis('original')}>
                 원래 부품의 정격

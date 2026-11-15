@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ArrowUpRight, Check, ChevronDown, Package, ShoppingCart } from 'lucide-react';
 import { api, ApiError } from './api';
 import { approvalState } from './approval';
+import { partsOf, pinsOf } from './circuit';
 import {
   basisLabel,
   estimateRows,
@@ -15,17 +16,7 @@ import {
   validQuantity,
 } from './display';
 import { inputLabel } from './inputLabels';
-import {
-  Badge,
-  Disclaimer,
-  ErrorBox,
-  Loading,
-  Modal,
-  Source,
-  partsOf,
-  pinsOf,
-  useResource,
-} from './ui';
+import { Badge, Disclaimer, ErrorBox, Loading, Modal, Source, useResource } from './ui';
 import type { Approval, Candidate as CandidateType, Project, Result, Role } from './types';
 /** 누를 때만 가격·재고를 조회한다. quantity가 있으면 그 수량의 적용 구간·단가·예상 금액도 보인다. */
 export function PriceLookup({ part, quantity }: { part: string; quantity?: number }) {

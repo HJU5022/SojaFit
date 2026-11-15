@@ -15,20 +15,29 @@ export function NewProject({
   onCreated: (p: Project) => void;
 }) {
   const demos = useResource<Demo[]>('/demo-circuits');
-  const [mode, setMode] = useState<'demo' | 'upload' | 'empty'>('demo'),
+  // [왜] 운영(DEMO_MODE=0)은 /demo-circuits가 404다. 그때는 데모 탭을 숨기고 업로드로 시작한다
+  const noDemo = demos.error instanceof ApiError && demos.error.status === 404;
+  const [chosen, setMode] = useState<'demo' | 'upload' | 'empty'>('demo'),
     [name, setName] = useState(''),
     [demo, setDemo] = useState(''),
     [file, setFile] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<Error | null>(null),
     [duplicate, setDuplicate] = useState(false);
+  const mode = noDemo && chosen === 'demo' ? 'upload' : chosen;
   return (
     <Modal title="새 프로젝트" close={close}>
-      <p>넷리스트를 올리거나 공개 데모 회로로 시작하세요.</p>
+      <p>
+        {noDemo
+          ? '넷리스트를 올려 시작하세요.'
+          : '넷리스트를 올리거나 공개 데모 회로로 시작하세요.'}
+      </p>
       <div className="segmented">
-        <button onClick={() => setMode('demo')} aria-pressed={mode === 'demo'}>
-          데모 회로
-        </button>
+        {!noDemo && (
+          <button onClick={() => setMode('demo')} aria-pressed={mode === 'demo'}>
+            데모 회로
+          </button>
+        )}
         <button onClick={() => setMode('upload')} aria-pressed={mode === 'upload'}>
           넷리스트 업로드
         </button>
@@ -83,14 +92,7 @@ export function NewProject({
           (demos.loading ? (
             <Loading />
           ) : demos.error ? (
-            <ErrorBox
-              error={
-                (demos.error as ApiError).status === 404
-                  ? '이 환경에서는 데모 회로를 제공하지 않습니다. 넷리스트를 업로드해 주세요.'
-                  : demos.error
-              }
-              retry={demos.reload}
-            />
+            <ErrorBox error={demos.error} retry={demos.reload} />
           ) : (
             <label>
               데모 회로

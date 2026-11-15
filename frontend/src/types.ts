@@ -11,7 +11,7 @@ export type Citation = {
   evidence_grade?: number;
   citation_number?: string;
 };
-export type Check = {
+type Check = {
   code: string;
   tier?: string;
   op?: string;
@@ -62,7 +62,7 @@ export type Project = {
   circuit_version: number;
   connections: { components?: Component[]; nets?: any[]; [key: string]: any };
 };
-export type Component = {
+type Component = {
   value?: string;
   footprint?: string;
   pins?: Record<string, any>;
@@ -76,7 +76,7 @@ export type Thread = {
   latest_run_id: string | null;
   circuit_version: number;
 };
-export type Message = {
+type Message = {
   id: number;
   run_id: string;
   role: 'user' | 'assistant';
@@ -130,7 +130,7 @@ export type PriceEstimate = {
 };
 export type Fact = { kind: string; value: string; text: string };
 export type User = { user_id: number; role: 'admin' | 'user'; email: string };
-export type SchematicChoice = {
+type SchematicChoice = {
   title: string;
   source_url: string;
   source_type: 'manufacturer_official' | 'public_web' | 'community';
