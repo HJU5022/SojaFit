@@ -195,6 +195,7 @@ function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target
   const role = candidate?.role ?? judgement?.roles?.[0] ?? ''
   const roleName = (Array.isArray(roles.data) ? roles.data.find(item => item.code === role)?.name : '') || role
   const documents = documentEvidenceOf(result)
+  const packageCitation = candidate?.package_citation?.outline_page != null ? { ...candidate.package_citation, page: candidate.package_citation.outline_page } : candidate?.package_citation
   const resultLoading = run.isFetching && !result
   useEffect(() => {
     if (!active || !focus || !result) return
@@ -217,7 +218,7 @@ function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target
         {candidate && <div><dt>기판 수정</dt><dd>{candidate.board_change === true ? '필요' : candidate.board_change === false ? '필요 없음' : '확인 안 됨'}</dd></div>}
         {(judgement?.input_conditions ?? []).map(item => <div key={item.code}><dt>{INPUT_LABELS[item.code] ?? '추가 조건'}</dt><dd>{item.value}</dd></div>)}
       </dl>
-        {candidate.package_citation && <p className="property-note">패키지 근거: {citationHref(candidate.package_citation) ? <a href={citationHref(candidate.package_citation)} target="_blank" rel="noreferrer">{candidate.package_citation.document} {citationText(candidate.package_citation)}<span className="sr-only"> (새 탭)</span></a> : <span>{candidate.package_citation.document} {citationText(candidate.package_citation)}</span>}</p>}
+        {packageCitation && <p className="property-note">패키지 근거: {citationHref(packageCitation) ? <a href={citationHref(packageCitation)} target="_blank" rel="noreferrer">{packageCitation.document} {citationText(packageCitation)}<span className="sr-only"> (새 탭)</span></a> : <span>{packageCitation.document} {citationText(packageCitation)}</span>}</p>}
       </section>
       <section className="property-group" aria-labelledby={`checks-title-${panelId}`}><h2 id={`checks-title-${panelId}`}>조건 대조</h2>
         <Checks candidate={candidate} resolved showDocument />
@@ -244,9 +245,9 @@ function DetailsPanel({ tab, active, panelId, focus, onFocused, fallback, target
   </div>
 }
 
-export default function ReviewDetails({ tabs, selected, open, onSelect, onClose, onDismiss, focus, onFocused, runId, result, ...context }: Context & {
+export default function ReviewDetails({ tabs, selected, open, onSelect, onClose, onDismiss, focus, onFocused, runId, result, projectId, ...context }: Context & {
   tabs: DetailTab[]; selected: DetailTab | null; onSelect: (tab: DetailTab | null) => void; onClose: (tab: DetailTab) => void; onDismiss: () => void;
-  open: boolean; focus: boolean; onFocused: () => void; runId: string; result?: ResultDto
+  open: boolean; focus: boolean; onFocused: () => void; runId: string; result?: ResultDto; projectId: number
 }) {
   const list = useRef<HTMLDivElement>(null)
   const refocus = useRef(false)
@@ -274,7 +275,7 @@ export default function ReviewDetails({ tabs, selected, open, onSelect, onClose,
       </div>)}
     </div>
     <button type="button" className="btn props-dismiss" onClick={onDismiss}>상세 패널 접기</button>
-    <DetailsPanel {...context} tab={base} panelId="detail-context" active={!selected} focus={false} onFocused={onFocused} fallback={result} />
-    {tabs.map((tab, index) => <DetailsPanel key={tab.key} {...context} tab={tab} panelId={`detail-${index}`} active={selected?.key === tab.key} focus={selected?.key === tab.key && focus} onFocused={onFocused} fallback={tab.runId === runId ? result : undefined} />)}
+    <DetailsPanel {...context} projectId={projectId} tab={base} panelId="detail-context" active={!selected} focus={false} onFocused={onFocused} fallback={result} />
+    {tabs.map((tab, index) => <DetailsPanel key={tab.key} {...context} projectId={projectId} tab={tab} panelId={`detail-${index}`} active={selected?.key === tab.key} focus={selected?.key === tab.key && focus} onFocused={onFocused} fallback={tab.runId === runId ? result : undefined} />)}
   </aside>
 }

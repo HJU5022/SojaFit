@@ -294,7 +294,7 @@ export default function WorkbenchPage() {
           return <section className={`part-group${group.eligible ? '' : ' part-group-secondary'}`} key={group.title} aria-label={group.title}>
             <div className="section-head"><h2>{group.title}<span className="group-count">{items.length}</span></h2><span>{group.eligible ? '다이오드' : '현재 다이오드만 판정합니다.'}</span></div>
             <table className="rows"><thead><tr><th scope="col">참조</th><th scope="col">값</th><th scope="col">풋프린트</th></tr></thead>
-              <tbody>{items.map(part => <tr key={part.ref} className={group.eligible ? undefined : 'dim-row'} onClick={group.eligible ? () => { go({ projectId: String(projectId), targetRef: part.ref, ...(threadId && !thread.data?.target_locked ? { threadId } : {}) }); if (question.trim()) setPending({ ref: part.ref, question: question.trim() }) } : undefined}>
+              <tbody>{items.map(part => <tr key={part.ref} className={group.eligible ? undefined : 'dim-row'} onClick={group.eligible ? () => { go({ projectId: String(projectId), targetRef: part.ref, ...(threadId && !thread.data?.target_locked ? { threadId } : {}) }); if (partIn(question.trim(), [part])?.ref === part.ref) setPending({ ref: part.ref, question: question.trim() }) } : undefined}>
                 <th scope="row"><button disabled={!group.eligible}>{part.ref}<span className="sr-only"> {part.value} {group.eligible ? '선택' : '판정 범위 밖'}</span></button></th><td data-label="값">{part.value}{!group.eligible && <p className="fine">{unsupportedPartReason(part)}</p>}</td><td data-label="풋프린트">{part.footprint.replace(/^import_input:/, '') || '넷리스트에 없음'}</td></tr>)}</tbody></table>
           </section>
         })}

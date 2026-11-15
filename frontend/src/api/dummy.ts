@@ -158,7 +158,7 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     const thread = threads.find(item => item.id === threadMatch[1])
     if (!thread) return notFound()
     threads = threads.filter(item => item.id !== thread.id)
-    if (approval && thread.messages.some(message => message.id === approval?.message_id)) { approval = null; approvedCase = null }
+    if (approval && thread.messages.some(message => message.id === approval?.message_id)) { approval = null; approvedCase = null; quotes.length = 0 }
     runs = runs.filter(item => item.thread_id !== thread.id)
     return new Response(null, { status: 204 })
   }
@@ -211,7 +211,10 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   }
   if (method === 'GET' && /^\/api\/messages\/\d+\/approvals$/.test(pathname)) return json(approval && pathname === `/api/messages/${approval.message_id}/approvals` ? [approval] : [])
   const projectQuotes = pathname.match(/^\/api\/projects\/(\d+)\/quotes$/)
-  if (method === 'GET' && projectQuotes) return json(quotes.filter(item => item.projectId === Number(projectQuotes[1])).map(({ projectId: _projectId, ...item }) => item))
+  if (method === 'GET' && projectQuotes) {
+    const projectId = Number(projectQuotes[1])
+    return projects.some(item => item.id === projectId) ? json(quotes.filter(item => item.projectId === projectId).map(({ projectId: _projectId, ...item }) => item)) : notFound()
+  }
   if (method === 'GET' && pathname === '/api/approved-cases') return json(approvedCase ? [approvedCase] : [])
   if (method === 'DELETE' && approvedCase && pathname === `/api/approved-cases/${approvedCase.id}`) {
     approvedCase = null
@@ -220,8 +223,10 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   }
   if (method === 'POST' && approval && pathname === `/api/approvals/${approval.id}/quotes`) {
     const body = JSON.parse(String(init.body ?? '{}')) as { quantity?: number }
+    const projectId = threads.find(item => item.messages.some(message => message.id === approval?.message_id))?.project_id
+    if (projectId === undefined || !projects.some(item => item.id === projectId)) return notFound()
     const quote = { id: 5 + quotes.length, approval_id: approval.id, part_number: approval.part_number!, quantity: body.quantity ?? 1 }
-    quotes.push({ ...quote, projectId: threads.find(item => item.messages.some(message => message.id === approval?.message_id))?.project_id ?? projects[0].id })
+    quotes.push({ ...quote, projectId })
     return json(quote, 201)
   }
   if (method === 'GET' && pathname === '/api/prices') {

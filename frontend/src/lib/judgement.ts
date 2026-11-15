@@ -51,6 +51,6 @@ export function citationText(citation: CitationDto | null | undefined) {
 // 서버가 준 출처 주소만 쓴다. http(s)가 아니면 링크를 만들지 않는다.
 export function citationHref(citation: CitationDto | null | undefined) {
   if (!citation?.source_url || !/^https?:\/\//.test(citation.source_url)) return ''
-  const page = citation.outline_page ?? citation.page
+  const page = citation.page ?? citation.outline_page
   return typeof page === 'number' ? `${citation.source_url.split('#')[0]}#page=${page}` : citation.source_url
 }

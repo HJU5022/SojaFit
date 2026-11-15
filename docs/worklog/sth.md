@@ -1,3 +1,12 @@
+## 2026-11-16 PR139 main·STH 충돌 통합 및 검증
+- 요청·범위: PR139의 양쪽 기능을 보존하며 STH에서 main을 로컬 통합하고 테스트·빌드를 확인한다. 원격 푸시·PR 변경·배포·실제 모델 호출·운영 DB 변경은 제외했다. 통합 전 HEAD 923987e8, main 0ffdc04c, 공통 조상 160cfc3d다.
+- 보존: 원래 미커밋 sth.md를 저장소 밖에 보관했고 검증 중 추가된 최신 작업 기록도 다시 보관했다. 새 검증 항목만 HEAD 기반으로 인덱스에 넣어 기존 미커밋 기록을 병합 커밋에 섞지 않는다. 별도 브랜치 생성·기존 커밋 재작성은 하지 않는다.
+- 해결: 프런트 6파일·13구간을 통합했다. main의 프로젝트별 견적 복원·조회 실패 후 재확인·필수 조건 승인 차단·질문 대상 일치 확인과 STH의 다중 견적·명시적 새 견적 작성·사례 삭제 후 재승인·수량별 가격·미지원 부품/승인 조건 안내를 보존했다. 견적 오류 회귀는 STH의 명시적 이력 재조회 UI로 맞추되 조회 실패/재확인 전 저장 POST 0 조건을 유지했다. 더미 견적의 프로젝트 구분·없는 프로젝트404와 재승인 ID도 유지했다. root 정본의 수동 수정 없이 main 변경을 통합했다.
+- 실패·수정: 결합 직후 프런트 4실패(이전 버튼 문구 3, 다른 부품 질문 전달 1)를 재현했다. 더미 없는 프로젝트200을404로 고쳤다. 프런트 전체 318통과 뒤 TypeScript가 더미 삭제 경로의 사라진 approvalProjectId와 const 배열 재대입을 잡았다. 독립 읽기 전용 검토도 같은 결함을 지적했고 새 삭제 회귀의 ReferenceError를 확인한 뒤 배열 제자리 초기화로 수정했다. 해당 동일 회귀는 수정 후 통과했다.
+- 프런트 최종: node node_modules/vitest/vitest.mjs run --reporter=dot → 12파일319 passed(10.01초). npm run build -- --logLevel error → TypeScript·Vite 통과. 초반 집중3파일157 passed와 별도 더미 삭제 회귀의 RED/GREEN을 확인했다.
+- 백엔드 최종: PYTHON_DOTENV_DISABLED=1 및 DB/모델 키를 비운 uv run --no-project --offline --no-cache --python .venv/Scripts/python.exe -m pytest -q tests/api/test_quotes.py tests/api/test_prices.py tests/api/test_conversations.py tests/api/test_threads.py tests/services/test_quote_service.py tests/judge/test_judge_pricing.py tests/multi_agent tests/evals/test_injection_baseline.py tests/repo/test_repo_layout.py -p no:cacheprovider --tb=short → 563 passed,24 skipped(18.75초). 최초 구조1실패는 미해결 인덱스의 중복 경로 때문이었으며 충돌 파일 스테이징 후 같은 묶음이 통과했다. 실제 DB가 필요한 검사는 건너뛰었다.
+- 추가 확인·한계: freeze.py --check에서 동결 후 변경 없음. staged git diff --check·알려진 비밀값 패턴 검사 통과, 미해결 인덱스 없음. 실제 모델 평가·운영/로컬 DB 통합·브라우저·Docker 재빌드/배포는 실행하지 않았다. 원격 PR 충돌 표시 갱신에는 별도의 푸시가 필요하며 이번 요청에 따라 하지 않는다.
+
 ## 2026-11-15 승인 사례 삭제 후 다른 후보 재승인
 - 요청/원인: 승인 사례를 삭제해도 approvals 원본과 message_id UNIQUE가 남고, 메시지 승인 GET이 삭제된 사례의 승인을 반환해 화면이 "다른 후보가 승인됨"으로 잠겼다. 기존 캐시도 승인 사례 목록만 무효화했다. 이해도 우선/체계적 진단/Ponytail로 서버·화면·DB 경계를 확인했다.
 - 변경: 활성 승인 여부를 approved_cases 존재로 판단한다. 같은 run 행 잠금 아래 활성 승인1건을 검사하고 새 승인 snapshot/사례를 원자 생성한다. 사례 삭제 후 다른/같은 후보 재승인이 가능하며 과거 snapshot/견적은 보존한다. 삭제된 승인으로 새 견적은 생성하지 못하고 현재 승인 id와 다른 견적은 화면에 표시하지 않는다. 삭제 후 두 캐시를 재조회하며 실패 시 서버 상태로 잠금을 유지한다. 삭제 확인에 승인 취소/견적 이력 보존을 명시했다.

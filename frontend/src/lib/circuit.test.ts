@@ -38,7 +38,8 @@ test('LED 구동 용도 설명을 가진 정류 다이오드를 LED로 오인하
 test('판정이 없는 결과와 위험한 출처 주소를 걸러 낸다', () => {
   expect(candidatesOf({ judgement: {} } as ResultDto)).toEqual([])
   expect(citationHref({ source_url: 'javascript:alert(1)' })).toBe('')
-  expect(citationHref({ source_url: 'https://a.test/d.pdf', page: 1, outline_page: 4 })).toBe('https://a.test/d.pdf#page=4')
+  expect(citationHref({ source_url: 'https://a.test/d.pdf', page: 1, outline_page: 4 })).toBe('https://a.test/d.pdf#page=1')
+  expect(citationHref({ source_url: 'https://a.test/d.pdf', outline_page: 4 })).toBe('https://a.test/d.pdf#page=4')
   expect(formatValue(40, 'V')).toBe('40 V')
 })
 

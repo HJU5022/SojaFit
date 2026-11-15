@@ -391,7 +391,9 @@ def test_free_resume_text_reaches_later_question_history_not_immediate_read(web,
         start=len(prompts)
         later=client.post(f'/api/threads/{repo.thread}/runs',json={'question':'DEMO2의 정격을 다시 확인해 주세요.','target_ref':'D1'},headers=ORIGIN)
         assert later.status_code==200 and 'event: failed' not in later.text
-        assert any(marker in user for _,user in prompts[start:])
+        # 비관련 자기완결 질문에는 재개 답변 marker를 현재 모델 입력으로
+        # 되먹이지 않는다. marker 자체는 사용자 원문 history에는 보존된다.
+        assert all(marker not in user for _,user in prompts[start:])
 
 
 def test_completed_frame_carries_profile_hints_but_run_record_does_not(web):

@@ -32,6 +32,7 @@
 - 판정 길(`Spec 에이전트`)은 사양 값 도구(`specs`, `find`)와 체크포인터가 있어야 켜지고, 없이 켜면 `build.py`가 `ValueError`를 낸다. 서비스는 카드 도구(`backend/rag/card_specs.py`, `backend/rag/card_find.py`)를 넘긴다.
 - 사용자 사실 기억: `mount_preference`는 판정 할 일의 Send 꾸러미에만 들어가고 찾기에서 질문이 실장 방식을 말하지 않았을 때 같은 판정 안의 후보 순서만 바꾼다(`backend/judge/verdict.py` `rank`의 `preferred`). 평가 실행기는 Store 없이 compile해 빈 값이다.
 - 승인 사례: 상태에 `approved_memories` 칸과 `memory_refs` 처리가 남아 있지만 서비스가 새 분석 입력에 빈 목록을 넣는다(`conversations/memory_service.py:442`). 승인 사례는 서비스 응답에 영향을 주지 않는다.
+- 대화 이력: `question`은 현재 요청만 담고 `conversation_history`는 이전 사용자 입력을 별도로 전달한다. 명시적인 이전 조건·후보 참조를 해석할 때만 이력을 사용하며, 과거 질문을 현재 할 일로 다시 실행하지 않는다. 현재 명시 조건과 회로 연결이 우선한다.
 - 웹 조회: 별도 에이전트가 아니다. `memory_service.py`가 `DEMO_MODE`가 아니고 `exa.enabled()`일 때만 문서·판정 에이전트에 등급별 조회 도구(`backend/services/exa.py`)를 넣는다(`memory_service.py:303-307`).
 - 계약: 분석 흐름은 [SPEC.md](../../SPEC.md), 판정은 [judge-agent.md](../../docs/specs/judge-agent.md)를 따른다.
 

@@ -5,7 +5,9 @@ import { afterEach, expect, it, vi } from 'vitest'
 import WorkbenchPage from './WorkbenchPage'
 import { failure, network, user } from '../test/network'
 import { renderWithQueries } from '../test/projects'
+import { listProjectQuotes } from '../api/quotes'
 import type { ApprovalDto } from '../api/quotes'
+import type { CandidateDto, CheckDto } from '../api/conversations'
 
 vi.mock('../auth/AuthProvider', () => ({ useAuth: () => ({ user, logout: vi.fn() }) }))
 vi.mock('../components/ApprovedCases', () => ({ default: () => null }))
@@ -918,6 +920,111 @@ it.each([false, true])('refreshes approval after a case deletion and preserves t
   }
 })
 
+it('restores the saved project quote for the selected approval after a fresh page mount', async () => {
+  const stored: ApprovalDto[] = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = fetch
+  const quoteReads: string[] = []
+  const quoteCreates: string[] = []
+  network((path, init) => {
+    if (path === '/api/projects/1/quotes') {
+      quoteReads.push(path)
+      return Response.json([
+        { id: 8, approval_id: 99, part_number: 'OTHER', quantity: 999 },
+        { id: 9, approval_id: 7, part_number: 'SS34L', quantity: 100 },
+      ])
+    }
+    if (path.startsWith('/api/approvals/') && init.method === 'POST') quoteCreates.push(path)
+    return base(path, init)
+  })
+  let view = renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const panel = screen.getByRole('tabpanel')
+  expect(await within(panel).findByText('견적 SS34L × 100')).toBeInTheDocument()
+  expect(within(panel).queryByText('견적 OTHER × 999')).toBeNull()
+  expect(within(panel).queryByRole('button', { name: '견적 저장' })).toBeNull()
+  expect(within(panel).getByRole('button', { name: '새 견적 작성' })).toBeEnabled()
+  view.unmount()
+  view = renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  expect(await within(screen.getByRole('tabpanel')).findByText('견적 SS34L × 100')).toBeInTheDocument()
+  expect(quoteReads.length).toBeGreaterThanOrEqual(2)
+  expect(quoteCreates).toEqual([])
+})
+
+it('keeps quote creation disabled while saved project quotes are still loading', async () => {
+  const stored: ApprovalDto[] = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = fetch
+  let resolveQuotes!: (response: Response) => void
+  const quoteCreates: string[] = []
+  network((path, init) => {
+    if (path === '/api/projects/1/quotes') return new Promise<Response>(resolve => { resolveQuotes = resolve })
+    if (path.startsWith('/api/approvals/') && init.method === 'POST') quoteCreates.push(path)
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const panel = screen.getByRole('tabpanel')
+  const quoteButton = await within(panel).findByRole('button', { name: '견적 저장' })
+  expect(quoteButton).toBeDisabled()
+  fireEvent.click(quoteButton)
+  expect(quoteCreates).toEqual([])
+  await act(async () => { resolveQuotes(Response.json([{ id: 9, approval_id: 7, part_number: 'SS34L', quantity: 100 }])) })
+  expect(await within(panel).findByText('견적 SS34L × 100')).toBeInTheDocument()
+})
+
+it('rechecks quotes after a lookup failure before allowing quote creation', async () => {
+  const stored: ApprovalDto[] = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = fetch
+  let quoteReads = 0
+  const quoteCreates: string[] = []
+  network((path, init) => {
+    if (path === '/api/projects/1/quotes') {
+      quoteReads++
+      return quoteReads === 1 ? failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503) : Response.json([{ id: 9, approval_id: 7, part_number: 'SS34L', quantity: 100 }])
+    }
+    if (path.startsWith('/api/approvals/') && init.method === 'POST') quoteCreates.push(path)
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const panel = screen.getByRole('tabpanel')
+  const retryButton = await within(panel).findByRole('button', { name: '견적 이력 다시 조회' })
+  expect(within(panel).getByRole('button', { name: '견적 저장' })).toBeDisabled()
+  fireEvent.click(retryButton)
+  expect(await within(panel).findByText('견적 SS34L × 100')).toBeInTheDocument()
+  expect(quoteReads).toBe(2)
+  expect(quoteCreates).toEqual([])
+})
+
+it('does not create a quote when the failed lookup cannot be rechecked', async () => {
+  const stored: ApprovalDto[] = [{ id: 7, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }]
+  candidateApi(false, id => candidateRun(id), stored)
+  const base = fetch
+  let quoteReads = 0
+  const quoteCreates: string[] = []
+  network((path, init) => {
+    if (path === '/api/projects/1/quotes') {
+      quoteReads++
+      return failure('UNAVAILABLE', '견적을 불러올 수 없습니다.', 503)
+    }
+    if (path.startsWith('/api/approvals/') && init.method === 'POST') quoteCreates.push(path)
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const panel = screen.getByRole('tabpanel')
+  const retryButton = await within(panel).findByRole('button', { name: '견적 이력 다시 조회' })
+  fireEvent.click(retryButton)
+  await waitFor(() => expect(quoteReads).toBe(2))
+  expect(within(panel).getByRole('alert')).toHaveTextContent('견적 이력을 불러오지 못했습니다.')
+  expect(within(panel).getByRole('button', { name: '견적 저장' })).toBeDisabled()
+  expect(quoteReads).toBe(2)
+  expect(quoteCreates).toEqual([])
+})
+
 it('matches a persisted approval to its message instead of another question with the same part', async () => {
   candidateApi(true, id => candidateRun(id), [{ id: 1, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }])
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
@@ -1164,6 +1271,26 @@ it('shows concise part links and opens the chosen candidate checks and evidence 
   expect(within(screen.getByRole('tabpanel')).getByText('극성을 확인해 주세요.')).toBeInTheDocument()
   expect(within(screen.getByRole('tabpanel')).getByRole('link', { name: /r1-SS34L.pdf/ })).toHaveAttribute('href', 'https://example.test/ss34l.pdf#page=2')
   expect(within(screen.getByRole('tabpanel')).queryByText('r1-1N5819.pdf')).toBeNull()
+})
+
+it('disables approval when a candidate is missing a value or has an unverified required check', async () => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    const candidate = run.result.judgement.shown[0] as CandidateDto
+    candidate.missing = ['VF']
+    candidate.checks = [{ ...candidate.checks?.[0], code: 'VF', tier: 'required', result: 'unverified' } as CheckDto]
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const panel = screen.getByRole('tabpanel')
+  await within(panel).findByText('승인 전')
+  expect(within(panel).getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
+})
+
+it('loads saved project quotes through the project-scoped quote endpoint', async () => {
+  network(path => path === '/api/projects/1/quotes' ? Response.json([{ id: 3, approval_id: 7, part_number: 'SS34', quantity: 100 }]) : Response.json([]))
+  await expect(listProjectQuotes(1)).resolves.toEqual([{ id: 3, approval_id: 7, part_number: 'SS34', quantity: 100 }])
 })
 
 it('keeps a past question candidate, its values and approval message together', async () => {
