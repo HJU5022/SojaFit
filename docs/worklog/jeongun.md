@@ -1136,3 +1136,12 @@
 - 다음: 조장 손 시험에서 나온 버그를 이 브랜치에 작은 커밋으로. `Dockerfile` · `Dockerfile.recovery`의 `COPY data/circuits/`는 새 화면이 쓰지 않는다(고정 파일이라 두었음).
 - 추가(같은 작업): 커밋 전체 목록 · 인벤토리 표는 `reports/2026-11-15-점검/fe-integrate.md`(위 ①~⑫ 뒤에 입력칸 안내 · 문서 정리 커밋이 더 있다). 개발 프록시의 Origin 바꿔치기는 로컬 uvicorn(`AUTH_ORIGIN=http://localhost:8765`)과 Vite(5199)로 확인했다 `[실측]`: Vite 경유 `POST /api/auth/login`은 Origin 검사를 통과해 503(DB 없음), 같은 요청을 백엔드에 직접 보내면 403 `ORIGIN_MISMATCH`.
 - 알려진 문제: `frontend/public/assets/product/condition-evidence.png`(랜딩 캡처)는 표시 수정 전 화면이라 `>= 0.17142857142857143 A` · `v_in_max * kV`가 그대로 찍혀 있고, `missing-condition.png`는 옛 칸 이름(`허용 전압강하`)이다. 다시 찍으려면 키 없는 데모 서버 전체가 필요해 하지 않았다. 조장 손 시험 뒤 다시 찍을지(또는 그림을 뺄지) 조장이 정한다. 점검 `fe-verify`의 F1(입력칸 라벨이 코드로 보임)은 `8f528922`로 답했다.
+
+## 2026-11-16 main(#138·#139)을 jeongun에 통합하고 #139 동작을 새 화면에 옮김 (브랜치 `jeongun`)
+- 목적: `origin/main`(`ba1ba203`: #138 로컬 compose KiCad 제외, #139 승인 재선택 · 수량별 가격 추정 · LED 대상 차단 · 캐시 헤더)을 `jeongun`에 합치고 새 화면에서 같은 동작이 되게 한다. 푸시 · PR · 배포 · 유료 호출 없음.
+- 커밋: 머지 `b3a1dcae` → 시험 고침 `b6f5c054` → 새 화면 이식 3개(`744d1a4a` 수량별 예상 금액 · `065a9187` LED 등 대상 제외 · `714a89ce` 다른 후보 승인됨 표시) → `a8c3a201` 스키마 문서 · `bd900c89` 통합 시험 → `61d9aada` 시험 주석. 충돌 · 해결 · 시험 수는 `reports/2026-11-16-마무리/merge-main.md`.
+- 합친 규칙: 옛 `frontend/` 파일은 삭제를 유지하고 `App.tsx` · `vite.config.ts` · `FRONTEND.md` · `SRC.md`는 새 화면 쪽. `quote.py` · `quotes.py`는 jeongun의 승인별 견적 복원 · 견적 목록(thread_id)과 #139의 활성 사례 JOIN · 재승인 · `part_number` · `FOR SHARE OF c`를 함께 둠. 동작이 달라진 곳: 사례를 지운 승인은 이제 승인 목록에서 사라진다(#139 규칙, 이전 jeongun은 `case_id: null`로 유지).
+- 확인 [실측]: `uv run pytest -q`(.env 끄고) 실패는 Mac 전용 `test_schematic_render.py` 12개뿐. DB 있는 전체 실행은 그 12개 + `test_rag_storage.py` halfvec 2개(VOYAGE 키 없음, 이번 병합이 건드리지 않은 파일). 실제 PG(`db/*.sql` 전부 적용) 승인 · 견적 · 대화 · 전체 흐름 227 통과. `npm ci && npm test(22) && format:check && build` 통과.
+- 확인 못 한 것: 새 화면 + 이 HEAD의 브라우저 흐름(Playwright 포함)은 돌리지 않음. 가격 estimate는 데모 모드라 실제 Mouser로 확인하지 못함(백엔드 단위 시험과 화면 순수 함수 시험만).
+- 미룸: #139의 새 배포 감지 안내(`DeploymentUpdate`)는 새 화면에 옮기지 않았다(빌드 식별 meta 플러그인 + 화면 곳곳의 `data-refresh-blocked` 표식이 필요). `docs/specs/frontend-screen-redesign.md`에는 그 기능 설명이 그대로 남아 있다. 필수 조건 미확인 시 승인 막기 안내(`ApprovalConditions`)도 옮기지 않았다(서버는 409로 거절함).
+- 이전 항목 보정: 위 "화면을 새 프론트엔드로 교체" 항목의 "뺀 것 — 가격 수량별 단가 · 합계 계산"은 이번에 옮겼다.
