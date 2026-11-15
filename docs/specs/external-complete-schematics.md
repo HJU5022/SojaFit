@@ -84,7 +84,7 @@
 
 - API 최종 이미지는 KiCad를 포함하지 않는다. `Dockerfile`의 `renderer` target이 KiCad 10과 `/health`, `/render`를 제공하며, API는 `KICAD_RENDERER_URL`이 있을 때 KiCad 원본만 이 서비스로 보낸다. API 이미지와 renderer 이미지는 서로 다른 Cloud Run 서비스로 배포한다.
 - 선택 KiCad 파일 다운로드의 한도 오류는 자료 손상으로 분류하지 않는다. renderer는 한도 오류를 `503`과 제한된 `Retry-After`로 전달하며, API도 기존의 `503`/`Retry-After` 계약을 유지한다. 일반 변환 장애와 잘못된 원본의 `422`는 별도로 처리한다.
-- 로컬 실제 API Compose는 `KICAD_RENDERER_URL`을 비우고 KiCad renderer를 시작하지 않는다. 로컬에서는 공개 PDF·PNG·SVG 회로도와 저장된 정적 회로도를 검색·표시하며, KiCad 원본만 있는 결과의 PNG 변환은 제공하지 않는다. 실제 LLM·외부 검색을 쓰려면 `DEMO_MODE=0`, `DEMO_REPLAY=0`과 공급자 키를 `.env.local`에 둔다.
+- 로컬 실제 API Compose는 `KICAD_RENDERER_URL`을 비우고 KiCad renderer를 시작하지 않는다. 로컬 검색·표시 대상은 공개 PDF·PNG·SVG 회로도와 정적 회로도다. KiCad 원본만 있는 결과는 PNG로 변환하지 않는다. 실제 LLM·외부 검색은 `DEMO_MODE=0`, `DEMO_REPLAY=0`과 공급자 키 설정으로 활성화한다.
 - Cloud Run의 API 환경변수 `KICAD_RENDERER_URL`에는 renderer의 HTTPS 서비스 URL만 넣는다. Cloud Run에서 실행될 때 API는 metadata server에서 그 URL을 audience로 한 ID token을 받아 `Authorization: Bearer`로 호출한다. renderer는 비공개로 두고 API 서비스 계정에 renderer의 `roles/run.invoker`를 부여해야 한다. 이 문서의 명령은 예시이며 실제 Cloud Run 배포·호출은 수행하지 않았다.
 
 예시 명령(자리표시자만 사용): Artifact Registry 저장소·Cloud Run의 프로젝트/리전·서비스 계정은 미리 준비한다. 두 컨테이너는 8000 포트로 실행하므로 배포에도 `--port 8000`을 지정한다. API의 DB·인증·Exa 환경변수와 Secret 설정은 기존 배포 설정을 유지하며, 아래 명령은 renderer 연결에 필요한 부분만 보여준다. `RENDERER_SERVICE_URL`은 renderer 배포 후 출력되는 실제 HTTPS 서비스 URL로 바꾼다.
