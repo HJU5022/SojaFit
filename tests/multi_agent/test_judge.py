@@ -569,6 +569,16 @@ def test_an_original_of_unknown_or_other_maker_is_not_read_from_the_tsc_document
     assert not J.original_not_tsc('TSC 1N5819', '현재 부품은 TSC 1N5819이다.')
 
 
+@pytest.mark.parametrize('text', ['현재 부품의 표기는 SS34지만 제조사는 확인하지 못했다.', '제조사 불명의 SS34이다.', '제조사가 확인하지 못한 상태다.'])
+def test_unknown_maker_wording_from_v3_02_is_read(text):
+    assert J.original_not_tsc('SS34', text)
+
+
+@pytest.mark.parametrize('text', ['VRRM은 확인하지 못했다.', '제조사는 TSC로 확인했다.', '역방향 전류는 확인하지 못했다. 제조사는 TSC이다.'])
+def test_unknown_maker_does_not_match_other_unconfirmed_facts(text):
+    assert not J.original_not_tsc('SS34', text)
+
+
 def test_find_widens_to_sibling_categories_and_keeps_a_family_the_user_named(monkeypatch):
     monkeypatch.setattr(J, 'interrupt', unknown)
     seen = []

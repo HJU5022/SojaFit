@@ -535,7 +535,7 @@ def _part(name: str) -> str:
 
 # [왜] 원래 부품이 '제조사 미상 1N5819'이거나 다른 제조사(onsemi · Vishay …)면 TSC 같은 품번 문서는 그 부품의 문서가 아니다. 정답들은
 #      원래 값을 TSC 값으로 대신하지 않는다(v3-01 근거, 11-07 c20-04: TSC 1N5819 값으로 사양 동등을 냈다)
-UNKNOWN_MAKER = re.compile(r'제조사\s*(?:가|는|를)?\s*(?:미상|모르|알\s*수\s*없)|maker (?:is )?unknown|unknown maker', re.I)
+UNKNOWN_MAKER = re.compile(r'제조사\s*(?:가|는|를)?\s*(?:미상|불명|모르|알\s*수\s*없|확인하지\s*못)|maker (?:is )?unknown|unknown maker', re.I)
 OTHER_MAKERS = re.compile(r'\b(?:onsemi|on ?semi(?:conductor)?|vishay|nexperia|diodes inc|rohm|stmicro\w*|infineon|littelfuse|bourns|toshiba|'
                           r'fairchild|panjit|micro commercial|comchip|central semi\w*)\b', re.I)
 
