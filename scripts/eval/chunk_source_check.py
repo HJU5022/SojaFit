@@ -220,6 +220,12 @@ def row_check(text, grids):
     if not best: return {"status": "unlocated", "reason": "행 이름이 같은 행 없음"}
     top = max(b[0] for b in best)
     cands = [b for b in best if b[0] >= top - 1e-9]
+    if top < 1 - 1e-9:
+        # [왜] 0.9 이상이면 가장 가까운 행에 붙여 값만 비교하던 허점: 조건 숫자가 바뀐 청크(`TJ = 125°C` -> `TJ = 6°C`)가 통과했다.
+        # 행 이름이 정확히 같은 행이 없으면 일치로 세지 않고 가장 가까운 행을 적어 표시한다.
+        near = [_label(grids[gi][ri], grid_layout(grids[gi])[1]) for _, gi, ri in cands[:3]]
+        return {"status": "row_mismatch", "name_score": round(top, 3), "checked": 0, "unchecked": [],
+                "mismatch": [{"field": "행 이름", "chunk": " | ".join(ident), "pdf": " / ".join(near), "found_elsewhere": []}]}
     res = []
     for sc, gi, ri in cands:
         hi, heads = grid_layout(grids[gi])
@@ -228,7 +234,7 @@ def row_check(text, grids):
     if len(states) > 1: return {"status": "unlocated", "reason": f"같은 이름의 행 {len(cands)}개가 갈림(일부만 일치)"}
     gi, ri, bad, unchecked, n = res[0]
     if not n: return {"status": "unlocated", "reason": "비교할 열을 못 찾음", "unchecked": unchecked}
-    return {"status": "row_mismatch" if bad else "ok", "table": gi, "row": ri, "same_name_rows": len(cands),
+    return {"status": "row_mismatch" if bad else "ok", "table": gi, "row": ri, "same_name_rows": len(cands), "name_score": round(top, 3),
             "checked": n, "unchecked": unchecked, "mismatch": bad}
 
 

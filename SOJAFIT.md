@@ -666,7 +666,7 @@ SojaFit (proj3-b)
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
 │   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
 │   │   ├── test_import_human_review.py <- 사람 채점 시트 변환의 파싱 · 채움 · 일치율 · 원본 보존(합성 시트)
-│   │   ├── test_chunk_source_check.py <- 청크-원본 대조의 같은 쪽 다른 행 값 변이 시험(합성 표 128건: 쪽 검사 0 · 행 검사 전부 탐지, 깨끗한 12건 통과)
+│   │   ├── test_chunk_source_check.py <- 청크-원본 대조의 같은 쪽 다른 행 값 변이 시험(합성 표 382건: 쪽 검사 0 · 행 검사 전부 탐지, 깨끗한 12건 통과)
 │   │   ├── test_check_injection_result.py <- 저장한 실측03의 기준 통과와 변이(작업 수 · 상태 · 판정 · 노출) 실패
 │   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
 │   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사

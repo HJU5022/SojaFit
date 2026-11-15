@@ -110,6 +110,25 @@ def mutants(kind):
     return out
 
 
+def cond_mutants():
+    """CONDITIONS의 숫자 하나를 같은 쪽에 있는 다른 숫자로 바꿔, 그런 조건의 행이 표에 없게 된 청크만 모은다.
+    쪽 검사는 바뀐 숫자가 쪽 어딘가에 있어 통과한다(예: `TJ = 6°C`는 `IF = 6A`의 6 때문에 통과)."""
+    page_nums = sorted({n for _, n in (x for t in CLEAN for x in C.checks(t)[0]) if True} | {"2", "4.0", "6", "3", "25", "125"})
+    row_bags = [C._ident_bag(C._row_ident(r, C.grid_layout(g)[1])) for g in GRIDS for r in g[C.grid_layout(g)[0] + 1:]]
+    out = []
+    for t in CLEAN[:7] + CLEAN[7:]:
+        for k, v in C.fields(t):
+            if C._key(k) != "CONDITIONS": continue
+            for m in C.NUM.finditer(v):
+                for n in page_nums:
+                    nv = v[:m.start(2)] + n + v[m.end(2):]
+                    if nv == v: continue
+                    mt = t.replace(f" | {k}: {v}", f" | {k}: {nv}", 1)
+                    ident, _, _ = C.chunk_cells(mt)
+                    if C._ident_bag(ident) not in row_bags and not old_caught(mt): out.append(mt)
+    return out
+
+
 def test_clean_chunks_pass_both_checks():
     # 깨끗한 청크 12개: 쪽 검사도 행 검사도 막지 않는다(오탐 0). 행 검사는 값·단위 칸을 실제로 비교했다(미확인 아님).
     assert len(CLEAN) == 12
@@ -164,3 +183,12 @@ def test_unknown_row_or_layout_is_unlocated_not_match():
     assert C.row_check(wrong_name, GRIDS)["status"] == "unlocated"
     assert C.row_check(device_row, GRIDS)["status"] == "unlocated"
     assert C.row_check(CLEAN[0], [])["status"] == "unlocated"  # 표가 하나도 없는 쪽
+
+
+def test_condition_number_that_matches_no_row_is_flagged():
+    # 행 이름 유사도가 0.9 이상이면 가장 가까운 행으로 붙잡아 값만 비교하던 허점: `TJ = 125°C` -> `TJ = 6°C`처럼 그런 조건의 행이 없는데도 통과했다.
+    ms = cond_mutants()
+    assert len(ms) >= 20
+    assert sum(old_caught(m) for m in ms) == 0
+    st = [new_status(m) for m in ms]
+    assert st.count("row_mismatch") == len(ms), {s: st.count(s) for s in set(st)}
