@@ -1,8 +1,8 @@
 # SojaFit
 
 - 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: `6707002`
+- 기준일: 2026-11-16 (트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사한다. 이름 규칙 · 안내 글은 11-12 이후 줄마다 대조하지 않았다)
+- 기준 커밋: `76fadcb4`
 - 정본 여부: 정본(폴더와 파일 위치)
 - 관련 문서: [README.md](README.md), [AGENTS.md](AGENTS.md), [SPEC.md](SPEC.md)
 
