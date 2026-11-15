@@ -65,6 +65,18 @@ def is_upstream_error(error: BaseException) -> bool:
     return isinstance(error, (UpstreamError, APIError, httpx.HTTPError))  # httpx: Voyage 호출의 연결 · 시간 초과
 
 
+class LLMFormatError(ValueError):
+    """`chat()`이 형식 재시도를 다 쓰고도 schema를 못 맞췄을 때. ValueError 그대로 잡던 곳은 그대로 동작한다."""
+
+
+def is_llm_failure(error: BaseException) -> bool:
+    """LLM · 임베딩 호출이 형식 오류나 공급자 오류로 끝났나(에이전트가 실패 보고로 바꿔 받아도 되는 오류).
+
+    [주의] 한도 초과(EvaluationLimitError) · 그래프 인터럽트 · 코드 오류는 아니다. 이들은 그대로 올라가야 한다.
+    """
+    return isinstance(error, LLMFormatError) or is_upstream_error(error)
+
+
 class EvaluationFormatError(RuntimeError):
     """provider 응답은 받았지만 평가 schema 검증에 실패했을 때 metadata를 보존하는 오류."""
 
@@ -483,30 +495,33 @@ def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     """시스템·사용자 메시지를 보내고 schema 형식으로 검증한 답을 돌려준다(그래프 노드가 쓰는 유일한 LLM 입구).
 
     형식이 틀리면 MAX_FORMAT_RETRIES번까지 다시 부르고, 그래도 틀리면 마지막 검증 오류를 담아 ValueError를 낸다.
-    연결 오류(시간 초과 포함)도 같은 상한 안에서 잠깐 쉬고 다시 부르고, 끝내 안 되면 그 연결 오류를 그대로 낸다.
+    연결 오류(시간 초과 포함)와 429 · 5xx도 같은 상한 안에서 잠깐 쉬고 다시 부르고, 끝내 안 되면 그 오류를 그대로 낸다.
     공급자는 LLM_PROVIDER(openrouter | claude_cli), 모델은 LLM_MODEL / LLM_CLI_MODEL이다(ADR 0010).
     """
     from langchain_core.exceptions import OutputParserException
-    from openai import APIConnectionError
+    from openai import APIConnectionError, APIStatusError
 
     call = _cli_call if LLM_PROVIDER == "claude_cli" else _openrouter_call
     last_error = None
-    # [주의] 최초 1번 + 재시도 MAX_FORMAT_RETRIES번이 호출 횟수의 절대 상한이다(키 한도 보호). 형식 오류와 연결 오류가 같은 상한을 나눠 쓴다
+    # [주의] 최초 1번 + 재시도 MAX_FORMAT_RETRIES번이 호출 횟수의 절대 상한이다(키 한도 보호). 형식 오류 · 연결 오류 · 429/5xx가 같은 상한을 나눠 쓴다
     for attempt in range(1 + MAX_FORMAT_RETRIES):
         try:
             return call(system, user, schema)
         except (ValidationError, OutputParserException) as error:
             last_error = error
-        except APIConnectionError as error:
+        except (APIConnectionError, APIStatusError) as error:
             # [왜] 연결이 끊기거나 시간이 넘으면(APITimeoutError 포함) 한 번에 문항 전체가 실패했다(v3-15, 11-09 OpenRouter). 잠깐 쉬고 다시 부른다
+            #      429(한도) · 5xx(공급자 오류)도 일시적이라 같은 상한 안에서 1 · 2초 쉬고 다시 부른다(점검 C #2). 그 밖의 4xx(키 · 크레딧 · 요청 오류)는 다시 불러도 같다
+            if isinstance(error, APIStatusError) and error.status_code != 429 and error.status_code < 500:
+                raise
             last_error = error
             if attempt < MAX_FORMAT_RETRIES:
                 budget = _evaluation_budget.get()
-                delay = 2 * (attempt + 1)
+                delay = (1 if isinstance(error, APIStatusError) else 2) * (attempt + 1)
                 time.sleep(min(delay, budget.remaining()) if budget else delay)
-    if isinstance(last_error, APIConnectionError):
-        raise last_error  # 연결 오류는 형식 오류로 바꾸지 않고 그대로 올린다
-    raise ValueError(f"LLM 출력이 {schema.__name__} 형식을 {1 + MAX_FORMAT_RETRIES}번 모두 어겼다") from last_error
+    if isinstance(last_error, (APIConnectionError, APIStatusError)):
+        raise last_error  # 연결 · 공급자 오류는 형식 오류로 바꾸지 않고 그대로 올린다
+    raise LLMFormatError(f"LLM 출력이 {schema.__name__} 형식을 {1 + MAX_FORMAT_RETRIES}번 모두 어겼다") from last_error
 
 
 def check_langfuse_connection() -> bool:

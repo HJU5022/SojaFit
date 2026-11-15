@@ -26,6 +26,7 @@ from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
 from backend.multi_agent.revisions import requested_revisions, revision_matches
+from backend.services.llm import is_llm_failure
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
@@ -109,11 +110,15 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
          'replans': old.get('replans', 0) + (1 if replan else 0)}
     try:
         plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled, web_enabled), Plan)
-    except ValueError:
+    except Exception as error:
         # [왜] llm.chat이 형식을 다시 맞춰 보고도(MAX_FORMAT_RETRIES) 틀리면 ValueError를 낸다. 틀린 계획으로 서브에이전트를 부르지 않는다(MULTI_AGENT.md "구조 결정")
+        #      공급자 오류(429 · 5xx를 재시도해도 안 됨)는 실행을 죽이지 않고 검색 장애 거절로 끝낸다(점검 C #2). 인터럽트 · 한도 초과는 그대로 올린다
+        if not (isinstance(error, ValueError) or is_llm_failure(error)):
+            raise
         if replan:  # 재계획만 틀렸으면 이미 받은 보고로 답한다
             return {'plan': {**(state.get('plan') or {}), 'next': 'answer'}, 'counters': c, 'path': ['계획']}
-        return {'plan': {}, 'question_type': '', 'refusal_reason': Reason.LIMIT_REACHED.value, 'counters': c, 'path': ['계획']}
+        reason = Reason.LIMIT_REACHED if isinstance(error, ValueError) else Reason.SEARCH_ERROR
+        return {'plan': {}, 'question_type': '', 'refusal_reason': reason.value, 'counters': c, 'path': ['계획']}
     if plan.next == 'answer' and not replan:
         plan = plan.model_copy(update={'next': 'refuse', 'reason': Reason.LIMIT_REACHED})  # 받은 보고가 없는데 '있는 답으로'는 형식 오류다
     if (not replan and judge_enabled and plan.next == 'tasks' and plan.question_type == 'candidate_find'
@@ -340,7 +345,12 @@ def synth_node(state: dict, *, chat) -> dict:
     c = {**state['counters'], 'hops': state['counters']['hops'] + 1}
     if c['hops'] > MAX_SUPERVISOR_CALLS:
         return {'counters': c, 'refusal_reason': Reason.LIMIT_REACHED.value, 'answer': '', 'path': ['종합']}
-    response = chat('synth', SYNTH_PROMPT, render_synth(state, reports), Synth)
+    try:
+        response = chat('synth', SYNTH_PROMPT, render_synth(state, reports), Synth)
+    except Exception as error:
+        if not is_llm_failure(error):
+            raise
+        return {'counters': c, 'refusal_reason': Reason.SEARCH_ERROR.value, 'answer': '', 'path': ['종합']}  # 답 검사가 거절로 보낸다
     text = response.answer.strip()
     # [왜] 판정 숫자는 LLM이 다시 쓰지 않는다(AGENTS 7). 종합 글 뒤에 코드 답 틀을 그대로 붙인다
     tables = [render_judgement(r.judgement) for r in sorted(reports, key=lambda r: r.task) if r.agent == 'judge' and r.status != 'fail' and r.judgement]

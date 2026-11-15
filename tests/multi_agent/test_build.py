@@ -261,6 +261,89 @@ def test_single_judge_task_answers_with_the_code_template():
     assert state['path'][-4:] == ['모으기', '답 정리', '답 검사', '끝']
 
 
+def provider_error(status=429):
+    import httpx
+    from openai import InternalServerError, RateLimitError
+    return (RateLimitError if status == 429 else InternalServerError)(
+        message='synthetic', response=httpx.Response(status, request=httpx.Request('POST', 'https://openrouter.ai/api/v1/chat')), body=None)
+
+
+def failing(node_to_fail, error, then=None):
+    """node_to_fail 호출은 error를 내고, 나머지는 then(node, user, schema)이 답하는 가짜 LLM."""
+    calls = []
+
+    def chat(node, system, user, schema):
+        calls.append(node)
+        if node == node_to_fail:
+            raise error
+        return then(node, user, schema)
+    chat.calls = calls
+    return chat
+
+
+def test_provider_error_in_the_plan_ends_as_search_error_refusal_not_a_crashed_run():
+    chat = failing('supervisor', provider_error(), then=lambda *a: pytest.fail('no other call after a failed plan'))
+    out = app(chat).invoke({'input': 'SS14 VRRM?'})
+    assert out['path'][-1] == '거절' and out['refusal']['code'] == 'search_error' and '다시 시도' in out['answer']
+
+
+def test_one_docs_task_failing_keeps_the_other_task_answer_and_does_not_replan():
+    p = Plan(question_type='rating', next='tasks', tasks=[docs_task(1), docs_task(2, query='1N4148 TJ')])
+    plan_calls = []
+
+    def then(node, user, schema):
+        if node == 'supervisor':
+            plan_calls.append(1)
+            return p
+        return DocsAnswer(grade='enough', answer='VRRM은 75 V이다 [7].')
+
+    def chat(node, system, user, schema):
+        if node == 'docs_answer' and 'goal: goal 2' in user:  # 동시에 도는 두 할 일 중 목표 2만 공급자 오류
+            raise provider_error(503)
+        return then(node, user, schema)
+    out = app(chat, docs=[doc(7)]).invoke({'input': '1N4148 VRRM과 TJ?'})
+    assert len(plan_calls) == 1  # search_error는 다시 해 볼 사유가 아니라 재계획이 없다
+    assert out['path'][-1] == '끝' and 'VRRM은 75 V이다 [7]' in out['answer'] and '일부 문서 작업은 완료되지 않았습니다' in out['answer']
+    assert any(r['reason'] == 'search_error' and r['status'] == 'fail' for r in out['reports'])
+
+
+def test_every_docs_task_failing_refuses_with_search_error():
+    p = Plan(question_type='rating', next='tasks', tasks=[docs_task()])
+    chat = failing('docs_answer', provider_error(429), then=lambda node, user, schema: p)
+    out = app(chat, docs=[doc(7)]).invoke({'input': '1N4148 VRRM?'})
+    assert chat.calls == ['supervisor', 'docs_answer'] and out['refusal']['code'] == 'search_error'
+
+
+def test_judge_read_failure_reports_search_error_and_skips_the_judging_node():
+    p = Plan(question_type='candidate_judge', next='tasks', tasks=[Task(id=1, agent='judge', kind='candidate_judge', goal='judge')])
+    chat = failing('judge_read', provider_error(500), then=lambda node, user, schema: p)
+    used = []
+    graph = judge_app(chat, specs=lambda *a, **k: used.append(1) or ROWS)
+    state = graph.invoke({'input': 'D1(입력 20V)을 1N5817로?'}, {'configurable': {'thread_id': 'fail1'}})
+    assert '__interrupt__' not in state and state['refusal']['code'] == 'search_error' and used == []
+    assert chat.calls == ['supervisor', 'judge_read']
+
+
+def test_synth_failure_ends_as_search_error_refusal():
+    from backend.multi_agent import supervisor as S
+    from backend.multi_agent.contracts import TaskReport
+    state = {'question': 'q', 'conditions': '', 'counters': {'hops': 1}, 'reports': [
+        TaskReport(task=i, agent='docs', status='partial', summary='partial', answer='VRRM은 75 V이다 [7].', docs=[doc(7)]).model_dump(mode='json') for i in (1, 2)]}
+    out = S.synth_node(state, chat=failing('synth', provider_error(), then=None))
+    assert out['refusal_reason'] == 'search_error' and out['answer'] == ''
+
+
+def test_budget_limit_interrupt_and_code_errors_still_stop_the_run():
+    """is_llm_failure가 아닌 오류(한도 초과 · 인터럽트 · 코드 오류)는 실패 보고로 바꾸지 않고 그대로 올린다."""
+    from langgraph.errors import GraphInterrupt
+    from backend.services.llm import EvaluationLimitError
+    for error in (EvaluationLimitError('한도'), GraphInterrupt(), KeyError('bug')):
+        def boom(state, error=error):
+            raise error
+        with pytest.raises(type(error)):
+            B.guarded(boom, 'docs', '문서')({'task': {'id': 1}})
+
+
 def test_new_turn_clears_previous_reports_and_judgement():
     """[왜] 같은 thread의 다음 질문에서 앞 질문의 보고 · 판정 결과로 답을 쓰지 않게 입력 읽기가 칸을 비운다."""
     out = B.parse_node({'input': 'q'}, parse=lambda s: {'question': 'q'})

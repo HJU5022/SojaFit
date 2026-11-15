@@ -8,6 +8,7 @@
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 외부 검색 구현(`backend/services/exa.py`), 체크포인터 만들기(부르는 쪽이 넘긴다).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/build.py(조립 방식을 따름)
 """
+import logging
 import math
 import re
 from functools import partial
@@ -19,10 +20,13 @@ from backend.graph.nodes import QUANTITY_CLAIM
 from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
-from backend.multi_agent.contracts import Reason
+from backend.multi_agent.contracts import Reason, TaskReport
 from backend.multi_agent.messages import refusal_for
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
+from backend.services.llm import is_llm_failure
+
+LOGGER = logging.getLogger(__name__)
 
 KEYS = set(MultiState.__annotations__) - {'path', 'reports'}
 
@@ -72,6 +76,28 @@ def finish_node(state: dict) -> dict:
     return {'path': ['끝']}
 
 
+def guarded(node, agent: str, path: str, *, skip_after_failure: bool = False):
+    """서브에이전트 노드가 LLM · 공급자 오류로 죽으면 그 할 일을 실패 보고(search_error)로 바꿔 올린다(점검 C #2).
+
+    [왜] 한 할 일의 429 · 5xx가 같은 단계에서 잘 돈 다른 할 일의 결과까지 버리고 실행 전체를 죽였다. search_error는 다시 해 볼 사유가 아니라 재계획을 돌리지 않는다.
+    [주의] 인터럽트 · 한도 초과 · 코드 오류는 is_llm_failure가 아니라서 그대로 올라간다. skip_after_failure: 앞 노드가 이미 실패를 올렸으면 이 노드는 하지 않는다.
+    """
+    def run(state: dict) -> dict:
+        if skip_after_failure and any(r.get('reason') == Reason.SEARCH_ERROR.value for r in state.get('reports') or []):
+            return {}
+        try:
+            return node(state)
+        except Exception as error:
+            if not is_llm_failure(error):
+                raise
+            task = state.get('task') or {}
+            LOGGER.warning('agent_llm_failed agent=%s error=%s', agent, type(error).__name__)
+            report = TaskReport(task=task.get('id', 1), agent=agent, status='fail', reason=Reason.SEARCH_ERROR,
+                                summary='LLM or retrieval provider failed; this task was not completed', round=state.get('round') or 1)
+            return {'reports': [report.model_dump(mode='json')], 'path': [path]}
+    return run
+
+
 def refuse_node(state: dict) -> dict:
     """거절: 이유 코드는 `refusal`에 남기고(Langfuse로), 사용자에게는 일상어 문구를 답으로 준다."""
     reason = Reason(state.get('refusal_reason') or Reason.LIMIT_REACHED.value)
@@ -83,9 +109,9 @@ def judge_subgraph(*, chat, specs, find, retriever, web_search=None, web_search_
     """Spec 에이전트: 회로 읽기(LLM 1번) → 대체 부품 판정(코드 관문 · 인터럽트 · 사양 표 · 비교). 하위 그래프라 재개하면 멈춘 판정 노드부터 다시 돈다."""
     from backend.multi_agent.agents.judge import judge_read_agent, judge_task_node
     g = StateGraph(JudgeState, output_schema=JudgeOut)  # [왜] 바깥 메모장에는 보고와 지나간 노드만 돌려준다. 다른 칸은 동시 실행 중 덮어쓰기 충돌이 난다
-    g.add_node('회로 읽기', partial(judge_read_agent, chat=chat))
-    g.add_node('대체 부품 판정', partial(judge_task_node, specs=specs, find=find, retriever=retriever,
-                                          web_search=web_search, web_search_fallback=web_search_fallback))
+    g.add_node('회로 읽기', guarded(partial(judge_read_agent, chat=chat), 'judge', '판정 읽기'))
+    g.add_node('대체 부품 판정', guarded(partial(judge_task_node, specs=specs, find=find, retriever=retriever,
+                                          web_search=web_search, web_search_fallback=web_search_fallback), 'judge', '판정', skip_after_failure=True))
     g.add_edge(START, '회로 읽기')
     g.add_edge('회로 읽기', '대체 부품 판정')
     g.add_edge('대체 부품 판정', END)
@@ -110,9 +136,9 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_node('기억 읽기', read_profile)  # Store(사용자 사실)에서 선호 실장 방식만 읽는다. Store 없이 compile하면(평가 실행기) 선호 없음
     g.add_node('품번·판 확인', partial(facts_mod.facts_node, lookup=lookup))
     g.add_node('Supervisor', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled, web_enabled=web_enabled))  # 계획(LLM 1번)
-    g.add_node('RAG 에이전트', partial(docs_agent, retriever=retriever, chat=chat, find=find,
+    g.add_node('RAG 에이전트', guarded(partial(docs_agent, retriever=retriever, chat=chat, find=find,
                                        web_search=web_search if web_enabled else None,
-                                       web_search_fallback=web_search_fallback if web_enabled else None))  # find: 품번 없이 정격만 준 질문의 품번 찾기
+                                       web_search_fallback=web_search_fallback if web_enabled else None), 'docs', '문서'))  # find: 품번 없이 정격만 준 질문의 품번 찾기
     g.add_node('답 모으기', sup.collect_node)  # 코드만(LLM 없음). 두 번째 Supervisor가 아니다
     g.add_node('답 정리', sup.single_node)
     g.add_node('종합', partial(sup.synth_node, chat=chat))

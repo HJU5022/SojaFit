@@ -183,27 +183,73 @@ def test_node_chat_retries_model_timeout_within_the_same_limit(monkeypatch):
     assert len(calls) == 3
 
 
-def test_node_chat_does_not_retry_model_rate_limit(monkeypatch):
-    """공급자 429는 형식 재시도로 소모하지 않고 상위 오류 변환 경로로 넘긴다."""
+def _status_error(cls, status):
     import httpx
+    return cls(message=f"synthetic {status}", response=httpx.Response(status, request=httpx.Request("POST", "https://openrouter.ai/api/v1/chat")),
+               body={"error": {"code": status}})
+
+
+def test_node_chat_retries_model_rate_limit_within_the_same_limit(monkeypatch):
+    """공급자 429는 형식 · 연결 오류와 같은 상한(첫 호출 + 재시도 2)과 1 · 2초 쉼으로 다시 부르고, 끝내 안 되면 그 오류를 올린다(점검 C #2)."""
     from openai import RateLimitError
 
     monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
+    sleeps = []
+    monkeypatch.setattr(llm.time, "sleep", sleeps.append)
     calls = []
-    error = RateLimitError(
-        message="synthetic provider rate limit",
-        response=httpx.Response(429, request=httpx.Request("POST", "https://openrouter.ai/api/v1/chat")),
-        body={"error": {"code": "rate_limit"}},
-    )
 
     def rate_limited(*_args):
         calls.append(1)
-        raise error
+        raise _status_error(RateLimitError, 429)
 
     monkeypatch.setattr(llm, "_openrouter_call", rate_limited)
     with pytest.raises(RateLimitError):
         llm.node_chat("route", "system", "user", Route)
+    assert len(calls) == 3 and sleeps == [1, 2]
+
+
+@pytest.mark.parametrize("status", [429, 500, 502, 503])
+def test_chat_recovers_after_transient_provider_status(monkeypatch, status):
+    from openai import InternalServerError, RateLimitError
+
+    monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
+    monkeypatch.setattr(llm.time, "sleep", lambda *_: None)
+    calls = []
+
+    def flaky(*_args):
+        calls.append(1)
+        if len(calls) < 3:
+            raise _status_error(RateLimitError if status == 429 else InternalServerError, status)
+        return Route(kind="role")
+
+    monkeypatch.setattr(llm, "_openrouter_call", flaky)
+    assert llm.chat("sys", "q", Route) == Route(kind="role") and len(calls) == 3
+
+
+@pytest.mark.parametrize("status", [400, 401, 402, 403, 404])
+def test_chat_does_not_retry_permanent_provider_status(monkeypatch, status):
+    """키 · 크레딧 · 요청 오류는 다시 불러도 같고 호출 수(키 한도)만 늘어난다."""
+    from openai import APIStatusError
+
+    monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
+    monkeypatch.setattr(llm.time, "sleep", lambda *_: pytest.fail("permanent errors must not wait"))
+    calls = []
+
+    def refused(*_args):
+        calls.append(1)
+        raise _status_error(APIStatusError, status)
+
+    monkeypatch.setattr(llm, "_openrouter_call", refused)
+    with pytest.raises(APIStatusError):
+        llm.chat("sys", "q", Route)
     assert len(calls) == 1
+
+
+def test_provider_and_format_failures_are_llm_failures_but_limits_are_not():
+    from openai import RateLimitError
+    assert llm.is_llm_failure(llm.LLMFormatError("x")) and llm.is_llm_failure(_status_error(RateLimitError, 429))
+    assert issubclass(llm.LLMFormatError, ValueError)  # ValueError로 잡던 곳(plan_node)은 그대로 동작한다
+    assert not llm.is_llm_failure(llm.EvaluationLimitError("한도")) and not llm.is_llm_failure(RuntimeError("x"))
 
 
 def test_cli_call_disables_tools_and_puts_schema_in_system_prompt(monkeypatch):
