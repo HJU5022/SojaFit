@@ -80,7 +80,7 @@ SojaFit (proj3-b)
 │   │       ├── samples/    <- 새 프로젝트 창의 "샘플 넷리스트 받기"가 내려 주는 공개 라이선스 넷리스트
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
-│   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘·화면 머리 로고)
+│   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘)
 │   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)
 │   │   ├── TESTS.md        <- 폴더 설명
 │   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용 시험
