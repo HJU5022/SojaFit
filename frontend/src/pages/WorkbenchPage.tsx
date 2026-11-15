@@ -44,6 +44,8 @@ export default function WorkbenchPage() {
   const [missingProjectId, setMissingProjectId] = useState<number | null>(null)
   const [filter, setFilter] = useState('')
   const [confirming, setConfirming] = useState('')
+  const [deletingThread, setDeletingThread] = useState('')
+  const threadDeletionPending = useRef(false)
   const [error, setError] = useState<unknown>(null)
   const [duplicates, setDuplicates] = useState<DuplicateProject[]>([])
   // 닫거나 이동한 뒤 끝난 요청이 이전 오류를 다시 띄우지 않게 한다.
@@ -88,7 +90,7 @@ export default function WorkbenchPage() {
   useEffect(() => {
     if (previousProjectId.current === projectId) return
     previousProjectId.current = projectId
-    setQuestion(''); setAskError('')
+    setFilter(''); setQuestion(''); setAskError('')
   }, [projectId])
   useEffect(() => {
     if (!navOpen) return
@@ -165,11 +167,14 @@ export default function WorkbenchPage() {
     if (hit && text) setPending({ ref: hit.ref, question: text })
   }
   async function removeThread(id: string) {
+    if (threadDeletionPending.current) return
     if (confirming !== id) { setConfirming(id); return }
+    threadDeletionPending.current = true; setDeletingThread(id)
     clearError()
     const version = errorVersion.current
     try { await deleteThread(id); await client.invalidateQueries({ queryKey: ['threads', projectId] }); if (version === errorVersion.current && id === threadId) onThread('') }
-    catch (reason) { if (version === errorVersion.current) setError(reason) } finally { setConfirming('') }
+    catch (reason) { if (version === errorVersion.current) setError(reason) }
+    finally { threadDeletionPending.current = false; setDeletingThread(''); setConfirming('') }
   }
   useEffect(() => { if (renaming) renamer.current?.showModal() }, [renaming])
   useEffect(() => { if (casesOpen) casesDialog.current?.showModal() }, [casesOpen])
@@ -235,8 +240,8 @@ export default function WorkbenchPage() {
         {!threads.isPending && !threads.error && threadList.length === 0 && <p className="rail-notice">검토 기록이 없습니다. 부품을 고르고 질문을 보내 주세요.</p>}
         <ul>{threadList.map(thread => <li key={thread.id} onMouseLeave={() => setConfirming('')}>
           <button className="rail-row" title={thread.title || '제목 없는 검토'} aria-current={thread.id === threadId ? 'true' : undefined} onClick={() => onThread(thread.id)}><ThreadStatus thread={thread} /><span>{thread.title || '제목 없는 검토'}</span></button>
-          <button className={`rail-del${confirming === thread.id ? ' on' : ''}`} onClick={() => void removeThread(thread.id)} onBlur={() => setConfirming('')}
-            aria-label={`${thread.title || '검토'} ${confirming === thread.id ? '삭제 확인' : '삭제'}`}>{confirming === thread.id ? '삭제' : <Trash2 aria-hidden="true" />}</button>
+          <button className={`rail-del${confirming === thread.id || deletingThread === thread.id ? ' on' : ''}`} disabled={Boolean(deletingThread)} aria-busy={deletingThread === thread.id || undefined} onClick={() => void removeThread(thread.id)} onBlur={() => setConfirming('')}
+            aria-label={`${thread.title || '검토'} ${deletingThread === thread.id ? '삭제 중' : confirming === thread.id ? '삭제 확인' : '삭제'}`}>{deletingThread === thread.id ? '삭제 중' : confirming === thread.id ? '삭제' : <Trash2 aria-hidden="true" />}</button>
         </li>)}</ul>
         {threads.error && <p className="rail-notice" role="alert">검토 기록을 불러오지 못했습니다.<button className="btn" onClick={() => void threads.refetch()}>다시 불러오기</button></p>}
       </>}
