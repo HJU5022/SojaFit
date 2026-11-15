@@ -12,6 +12,28 @@ const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attrib
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
 
+it('scopes uploaded schematic searches to the project and version and hides unbound results', async () => {
+  const handler=vi.fn((_path: string) => Response.json(found))
+  network(handler)
+  renderWithQueries(<ExternalSchematic name="Board" context={{ projectId:12,circuitVersion:2,threadId:'thread-1' }} />)
+  search()
+  expect(await screen.findByRole('alert')).toHaveTextContent('회로 버전')
+  expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  expect(String(handler.mock.calls[0][0])).toContain('project_id=12&circuit_version=2&thread_id=thread-1')
+})
+
+it('shows matched version evidence and separates searches after a circuit version change', async () => {
+  const handler=vi.fn(() => Response.json({ ...found,circuit_version:1 }))
+  network(handler)
+  const view=renderWithQueries(<ExternalSchematic name="Board" context={{ projectId:12,circuitVersion:1 }} />)
+  search()
+  expect(await screen.findByText(/업로드 회로 v1/)).toBeInTheDocument()
+  expect(screen.getByText(/도면의 참조 번호는 업로드 파일과 다를 수 있습니다/)).toBeInTheDocument()
+  view.rerender(<QueryClientProvider client={view.client}><ExternalSchematic key="version2" name="Board" context={{ projectId:12,circuitVersion:2 }} /></QueryClientProvider>)
+  expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  expect(handler).toHaveBeenCalledTimes(1)
+})
+
 const picture = { image_url: '/circuit-schematics/breadboard_supply.png', original_url: 'https://example.test/original.pdf', attribution: 'Maker', license: 'CC BY-SA' }
 
 function readyViewport() {
@@ -172,7 +194,7 @@ it('searches the project name only when asked, and shows every sheet in order wi
   expect(paths).toEqual([])
   search()
   const images = await screen.findAllByAltText(/원본 회로도/, { exact: false })
-  expect(paths).toEqual(['/api/external-circuits/schematics?q=My%20Board'])
+  expect(paths).toEqual(['/api/external-circuits/schematics?q=My%20Board&reference_only=true'])
   expect(images.map(image => image.getAttribute('src'))).toEqual(found.images.map(image => image.url))
   expect(images.map(image => image.getAttribute('alt'))).toEqual(['Board 시트 1 원본 회로도', 'Board 시트 2 원본 회로도'])
   expect(screen.getAllByText('출처: Maker')).toHaveLength(2)
@@ -232,7 +254,7 @@ it('keeps the chosen source without automatic searches and resets it on an expli
   const choice = await screen.findByRole('button', { name: 'Board v2 · 출처 확인 필요' })
   fireEvent.click(choice)
   await waitFor(() => expect(screen.getByRole('button', { name: 'Board v2 · 출처 확인 필요' })).toHaveAttribute('aria-pressed', 'true'))
-  expect(paths).toEqual(['/api/external-circuits/schematics?q=Board', `/api/external-circuits/schematics?q=Board&source_url=${encodeURIComponent(other)}`])
+  expect(paths).toEqual(['/api/external-circuits/schematics?q=Board&reference_only=true', `/api/external-circuits/schematics?q=Board&source_url=${encodeURIComponent(other)}&reference_only=true`])
   vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 16 * 60_000)
   await act(async () => { focusManager.setFocused(false); focusManager.setFocused(true); await new Promise(resolve => setTimeout(resolve, 0)) })
   await act(async () => { onlineManager.setOnline(false); onlineManager.setOnline(true); await new Promise(resolve => setTimeout(resolve, 0)) })
@@ -241,7 +263,7 @@ it('keeps the chosen source without automatic searches and resets it on an expli
   search()
   await waitFor(() => expect(screen.getByRole('button', { name: 'Board v1 · 제조사 공식' })).toHaveAttribute('aria-pressed', 'true'))
   expect(paths).toHaveLength(3)
-  expect(paths[2]).toBe('/api/external-circuits/schematics?q=Board')
+  expect(paths[2]).toBe('/api/external-circuits/schematics?q=Board&reference_only=true')
   view.client.clear()
 })
 

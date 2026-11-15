@@ -76,7 +76,7 @@ export default function WorkbenchPage() {
   // 저장된 대화는 주소의 부품 선택값 없이도 열려야 한다. 대상은 서버 기록을 우선한다.
   const threadMismatch = Boolean(thread.data && thread.data.project_id !== projectId)
   const target = parts.find(part => part.ref === (threadId && !threadMismatch ? thread.data?.target_ref ?? targetRef : targetRef))
-  const schematic = demoList.find(demo => demo.id === project.data?.demo_id)?.schematic ?? null
+  const schematic = project.data?.source_kind === 'demo' ? demoList.find(demo => demo.id === project.data?.demo_id)?.schematic ?? null : null
   const query = filter.trim().toLowerCase()
   const filteredProjects = projectList.filter(item => item.name.toLowerCase().includes(query))
   const filteredParts = parts.filter(part => `${part.ref} ${part.value}`.toLowerCase().includes(query))
@@ -327,7 +327,7 @@ export default function WorkbenchPage() {
     <dialog ref={sheet} className="dialog sheet" aria-labelledby="sheet-title" onClick={closeOutside}>
       <header><h2 id="sheet-title">{project.data?.name} 원본 회로도</h2>
         <button className="icon-btn" onClick={() => sheet.current?.close()} aria-label="닫기"><X aria-hidden="true" /></button></header>
-      {schematic ? <SchematicImage key={schematic.image_url} schematic={schematic} name={project.data?.name ?? ''} /> : <ExternalSchematic key={project.data?.id} name={project.data?.name ?? ''} />}
+      {schematic ? <SchematicImage key={schematic.image_url} schematic={schematic} name={project.data?.name ?? ''} /> : project.data && <ExternalSchematic key={`${project.data.id}:${project.data.circuit_version}:${threadId}`} name={project.data.name} context={{ projectId: project.data.id, circuitVersion: project.data.circuit_version ?? 0, threadId: threadId || undefined }} />}
     </dialog>
   </div>
 }

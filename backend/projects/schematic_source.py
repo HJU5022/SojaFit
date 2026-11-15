@@ -31,6 +31,7 @@ class VerifiedSchematicSource:
     revision: str | None = None
     source_sha256: str | None = None
     license_evidence_url: str | None = None
+    circuit_sha256: str | None = None
 
 
 class ExternalSchematicError(RuntimeError):
@@ -63,7 +64,7 @@ class ExternalSchematicRateLimited(ExternalSchematicError):
 class ExternalSchematicNotFound(ExternalSchematicError):
     def __init__(self, *args, reason: str = "not_found"):
         super().__init__(*args)
-        if reason not in {"not_found", "no_candidates", "validation_failed"}:
+        if reason not in {"not_found", "no_candidates", "validation_failed", 'circuit_mismatch'}:
             raise ValueError("유효하지 않은 회로도 실패 원인입니다.")
         self.reason = reason
 

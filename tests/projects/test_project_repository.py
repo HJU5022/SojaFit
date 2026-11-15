@@ -44,6 +44,23 @@ def test_invalid_demo_never_opens_database(monkeypatch):
             ProjectRepository().create_demo(1, demo_id, name)
 
 
+def test_schematic_comparison_reads_owned_thread_circuit_version(storage):
+    import json
+    from fastapi import HTTPException
+    from backend.api.external_circuits import _project_circuit
+    from backend.projects.netlist import normalize_netlist, circuit_fingerprint
+    repo,(owner,other),_=storage
+    normalized=normalize_netlist(Path('tests/fixtures/netlists/minimal.net').read_bytes())
+    project=repo.create_upload(owner,'회로도 대조',connections=normalized.connections,source_sha256=normalized.source_sha256,parser_version='test')
+    first,thread=repo.import_netlist(owner,project.id,connections=normalized.connections,source_sha256=normalized.source_sha256,parser_version='test')
+    changed=json.loads(json.dumps(normalized.connections,default=dict));changed['nets'][0]['nodes'][0]['pin']='99'
+    latest,_=repo.import_netlist(owner,project.id,connections=changed,source_sha256='f'*64,parser_version='test')
+    assert circuit_fingerprint(_project_circuit(owner,project.id,first.circuit_version,thread).connections)==circuit_fingerprint(normalized.connections)
+    assert circuit_fingerprint(_project_circuit(owner,project.id,latest.circuit_version,None).connections)!=circuit_fingerprint(normalized.connections)
+    with pytest.raises(HTTPException) as denied:_project_circuit(other,project.id,first.circuit_version,thread)
+    assert denied.value.status_code==404
+
+
 def test_received_demo_circuit_is_read_from_its_own_folder(monkeypatch):
     """[왜] c01(키 없는 데모 v3-01의 회로)은 samples/가 아니라 received-20261030/c01에 있다. DB 없이 넣는 값만 본다."""
     import hashlib

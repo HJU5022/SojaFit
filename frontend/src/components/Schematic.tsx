@@ -3,6 +3,7 @@ import type { FormEvent, PointerEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Maximize2 } from 'lucide-react'
 import { findSchematic } from '../api/externalCircuits'
+import type { SchematicContext } from '../api/externalCircuits'
 import { errorMessage, requestIdProps } from '../api/client'
 import type { ApiError } from '../api/client'
 import type { DemoSchematic } from '../api/projects'
@@ -118,7 +119,7 @@ function waitText(seconds: number) { return seconds >= 60 ? `${Math.ceil(seconds
 // 503이면서 Retry-After가 없으면 기능 꺼짐(키 없는 데모·설정 누락)이라 다시 시도를 권하지 않는다.
 const disabled = (error: unknown) => (error as ApiError | null)?.code === 'UNAVAILABLE' && !(error as ApiError).retryAfter
 function searchMessage(error: ApiError) {
-  if (error.code === 'SCHEMATIC_NOT_FOUND' && /검색 결과가 없습니다|후보를 찾았지만/.test(error.message)) return errorMessage(error)
+  if (error.code === 'SCHEMATIC_NOT_FOUND' && /검색 결과가 없습니다|후보를 찾았지만|업로드한 회로와/.test(error.message)) return errorMessage(error)
   if (error.code === 'SCHEMATIC_NOT_FOUND') return '공개된 원본 회로도를 찾지 못했습니다. 검색어를 바꿔 다시 찾아 보세요. 창을 닫으면 연결 개념도는 계속 볼 수 있습니다.'
   if (error.code === 'UPSTREAM_ERROR') return '외부 회로도를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
   if (error.code === 'UNAVAILABLE') return error.retryAfter ? `외부 회로도 조회 한도에 닿았습니다. ${waitText(error.retryAfter)} 뒤에 다시 시도해 주세요.` : '이 환경에서는 외부 원본 회로도를 사용할 수 없습니다. 창을 닫고 연결 개념도를 확인해 주세요.'
@@ -126,13 +127,13 @@ function searchMessage(error: ApiError) {
 }
 
 // 검색은 누를 때만 보낸다(검색마다 외부 호출이 든다). 같은 검색어는 5분 동안 다시 보내지 않는다.
-export function ExternalSchematic({ name }: { name: string }) {
+export function ExternalSchematic({ name, context }: { name: string; context?: SchematicContext }) {
   const [text, setText] = useState(name)
   const [searched, setSearched] = useState('')
   const [selectedSource, setSelectedSource] = useState('')
   const term = text.trim()
   const valid = term.length >= 2 && term.length <= 200
-  const result = useQuery({ queryKey: ['external-schematic', searched, selectedSource], queryFn: ({ signal }) => findSchematic(searched, signal, selectedSource), enabled: searched !== '', retry: false, staleTime: 5 * 60_000,
+  const result = useQuery({ queryKey: context ? ['external-schematic', context.projectId, context.circuitVersion, context.threadId ?? '', searched, selectedSource] : ['external-schematic', searched, selectedSource], queryFn: ({ signal }) => findSchematic(searched, signal, selectedSource, context), enabled: searched !== '', retry: false, staleTime: 5 * 60_000,
     refetchOnWindowFocus: false, refetchOnReconnect: false, refetchOnMount: false })
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -140,7 +141,8 @@ export function ExternalSchematic({ name }: { name: string }) {
     if (term !== searched || selectedSource) { setSelectedSource(''); setSearched(term) }
     else if (result.isError || result.isStale) void result.refetch()
   }
-  const data = searched ? result.data : undefined
+  const received = searched ? result.data : undefined
+  const data = received && (!context || received.circuit_version === context.circuitVersion) ? received : undefined
   return <div className="sheets">
     {!disabled(result.error) && <form onSubmit={search}>
       <label className="field"><span>검색어 (올린 넷리스트의 프로젝트 이름과 다를 수 있습니다)</span><input className="input" value={text} onChange={event => setText(event.target.value)} maxLength={200} autoComplete="off" aria-describedby="schematic-rule" /></label>
@@ -149,6 +151,9 @@ export function ExternalSchematic({ name }: { name: string }) {
     </form>}
     {result.isFetching && <div className="skeleton inset" role="status"><span className="sr-only">원본 회로도를 찾는 중입니다. 몇 초 걸릴 수 있습니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
     {result.error && !result.isFetching && <p className="notice inset" role="alert" {...requestIdProps(result.error)}>{searchMessage(result.error as unknown as ApiError)}</p>}
+    {received && !data && <p className="notice inset" role="alert">현재 회로 버전과의 일치를 확인하지 못해 도면을 표시하지 않습니다.</p>}
+    {data && context && <p className="inset">업로드 회로 v{context.circuitVersion} · 부품·핀 연결 일치</p>}
+    {data && context && <p className="field-hint inset">도면의 참조 번호는 업로드 파일과 다를 수 있습니다. 부품 정보와 전체 핀 연결을 대조한 결과입니다.</p>}
     {data && data.choices.length > 1 && <div className="inset" aria-label="검색된 회로도 후보">
       <p>검색된 회로도 후보를 확인해 선택하세요.</p>
       {data.choices.map(choice => <button className="btn" key={choice.source_url}

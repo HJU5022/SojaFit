@@ -18,8 +18,16 @@ class KicadServiceUnavailable(RuntimeError):
 
 
 def run_kicad_pdf(root: Path, output: Path) -> tuple[str, Path]:
+    return _run_export(root, output, 'pdf')
+
+
+def run_kicad_netlist(root: Path, output: Path) -> Path:
+    return _run_export(root, output, 'netlist')[1]
+
+
+def _run_export(root: Path, output: Path, kind: str) -> tuple[str, Path]:
     """검증한 root 회로도와 자식 시트를 한 PDF로 내보낸다."""
-    pdf = output / "schematic.pdf"
+    pdf = output / ('schematic.net' if kind == 'netlist' else 'schematic.pdf')
     home = output / "home"
     home.mkdir()
     env = {"HOME": str(home), "PATH": os.environ.get("PATH", os.defpath)}
@@ -28,9 +36,12 @@ def run_kicad_pdf(root: Path, output: Path) -> tuple[str, Path]:
             [KICAD_CLI, "--version"], check=True, capture_output=True, text=True,
             timeout=COMMAND_TIMEOUT_SECONDS, env=env,
         ).stdout.strip()
-        command = [KICAD_CLI, "sch", "export", "pdf", "--output", str(pdf), str(root)]
+        command = [KICAD_CLI, "sch", "export", kind, "--output", str(pdf)]
+        if kind == 'netlist':
+            command += ['--format', 'kicadsexpr']
+        command.append(str(root))
         if os.name == "posix":
-            command = ["prlimit", "--as=2147483648", "--fsize=20971520", "--", *command]
+            command = ["prlimit", "--as=2147483648", '--fsize='+str(5*1024**2 if kind == 'netlist' else 20*1024**2), "--", *command]
         subprocess.run(command, cwd=root.parent, check=True, env=env,
                        timeout=COMMAND_TIMEOUT_SECONDS, stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL)

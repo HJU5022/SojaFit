@@ -128,6 +128,7 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     return json(demos.slice(offset, offset + limit))
   }
   if (method === 'GET' && pathname === '/api/external-circuits/schematics') {
+    if (url.searchParams.has('project_id')) return json({ error: { code: 'SCHEMATIC_NOT_FOUND', message: '업로드한 회로와 부품·핀 연결의 일치를 확인할 수 없는 더미 자료입니다.', request_id: REQUEST_ID } }, 404)
     if (!/attiny85/i.test(url.searchParams.get('q') ?? '')) return json({ error: { code: 'SCHEMATIC_NOT_FOUND', message: '검증된 완성 회로도를 찾지 못했습니다.', request_id: REQUEST_ID } }, 404)
     return json({ project: 'attiny85_dev', commit: '0'.repeat(40), license: 'CC-BY-4.0', attribution: '더미 저작자', repository_url: 'https://example.test/repo',
       source_url: 'https://example.test/repo/blob/main/board.kicad_sch', source_file: 'board.kicad_sch', choices: [],
