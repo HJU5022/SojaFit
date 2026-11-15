@@ -281,6 +281,20 @@ docker compose up --build
 
 계정을 바꾸는 방법과 기존 DB에 적용하는 절차는 [`db/DB.md`](db/DB.md)에 있다.
 
+### 선택: KiCad 렌더러
+
+KiCad 원본 회로도를 그림(PNG)으로 바꾸는 일만 하는 별도 서비스다(무상태, `POST /render`). 기본 `docker compose up`에는 들어 있지 않다.
+
+| 무엇 | 어떻게 | 근거 |
+|---|---|---|
+| 이미지 | `Dockerfile`의 `renderer` target. KiCad 10을 설치하고 `uvicorn backend.projects.schematic:app`을 8000 포트로 띄운다 | [`Dockerfile`](Dockerfile) |
+| 로컬에서 같이 띄우기 | compose profile `schematic`: `docker compose --profile schematic up --build` | [`docker-compose.yml`](docker-compose.yml) `renderer` |
+| API가 렌더러를 찾는 주소 | 환경변수 `KICAD_RENDERER_URL`. compose의 api는 값이 없으면 `http://renderer:8000`을 쓴다. 그래서 profile 없이 띄우면 그 주소에 서비스가 없어 KiCad 원본 회로도 렌더가 `KiCad 렌더러에 연결할 수 없습니다`로 실패한다 `[추정]`(코드 `render_remote_kicad`를 읽은 것이고 compose에서 실행해 보지는 않았다) | [`docker-compose.yml`](docker-compose.yml), `backend/projects/schematic.py` |
+| Cloud Run | 주소는 HTTPS여야 하고 API가 메타데이터 서버의 ID token을 붙여 부른다(`_renderer_headers`). 운영 리비전에는 `KICAD_RENDERER_URL`이 설정돼 있다(조장 전달, 직접 확인 못 함) | `backend/projects/schematic.py` |
+| 렌더러 없이 | `INCLUDE_KICAD=1`로 API 이미지를 빌드해 `kicad-cli`를 넣고 `KICAD_RENDERER_URL`을 비워 두면 API 프로세스가 직접 부른다(실행 파일은 `KICAD_CLI`로 지정). compose의 api는 위 기본 주소가 있어 이 방식은 compose 밖에서 쓴다 | [`Dockerfile`](Dockerfile), `backend/projects/external_schematic.py` |
+
+렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)뿐이다 `[실측: grep]`. 분석 그래프 · 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 다만 분리(`renderer` target 추가) 뒤의 코드로 키 없는 새 clone 기동과 스모크를 다시 재지는 않았다([GATES](docs/GATES.md) G2).
+
 ### 화면 개발 서버
 
 compose 이미지는 React 화면을 빌드해 api에 넣으므로 위 명령만으로 화면이 뜬다. 화면을 고치며 볼 때는 API를 `localhost:8000`에 띄워 둔 채 Vite 개발 서버를 쓴다(`/api` 요청을 `localhost:8000`으로 넘김). 명령과 시험은 [`frontend/FRONTEND.md`](frontend/FRONTEND.md)에 있다.
@@ -373,7 +387,7 @@ SojaFit/
 | TSC 데이터시트 | 위 데이터 절 | 사이트 약관: 정보 · 비상업 목적, 고치지 않고 고지 · 출처 유지 | [`data/corpus/CORPUS.md`](data/corpus/CORPUS.md) |
 
 - **이 저장소 자체의 라이선스**: 루트에 `LICENSE` · `NOTICE` 파일이 없다(2026-11-16 `ls`로 확인). 저장소 사용을 허락하는 라이선스를 정해 두지 않았다. 저장소는 팀 비공개(`aihuman-7th/proj3-b`)이고 과제 제출용이다.
-- KiCad GPL 고지: 렌더러는 `docker compose --profile schematic up`이나 별도 서비스로 돌려 API가 HTTP로 부른다. 이 이미지를 공개로 배포할 때의 GPL 의무(소스 제공 · 고지)는 따로 검토하지 않았다(확인 못 함).
+- KiCad GPL 고지: 렌더러는 `docker compose --profile schematic up`이나 별도 서비스로 돌려 API가 HTTP로 부른다(아래 "선택: KiCad 렌더러"). 이 이미지를 공개로 배포할 때의 GPL 의무(소스 제공 · 고지)는 따로 검토하지 않았다(확인 못 함).
 - Python · npm 의존성의 라이선스는 `uv.lock` · `frontend/package-lock.json`에 있고 하나씩 대조하지 않았다.
 
 ### 안전
