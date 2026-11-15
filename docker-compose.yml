@@ -78,7 +78,9 @@ services:
       # initdb 폴더의 .sql은 데이터 폴더가 비어 있을 때 첫 기동에만 파일 이름순으로 실행된다.
       - ./db:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      # [왜] 새 볼륨의 첫 기동에서 initdb 임시 서버는 Unix 소켓만 연다. 소켓으로 묻는 검사는 db/*.sql이 도는 중에도 통과해 thread-setup · corpus-load가 TCP가 열리기 전에 접속하다 exit 1로 죽는다(재시도 없음).
+      #      -h 127.0.0.1로 TCP를 물어 진짜 서버가 뜬 뒤에만 healthy가 되게 한다.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U app -d app"]
       interval: 3s
       timeout: 3s
       retries: 20
