@@ -1,6 +1,6 @@
 """scripts/db/gen_schema_docs.py 시험: 일회용 PostgreSQL에 서비스 스키마를 적용하고 생성한 표 정의서 · ERD를 확인한다.
 
-- 역할: ① 서비스 표 25개가 모두 문서에 있고 FK 선 · 제약이 DB와 같고(승인당 견적 UNIQUE는 없고 approvals.message_id UNIQUE는 있음)
+- 역할: ① 서비스 표 25개가 모두 문서에 있고 FK 선 · 제약이 DB와 같고(승인당 견적 UNIQUE도, 032 이후 approvals.message_id UNIQUE도 없음)
   ② `--out-dir`로 임시 위치에 쓰고 `--check`가 같은 DB에서 0 · 칸 기본값을 바꾼 DB에서 1을 내고
   ③ 설명이 없는 새 칸이 생기면 멈추고 ④ 커밋된 db/schema 문서가 생성물이면 DB와 글자까지 같아야 한다(어긋남 시험).
 - 하지 않는 일: 운영 DB 접속(DATABASE_URL은 시험이 만든 DB로만 둔다), 코퍼스 · LangGraph 표 확인.
@@ -66,12 +66,12 @@ def test_constraints_come_from_the_database(dsn):
     erd, definition = docs['erd.md'], docs['table-definition.md']
     approvals = definition.split('## `public.approvals`')[1].split('## `')[0]
     quotes = definition.split('## `public.quotes`')[1].split('## `')[0]
-    assert '`approvals_message_id_key` | UNIQUE | `UNIQUE (message_id)`' in approvals  # 승인 중복을 막는 유일한 제약
+    assert '`approvals_message_id_key`' not in approvals and '`ix_approvals_message` | `btree (message_id)`' in approvals  # 032: 사례를 지우면 재승인할 수 있어 UNIQUE를 조회 색인으로 바꿨다. 활성 승인 하나는 서비스 코드가 지킨다
     assert '| UNIQUE |' not in quotes  # 정정(11-11): 견적은 승인당 여러 건이 허용된다. 승인당 견적 1개 제약은 없다
     assert 'FOREIGN KEY (approval_id, user_id) REFERENCES approvals(id, user_id) ON DELETE CASCADE' in quotes
     assert '`ix_quotes_approval` | `btree (approval_id)`' in quotes
     assert 'approvals ||--o{ quotes : "approval_id+user_id (CASCADE)"' in erd  # 견적은 여러 건(o{)
-    assert 'messages ||--o| approvals : "message_id (CASCADE)"' in erd  # 승인은 메시지당 하나(o|)
+    assert 'messages ||--o{ approvals : "message_id (CASCADE)"' in erd  # 032 이후 한 메시지에 승인 이력이 여러 건(o{)
     assert 'threads ||--o| agent_threads : "id (CASCADE)"' in erd  # 두 스키마의 같은 id 연결
     assert 'trg_threads_purge_checkpoints' in definition  # 체크포인트 삭제 트리거
 

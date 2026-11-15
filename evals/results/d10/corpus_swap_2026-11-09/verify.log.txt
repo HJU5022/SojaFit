@@ -1,0 +1,18 @@
+source_documents: 로컬 1360 / 운영 1360
+document_chunks: 로컬 51967 / 운영 51967
+chunk_embedding_bits: 로컬 51967 / 운영 51967
+chunk_embeddings: 로컬 51967 / 운영 51967
+part_specifications: 로컬 0 / 운영 0
+chunker_version 운영 [('tsc-v4h-2026-11-08', 51967)] 로컬 [('tsc-v4h-2026-11-08', 51967)]
+category 있는 문서 1360
+ANALYZE 끝
+회 1: 정확 전체 5803 ms (50개) | 비트 1단계 521 ms (3200개) + 2단계 921 ms = 1442 ms
+회 2: 정확 전체 3024 ms (50개) | 비트 1단계 576 ms (3200개) + 2단계 107 ms = 683 ms
+회 3: 정확 전체 6527 ms (50개) | 비트 1단계 1188 ms (3200개) + 2단계 620 ms = 1808 ms
+정확 검색 상위 50 운영=로컬: True | 비트 경로 상위 5 = 정확 상위 5: True
+  source_documents 크기 MB 1.0
+  document_chunks 크기 MB 33.6
+  chunk_embedding_bits 크기 MB 12.5
+  chunk_embeddings 크기 MB 151.4
+  part_specifications 크기 MB 0.0
+최종 용량 MB 410.7

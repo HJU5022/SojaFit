@@ -13,13 +13,14 @@ class FakeQuotes:
     def __init__(self): self.calls = []
     def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'part_number': part, 'verdict': verdict, 'case_id': 4, 'created_at': CREATED}
     def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity, 'created_at': CREATED}
-    def list_quotes(self, user, project): return []
+    def list_quotes(self, user, project): return [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': CREATED, 'thread_id': '0b1c2d3e-0000-4000-8000-000000000001'}]
     def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'created_at': CREATED}]
     def delete_case(self, user, case): self.calls.append(('delete', user, case))
     def list_approvals(self, user, message):
         self.calls.append(('approvals', user, message))
         return [{'id': 3, 'message_id': message, 'candidate_part': 'SS34', 'part_number': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
-                 'case_id': None, 'created_at': CREATED, 'snapshot': {'answer': 'PRIVATE_SNAPSHOT'}}]
+                 'case_id': None, 'created_at': CREATED, 'snapshot': {'answer': 'PRIVATE_SNAPSHOT'},
+                 'quotes': [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': CREATED, 'price': '1.00'}]}]
 
 
 def client(fake):
@@ -37,9 +38,10 @@ def test_persisted_approval_read_is_owned_metadata_without_origin_or_snapshot():
         response = web.get('/api/messages/9/approvals')
     assert response.status_code == 200, response.text
     assert response.headers['cache-control'] == 'no-store'
-    assert response.json() == [{'id': 3, 'message_id': 9, 'candidate_part': 'SS34', 'part_number': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
-                                'case_id': None, 'created_at': '2026-11-10T09:00:00Z'}]
-    assert 'PRIVATE_SNAPSHOT' not in response.text
+    # [왜] 새로고침 뒤 승인 · 견적 복원용이다: case_id가 null이어도 200이고, 견적에 가격 칸이 새어 나가지 않는다
+    assert response.json() == [{'id': 3, 'message_id': 9, 'candidate_part': 'SS34', 'part_number': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'case_id': None, 'created_at': '2026-11-10T09:00:00Z',
+                                'quotes': [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': '2026-11-10T09:00:00Z'}]}]
+    assert 'PRIVATE_SNAPSHOT' not in response.text and 'price' not in response.text
     assert fake.calls == [('approvals', 7, 9)]
 
 
@@ -83,7 +85,7 @@ def test_mutations_require_origin_and_case_delete_is_explicit(monkeypatch):
 
 def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
     monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
-    # [왜] 같은 메시지를 두 번 승인하면 DB의 UNIQUE(message_id)가 UniqueViolation을 내고, 승인은 한 건으로 남은 채 409다(db/020)
+    # [왜] 같은 메시지에 활성 승인이 있으면 서비스가 InvalidApproval을 내 409다(032 이후 DB의 UNIQUE(message_id)는 없다). 옛 DB의 UniqueViolation도 같은 409로 받는다
     # [왜] 409 둘 다 ALREADY_APPROVED라 화면은 승인을 다시 보내지 않는다(ADR 0019)
     for error, status, code in [(QuoteNotFound(), 404, 'NOT_FOUND'), (InvalidApproval('no'), 409, 'ALREADY_APPROVED'),
                                 (psycopg.errors.UniqueViolation(), 409, 'ALREADY_APPROVED')]:
@@ -110,3 +112,10 @@ def test_approval_accepts_the_name_the_judgement_showed_but_not_control_characte
     assert shown.status_code == 201 and control.status_code == blank.status_code == 422
     assert fake.calls == [('approve', 7, 9, 'TSC 1N4007G', 'ROLE_SUFFICIENT')]
 
+
+
+def test_project_quote_list_names_the_thread_and_has_no_price_fields():
+    with client(FakeQuotes()) as web:
+        rows = web.get('/api/projects/1/quotes').json()
+    assert rows[0]['thread_id'] == '0b1c2d3e-0000-4000-8000-000000000001' and rows[0]['quantity'] == 10
+    assert not {'price', 'price_breaks', 'stock', 'availability'} & set(rows[0])

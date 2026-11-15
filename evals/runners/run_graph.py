@@ -181,8 +181,19 @@ def make_app(multi: bool, stack: ExitStack):
         return build_graph(**tools), warm_eval  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
     from backend.multi_agent.build import build_graph as build_multi
     from backend.rag.retrieve import retrieve
-    from backend.services import llm
-    return build_multi(chat=llm.node_chat, retriever=timed_tool("search", retrieve), judge_enabled=True, **tools), warm_eval
+    from backend.services import exa, llm
+    web = {}
+    if os.environ.get("EVAL_WEB") == "1":
+        # [왜] 배포는 EXA_WEB_SEARCH_ENABLED=1이라 웹 근거(2 · 3등급)를 쓴다. 서비스(memory_service._graph)와 같은 도구 · 같은 단계 이름으로 연결해 웹을 켠 상태를 잰다
+        # [주의] 실제 Exa · PDF 호출이라 비용이 든다(검색 1번 약 0.007달러). 기본은 꺼짐(지금까지의 평가 수치와 같은 조건)
+        if not exa.enabled():
+            raise RuntimeError("EVAL_WEB=1인데 Exa가 꺼져 있습니다(EXA_WEB_SEARCH_ENABLED · EXA_API_KEY 확인)")
+        web = {"web_enabled": True, "web_search": timed_tool("grade2_datasheet", exa.search_grade2_evidence),
+               "web_search_fallback": timed_tool("grade3_reference", exa.search_grade3_reference),
+               "judge_web_search_fallback": timed_tool("grade3_reference_judge", exa.search_grade3_reference)}
+        from backend.multi_agent.facts import with_prefetch
+        tools["lookup"] = with_prefetch(lookup, exa.prefetch)  # [왜] 서비스와 같은 조립. 미리 출발은 WEB_PREFETCH=1일 때만 실제로 움직인다
+    return build_multi(chat=llm.node_chat, retriever=timed_tool("search", retrieve), judge_enabled=True, **tools, **web), warm_eval
 
 
 def _git(*args):

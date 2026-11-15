@@ -60,8 +60,9 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     for user, message in ((other, saved['message_id']), (owner, saved['message_id'] + 100000), (owner, user_message)):
         with pytest.raises(QuoteNotFound): quotes.list_approvals(user, message)
     approval = quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
-    assert quotes.list_approvals(owner, saved['message_id']) == [approval]
-    assert set(quotes.list_approvals(owner, saved['message_id'])[0]) == {'id', 'message_id', 'candidate_part', 'part_number', 'verdict', 'case_id', 'created_at'}
+    assert quotes.list_approvals(owner, saved['message_id']) == [{**approval, 'quotes': []}]
+    assert set(quotes.list_approvals(owner, saved['message_id'])[0]) == {'id', 'message_id', 'candidate_part', 'part_number', 'verdict', 'case_id', 'created_at', 'quotes'}
+    # [왜] 활성 사례가 남은 같은 메시지를 다시 승인하면 거절한다(API는 409 ALREADY_APPROVED, #139)
     with pytest.raises(InvalidApproval): quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     assert len(quotes.list_cases(owner)) == 1
     quote = quotes.create_quote(owner, approval['id'], 25)
@@ -92,7 +93,7 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     assert len(quotes.list_quotes(owner, project.id)) == 2
     replacement = quotes.approve(owner, saved['message_id'], 'SS33', 'ROLE_SUFFICIENT')
     assert replacement['id'] != approval['id']
-    assert quotes.list_approvals(owner, saved['message_id']) == [replacement]
+    assert quotes.list_approvals(owner, saved['message_id']) == [{**replacement, 'quotes': []}]  # 지운 승인의 견적은 새 승인에 붙지 않는다
     assert quotes.create_quote(owner, replacement['id'], 3)['part_number'] == 'SS33'
     with connect() as conn:
         assert conn.execute('SELECT candidate_part,snapshot FROM approvals WHERE id=%s', (approval['id'],)).fetchone()[0] == 'SS34'
@@ -159,7 +160,9 @@ def test_http_case_deletion_unlocks_new_candidate_and_preserves_quote_history(fu
         second = web.post(f'/api/messages/{message}/approvals', json={'candidate_part': 'SS33', 'verdict': 'ROLE_SUFFICIENT'})
         assert second.status_code == 201 and second.json()['id'] != approval['id']
         assert web.post(f'/api/messages/{message}/approvals', json={'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}).status_code == 409
-        assert web.get(f'/api/projects/{project.id}/quotes').json() == [quote.json()]
+        listed = web.get(f'/api/projects/{project.id}/quotes').json()
+        assert [{k: v for k, v in item.items() if k != 'thread_id'} for item in listed] == [quote.json()]  # 지운 승인의 견적은 이력으로 남는다
+        assert listed[0]['thread_id'] == str(thread)  # 견적 목록은 견적이 나온 검토(thread)를 함께 준다
     finally:
         app.dependency_overrides.clear()
 

@@ -134,12 +134,56 @@ def test_interval_and_daily_usd_get_different_codes(spent, code, monkeypatch):
 def test_pending_condition_is_condition_pending():
     @contextmanager
     def locked(user, thread):
-        yield None, {'version': 1}
+        # [왜] message()는 조건 대기를 보기 전에 대상 부품이 지원 대상인지 본다(#139). 실제 _owned() 행처럼 connections와 target을 준다
+        yield None, {'version': 1, 'target': 'D1', 'connections': {'components': [{'ref': 'D1', 'value': '1N4007', 'footprint': 'Diode_THT:D_DO-41', 'description': 'Diode'}], 'nets': []}}
     svc = service(_purge_expired=lambda: None, locked=locked, _reconcile=lambda conn, row: None,
-                  graph=SimpleNamespace(get_state=lambda config: SimpleNamespace(next=('판정',))))
+                  graph=SimpleNamespace(get_state=lambda config: SimpleNamespace(next=('판정',), tasks=[SimpleNamespace(interrupts=[object()])])))
     with pytest.raises(ApiError) as error:
         svc.message(1, 'thread', QUESTION)
     assert (error.value.status_code, error.value.code) == (409, 'CONDITION_PENDING')
+
+
+def test_stale_next_after_a_failed_run_is_not_a_pending_condition():
+    """점검 B #2: 예외로 멈춘 실행은 next만 남기고 인터럽트가 없다. 이것을 조건 대기로 보면 그 대화는 영영 새 질문을 못 받는다."""
+    from langgraph.checkpoint.memory import InMemorySaver
+    from langgraph.graph import END, START, StateGraph
+    from langgraph.types import Command, interrupt
+    from typing import TypedDict
+    from backend.conversations.memory_service import has_pending_question
+
+    class S(TypedDict, total=False):
+        value: str
+    flaky = {'fail': True}
+
+    def work(state):
+        if flaky['fail']:
+            raise KeyError('실행 중 오류')
+        return {'value': 'ok'}
+
+    def ask(state):
+        return {'value': interrupt('조건?')}
+    config = {'configurable': {'thread_id': 'failed'}}
+    graph = StateGraph(S)
+    graph.add_node('work', work)
+    graph.add_edge(START, 'work')
+    graph.add_edge('work', END)
+    graph = graph.compile(checkpointer=InMemorySaver())
+    with pytest.raises(KeyError):
+        graph.invoke({'value': 'q'}, config)
+    snapshot = graph.get_state(config)
+    assert snapshot.next == ('work',) and not has_pending_question(snapshot)  # 옛 판정(next만 봄)이면 409였다
+    flaky['fail'] = False
+    assert graph.invoke({'value': 'q2'}, config) == {'value': 'ok'}  # 같은 대화에서 새 질문이 도는 것까지 확인
+
+    asking = StateGraph(S)
+    asking.add_node('ask', ask)
+    asking.add_edge(START, 'ask')
+    asking.add_edge('ask', END)
+    asking = asking.compile(checkpointer=InMemorySaver())
+    asking.invoke({'value': 'q'}, config)
+    assert has_pending_question(asking.get_state(config))  # 진짜 조건 질문은 그대로 대기다
+    asking.invoke(Command(resume='12V'), config)
+    assert not has_pending_question(asking.get_state(config))
 
 
 def invoke_failure(error, *, late=False):

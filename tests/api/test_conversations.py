@@ -503,6 +503,45 @@ def test_project_delete_rejects_active_run_before_checkpoint_deletion(monkeypatc
         delete_owned_with_checkpoints(1, 1, service)
 
 
+@pytest.mark.parametrize(('age_seconds', 'lock_held', 'blocks'), [
+    (3600, False, False),  # 인스턴스가 내려가 멈춘 run: 지울 수 있다(점검 B #3)
+    (10, False, True),     # 방금 갱신된 run: 아직 도는 중일 수 있다
+    (3600, True, True),    # 오래됐어도 분석 잠금을 쥔 thread: 살아 있다
+])
+def test_project_delete_ignores_only_stale_unlocked_running_runs(monkeypatch, age_seconds, lock_held, blocks):
+    """실제 DB 판정은 tests/conversations/test_repository.py(격리 PostgreSQL)가 본다. 여기서는 삭제 SQL이 나이와 잠금을 묻고 stale 한도를 넘기는지만 본다."""
+    from backend.api.projects import delete_owned_with_checkpoints
+    from backend.conversations.repository import InvalidRunState, stale_run_seconds
+    statements, deleted = [], []
+
+    class Conn:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def execute(self, query, params=()):
+            statements.append(query)
+            class Result:
+                def fetchone(self_):
+                    if 'FROM projects' in query:
+                        return (1,)
+                    if 'FROM runs' not in query:
+                        return None
+                    # 멈춘 run 하나가 있는 DB를 흉내 낸다: 쿼리가 나이 · 잠금을 묻지 않으면 늘 막는다(옛 쿼리)
+                    if 'updated_at' not in query or 'pg_try_advisory_xact_lock' not in query:
+                        return (1,)
+                    assert params[-1] == stale_run_seconds() == 300
+                    return (1,) if age_seconds < params[-1] or lock_held else None
+                def fetchall(self_): return [('t1',)]
+            return Result()
+    monkeypatch.setattr(auth, 'connection', lambda: Conn())
+    if blocks:
+        with pytest.raises(InvalidRunState):
+            delete_owned_with_checkpoints(1, 1, lambda conn, ids: deleted.extend(ids))
+        assert deleted == [] and not any('DELETE FROM projects' in q for q in statements)
+    else:
+        delete_owned_with_checkpoints(1, 1, lambda conn, ids: deleted.extend(ids))
+        assert deleted == ['t1'] and any('DELETE FROM projects' in q for q in statements)
+
+
 def test_foreign_and_active_runs_return_safe_errors(web, monkeypatch):
     import psycopg
     from backend.conversations.repository import ConversationNotFound, InvalidRunState

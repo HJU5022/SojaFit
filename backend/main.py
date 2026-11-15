@@ -1,7 +1,7 @@
 """SojaFit FastAPI 진입점: 앱을 조립만 한다.
 
 역할: 수명(lifespan) · 공통 오류 처리기 · 미들웨어(요청 ID · 대화 본문 한도) · 라우터 등록 · React SPA 연결. 경로 함수는 두지 않는다.
-  경로는 `backend/api/<이름>.py` 라우터에 있고 화면의 `frontend/src/api/<이름>.ts`와 짝이다(health · auth · admin · prices · profile · projects · quotes · conversations).
+  경로는 `backend/api/<이름>.py` 라우터에 있고 화면의 `frontend/src/api.ts`가 호출한다(health · auth · admin · prices · profile · projects · quotes · conversations).
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
 하지 않는 일: 경로 처리(`backend/api/`), 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(공통 오류, 대화 본문 한도)·8.6절(로그인 AC), docs/specs/api-error-contract.md, ADR 0019, backend/BACKEND.md.
@@ -11,6 +11,7 @@
 THREADS_ENABLED=1이면 명시적으로 준비한 DATABASE_URL의 분석 저장소·MCP 세션을 앱 수명 동안 관리한다.
 """
 import os
+import threading
 from http import HTTPStatus
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -49,6 +50,8 @@ async def lifespan(app: FastAPI):
             from backend.conversations.memory_service import Conversations
             conversations = Conversations(os.environ['DATABASE_URL'])
             app.state.conversations = conversations
+            # [왜] 색인 만들기(7~23초)가 서버 시작을 막지 않게 데몬 스레드로 한다. /health는 곧바로 답하고, 첫 질문이 색인을 기다리지 않게 한다(점검 C #1)
+            threading.Thread(target=conversations.warm, name='warmup', daemon=True).start()
         yield
     finally:
         if conversations:

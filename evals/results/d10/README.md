@@ -42,8 +42,9 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | `boot/` | - | 위 측정의 원시 출력: 시각표, 스모크 28단계, 52개 점검, 체크포인트 행 수, 합성 시험 출력, 측정 스크립트(`.log` 파일은 `.txt`를 덧붙여 둠) |
 | `corpus_v4h_fingerprint_2026-11-12.md` | 5 | v4h 카드·distinct_text·파일 sha256 |
 | `index_row_count_2026-11-13.md` | - | 운영 DB `SojaFit_2` 코퍼스 표 행 수 읽기 전용 조회(문서 1,360 · 청크 51,967), 다시 보는 쿼리, 52,244 → 51,967 날짜와 이유 |
-| `corpus_swap_2026-11-09/` | - | 11-09 운영 DB 코퍼스 교체 전(`check.log`) · 후(`verify.log`) 행 수 원본 |
+| `corpus_swap_2026-11-09/` | - | 11-09 운영 DB 코퍼스 교체 전(`check.log.txt`) · 후(`verify.log.txt`) 행 수 원본(`.log` 파일은 `.txt`를 덧붙여 둠) |
 | `chunk_source_check/` | - | 표·수치 청크 표본 123개를 원본 PDF 같은 쪽과 대조한 결과(`scripts/eval/chunk_source_check.py`) |
+| `chunk_source_check_rows_2026-11-16/` | - | 같은 123개를 PDF 표의 같은 행·열 칸 값까지 대조한 결과(`--rows`): 행 검사 117 일치 · 0 불일치 · 6 미확인(부품 행 표), 변이 시험, 남은 한계 |
 | `v3_gate_fail_2026-11-13.txt` | 5 | v3 게이트(`gate_report.py`)가 기준 미달 사본 4종에서 종료 1로 실패하는 출력(`mutation/v3_gate_demo.py`) |
 | `pytest_full_2026-11-13.txt` | - | 전체 pytest 실행 로그(macOS 로컬) |
 | `pytest_full_linux_2026-11-13.txt` | - | 전체 pytest 실행 로그(Linux 컨테이너, 저장소 Dockerfile 이미지 + 컨테이너 안 dev 설치). 실행 A(git 없음) 8 failed, 실행 B 0 failed |

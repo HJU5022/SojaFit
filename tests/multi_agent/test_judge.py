@@ -127,6 +127,14 @@ def test_grade2_budget_boundary_is_not_swallowed_by_row_adapter():
     assert error.value.grade == 2
 
 
+def test_grade2_search_failure_is_logged_by_class_and_does_not_stop_judging(caplog):
+    def broken(parts, terms):
+        raise RuntimeError('boom SS14 repetitive peak reverse voltage secret-token')
+    assert J._grade2_rows(broken, 'SS14', {'VRRM'}) == []
+    assert 'grade2_rows_failed error=RuntimeError' in caplog.text
+    assert 'secret-token' not in caplog.text and 'SS14' not in caplog.text
+
+
 def test_explicit_revision_is_extracted_and_row_revision_is_exact():
     """지정 판본은 접두어가 비슷한 다른 개정 코드와 섞이지 않아야 한다."""
     read = J.JudgeRead(role='R01', revision_wanted='S2202판')
@@ -559,6 +567,16 @@ def test_an_original_of_unknown_or_other_maker_is_not_read_from_the_tsc_document
     assert J.original_not_tsc('1N5819', '현재 D1~D4는 제조사 미상의 1N5819이다.')
     assert J.original_not_tsc('onsemi 1N4007RLG', '현재 부품은 onsemi 1N4007RLG')
     assert not J.original_not_tsc('TSC 1N5819', '현재 부품은 TSC 1N5819이다.')
+
+
+@pytest.mark.parametrize('text', ['현재 부품의 표기는 SS34지만 제조사는 확인하지 못했다.', '제조사 불명의 SS34이다.', '제조사가 확인하지 못한 상태다.'])
+def test_unknown_maker_wording_from_v3_02_is_read(text):
+    assert J.original_not_tsc('SS34', text)
+
+
+@pytest.mark.parametrize('text', ['VRRM은 확인하지 못했다.', '제조사는 TSC로 확인했다.', '역방향 전류는 확인하지 못했다. 제조사는 TSC이다.'])
+def test_unknown_maker_does_not_match_other_unconfirmed_facts(text):
+    assert not J.original_not_tsc('SS34', text)
 
 
 def test_find_widens_to_sibling_categories_and_keeps_a_family_the_user_named(monkeypatch):

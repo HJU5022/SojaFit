@@ -8,7 +8,7 @@ from starlette.formparsers import MultiPartException, MultiPartParser
 
 from backend import auth
 from backend.api.auth import demo_mode
-from backend.conversations.repository import InvalidRunState
+from backend.conversations.repository import LIVE_RUN, InvalidRunState, stale_run_seconds
 from backend.projects.models import Project, ProjectSummary
 from backend.projects.netlist import InvalidNetlist, InvalidNetlistEncoding, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
 from backend.projects.repository import DEMOS, InvalidProject, ProjectNotFound, ProjectRepository, project_name
@@ -228,7 +228,9 @@ def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
     with auth.connection() as conn:
         if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
             raise ProjectNotFound
-        if conn.execute("SELECT 1 FROM runs r JOIN threads t ON t.id=r.thread_id WHERE t.project_id=%s AND r.status='running' LIMIT 1", (project_id,)).fetchone():
+        # [왜] 멈춘 run(마지막 갱신이 stale 한도보다 오래되고 분석 잠금도 없음)은 막지 않는다. 막으면 인스턴스가 내려간 뒤 프로젝트를 영영 못 지운다(점검 B #3)
+        if conn.execute(f"SELECT 1 FROM runs r JOIN threads t ON t.id=r.thread_id WHERE t.project_id=%s AND {LIVE_RUN} LIMIT 1",
+                        (project_id, stale_run_seconds())).fetchone():
             raise InvalidRunState
         ids = [str(row[0]) for row in conn.execute('SELECT id FROM threads WHERE project_id=%s', (project_id,)).fetchall()]
         if ids and checkpoint_delete:

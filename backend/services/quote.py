@@ -79,8 +79,13 @@ class QuoteService:
             rows = conn.execute('SELECT a.id,a.message_id,a.candidate_part,a.verdict,c.id,a.created_at,a.part_number FROM approvals a '
                                 'JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
                                 'WHERE a.message_id=%s AND a.user_id=%s ORDER BY a.id', (message_id, user_id)).fetchall()
-            return [{'id': r[0], 'message_id': r[1], 'candidate_part': r[2], 'verdict': r[3],
-                     'case_id': r[4], 'created_at': r[5], 'part_number': r[6] or part_number(r[2])} for r in rows]
+            # [왜] 새로고침 뒤 승인과 함께 그 견적도 복원한다. 승인이 여러 건이어도 쿼리 하나로 읽어 승인별로 나눈다
+            quotes = conn.execute('SELECT q.id,q.approval_id,q.part_number,q.quantity,q.created_at FROM quotes q JOIN approvals a ON a.id=q.approval_id '
+                                  'WHERE a.message_id=%s AND q.user_id=%s ORDER BY q.id', (message_id, user_id)).fetchall()
+            return [{'id': r[0], 'message_id': r[1], 'candidate_part': r[2], 'verdict': r[3], 'case_id': r[4], 'created_at': r[5],
+                     'part_number': r[6] or part_number(r[2]),
+                     'quotes': [{'id': q[0], 'approval_id': q[1], 'part_number': q[2], 'quantity': q[3], 'created_at': q[4]} for q in quotes if q[1] == r[0]]}
+                    for r in rows]
 
     def approve(self, user_id: int, message_id: int, candidate_part: str, verdict: str):
         with auth.connection() as conn:
@@ -121,10 +126,10 @@ class QuoteService:
         with auth.connection() as conn:
             if conn.execute('SELECT 1 FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id)).fetchone() is None:
                 raise QuoteNotFound
-            rows = conn.execute("""SELECT q.id,q.approval_id,q.part_number,q.quantity,q.created_at FROM quotes q
+            rows = conn.execute("""SELECT q.id,q.approval_id,q.part_number,q.quantity,q.created_at,t.id FROM quotes q
                 JOIN approvals a ON a.id=q.approval_id JOIN messages m ON m.id=a.message_id
                 JOIN threads t ON t.id=m.thread_id WHERE q.user_id=%s AND t.project_id=%s ORDER BY q.id""", (user_id, project_id)).fetchall()
-            return [{'id': r[0], 'approval_id': r[1], 'part_number': r[2], 'quantity': r[3], 'created_at': r[4]} for r in rows]
+            return [{'id': r[0], 'approval_id': r[1], 'part_number': r[2], 'quantity': r[3], 'created_at': r[4], 'thread_id': str(r[5])} for r in rows]
 
     def list_cases(self, user_id: int):
         with auth.connection() as conn:

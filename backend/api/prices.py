@@ -1,6 +1,6 @@
 """가격 · 재고 HTTP 경계: `GET /api/prices`(로그인 필요, 요청 때 Mouser를 한 번 조회).
 
-- 화면 쪽 짝: `frontend/src/api/prices.ts`.
+- 화면 쪽 짝: `frontend/src/api.ts`.
 하지 않는 일: Mouser 호출 · 응답 거르기 · 호출 상한(`backend/services/mouser.py`), 결과 저장 · 캐시 · 로그(ADR 0009, 하지 않는다).
 출처: SPEC.md 4절 · 6절 · 7절 · 8.4절, ADR 0009.
 읽는 환경변수: DEMO_MODE(기본 1, 1이면 Mouser를 부르지 않음).

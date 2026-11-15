@@ -75,3 +75,25 @@ def test_order_code_forms_are_kept_with_single_space():
     s = st('D1에 쓸 LL4448 L0 대신 TSC LL4448 L0G로 바꿔도 돼?', value='LL4448')
     assert part_tokens(s['question'], {'D1'}) == ['LL4448', 'LL4448 L0', 'LL4448 L0G']
     assert ground_part_names('LL4448 L0', ['TSC LL4448  L0G'], s) == ('LL4448 L0', ['LL4448 L0G'])
+
+
+# 점검 C #7: v3-08 · v3-02의 실제 문장. "현재 TSC SS14가 달려 있다"를 못 잡으면 원래 부품이 읽기 LLM 표본(SS14 또는 넷리스트 1N5819)에 맡겨졌다
+V3_08 = {'target': 'D2', 'target_part': {'ref': 'D2', 'value': '1N5819', 'nets': []},
+         'conditions': '브리지 전체를 이전에 표면실장으로 개조했고 D2에는 현재 TSC SS14가 달려 있다. 넷리스트의 1N5819 표기는 개조 전 값이다.',
+         'question': '브리지 D2를 TSC SS14H로 바꾸면 지금 쓰는 SS14와 같은 수준으로 사용할 수 있을까?'}
+
+
+@pytest.mark.parametrize('orig', ['1N5819', 'SS14', 'TSC SS14', ''])
+def test_v3_08_subject_particle_after_current_part_is_read(orig):
+    assert current_part(V3_08['conditions'], V3_08['question'], 'D2', {'D2'}) == 'SS14'
+    assert ground_part_names(orig, ['SS14H'], V3_08) == ('SS14', ['SS14H'])
+
+
+@pytest.mark.parametrize('sentence', ['D2에는 현재 TSC SS14가 달려 있다.', 'D2에는 지금 SS14이 달려 있다.', 'D2에 현재 SS14를 달아 쓴다.'])
+def test_current_particles_ga_i_eul_reul_are_all_read(sentence):
+    assert current_part('', sentence, 'D2', {'D2'}) == 'SS14'
+
+
+def test_ga_particle_does_not_make_a_candidate_or_other_ref_current():
+    assert current_part('D3에는 현재 SS14가 달려 있다.', 'D2를 SS24로 바꿔도 돼?', 'D2', {'D2', 'D3'}) is None
+    assert current_part('', 'D2에 SS24가 달려 있으면 어때?', 'D2', {'D2'}) is None  # '지금/현재'가 없으면 현재 부품 표현이 아니다

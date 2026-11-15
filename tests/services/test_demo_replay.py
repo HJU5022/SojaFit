@@ -222,6 +222,8 @@ def test_ensure_thread_refuses_other_targets_and_questions_before_the_stream_ope
     q = {k: S.QUESTIONS[0][k] for k in ('id', 'kind', 'circuit', 'netlist', 'target', 'conditions', 'question')}
     fake_recording(monkeypatch, tmp_path, [{**q, 'resume': None}])
     pinned = demo.connections(q['netlist'])
+    # [왜] 기록하지 않은 다른 대상을 시험하려면 LED가 아닌 다이오드가 필요하다(D2는 LED라 #139의 지원 대상 검사가 먼저 거른다). 일반 다이오드 D3을 더한 사본을 쓴다
+    pinned = {**pinned, 'components': [*pinned['components'], {'ref': 'D3', 'value': '1N4148', 'footprint': 'Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal', 'description': 'Diode'}]}
 
     class Conn:
         def __init__(self):
@@ -249,12 +251,16 @@ def test_ensure_thread_refuses_other_targets_and_questions_before_the_stream_ope
 
     conn = Conn()
     app = Conversations.__new__(Conversations)
-    app.mode, caller_circuit = 'demo', {'components': [{'ref': 'D2'}], 'nets': []}
+    app.mode, caller_circuit = 'demo', {'components': [{'ref': 'D3'}], 'nets': []}
     monkeypatch.setattr(app, 'connection', lambda: conn)
-    for target, question in (('D2', None), ('D1', '다른 질문'), ('D1', q['question'] + ' ')):
+    for target, question in (('D3', None), ('D1', '다른 질문'), ('D1', q['question'] + ' ')):
         with pytest.raises(HTTPException) as error:
             app.ensure_thread(1, 'thread', '이름', caller_circuit, target, question=question, conditions=q['conditions'])
         assert error.value.status_code == 422 and '[v3-01]' in error.value.detail
+    # LED(D2)는 기록 대조에 가기 전에 지원 대상 검사가 먼저 거른다(#139)
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(1, 'thread', '이름', caller_circuit, 'D2', question=None, conditions=q['conditions'])
+    assert error.value.status_code == 422 and 'D2은(는) LED로 식별됩니다' in error.value.detail
     assert not any(any(word in query.upper() for word in ('INSERT', 'UPDATE', 'DELETE')) for query in conn.queries)
 
 

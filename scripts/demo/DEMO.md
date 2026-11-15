@@ -15,7 +15,7 @@
 
 ## 데모 질문
 
-질문 목록은 `record_demo.py`의 `QUESTIONS`다. 아래 결과는 `data/demo/recordings/outcomes.json`(기록일 2026-11-12, 코드 `8e769db`)에서 옮겼다.
+질문 목록은 `record_demo.py`의 `QUESTIONS`다. 아래 결과는 `data/demo/recordings/outcomes.json`(기록일 2026-11-15(UTC), 코드 `c483bab0`)에서 옮겼다.
 
 | id | 회로 · 대상 | 유형 | 출처 | 기록 결과 |
 |---|---|---|---|---|

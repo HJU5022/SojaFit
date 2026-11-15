@@ -36,7 +36,7 @@ class QuoteBody(BaseModel):
     quantity: int = Field(ge=1, le=100000)
 
 
-# 응답 본문. 칸은 backend/services/quote.py가 만드는 dict와 frontend/src/api/quotes.ts의 타입과 같다. 가격 · 재고 칸은 없다
+# 응답 본문. 칸은 backend/services/quote.py가 만드는 dict와 frontend/src/api.ts의 타입과 같다. 가격 · 재고 칸은 없다
 class Approval(BaseModel):
     id: int
     message_id: int
@@ -47,16 +47,21 @@ class Approval(BaseModel):
     created_at: datetime
 
 
-class SavedApproval(Approval):
-    case_id: int | None  # 응답 형식은 유지하며 조회에는 활성 사례가 있는 승인만 반환한다.
-
-
 class Quote(BaseModel):
     id: int
     approval_id: int
     part_number: str
     quantity: int
     created_at: datetime
+
+
+class SavedApproval(Approval):
+    case_id: int | None  # 응답 형식은 유지하며 조회에는 활성 사례가 있는 승인만 반환한다(사례를 지우면 승인 기록은 남아도 목록에서 빠져 다시 승인할 수 있다).
+    quotes: list[Quote]  # [왜] 새로고침 뒤 화면이 이 승인의 마지막 견적을 다시 보여 준다(가격 칸 없음, ADR 0009)
+
+
+class QuoteListItem(Quote):
+    thread_id: str  # 견적이 나온 검토(대화). 화면이 그 검토로 돌아가는 링크에 쓴다
 
 
 class ApprovedCase(BaseModel):
@@ -95,7 +100,7 @@ def create_quote(approval_id: int, body: QuoteBody, user_id: int = Depends(auth.
     return quotes.create_quote(user_id, approval_id, body.quantity)
 
 
-@router.get('/projects/{project_id}/quotes', response_model=list[Quote])
+@router.get('/projects/{project_id}/quotes', response_model=list[QuoteListItem])
 def list_quotes(project_id: int, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
     return quotes.list_quotes(user_id, project_id)
 

@@ -1,8 +1,8 @@
 # SojaFit
 
 - 상태: 현행
-- 기준일: 2026-11-13
-- 기준 커밋: `ea5797c`
+- 기준일: 2026-11-16
+- 기준 커밋: `7ba86325`(`main`, 운영 배포 소스)
 - 정본 여부: 정본(배포 주소 · 배포 리비전 · 실행 방법). 기능은 [SPEC.md](SPEC.md), 평가 수치는 [EVAL_REPORT.md](EVAL_REPORT.md), 게이트 증거는 [docs/GATES.md](docs/GATES.md)가 정본
 - 관련 문서: [SPEC.md](SPEC.md), [EVAL_REPORT.md](EVAL_REPORT.md), [docs/GATES.md](docs/GATES.md), [SOJAFIT.md](SOJAFIT.md), [AGENTS.md](AGENTS.md)
 
@@ -11,10 +11,10 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | API(배포) 주소 | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상. Cloud Run이라 첫 요청은 몇 초 걸린다. 같은 주소의 `/login`이 React 화면이다 |
-| 배포 리비전 | `sojafit-api-fadde2a`(태그 `main-fadde2a`). 소스: `main` `fadde2a`. 100% 전환 2026-11-13 08:17 KST | 인증 없는 점검만 했다. 0% 점검 주소: `/health` 200(냉 기동 11.1초), `/login` 200, `/app` 200, `/openapi.json` 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), 새 화면 번들에 `모두 모름으로 계속` · `원하는 정격도 적어 주세요` 문구 있음, 오류 로그 없음. 전환 뒤 공개 주소: `/health` 200(0.13초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 번들 문구 둘 다 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security`. `ae3de0b`부터 `fadde2a`까지 `frontend/src` 2개 파일(예시 질문 · 안내 문구)과 문서만 바뀌었다. 측정 커밋 `ad8612e`와 비교하면 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package*.json`은 바뀌지 않았다. 바뀐 화면: 예시 질문과 안내 문구가 사용 조건 · 원하는 정격을 함께 적게 한다. 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복은 하지 않았다. 이전 리비전 `sojafit-api-ae3de0b`(11-13 08:07 KST 전환). 증거 · 되돌리기: [docs/GATES.md](docs/GATES.md) G1, `docs/worklog/jeongun.md` 11-13 항목 |
+| 배포 리비전 | `sojafit-api-main7ba86325-1115`(소스 `main` `7ba86325`, 2026-11-15 22:29 KST 100% 전환, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 동결(11-16 24:00) 뒤 다시 배포하면 이 줄과 [GATES](docs/GATES.md) G1을 같은 리비전으로 한 번에 고친다 | 리비전 이름 · 전환 시각 · 소스는 조장이 전달한 값이고 이 문서를 고치는 동안 `gcloud`로 직접 확인하지 않았다. 평가용 계정 A · B 25단계(로그인, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작, 같은 run 재개, 승인, 같은 승인 다시(409), 견적, 계정 B의 접근 404)는 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`, 11-13)에서 통과(실패 0 · 건너뜀 0)했고, 지금 리비전에서 같은 점검을 했다는 기록은 없다(확인 못 함). 하지 않은 것: Google 로그인 왕복, 이메일 가입 왕복. 11-14 22:43 ~ 11-15 21:26 KST에는 고정해 둔 `EXA_API_KEY` 비밀 버전이 파기돼 새 인스턴스가 시작하지 못했다([GATES](docs/GATES.md) G1). 증거: [evals/results/d10/deploy_574de79/](evals/results/d10/deploy_574de79/README.md), [docs/GATES.md](docs/GATES.md) G1 · G4 |
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
-| 기준 커밋 | `ea5797c` | 이 문서가 기술하는 코드이며, 배포 리비전의 소스 `main` `fadde2a`와는 `frontend/src`가 다르다(`ea5797c`에는 위 화면 변경이 없다). 동결 커밋(11-16 24:00)은 아직 정해지지 않았고, 동결 뒤 배포 리비전과 같은 코드인지 확인한다 |
-| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
+| 기준 커밋 | `7ba86325`(`main`) | 이 문서가 기술하는 코드의 기준이다. 배포 리비전의 소스와 같다. 동결 커밋(11-16 24:00)이 정해지면 이 줄을 그 커밋으로 고치고, 배포 소스와 같은 코드인지 `git diff --stat <배포 소스> <동결 커밋> -- backend frontend db Dockerfile`로 확인한다 |
+| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
 | 시연 영상 | 영상 파일 없음. 초안 스크립트 [`docs/deliverables/demo_script.md`](docs/deliverables/demo_script.md) | 정상 1 + 실패(거절) 1, 3분 이내 |
 
 ```bash
@@ -39,7 +39,7 @@ curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.ru
 D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오드로 바꿔도 되나?
 ```
 
-공개 ATtiny85 계열 KiCad 회로의 다이오드 554개 중 1N4148(100V)이 53개, 1N4007(1000V)이 11개였다. 5V 회로에 과한 정격이 그대로 이어진다. 제조사 대체품 조회 도구는 동등성을 보증하지 않는다고 고지하고, 범용 챗봇이 없는 품번을 대체품으로 내놓은 사례도 있다. 근거와 조사 출처는 [`docs/TOPIC.md`](docs/TOPIC.md).
+공개 ATtiny85 계열 KiCad 회로의 다이오드 554개 중 1N4148(100V)이 53개, 1N4007(1000V)이 11개였다. 5V 회로에 과한 정격이 그대로 이어진다. 제조사 대체품 조회 도구는 동등성을 보증하지 않는다고 고지한다. 같은 50문항을 범용 코딩 에이전트(Codex)에 넣은 팀 측정은 45/50(우리 50/50은 `DEMO_MODE` 미기록 측정, 아래 4절 표)이고, 없는 품번을 내놓은 사례는 없었다(비관련 25건 모두 올바른 거절). 오답 4건은 넷리스트를 읽지 못한 역할 질문 3건과 시험 조건 차이를 놓친 승인 1건이다. 한계: 정답 초안을 같은 도구가 썼고 Codex 답의 원본 로그가 없다([EVAL_REPORT.md](EVAL_REPORT.md) 10장, [TALLY.md](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)). 근거와 조사 출처는 [`docs/TOPIC.md`](docs/TOPIC.md).
 
 ---
 
@@ -212,16 +212,33 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 
 ## 4. 지표
 
-기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 현재 값이다. 수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 3-D · 8장이다.
+기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 값이다. 이 절 첫 표(통과 50/50 · p95 10.0 · 8.6 ~ 8.9 등)의 측정은 결과 파일에 `DEMO_MODE`가 없는 11-14 이전 값이다(코드 기본값 1 = 검색이 BM25만). `DEMO_MODE=0`이 기록된 v3 50문항 측정의 통과 수는 47 ~ 50/50이다(아래 "통과 수와 응답 시간(조건별)" 표의 통과 열). 수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 3-D · 8장이다.
 
 | 지표 | 값 | 조건 | 원시 결과 |
 |---|---|---|---|
 | 통과(정답 근거 인용 + 올바른 거절) | 50/50 (cited_gold 25 · correct_refusal 25) | 1세트, 커밋 `520988c`+작업 트리 변경, 11-12 | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
-| 응답 시간 | p50 4.9초 · p95 10.0초 | 위와 같음 | 위와 같음 |
+| 응답 시간 | p50 4.9초 · p95 10.0초 (`DEMO_MODE` 미기록) | 위와 같음 | 위와 같음. 조건별 값은 아래 "응답 시간(조건별)" |
 | 통과 · 무관 거절 · 지어낸 답 | 4세트 모두 50/50 · 25/25 · 0 | 사전 등록 #50, 커밋 `93a497c` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_4sets_93a497c.json` |
-| 응답 시간 p95 · 50문항 LLM 비용 | 8.6 ~ 8.9초 · $0.044 ~ 0.052 | 위와 같음 | 위와 같음 |
-| 동결 파일로 병합 뒤 2세트 | 50/50, p95 10.4 · 7.8초 | 커밋 `f2b914e` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_merged_2sets_f2b914e.json` |
+| 응답 시간 p95 · 50문항 LLM 비용 | 8.6 ~ 8.9초(`DEMO_MODE` 미기록) · $0.044 ~ 0.052 | 위와 같음 | 위와 같음 |
+| 동결 파일로 병합 뒤 2세트 | 50/50, p95 10.4 · 7.8초(`DEMO_MODE` 미기록) | 커밋 `f2b914e` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_merged_2sets_f2b914e.json` |
 | 단일 그래프 대비 | 48/50 | 단일 1세트, 커밋 `11dc216`+작업 트리 변경 | `evals/results/graph/2026-11-12-d9-v3-single/set1.json` |
+
+**통과 수와 응답 시간(조건별).** 모두 동결 v3 50문항 1세트(`run_gate`, 문항을 차례로 하나씩)이고 p50 · p95는 결과 파일 `summary`의 값 그대로다. 결과 파일에 `DEMO_MODE`가 기록된 것은 11-14 측정부터다. 그 앞 행은 "DEMO_MODE 미기록"이며, 코드 기본값이 1(검색이 BM25만)이라 같은 조건이라고 말할 수 없다. 실행 장소는 파일에 적혀 있지 않다(DB `postgres`, LLM `openrouter`만 기록). 경로는 `evals/results/graph/` 아래다.
+
+| 구분 | `DEMO_MODE` | 웹(`EVAL_WEB`) | 일자 · 코드 | 통과 | p50 | p95 | 결과 파일 |
+|---|---|---|---|---|---|---|---|
+| 옛 헤드라인 1 | 미기록 | 미기록 | 11-11 · `9634c5c`+작업 트리 변경 | 50/50 | 4.7 | 9.2 | `2026-11-11-speed-g-all/E-v3-50-warm-n5/set1.json` |
+| 옛 헤드라인 2(위 표의 값) | 미기록 | 미기록 | 11-12 · `520988c`+작업 트리 변경 | 50/50 | 4.9 | 10.0 | `2026-11-12-d9-improve2/set1.json` |
+| 옛 헤드라인 3 | 미기록(11-14 `2026-11-14-web-prefetch/README.md`는 1, BM25만이라고 적음) | 미기록 | 11-13 · `a3ad51e` | 50/50 | 3.7 | 8.1 | `2026-11-13-citecheck-v3/set1.json` |
+| 웹 끔 | 0 | 0 | 11-14 · `d7023cb` | 47/50 | 5.5 | 10.9 | `2026-11-14-web-prefetch/B0-web-off/set1.json` |
+| 웹 켬 · R1의 비교 기준 G2 set1 | 0 | 1 | 11-14 · `1df3f93` | 49/50 | 6.4 | 13.0 | `2026-11-14-grade3-early/G2/set1.json` |
+| 웹 켬 · G2 set2 | 0 | 1 | 11-14 · `1df3f93` | 49/50 | 5.3 | 13.3 | `2026-11-14-grade3-early/G2/set2.json` |
+| 웹 켬 · R1 set1(마지막 채택 구성) | 0 | 1 | 11-14 · `b790004` | 50/50 | 6.8 | 10.5 | `2026-11-14-no-replan/R1/set1.json` |
+| 웹 켬 · R1 set2 | 0 | 1 | 11-14 · `b790004` | 48/50 | 5.9 | 12.1 | `2026-11-14-no-replan/R1/set2.json` |
+
+- **p95 ≤ 10초(SPEC 3절 목표)는 일부 조건에서만 충족된다.** 10초 이내인 값(9.2 · 10.0 · 8.1)은 모두 `DEMO_MODE` 미기록 행이다. `DEMO_MODE=0`이 기록된 이 표의 행은 웹을 끈 쪽(10.9)도 넘었고, 웹 근거를 켠 행은 10.5 ~ 13.3초다. 웹을 끈 후속 측정 중 일부는 10초 안이다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절. 그 결과 파일은 이 저장소 브랜치에 없는 것을 포함한다).
+- 웹을 켜면 느린 쪽은 웹 근거를 찾는 문항이다. 거절해야 하는 문항도 웹 근거를 찾느라 시간이 든다(`2026-11-14-web-prefetch/README.md`). 운영 설정은 웹 켬(`EXA_WEB_SEARCH_ENABLED=1`)이다.
+- 같은 코드의 두 세트끼리도 p95가 0.3 ~ 1.6초 다르다(G2 13.0 · 13.3, R1 10.5 · 12.1). 속도 실험의 같은 코드 4회는 13.0 ~ 16.8초였다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절). 한 번의 값으로 1~2초 차이를 가리기 어렵다.
 
 검색 기준선(v1, 폐기한 설정): 관련 19문항, `text-embedding-3-small` 하이브리드(RRF) 문서 Recall@5 0.737 · MRR 0.649 · Page Hit@5 0.368, 벡터만 0.684 · 0.589 · 0.263, BM25만 0.263 · 0.195 · 0.211(`evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`). 현재 설정(`voyage-4-large` + `rerank-3`)의 R1 test 38문항 Page Recall@5는 0.579 → 0.908이다(EVAL_REPORT 1-4절). 개선 전후 비교와 실패 분석은 [EVAL_REPORT.md](EVAL_REPORT.md)에 있다.
 
@@ -254,31 +271,59 @@ curl http://localhost:8000/health   # {"status":"ok"}
 
 ### 키를 넣고 실제 모드
 
-`.env.example`은 실제 모드(`DEMO_MODE=0`)가 기본이다. 복사한 뒤 키와 32바이트 이상의 무작위 `AUTH_SECRET`을 채워야 서버가 시작한다.
+실제 모드는 `.env`에서 `DEMO_MODE=0`과 `DEMO_REPLAY=0`으로 두고 키와 32바이트 이상의 무작위 `AUTH_SECRET`을 채워야 서버가 시작한다(`DEMO_MODE`가 1이 아닌데 `AUTH_SECRET`이 비면 `backend/auth.py`가 시작을 거부하고, `DEMO_REPLAY=1`은 `DEMO_MODE=1`과 함께일 때만 허용된다). `.env.example`의 `DEMO_MODE` · `DEMO_REPLAY` 기본값은 그 파일의 주석을 따르므로, 복사한 뒤 두 값을 위 조건에 맞는지 확인하고 띄운다. 키 없는 데모를 띄울 때는 `.env`를 만들지 않거나 두 값을 1로 둔다.
 
 ```bash
-cp .env.example .env                                                  # DEMO_MODE=0
+cp .env.example .env                                                  # 두 값과 키를 채운 뒤 띄운다
 uv run python -c "import secrets; print(secrets.token_urlsafe(32))"   # AUTH_SECRET 만들기
 docker compose up --build
 ```
 
 계정을 바꾸는 방법과 기존 DB에 적용하는 절차는 [`db/DB.md`](db/DB.md)에 있다.
 
+### 선택: KiCad 렌더러
+
+KiCad 원본 회로도를 그림(PNG)으로 바꾸는 일만 하는 별도 서비스다(무상태, `POST /render`). 기본 `docker compose up`에는 들어 있지 않다.
+
+| 무엇 | 어떻게 | 근거 |
+|---|---|---|
+| 이미지 | `Dockerfile`의 `renderer` target. KiCad 10을 설치하고 `uvicorn backend.projects.schematic:app`을 8000 포트로 띄운다 | [`Dockerfile`](Dockerfile) |
+| 로컬에서 같이 띄우기 | compose profile `schematic`: `docker compose --profile schematic up --build` | [`docker-compose.yml`](docker-compose.yml) `renderer` |
+| API가 렌더러를 찾는 주소 | 환경변수 `KICAD_RENDERER_URL`. compose의 api는 값이 없으면 `http://renderer:8000`을 쓴다. 그래서 profile 없이 띄우면 그 주소에 서비스가 없어 KiCad 원본 회로도 렌더가 `KiCad 렌더러에 연결할 수 없습니다`로 실패한다 `[추정]`(코드 `render_remote_kicad`를 읽은 것이고 compose에서 실행해 보지는 않았다) | [`docker-compose.yml`](docker-compose.yml), `backend/projects/schematic.py` |
+| Cloud Run | 주소는 HTTPS여야 하고 API가 메타데이터 서버의 ID token을 붙여 부른다(`_renderer_headers`). 운영 리비전에는 `KICAD_RENDERER_URL`이 설정돼 있다(조장 전달, 직접 확인 못 함) | `backend/projects/schematic.py` |
+| 렌더러 없이 | `INCLUDE_KICAD=1`로 API 이미지를 빌드해 `kicad-cli`를 넣고 `KICAD_RENDERER_URL`을 비워 두면 API 프로세스가 직접 부른다(실행 파일은 `KICAD_CLI`로 지정). compose의 api는 위 기본 주소가 있어 이 방식은 compose 밖에서 쓴다 | [`Dockerfile`](Dockerfile), `backend/projects/external_schematic.py` |
+
+렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)뿐이다 `[실측: grep]`. 분석 그래프 · 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 다만 분리(`renderer` target 추가) 뒤의 코드로 키 없는 새 clone 기동과 스모크를 다시 재지는 않았다([GATES](docs/GATES.md) G2).
+
 ### 화면 개발 서버
 
-compose 이미지는 React 화면을 빌드해 api에 넣으므로 위 명령만으로 화면이 뜬다. 화면을 고치며 볼 때는 API를 `localhost:8000`에 띄워 둔 채 Vite 개발 서버를 쓴다(`/api` 요청을 `localhost:8000`으로 넘김). 명령과 시험은 [`frontend/FRONTEND.md`](frontend/FRONTEND.md)에 있다.
+compose 이미지는 React 화면을 빌드해 api에 넣으므로 위 명령만으로 화면이 뜬다. 화면을 고치며 볼 때는 API를 `localhost:8000`에 띄워 둔 채 Vite 개발 서버를 쓴다(`/api` 요청을 `localhost:8000`으로 넘기고, 백엔드의 Origin 검사(`AUTH_ORIGIN`)를 통과하도록 프록시가 Origin을 `http://localhost:8000`으로 바꿔 보낸다). 명령과 시험은 [`frontend/FRONTEND.md`](frontend/FRONTEND.md)에 있다.
 
 ```bash
-cd frontend && npm ci && npm run dev   # 화면 개발 서버
-npm run test:run                       # 화면 단위 시험
+cd frontend && npm ci && npm run dev   # 화면 개발 서버 http://localhost:5173
+npm test                               # 화면 단위 시험(node --test)
+npm run build                          # 타입 검사 + 빌드(frontend/dist)
 ```
 
 ### 테스트와 평가
 
 ```bash
 uv run pytest -q                                                              # 회귀 테스트(키·DB 없이 도는 것만)
+uv run python evals/runners/freeze.py --check                                 # 동결 평가셋 해시 검사(무료, 키 · DB · 네트워크 불필요)
 uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json> 5 hybrid  # 검색 지표(코퍼스 DB와 임베딩 키 필요)
 ```
+
+- `freeze.py --check`는 2026-11-16에 실행했고 "동결 이후 바뀐 파일: 없음"(종료 코드 0)이었다. 동결 해시 v1 · v2 · v3의 기록은 [`evals/FROZEN.json`](evals/FROZEN.json), v3의 재동결 이력은 [EVAL_REPORT.md](EVAL_REPORT.md) 2절 표와 [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md)에 있다.
+- **v3 기준 게이트(유료, 키 필요).** 평가자가 다시 돌리려면 `.env`에 `OPENROUTER_API_KEY`, `VOYAGE_API_KEY`, 코퍼스를 적재한 `DATABASE_URL`, `LANGFUSE_*` 키가 있어야 하고, 서비스와 같은 검색 설정으로 재려면 `DEMO_MODE=0`을 **명시**한다(안 쓰면 코드 기본값 1 = BM25만이라 위 응답 시간 표의 "미기록" 행처럼 조건이 달라진다). 명령 앞에 붙인 `DEMO_MODE=0`이 `.env`의 값보다 우선한다(`.env`에 `DEMO_MODE=1`을 넣고 uv 0.13.7에서 `0`이 나오는 것을 확인했다). 웹 근거까지 재려면 `EVAL_WEB=1`과 `EXA_WEB_SEARCH_ENABLED=1` · `EXA_API_KEY`가 더 필요하고 Exa 검색 요금이 따로 든다.
+
+  ```bash
+  DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 \
+    uv run --env-file .env python -m evals.runners.run_gate evals/dataset_v3.jsonl --out eval-out --sets 1 --keep-going
+  uv run python -m evals.runners.gate_report evals/dataset_v3.jsonl eval-out   # 무료. 기준 미달이면 종료 코드 1
+  ```
+
+  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 이 명령 자체는 이번에 다시 실행하지 않았다(유료). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
+- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡 순서 `npm ci && npm run test:run && npm run build`와 `gitleaks`, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md)). 동결 직전에 `pytest` · `freeze.py --check` · `gitleaks`를 다시 돌려야 한다. Actions에서의 실제 실행 결과는 확인하지 못했다.
 
 ---
 
@@ -344,6 +389,20 @@ SojaFit/
 - **데모 코퍼스 스냅샷**: 키 없는 compose가 로컬 DB에 넣는 TSC 42문서 · 청크 1,556개의 출처 · 이용 조건 · 고른 규칙은 [`data/demo/snapshot/SNAPSHOT.md`](data/demo/snapshot/SNAPSHOT.md)에 있다.
 - **넣지 않는 데이터시트**: 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트는 받지 않는다. 이 회사 부품은 링크만 보여 준다.
 - **회로**: 평가·시연용 회로 5종은 라이선스를 확인한 공개 KiCad 프로젝트(MIT, CC BY-SA 3.0·4.0)다. 원 저장소와 커밋은 [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md)에 있다.
+
+### 제3자 소프트웨어 · 라이선스
+
+| 대상 | 쓰는 곳 | 라이선스 | 근거 |
+|---|---|---|---|
+| KiCad 10(`kicad-cli`) | 원본 회로도 변환 전용 `renderer` 이미지(`Dockerfile`의 `renderer` target, 공식 `ppa:kicad/kicad-10.0-releases`의 `kicad=10.0.*`). 기본 API 이미지에는 넣지 않고 `INCLUDE_KICAD=1`로 빌드할 때만 들어간다(선택). KiCad를 고치지 않고 실행 파일(`kicad-cli`)로 부른다 | GPL-3.0-or-later | [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) |
+| KiCad 라이브러리(심볼 · 풋프린트 · 3D) | 위 `kicad` 패키지에 딸려 와 변환할 때 쓰인다. 저장소에 복사해 두지 않았다 | CC-BY-SA 4.0, KiCad 라이브러리 예외(라이브러리 부품을 쓴 설계에는 그 라이선스를 강제하지 않는다)가 붙는다 | KiCad 프로젝트의 라이선스 안내 `[문서]`. 이 저장소에 원문 사본은 없다(확인 못 함) |
+| 외부 공개 회로도(검색 결과로 화면에 보이는 것) | 사용자가 회로도 검색을 누를 때 확인된 공개 저장소의 고정 commit에서 받아 그림으로 렌더한다. 저장소에 넣지 않는다 | 저장소마다 다르다. 화면이 출처(`attribution`) · 라이선스(`license`) · 원본 링크를 그림 옆에 같이 보인다. 라이선스를 확인하지 못한 자료는 `NOASSERTION`을 일괄 허용하지 않는다 | [`backend/projects/PROJECTS.md`](backend/projects/PROJECTS.md), `frontend/src/components/Schematic.tsx` |
+| 평가 · 데모용 공개 회로 | 저장소에 사본이 있다 | 프로젝트마다 MIT · CC BY-SA 3.0 · 4.0 등 | [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md) |
+| TSC 데이터시트 | 위 데이터 절 | 사이트 약관: 정보 · 비상업 목적, 고치지 않고 고지 · 출처 유지 | [`data/corpus/CORPUS.md`](data/corpus/CORPUS.md) |
+
+- **이 저장소 자체의 라이선스**: 루트에 `LICENSE` · `NOTICE` 파일이 없다(2026-11-16 `ls`로 확인). 저장소 사용을 허락하는 라이선스를 정해 두지 않았다. 저장소는 팀 비공개(`aihuman-7th/proj3-b`)이고 과제 제출용이다.
+- KiCad GPL 고지: 렌더러는 `docker compose --profile schematic up`이나 별도 서비스로 돌려 API가 HTTP로 부른다(아래 "선택: KiCad 렌더러"). 이 이미지를 공개로 배포할 때의 GPL 의무(소스 제공 · 고지)는 따로 검토하지 않았다(확인 못 함).
+- Python · npm 의존성의 라이선스는 `uv.lock` · `frontend/package-lock.json`에 있고 하나씩 대조하지 않았다.
 
 ### 안전
 

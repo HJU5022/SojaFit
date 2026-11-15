@@ -892,6 +892,24 @@ def test_production_requires_valid_auth_secret(monkeypatch):
     auth.validate_auth_configuration()
 
 
+def test_env_example_starts_keyless_and_lists_every_variable_the_code_reads(monkeypatch):
+    """`cp .env.example .env` 뒤 키 없이 compose가 뜨려면 데모 모드가 기본이어야 한다(점검 D #3). 코드가 읽는 변수 이름도 빠뜨리지 않는다."""
+    import re
+    from pathlib import Path
+    text = (Path(__file__).resolve().parents[2] / '.env.example').read_text(encoding='utf-8')
+    values = dict(re.findall(r'^([A-Z][A-Z0-9_]*)=(.*)$', text, re.M))
+    assert values['DEMO_MODE'] == '1' and values['DEMO_REPLAY'] == '1' and values['AUTH_SECRET'] == ''
+    for name, value in values.items():
+        monkeypatch.setenv(name, value)
+    auth.validate_auth_configuration()  # 빈 AUTH_SECRET도 데모 모드에서는 통과
+    assert 'DEMO_REPLAY' in text.split('\nDEMO_MODE=1')[0]  # 실제 모드로 바꾸는 안내가 DEMO_REPLAY도 0으로 바꾸라고 말한다
+    from backend.services import demo
+    monkeypatch.setenv('DEMO_MODE', '0')
+    with pytest.raises(ValueError):  # DEMO_REPLAY=1을 둔 채 DEMO_MODE만 0으로 바꾸면 서버가 못 뜬다: 안내 문구가 필요한 이유
+        demo.enabled()
+    assert all(re.search(rf'^#? ?{name}=', text, re.M) for name in ('WEB_PREFETCH', 'KICAD_CLI', 'LANGFUSE_HOST'))
+
+
 def test_keyed_session_login_rotation_and_logout(monkeypatch):
     import os
     import secrets

@@ -3,6 +3,7 @@ import io
 import base64
 import hashlib
 import json
+import logging
 import os
 import re
 import subprocess
@@ -11,6 +12,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from urllib.parse import quote, unquote
 
+LOGGER = logging.getLogger(__name__)
 
 # 제품·커뮤니티 글과 사용자 업로드 주소는 다운로드 대상에서 제외한다.
 PDF_PATHS = {
@@ -361,7 +363,7 @@ def verified_rows(raw, url, parts, terms, *, grade=None):
     worker = Path(__file__).resolve()
     try:
         result = subprocess.run([sys.executable, '-I', str(worker), url, json.dumps(parts), json.dumps(terms), str(grade or '')],
-                                input=raw, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                input=raw, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 timeout=12, check=True,
                                 env={k: os.environ[k] for k in ('SystemRoot', 'WINDIR', 'PATH', 'TMP', 'TEMP', 'LANG')
                                      if k in os.environ})
@@ -373,14 +375,16 @@ def verified_rows(raw, url, parts, terms, *, grade=None):
                 row['source_url'] = official_pdf(url, grade=grade)
                 row['source_sha256'] = digest
         return rows
-    except (subprocess.SubprocessError, OSError, ValueError):
+    except (subprocess.SubprocessError, OSError, ValueError) as error:
+        # [왜] 검증 하위 프로세스가 죽거나 시간이 넘어도 [](근거 없음)로만 보였다. 예외 종류와 stderr 마지막 한 줄만 남긴다(주소 · 질의 · 키는 적지 않는다)
+        lines = (getattr(error, 'stderr', None) or b'').decode('utf-8', 'replace').strip().splitlines()
+        LOGGER.warning('datasheet_verify_failed error=%s stderr_last=%s', type(error).__name__, lines[-1][:200] if lines else '')
         return []
 
 
 if __name__ == '__main__':
-    if os.name == 'posix':
+    if sys.platform == 'linux':  # [왜] RLIMIT_AS는 Linux에서만 쓴다. macOS는 ValueError로 이 하위 프로세스가 죽는다(os.name == 'posix'는 macOS도 참)
         import resource
-        # [주의] RLIMIT_AS 제한은 Linux 전용이다. macOS에서는 ValueError로 이 하위 프로세스가 죽는다
         resource.setrlimit(resource.RLIMIT_AS, (768 * 1024**2,) * 2)
         resource.setrlimit(resource.RLIMIT_CPU, (10, 10))
     grade = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] else None

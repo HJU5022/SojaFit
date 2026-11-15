@@ -15,9 +15,9 @@
 | 제공 | 로그인 · Google 가입 · 로그인(일반 사용자 · 관리자) · 이메일 인증 가입 · 비밀번호 재설정 · 데모 모드 버튼 로그인 · 관리자 계정 · 가격 조회 · 외부 원본 회로도 조회 · 공통 오류 응답 |
 | 제공 | 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 대화 상세 조회 · 삭제, 탈퇴 · 프로젝트 삭제, 보관 기간 청소 |
 | 제공 | 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`). 멀티 그래프의 `기억 읽기` 노드가 선호 실장 방식으로 후보 순서만 바꾼다(8.5) |
-| 제공 | React 작업대(랜딩 · 로그인 · 가입 · 프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적 · 내 설정 · 사용자 관리 · 처리방침) |
+| 제공 | React 작업대(랜딩 · 로그인 · 가입 · 프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 원본 회로도 · 후보 승인 · 견적 · 승인 사례 · 내 설정 · 사용자 관리 · 처리방침) |
 | 키 없는 데모 | `DEMO_REPLAY=1`의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생한다(7절). 기록은 데모 질문 10개(`data/demo/recordings/`)뿐이라 기록에 없는 질문은 받지 않는다 |
-| 없음 | 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기 |
+| 없음 | 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기(승인 사례는 새 분석에 넘기지 않음, 8.5) |
 
 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않는다.
 
@@ -42,7 +42,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 후보는 대체 조건으로 코퍼스에서 찾은 품번과 사용자가 넣은 품번입니다. 판정은 문서 근거(쪽·표·행)가 있을 때만 냅니다(2절 "근거가 없을 때").
 - 같은 동작은 보장하지 않으며, 답마다 이 사실을 밝힙니다.
 - 견적서는 사람이 승인한 뒤에만 저장합니다.
-- 후보 품번의 실시간 가격·재고는 답·견적 화면에서 데이터시트 근거와 따로 보여 줍니다. React 작업대의 "가격·재고" 패널(결과의 `price_parts`)과 견적 패널(승인한 후보 품번)이 사용자가 조회를 누를 때 `/api/prices`를 부르고, Mouser 키가 있으면 출처와 조회 시각을 붙여 보여 줍니다(`frontend/src/components/PricePanel.tsx`). 데모 모드와 키 없음에서는 `available: false`, `parts: []`를 반환하며 `data/demo/`에 가격표는 없습니다. 조회한 Mouser 값은 어디에도 저장하지 않습니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md), 4절 · 6절).
+- 후보 품번의 실시간 가격·재고는 답·견적 화면에서 데이터시트 근거와 따로 보여 줍니다. React 작업대의 "가격·재고" 조회(결과의 `price_parts`)와 견적(검토 화면의 승인 아래, 부품 고르기 화면의 견적 목록의 각 행)이 사용자가 조회를 누를 때 `/api/prices`를 부르고, Mouser 키가 있으면 "Mouser 실시간 조회 · 조회 시각 · 세금·배송비·환율 미포함 · 저장하지 않음"을 붙여 보여 줍니다. 화면은 조회한 가격 구간 목록을 그대로 보여 줍니다(`frontend/src/Candidate.tsx`의 `PriceLookup`). 견적 수량에 맞는 단가·합계의 화면 계산은 2026-11-16 화면 교체 때 뺐습니다. 데모 모드와 키 없음에서는 `available: false`, `parts: []`를 반환하며 `data/demo/`에 가격표는 없습니다. 조회한 Mouser 값은 어디에도 저장하지 않습니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md), 4절 · 6절).
 
 ### 하지 않는 것
 
@@ -63,7 +63,9 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ### 목표 사용자 흐름
 
-1~7단계는 React 작업대(`/app`)에서 씁니다: 회로 업로드 · 대상 선택(2), 역할 질문과 판정 답의 조건 표(3 · 4), 찾기 · 판정 질문(5 · 6), 가격·재고 패널(6), 후보 승인 뒤 견적 저장(7). 8단계는 아직 없습니다. 승인 사례는 승인 기록으로만 남고 새 분석에 넘기지 않습니다(8.5 "승인 기록").
+1~7단계는 React 작업대(`/app`)에서 씁니다: 회로 업로드 · 대상 선택(2), 역할 질문과 판정 답의 조건 표(3 · 4), 찾기 · 판정 질문(5 · 6), "가격·재고" 조회(6), 후보 승인 뒤 견적 저장 · 복원 · 목록과 견적별 실시간 가격(7). 8단계의 사례 재사용은 아직 없습니다. 승인 사례는 승인 기록으로만 남고 새 분석에 넘기지 않습니다(8.5 "승인 기록").
+
+화면 경로(`frontend/src/App.tsx`)와 백엔드가 보내는 주소: 공개 `/` · `/login`(Google 콜백이 `/login` · `/login?google=finish` · `/login?google=error`로 돌려보냄) · `/signup` · `/password-reset` · `/verify-email` · `/reset-password`(가입·재설정 메일 링크 `…#token=…`. 토큰은 읽은 뒤 주소에서 지움) · `/privacy`, 로그인 뒤 `/app`(`?project=&thread=`) · `/settings` · `/approved` · `/admin`(이전 `/admin/users`도 같은 화면). 그 밖의 주소는 로그인 전이면 `/login`으로, 로그인 뒤면 "페이지를 찾을 수 없습니다"를 보입니다. 화면 표기: 조건 표의 숫자는 유효숫자 3자리로 줄이고(받은 값은 마우스를 올리면 보임), 판정 기준식(`v_in_max * kV`)은 한국어로 풀며, 서버가 준 링크는 http(s)만 쓰고 답의 그림은 그리지 않습니다.
 
 1. 로그인합니다.
 2. KiCad 넷리스트를 올리고 바꿀 부품을 고릅니다(예: D1).
@@ -72,7 +74,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 5. 후보를 정합니다. 대체 조건으로 코퍼스에서 찾은 후보에 사용자가 넣은 품번을 더합니다.
 6. 후보마다 판정과 인용을 봅니다. 후보의 가격·재고는 근거와 따로 보입니다(1절 "하는 일").
 7. 견적서를 확인하고 승인하면 저장됩니다.
-8. 승인된 판정·견적 사례는 사용자별로 쌓이고, 다음 판정 때 비슷한 사례가 함께 보입니다.
+8. 승인한 판정·견적은 사용자별로 저장되어 새로고침 뒤에도 승인 상태와 프로젝트 견적 목록으로 다시 볼 수 있습니다. 승인 사례는 새 분석에 넘기지 않습니다(8.5 "승인 기록"). 다음 판정에 비슷한 사례를 함께 보이는 것은 아직 없습니다.
 
 ### 근거가 없을 때
 
@@ -93,9 +95,13 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니다.
 
+2등급 미리 출발(`WEB_PREFETCH=1`, 기본 꺼짐, 사전 등록 2026-11-14): `품번·판 확인`이 질문 속 품번을 확정하면 그 품번(최대 2개)으로 공식 PDF 검색 · 내려받기(최대 2개)를 옆 스레드에서 먼저 시작합니다(`exa.prefetch`, `facts.with_prefetch`). 문서 · 판정 에이전트가 2등급을 부를 때 같은 URL이 이미 받아져 있으면 다시 받지 않고, 검증 관문(`verified_rows`) · 요청당 공식 1번 · 참고 1번 제한은 그대로입니다. 받은 PDF는 그 요청이 끝나면 버리고 저장하지 않습니다. 미리 받기가 실패하거나 12초 안에 끝나지 않으면 원래대로 받습니다. 대가: 품번이 있는 질문마다 Exa 검색이 1번 늘어납니다(웹 근거가 필요 없어도).
+
+문서(RAG) 에이전트의 3등급 참고 검색은 2등급 공식 검색과 함께 옆 스레드에서 출발하고, 원래 3등급을 부르던 자리(공식 근거를 쓰지 못했을 때)에서 그 결과만 받습니다(사전 등록 「참고(3등급) 웹 검색 미리 출발」). 공식 근거를 쓰거나 공식 예산이 소진되면 받은 결과를 버리고, 다른 에이전트가 그 요청의 공식 예산을 이미 쓰는 중이면 미리 출발시키지 않습니다. 대가: 공식 근거를 쓴 요청에서도 참고 1번 예산과 Exa 검색 1번을 씁니다.
+
 ### 그래프
 
-- 구성: D4 줄기는 단일 에이전트 그래프(D4 v2, `backend/graph/`)입니다: 사실 확인 뒤 라우팅이 첫 단에서 거절을 정하고, 질문 종류마다 다른 길로 갑니다. D5 멀티 그래프(`backend/multi_agent/`)는 계획형 구조입니다: `입력 읽기` → `기억 읽기`(Store의 선호 실장 방식, 8.5) → `품번·판 확인` → `Supervisor`(계획, LLM 1번) → `RAG 에이전트` · `Spec 에이전트`(할 일마다 Send 동시 실행) → `답 모으기`(코드) → `답 정리` · `종합` → `답 검사` → `끝내기` | `거절`이고, 일상 대화 · 가격 · 거절은 Supervisor에서 바로 `끝내기` · `가격 안내` · `거절`로 갑니다. 노드 이름은 한국어이며 `get_graph().draw_mermaid()` 그림에 그대로 보입니다. 조건 라벨은 `답 모으기` → `Supervisor` 되돌림(재계획 1번) 하나만 붙습니다. 사실 확인 · Spec 에이전트 · 거절 문구는 D4 v2와 같은 코드를 씁니다([MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)). D4 v2의 노드와 하는 일:
+- 구성: D4 줄기는 단일 에이전트 그래프(D4 v2, `backend/graph/`)입니다: 사실 확인 뒤 라우팅이 첫 단에서 거절을 정하고, 질문 종류마다 다른 길로 갑니다. D5 멀티 그래프(`backend/multi_agent/`)는 계획형 구조입니다: `입력 읽기` → `기억 읽기`(Store의 선호 실장 방식, 8.5) → `품번·판 확인` → `Supervisor`(계획, LLM 1번) → `RAG 에이전트` · `Spec 에이전트`(할 일마다 Send 동시 실행) → `답 모으기`(코드) → `답 정리` · `종합` → `답 검사` → `끝내기` | `거절`이고, 일상 대화 · 가격 · 거절은 Supervisor에서 바로 `끝내기` · `가격 안내` · `거절`로 갑니다(`끝내기`는 Supervisor의 reply를 일상 대화이고, 주소가 없고, 질문 · 대화 이력 · 사용 조건에 없던 숫자+단위가 없을 때만 그대로 내고, 아니면 범위 밖 고정 안내문을 냅니다, 11-15). 노드 이름은 한국어이며 `get_graph().draw_mermaid()` 그림에 그대로 보입니다. 조건 라벨은 `답 모으기` → `Supervisor` 되돌림(재계획 1번) 하나만 붙습니다. 사실 확인 · Spec 에이전트 · 거절 문구는 D4 v2와 같은 코드를 씁니다([MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)). D4 v2의 노드와 하는 일: 재계획 조건은 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) 「재계획」을 따르고, 코퍼스에 없는 품번 · 판본의 문서 실패는 웹 공식 예산을 쓴 뒤에는 되돌리지 않습니다(11-14). 서버가 뜰 때 데몬 스레드가 검색 색인(BM25 · MCP 품번)을 미리 만들고, 멀티 그래프의 `품번·판 확인`이 MCP 시간 초과를 한 번 다시 불러도 안 되면 계획 LLM을 부르지 않고 `search_error` 거절로 끝납니다(11-15).
 
 | 노드 | 하는 일 |
 |---|---|
@@ -114,7 +120,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 | 거절 | 이유 코드(`refusal.code`, 멀티와 같은 `Reason` 값)와 안내문, 다음 할 일(근거 없음이면 단서 요청)을 남기고 끝냅니다. LLM을 쓰지 않습니다. 라우팅이 정한 거절은 멀티와 같은 일상어 문구입니다. 검색 고리의 거절은 `not_found`이며, 품번 문서가 없을 때(검색 0장, 그 품번을 적음)와 찾은 문서에 답이 없을 때(찾아본 문서 이름과 검색 횟수를 적음)로 나눕니다. 검색 · MCP 도구 장애는 `search_error`입니다. 판정이 코퍼스 밖 요구로 정한 사유(`part_missing` · `revision_missing` · `not_found`)는 멀티와 같은 문구입니다. 대화는 같은 thread의 다음 메시지로 이어 갑니다 |
 
 - 사람 확인(interrupt): 판정의 빠진 회로 값 묻기는 문항당 1번 인터럽트로 구현했고 체크포인터가 있어야 켭니다. 견적 저장 전 사람 승인은 그래프 인터럽트가 아니라 API 단계입니다(승인 `POST /api/messages/{id}/approvals` 뒤에만 견적 저장, 4절 · 8.4).
-- 재검색·재시도 상한: 검색은 2회(재작성한 첫 검색 + 재작성 뒤 1회)입니다. LLM 출력 형식이 틀리면 2회까지 다시 부릅니다.
+- 재검색·재시도 상한: 검색은 2회(재작성한 첫 검색 + 재작성 뒤 1회)입니다. LLM 출력 형식이 틀리거나 공급자가 연결 오류 · 429 · 5xx를 내면 같은 상한 안에서(처음 1번 + 재시도 2번, 429 · 5xx는 1 · 2초 쉼) 다시 부르고, 끝내 안 되면 그 할 일은 `search_error` 실패 보고(재계획 없음), Supervisor · 종합은 `search_error` 거절로 끝납니다(11-15).
 - 답 조립의 출력 경계: `Spec 에이전트`의 판정(kind=judge) 보고가 하나라도 있으면(판정 성공 · 실패와 관계없이) `답 정리` · `종합` 모두 코드 판정 답 틀(`render_judgement`: 판정 · 조건 표 · 인용 · 빠진 값 · 불확실 조건)만 냅니다. RAG 에이전트 답과 종합 LLM 글은 판정 답에 붙이지 않고, 이때 종합 LLM은 부르지 않습니다. 판정과 함께 물은 별도 문서 설명은 "별도로 요청한 문서 설명은 이 답변에 포함하지 않았습니다"로 알리고, 일부 판정이 실패 · 미완료면 "일부 부품의 판정은 완료하지 못했습니다", 모두 실패면 "판정을 완료하지 못했습니다"를 냅니다. 원래 보고(`reports`)는 그대로 두고 `답 검사`는 답에 쓴 판정 보고(`final_reports`)만 봅니다. 문서만 묻는 질문, 찾기(find), 규칙 밖 역할(no_rule)은 예전처럼 문서 답 · 종합을 씁니다.
 - `종합`으로 가는 조건: `답 모으기`가 최종 보고를 모은 뒤 `collect_node`의 `joinable`이 거짓일 때만입니다. 아래 중 하나라도 맞으면 `답 정리`(LLM 없음)가 보고 글을 코드로 이어 붙입니다: 쓸 만한 보고가 PDF 근거(`W`로 시작하는 청크 id)를 인용함, 후보 찾기(find) 판정 표가 있음, 최종 보고가 1개, 보고가 모두 `ok`, 보고가 모두 RAG 에이전트(문서) 보고. 그래서 `종합`은 서로 다른 에이전트의 보고가 2개 이상이고 일부가 일부 답이거나 실패일 때만 갑니다. 거기서도 판정(kind=judge) 보고가 있으면 위 출력 경계대로 LLM을 부르지 않습니다(`backend/multi_agent/supervisor.py`의 `collect_node` · `synth_node`).
 - LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor와 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 종합(`synth`, 위 조건일 때만)은 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 처음 노드별 모델은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
@@ -145,7 +151,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처는 `docs/reference/team-contract.md`를 따른다(9절).
-- HTTP API: 동작(메서드 + 경로) 48개, 경로 41개입니다. `/openapi.json`(`/docs`)에 동작 41개(경로 34개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 12개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 38개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+- HTTP API: 동작(메서드 + 경로) 50개, 경로 42개입니다. `/openapi.json`(`/docs`)에 동작 43개(경로 35개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 12개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 40개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/types.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
   - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 25개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
@@ -161,7 +167,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/projects/{id}/threads` | 로그인 | - | 200 `list[ThreadSummary]` `[{id, project_id, title, created_at, last_activity_at, latest_run_id, status}]` | 404 | 프로젝트의 사용자 대화를 다시 엶(G4 사용자별 thread) |
     | `POST /api/projects/{id}/threads` | 로그인 | - | 201 `Thread` | 404 | 새 대화 = 같은 UUID의 분석 thread(G4, 8.5 삭제 범위) |
     | `GET /api/threads/{id}` | 로그인 | 선택 쿼리 `limit` 1~100(기본 50) · `before_message_id` | 200 `ThreadDetail` `{id, project_id, title, target_ref, target_locked, latest_run, messages, next_before_message_id}` | 404 · 422 · 503 | 대화의 저장한 메시지를 최근 쪽부터 쪽 단위로 다시 읽음(G4 사용자별 thread) |
-    | `DELETE /api/threads/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run) | 대화 하나와 같은 UUID 분석 기록을 지움(8.5 삭제) |
+    | `DELETE /api/threads/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 마지막 갱신이 300초(`ANALYSIS_MAX_SECONDS`+60 중 큰 값)보다 오래되고 분석 잠금도 없는 멈춘 run은 막지 않음) | 대화 하나와 같은 UUID 분석 기록을 지움(8.5 삭제) |
     | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음 · 키 없는 데모의 기록 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품, 키 없는 데모에서 기록하지 않은 회로 · 대상 · 질문 · 조건이면 데모 질문 목록을 문구에 담음) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
     | `GET /api/runs/{id}` | 로그인 | - | 200 `Run` `{id, thread_id, message_id, result}` | 404 | 연결이 끊겨도 저장한 마지막 상태를 다시 읽음(다시 실행하지 않음) |
     | `POST /api/runs/{id}/recover` | 로그인 | - | 200 `Run` | 404 | 소유한 run의 오래된 상태만 정리하고 `Run`을 돌려줌(분석 · 모델 호출 · 질문 재전송 없음) |
@@ -181,10 +187,11 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
     | `GET /api/projects/{id}` | 로그인 | - | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
     | `PATCH /api/projects/{id}` | 로그인 | `RenameProject` `{name 1~200자}` | 200 `Project` | 404 · 422 | 프로젝트 이름 바꾸기 |
-    | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
+    | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 멈춘 run은 막지 않음, 위 대화 삭제와 같은 기준) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
     | `GET /api/judge/roles` | 로그인 | - | 200 `list[RoleLabel]` `[{code, name}]` | | 역할 23개 이름(5절 `roles.yaml`), 역할 코드 표시와 역할 선택 interrupt(4단계) |
     | `POST /api/approvals/{id}/quotes` | 로그인 | `QuoteBody` `{quantity 1~100000}` | 201 `Quote` `{id, approval_id, part_number, quantity, created_at}` | 404 · 409 | 승인한 후보로 가격 없는 견적을 저장(7단계, 8.4, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
-    | `GET /api/projects/{id}/quotes` | 로그인 | - | 200 `list[Quote]` | 404 | 프로젝트의 견적 목록(7단계, 8.4) |
+    | `GET /api/messages/{id}/approvals` | 로그인 | - | 200 `list[SavedApproval]` `[{id, message_id, candidate_part, verdict, case_id, created_at, quotes: list[Quote]}]`(소유 assistant 메시지만, `case_id`는 승인 사례를 지우면 null, `Cache-Control: no-store`) | 404 | 새로고침 뒤 승인·견적 상태를 복원(8.4). 가격·재고 칸 없음 |
+    | `GET /api/projects/{id}/quotes` | 로그인 | - | 200 `list[QuoteListItem]` `[{id, approval_id, part_number, quantity, created_at, thread_id}]` | 404 | 프로젝트의 견적 목록. `thread_id`는 그 견적이 나온 검토(7단계, 8.4) |
 
   - 운영 · 보안 · 부가:
 
@@ -223,7 +230,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | `ORIGIN_MISMATCH` | 403 | 요청 출처(Origin) 불일치 |
   | `NOT_FOUND` | 404 | 없는 자원, 남의 대화 · 프로젝트도 404 |
   | `VALIDATION_ERROR` | 400 · 422 | 요청 · 파일 형식 오류. 표에 없는 4xx(예: 메서드가 틀린 405)도 이 코드 |
-  | `CONDITION_PENDING` | 409 | 조건 질문에 먼저 답해야 함 |
+  | `CONDITION_PENDING` | 409 | 조건 질문에 먼저 답해야 함(인터럽트가 실제로 남았을 때만. 오류로 멈춰 남은 노드만 있는 대화는 새 질문을 받음) |
   | `ALREADY_APPROVED` | 409 | 이미 승인했거나 승인할 수 없는 판정 |
   | `CONFLICT` | 409 | 그 밖의 상태 충돌(분석 처리 중, 가입된 이메일, 질문 · 회로 한도) |
   | `PAYLOAD_TOO_LARGE` | 413 | 넷리스트 5 MiB · 요청 본문 128 KiB 초과 |
@@ -379,7 +386,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 ### 8.4 견적서 승인과 저장
 
-- 현재 상태: 사람이 완료된 판정 메시지의 후보 하나(동일품 · 사양 동등 · 역할상 충분)를 승인하면(`POST /api/messages/{id}/approvals`) 승인 snapshot과 승인 사례를 저장하고, 그 승인으로만 견적을 저장합니다(`POST /api/approvals/{id}/quotes`, 수량만 받음). 저장은 `backend/services/quote.py`, 표는 `db/020_service_baseline.sql`(옛 증분 `db/legacy/020_approvals_quotes.sql`을 대체)입니다. 견적에는 Mouser 가격·재고를 저장하지 않고, 견적 패널이 조회할 때 `/api/prices`로 다시 부릅니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
+- 현재 상태: 사람이 완료된 판정 메시지의 후보 하나(동일품 · 사양 동등 · 역할상 충분)를 승인하면(`POST /api/messages/{id}/approvals`) 승인 snapshot과 승인 사례를 저장하고, 그 승인으로만 견적을 저장합니다(`POST /api/approvals/{id}/quotes`, 수량만 받음). 저장은 `backend/services/quote.py`, 표는 `db/020_service_baseline.sql`(옛 증분 `db/legacy/020_approvals_quotes.sql`을 대체)입니다. 견적에는 Mouser 가격·재고를 저장하지 않고, 화면이 조회를 누를 때 `/api/prices`로 다시 부릅니다(요청 본문 · 브라우저 저장소에 가격을 넣지 않고 조회 결과 캐시도 남기지 않음). 화면은 `GET /api/messages/{id}/approvals`로 이미 한 승인 · 견적(승인마다 `quotes`)을 복원하고(409 `ALREADY_APPROVED`는 오류가 아니라 "이미 승인됨"으로 보고 상태를 다시 읽음), 부품 고르기 화면의 "견적" 목록은 `GET /api/projects/{id}/quotes`로 읽습니다. 새 프로젝트 창의 넷리스트는 선택 사항이고(파일 없이 만든 뒤 채팅에서 첨부 가능), 파일이 없는 사용자를 위해 샘플 넷리스트(`frontend/public/assets/samples/`) 받기 링크를 둡니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
 - 가격·재고 수용 기준:
   - GIVEN 다이오드 품번의 가격·재고 질문, WHEN 단일 · 멀티 그래프가 답하면, THEN 질문 종류는 `price`, 마지막 노드는 가격 안내이고, `price_parts`에 물은 품번이 남으며, 그래프는 Mouser를 부르지 않고 상태와 답에 가격·재고 값을 넣지 않는다.
   - GIVEN 로그인하지 않은 요청, WHEN `GET /api/prices`를 부르면, THEN 401이고 Mouser를 부르지 않는다.
@@ -407,7 +414,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 고치기·지우기: 설정 API로만 씁니다(대화에서 사실을 뽑지 않음). `GET /api/me/memory`(선택 `q` → 의미가 가까운 순 최대 3개), `PATCH /api/me/memory`(세 칸만), `DELETE /api/me/memory`(전부, `?kind=`면 한 칸, 204). 로그인 사용자만 쓰고 사용자 id는 세션에서 옵니다. 사실은 자동 만료가 없습니다.
 - 삭제(상세와 개인정보 보호법 조항 대응은 [작업서](docs/specs/user-thread-memory.md) "보관 · 삭제"): 사용자가 지우면 숨김이 아니라 바로 지웁니다. 프로젝트 삭제(`DELETE /api/projects/{id}`)는 React 업무 행과 같은 UUID의 분석 thread·checkpoint·메시지·승인 기록·분석 사건을 한 트랜잭션에서 지웁니다. 탈퇴(`DELETE /api/me`, 같은 출처, 일반 계정만, 관리자 409)는 분석 기록 → Store namespace `(user_id, ...)` 전부(옛 `("memories", user_id)` 포함) → 계정(세션·프로젝트·견적은 FK cascade) 순서로 지우고 지운 건수를 돌려줍니다. 중간에 실패하면 계정이 남아 다시 요청하면 이어서 지웁니다. 계정 단위 잠금으로 그 사용자의 분석이 도는 동안 탈퇴는 409, 탈퇴가 도는 동안 그 사용자의 새 분석·재개·설정 저장은 409입니다.
 - 보관 기간: 프로젝트와 딸린 것(대화·checkpoint·승인·견적, 같은 UUID 분석 기록)과 프로젝트 없는 분석 대화는 마지막 활동 뒤 60일, 기록(분석 사건·하루 사용량·로그인·가입 시도)은 30일 뒤에 지웁니다. 사용자 사실은 자동 만료가 없습니다. 스케줄러 없이 새 분석(질문)을 시작할 때 규칙마다 SQL 함수 하나(`sojafit_agent.purge_inactive_projects`·`purge_log_records`, `db/legacy/023_retention.sql`)를 작은 묶음으로 부르고, 청소가 실패해도 분석은 계속합니다. 아직 걸린 로그인 잠금은 지우지 않습니다.
-- 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(React run · 재개 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다.
+- 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(React run · 재개 결과 frame). 현재 React 화면은 이 값을 아직 보이지 않습니다(타입만 받음).
 - 에이전트 활용(선호 실장 방식만): 멀티 그래프의 `기억 읽기` 노드(`입력 읽기` 다음, `backend/graph/memory.py`)가 compile에 넘긴 Store에서 세션 사용자(`user_id`)의 `mounting_preference`만 읽어 `smd`→`smd`, `through_hole`→`tht`, `any`·없음·Store 없음·읽기 실패→빈 값으로 상태 `mount_preference`에 둡니다. Spec 에이전트는 후보 찾기에서 질문이 실장 방식을 말하지 않았을 때만 이 값으로 같은 판정·같은 기판 수정 여부 안에서 그 방식의 패키지가 있는 후보를 앞에 둡니다(`verdict.rank`). 판정·거르기·답 글·프롬프트는 바꾸지 않고, 질문이 실장 방식을 말하면 질문이 이깁니다. 판정마다 3개·전체 5개로 자르므로 같은 판정 후보가 많으면 보여 줄 후보가 바뀔 수 있습니다. 쓴 값은 판정 결과의 `preferred_mount`(트레이스·API)에 남습니다. 소속·직무는 모델 프롬프트·판정 입력에 넣지 않습니다. 저장되는 것은 선호 코드뿐입니다: 체크포인트의 `mount_preference`와, 판정 결과의 `preferred_mount`가 실린 저장 결과(run·메시지 결과, 승인 기록 snapshot)입니다. 이들은 분석 thread·프로젝트와 같은 보관 기간(60일)·삭제를 따릅니다(내 설정을 지우면 다음 질문부터 빈 값이고, 이미 저장된 코드는 그 thread·프로젝트·계정을 지울 때 함께 지워집니다). 평가 실행기는 Store 없이 compile해 순서가 예전과 같습니다.
 - 승인 기록: 승인 원본은 `public.approvals`이고 React의 `POST /api/messages/{id}/approvals`(4절)가 저장하며 삭제 · 보관 기간 규칙을 따릅니다. 옛 `sojafit_agent.approvals`는 서비스 DB 재설계(P2)에서 지웠습니다(`db/legacy/028_service_redesign_agent.sql`). 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
 - 한계:
@@ -431,7 +438,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - GIVEN 사전 생성된 활성 계정, WHEN 올바른 이메일·비밀번호를 제출하면, THEN 서버 세션을 발급하고 사용자 ID를 확인할 수 있다.
 - GIVEN 새 이메일과 같은 출처의 `POST /api/auth/signup`, WHEN 메일 설정이 있으면, THEN 계정 · 세션 없이 가입 확인 메일(60분 유효 링크)만 보내고 200 `{ok}`를 돌려준다(이미 계정이 있어도 같은 응답). 링크의 토큰과 12자 이상 비밀번호를 `POST /api/auth/signup/confirm`으로 보내면 이메일 확인 시각이 찍힌 `user` 계정이 만들어진다. 만료 · 사용 불가 링크는 400, 입력 오류는 422(입력값 미노출), Origin 없음·불일치는 403이다. React `/signup`은 이메일만 받아 인증 메일을 요청하고, 메일 링크에서 비밀번호를 설정해야 가입이 끝난다고 안내한다.
-- GIVEN 로그아웃·탈퇴·세션 만료, WHEN React 화면이 로그인 상태를 잃으면, THEN 화면 메모리(React Query 캐시)와 sessionStorage를 비우고 보호 화면은 `/login`으로 바꿔(replace) 주소의 프로젝트 id를 남기지 않는다.
+- GIVEN 로그아웃·탈퇴·세션 만료, WHEN React 화면이 로그인 상태를 잃으면, THEN 화면 메모리(상태)와 sessionStorage를 비우고 보호 화면은 `/login`으로 바꿔(replace) 주소의 프로젝트 id를 남기지 않는다.
 - GIVEN 같은 클라이언트 IP에서 같은 UTC 날짜에 가입 확정(`signup/confirm` · Google 가입) 3회, WHEN 4번째로 가입하면, THEN 429로 거부한다. 다른 IP는 막지 않는다. Cloud Run에서는 `X-Forwarded-For`의 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 쓴다.
 - GIVEN 같은 클라이언트 IP에서 15분 집계 구간에 로그인 실패 30회(서로 다른 계정 포함), WHEN 31번째로 로그인하면, THEN 비밀번호가 맞아도 30번째 실패 시점부터 15분 동안 일반 실패와 같은 401로 거부한다(계정당 5회 잠금에 더해). 다른 IP는 막지 않고, 로그인 성공은 IP 횟수를 지우지 않는다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
 - GIVEN 공개 가입, WHEN LLM 호출이 몰리면, THEN LLM 토큰 사용자당 UTC 하루 5,000,000(`USER_DAILY_TOKENS`, 사용자별 한도가 실사용 기준이며 예약 토큰은 돌려주지 않는다)·서비스 전체 하루 10,000,000(`SERVICE_DAILY_TOKENS`, 다계정 합산 안전선, 둘 다 `backend/conversations/memory_service.py`)에서 외부 호출 전에 429(`LIMIT_EXCEEDED`)로 거부한다. 토큰은 공급자 청구량이 아니라 USD 예약과 같은 위쪽 경계(입력 바이트 + 여유 8192 + 출력 상한)의 예약 합이고(임베딩 호출 포함), 기존 USD 한도는 유지한다(`db/legacy/022_token_limits.sql`).

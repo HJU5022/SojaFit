@@ -59,15 +59,22 @@ def _retry_after(headers: httpx.Headers) -> int:
 
 def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                      client: httpx.Client | None = None,
-                     phase: str = "download") -> tuple[bytes, str]:
-    """Only the API receives credentials. Never follow redirects to a different resource."""
+                     phase: str = "download", deadline_seconds: float | None = None) -> tuple[bytes, str]:
+    """Only the API receives credentials. Never follow redirects to a different resource.
+
+    deadline_seconds: 리다이렉트 · 본문 읽기를 합친 전체 시간 상한(넘으면 ExternalSchematicUpstreamError). httpx timeout은 읽기 한 번마다라
+    느리게 흘리는 서버가 스레드를 오래 붙잡을 수 있다(점검 A #7). 기본은 마감 없음이라 기존 호출은 그대로다.
+    """
     if client is None:
         with httpx.Client(trust_env=False) as owned:
             return download_bounded(url, max_bytes=max_bytes, allowed_hosts=allowed_hosts, client=owned,
-                                    phase=phase)
+                                    phase=phase, deadline_seconds=deadline_seconds)
     original = urlsplit(url)
+    deadline = None if deadline_seconds is None else time.monotonic() + deadline_seconds
     try:
         for _ in range(4):
+            if deadline is not None and time.monotonic() > deadline:
+                raise TimeoutError("deadline")
             if not safe_public_https_url(url, allowed_hosts=allowed_hosts):
                 raise ExternalSchematicInvalidSource()
             parsed = urlsplit(url)
@@ -121,7 +128,7 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                     raise ExternalSchematicInvalidSource()
                 response.raise_for_status()
                 try:
-                    data = read_bounded_body(response, max_bytes)
+                    data = read_bounded_body(response, max_bytes, deadline=deadline)
                 except ValueError:
                     raise ExternalSchematicInvalidSource() from None
                 return data, response.headers.get("content-type", "").partition(";")[0].strip().lower()

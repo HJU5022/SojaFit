@@ -40,7 +40,20 @@
 
 - v3 게이트 두 명령은 `.github/workflows/eval-live.yml`(수동 실행 `workflow_dispatch`, 입력 `sets` 기본 1)이 그대로 실행한다.
 - `gate_report`의 기본 기준은 `--min 0.95 --max-error 0.05 --p95 10`이다([gate_report.py](runners/gate_report.py)의 `main` 기본값).
-- 이 문서의 명령은 실행해 확인하지 않았다. 인자와 환경변수는 코드와 워크플로 파일에서 대조했다.
+- 동결 해시 검사(`freeze.py --check`)는 2026-11-16에 실행해 확인했다(바뀐 파일 없음, 종료 코드 0). 나머지 명령은 실행해 확인하지 않았다(유료이거나 DB가 필요하다). 인자와 환경변수는 코드와 워크플로 파일에서 대조했다.
+
+## v3 재동결 이력
+
+`dataset_v3.jsonl`은 한 번 다시 동결했다. `FROZEN.json`에는 현재 해시와 최초 동결일(`frozen_at` 2026-11-10)만 있고 이력 필드는 없다(이 파일을 고치지 않는다). 이력의 정본은 아래 표이고 같은 사실이 [dataset-guide.md](guides/dataset-guide.md)와 [EVAL_REPORT.md](../EVAL_REPORT.md) 2절 표에 있다.
+
+| 시점 | 파일 sha256 | 커밋 | 바뀐 것 |
+|---|---|---|---|
+| 2026-11-10 11:48 최초 동결 | `2b99b2125d98db6f127d4364e2940acaf4a27aeb9ee60ef1667d5e0e3e6e5e91` | `30d0469` | 50건(관련 25 · 비관련 25) |
+| 2026-11-12 21:23 | `05202314ed1d009593ab14bc5d44e3d7ab7dd4a9f7e726f98282198c7999b4fd`(현재, `FROZEN.json`의 값) | `a16afe5` | 50건 모두에 `judges: ["심태현", "하정운"]` 칸을 더했다. 건수 · 관련/비관련 건수는 그대로 |
+
+- 두 시점의 파일을 문항별로 대조하면 50건 모두에서 다른 칸은 `judges` 하나뿐이다(질문 · 정답 · 판정 기준은 같다). `git show`로 읽은 두 시점 파일의 sha256을 다시 계산해 위 표의 두 값과 같음을 확인했다(2026-11-16 `[실측]`).
+- 측정 결과 파일의 `summary`에는 데이터셋 해시가 없다. 그래서 어느 결과가 어느 해시의 파일로 났는지는 결과의 측정 시각 · 커밋으로만 가를 수 있다(11-12 21:23 이전이면 최초 파일, 이후면 현재 파일 `[추정]`). 질문과 정답은 같아 점수 해석은 바뀌지 않는다.
+- `freeze.py --check`는 현재 해시와 대조한다. 2026-11-16 실행 결과는 "동결 이후 바뀐 파일: 없음"이다.
 
 ## 결과 폴더
 
@@ -53,7 +66,7 @@
 | `results/embedding/` | 임베딩 격자 본평가(`grid_*`, 모델별 카드 임베딩 기록, 리랭크 캐시)와 프록시 측정(`embedding_<모델>_proxy_*`) | `run_embedding_grid.py`, `benchmark_embeddings.py` | [embedding-grid-eval-2026-11-02.md](../docs/research/embedding-grid-eval-2026-11-02.md) |
 | `results/search_compare/` | 청킹 개선 전후, dense·BM25·하이브리드 비교(11-01) | — | 사전 등록 #4~#8 |
 | `results/drafts/` | 초안 50건·52건의 보조 검증 원시 기록 | — | `drafts/reviews/second_pass_50_review.md` |
-| `results/graph/` | 그래프 실행 문항별 지표(`graph_*`, `multi_*`)와 실험별 하위 폴더 `<날짜>-<이름>/`(판정 단계, v3 Haiku 세트, D8 단계 시간, 속도 A/B, D9, Langfuse 점검 등). 답변 문장·청크 원문은 넣지 않음. 일부 하위 폴더는 `sources_*.json`에 원본 경로·sha256을 기록 | `run_graph.py`, `run_gate.py`, `scripts/eval/stage_report.py` | `EVAL_REPORT.md`, [d8-stage-remeasure-plan.md](../docs/experiments/d8-stage-remeasure-plan.md), [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
+| `results/graph/` | 그래프 실행 문항별 지표(`graph_*`, `multi_*`)와 실험별 하위 폴더 `<날짜>-<이름>/`(판정 단계, v3 Haiku 세트, D8 단계 시간, 속도 A/B, D9, Langfuse 점검 등). 답변 문장·청크 원문은 넣지 않음. 일부 하위 폴더는 `sources_*.json`에 원본 경로·sha256을 기록. `2026-11-14-no-replan/`에는 상한에 닿은 질문 한 건의 경로 기록 [v3-15_cap_path_2026-11-14.md](results/graph/2026-11-14-no-replan/v3-15_cap_path_2026-11-14.md)가 있음 | `run_graph.py`, `run_gate.py`, `scripts/eval/stage_report.py` | `EVAL_REPORT.md`, [d8-stage-remeasure-plan.md](../docs/experiments/d8-stage-remeasure-plan.md), [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
 | `results/chunking/v4h-2026-11-08/` | v4h 청킹의 `summary.json`·`manifest.jsonl`·`table_suspects.jsonl`·`SHA256.txt`. 청크 본문은 없음 | 저장소 밖 청킹 | `results/chunking/v4h-2026-11-08/README.md`, 문서·청크 수는 [DATA.md](../data/DATA.md) |
 | `results/chunking/v1-vs-v4h-2026-11-13/` | 청킹 v1 대 v4h 검색 비교: 같은 동결 v3(쪽 정답 21건)·고정 질의·같은 임베딩과 검색 코드로 잰 `retrieval_v1_*`·`retrieval_v4h_*` json, 설정·지표·한계(`README.md`), `SHA256.txt` | `run_retrieval_v3.py` | `results/chunking/v1-vs-v4h-2026-11-13/README.md` |
 | `results/grader/` | 채점기 기준선(`grader_baseline_*`) | `eval_grader.py` | 사전 등록 #34·#36 |

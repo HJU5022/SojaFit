@@ -1,54 +1,16 @@
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+/** 개발·미리보기 프록시. 판정·인증은 백엔드 소유. 출처: SPEC 4절. */
+import { defineConfig, type ProxyOptions } from 'vite';
+import react from '@vitejs/plugin-react';
 
-const DUMMY_CIRCUITS_ID = 'virtual:sojafit-dummy-circuits'
-const DUMMY_CIRCUITS_RESOLVED_ID = `\0${DUMMY_CIRCUITS_ID}`
-const repositoryRoot = fileURLToPath(new URL('../', import.meta.url))
-type CatalogEntry = { name: string; connections_path: string }
+const target = process.env.SOJAFIT_API_TARGET || 'http://localhost:8000';
+// [왜] 백엔드는 상태를 바꾸는 요청의 Origin이 AUTH_ORIGIN(기본 http://localhost:8000)과 같아야 한다(ORIGIN_MISMATCH).
+// 브라우저는 개발 서버 주소를 Origin으로 보내므로, 프록시가 백엔드가 기대하는 값으로 바꿔 보낸다.
+const origin = process.env.SOJAFIT_AUTH_ORIGIN || target;
+const api: ProxyOptions = {
+  target,
+  changeOrigin: false,
+  configure: (p) => p.on('proxyReq', (req) => req.setHeader('origin', origin)),
+};
+const proxy = { '/api': api, '/health': target };
 
-function demoSources() {
-  const raw = JSON.parse(readFileSync(resolve(repositoryRoot, 'data/circuits/catalog.json'), 'utf8')) as Record<string, CatalogEntry>
-  return Object.entries(raw).map(([id, entry]) => [id, entry.name, entry.connections_path] as const)
-}
-
-function dummyCircuitsPlugin() {
-  return {
-    name: 'sojafit-dummy-circuits',
-    resolveId(id: string) { return id === DUMMY_CIRCUITS_ID ? DUMMY_CIRCUITS_RESOLVED_ID : undefined },
-    load(id: string) {
-      if (id !== DUMMY_CIRCUITS_RESOLVED_ID) return undefined
-      const visuals = JSON.parse(readFileSync(resolve(repositoryRoot, 'data/circuits/visuals.json'), 'utf8'))
-      const createdAt = '2026-11-09T00:00:00Z'
-      const sources = demoSources()
-      const demos = sources.map(([demoId, name]) => ({ id: demoId, name, schematic: visuals[demoId] ? {
-        image_url: visuals[demoId].image_url,
-        original_url: visuals[demoId].original_url,
-        source_repo: visuals[demoId].source_repo,
-        source_commit: visuals[demoId].source_commit,
-        license: visuals[demoId].license,
-        license_evidence_url: visuals[demoId].license_evidence_url,
-        attribution: visuals[demoId].attribution,
-      } : null }))
-      const projects = sources.map(([demoId, , source], index) => ({
-        id: index + 1, name: demoId, source_kind: 'demo', demo_id: demoId,
-        created_at: createdAt, updated_at: createdAt,
-        connections: JSON.parse(readFileSync(resolve(repositoryRoot, source), 'utf8')),
-      }))
-      return `export const dummyDemos = ${JSON.stringify(demos)}; export const dummyProjects = ${JSON.stringify(projects)};`
-    },
-  }
-}
-
-export default defineConfig({
-  plugins: [react(), dummyCircuitsPlugin(), {
-    name: 'sojafit-build-version',
-    apply: 'build',
-    // 고정 경로 로고만 바뀐 배포도 열린 탭에서 감지한다.
-    transformIndexHtml: () => [{ tag: 'meta', attrs: { name: 'sojafit-build', content: new Date().toISOString() } }],
-  }],
-  server: { proxy: { '/api': 'http://localhost:8000' } },
-  test: { environment: 'jsdom', css: true, setupFiles: ['./src/test/setup.ts'] },
-})
+export default defineConfig({ plugins: [react()], server: { proxy }, preview: { proxy } });

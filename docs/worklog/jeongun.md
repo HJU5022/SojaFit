@@ -1,5 +1,15 @@
 # jeongun 작업 기록
 
+## 2026-11-15 web-to-main 동결 전 백엔드 수정(로컬 커밋만, 푸시 · PR 없음)
+- 목적: 11-15 점검(`reports/2026-11-15-점검/합본-동결전-목록.md`)의 백엔드 수정을 `web-to-main`에 커밋 하나에 목적 하나로 쌓아 PR 준비 상태로 둔다. `frontend/`는 건드리지 않는다. 상세 보고: `reports/2026-11-15-점검/fix-for-main.md`.
+- 그룹 1(올바른 입력의 동작 불변): A4 `a3411700`(macOS `RLIMIT_AS`, 웹 근거 시험 8건 복구), A1 `c4667658`(`None.result()` 크래시), A2(a) `4aa14a55`(외부 실패 WARNING 로그), D3 `f732afba` · `78ffad14`(`.env.example` 키 없는 데모 기본, 실제 모드로 바꿀 때 `DEMO_REPLAY`도 0으로).
+- 그룹 2(동작 변경, 하나씩 되돌릴 수 있음): C7 `a75ebfd6`, C3 `392d4c88`, C2 `2e6c6a72`, C1 `979d265c`, B3 `9eda28b0`. 덤으로 B2 `9b8aceb4`(오류로 멈춘 대화의 남은 노드를 조건 대기로 안 봄), A7 `3b08b07e`(`download_bounded` 전체 마감 인자). 안 한 것: A5(a) · C5 · 복원 폼 조건(`backend/api/conversations.py:279`, 이유는 보고서).
+- 실행한 명령 · 결과 [실측]: 전체 `uv run pytest -q`(`.env` 없음) 기준선 31 실패 · 통과 2344 → 그룹 1 뒤 14 실패 · 2371 → 그룹 2 뒤 14 실패 · 2421 → 최종 14 실패 · 2423 통과 · 186 건너뜀. 실패 14건은 모두 기준선과 같은 환경 탓(cairo 없음 12 + 이 worktree가 `/private/tmp` 아래라 로그 검사에 걸리는 2)이고 새 실패는 없다.
+- 정확도 회귀(사전 등록 `evals/guides/preregister.md` 2026-11-15 묶음, 웹 끔 v3 50×1): `uv run --env-file <.env> python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-16-fixes-<팔> --sets 1 --keep-going --p95 120`(`DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 EVAL_WEB=0 WEB_PREFETCH=0 EXA_WEB_SEARCH_ENABLED=0 EXA_API_KEY=`). before(코드 `f732afba` 상당) 50/50 · p50 4.3 · p95 9.1초 · 0.0297달러, after(`9eda28b0`) 50/50 · p50 4.8 · p95 11.1초 · 0.0281달러. 판정 일치 10/10 · 오류 거절 0 · Exa 흔적 0 · 새 실패 0. 2회 사용(상한 4회), 합 0.058달러(상한 0.3달러), Exa 0.
+- 방법 참고: 속도 실험(`sojafit-exp-*` 컨테이너)과 겹치지 않으려고 컨테이너가 없을 때만 무거운 단계를 돌렸고, 두 팔은 해당 커밋을 `git archive`로 임시 폴더에 풀어 돌렸다(결과의 `git` 칸은 임시 폴더 해시, 결과 폴더 README에 매핑).
+- 확인 못 한 것: 실제 PostgreSQL을 쓰는 시험(B3 삭제 · 실제 lifespan · 기존 DB 시험 186건 건너뜀), Linux · Docker에서의 전체 pytest, 웹 켬 평가, C3 가드의 실제 Supervisor 동작(v3에 일상 대화 문항 없음), C2 재시도가 실제 429에서 도는지, 화면.
+- 다음 할 일: 조장이 PR 본문 초안(`fix-for-main.md`)을 보고 푸시 · PR 여부를 정한다. 프런트 몫 4건(보고서 "프런트 후속")과 `jeongun`에서만 고칠 주요 문서(README 257 · 260행의 `.env.example` 기본값 설명)가 남아 있다.
+
 ## 2026-11-13 main 574de79 배포(Cloud Run)
 - 배포: `main` `574de79`(PR #127 병합, 인용 숫자 검사 포함)를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-574de79 --revision-suffix 574de79`(빌드 ~10:50 KST 끝). 리비전 `sojafit-api-574de79`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
 - 이전 100% 리비전은 `fadde2a`가 아니라 `sojafit-api-00086-zn6`(11-13 10:28 KST 생성, 이미지는 `fadde2a`와 같은 `sha256:95d6f571…`)였다. `fadde2a` 대비 환경변수 2개(`EXA_WEB_SEARCH_ENABLED=1`, 비밀 `EXA_API_KEY:1`)가 더해진 설정 변경이다. `574de79`도 이 32개 설정을 그대로 이었다(이름 · 값 · 비밀 참조 비교 [실측]).
@@ -1049,3 +1059,89 @@
 - 확인: `npm run test:run` 51 passed, `tsc -b`, `vite build`. 키 없는 compose(8010 포트, 별도 프로젝트)에서 데모 버튼 로그인 · 프로젝트 만들기 · 이름 변경 · 삭제 · 부품 목록 · 내 설정 · 관리자 차단을 눌러 봤다.
 - 확인 못 한 것: 키 없는 데모의 질문 재생은 서버가 `ReplayMiss`로 실패해 판정 · 승인 · 견적 · 가격 화면을 실제 서버로 보지 못했다(기록은 11-10, Supervisor · 프롬프트는 11-12에 바뀜). 실제 모드(`DEMO_MODE=0`) 연결, Google 로그인, 새 화면의 자동 테스트.
 - 남은 것: 작업서(`docs/specs/`) · `SPEC.md`의 화면 서술 · `README.md`의 화면 설명 갱신, 랜딩의 판정 일치 수치(재측정 뒤).
+
+## 2026-11-14 main(#130 화면 재설계) 통합과 승인 복원 경로 하나로 합치기 (브랜치 `jeongun`, 9b885b1 · 6f40cd1)
+
+- 바꾼 것(9b885b1, 병합 80파일): 승인 · 조건 대조는 main의 `frontend/src/components/ReviewDetails.tsx` 구조를 따르고, `jeongun`의 견적 복원과 수량별 실시간 가격만 그 Approval에 옮겼다. 새 프로젝트는 main대로 넷리스트가 선택 사항이고, 샘플 넷리스트 받기 링크는 안내로 남겼다. 병합 시점에는 승인 조회 경로 두 개(main `GET /messages/{id}/approvals`, `jeongun` `GET /messages/{id}/approval`)를 함께 두었다. main에서 들어온 새 파일: `db/031_circuit_versions.sql`, `docker-compose.local.yml`, `docs/specs/local-live-api.md` · `netlist-conversation-versions.md`, `frontend/src/components/ChatPane.tsx` · `NetlistIntake.tsx` · `ReviewDetails.tsx`, `hooks/useNetlistFiles.ts`, `lib/inputLabels.ts`, 테스트 `tests/api/test_local_live_config.py` · `tests/projects/test_official_schematic.py` · `test_service_schema.py`.
+- 바꾼 것(6f40cd1, 11파일 +40 −84): 승인 복원을 `GET /api/messages/{id}/approvals` 하나로 합쳤다. 소유 assistant 메시지만, `no-store`, 승인마다 견적(`quotes`, id 순)을 붙인다. `GET /api/messages/{id}/approval` · `QuoteService.message_approval` · `MessageApproval` · `ExistingApproval`과 그 테스트를 지웠고, 화면은 `getMessageApproval`와 두 번째 `useQuery`를 지우고 승인 목록의 마지막 견적으로 복원한다. `SPEC.md` 4절 표 · 경로 수(동작 50, 경로 42, `/docs` 43 · 35, 응답 모델 40), `backend/api/API.md`, `backend/services/SERVICES.md`를 맞췄다.
+- 실제 결과: 프런트 vitest 201/201 통과, build 통과. 백엔드 전체 pytest는 실패 28개로, 이 커밋들 전후 같다(이미 있던 실패: layout 2개는 미추적 `docs/assets` 로고 파일 때문, `schematic_render` · `datasheet_rows` 등).
+- 문서 확인(11-14): `SPEC.md` · `EVAL_REPORT.md` · `README.md` · `backend/api/API.md` · `frontend/src/SRC.md` · `docs/`에서 지운 경로(`/approval` 단수) · `getMessageApproval`을 grep해 남은 곳 없음. 병합으로 들어온 새 파일은 `SOJAFIT.md` 트리와 각 폴더 설명 파일에 모두 있다. `tests/repo/test_repo_layout.py` 3 통과 · 2 실패(둘 다 미추적 `docs/assets/logo-concepts/` · `sojafit-fit-*` 파일 때문).
+- 확인 못 한 것: 배포 주소에서 승인 · 견적 복원을 실제로 눌러 보지 않았다. 백엔드 28개 실패의 원인별 정리.
+- 다음 할 일: `SPEC.md` 8.4절 "새 프로젝트 창은 … 넷리스트를 필수로" 문장을 병합 결과(넷리스트 선택 사항)에 맞춘다. 로고 파일을 쓸지 정해 커밋하거나 지운다.
+
+## 2026-11-14 RAG 에이전트 검색 병렬화 측정 P1 (브랜치 `jeongun`, 290fe5e · 4714b2f · 5493ddf)
+
+- 바꾼 것: 사전 등록(`evals/guides/preregister.md`, 290fe5e) 뒤 `backend/multi_agent/agents/docs.py`에서 품번별 검색과 품번 규칙 주석 검색을 동시에 부른다(4714b2f, 테스트 `tests/multi_agent/test_docs_agent.py`). 결과 `evals/results/graph/2026-11-14-docs-parallel/`(P1 set1 · set2, README).
+- 실행한 명령: 동결 v3 50문항, `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0`, `run_gate --sets 2 --keep-going --p95 120`. 비교 기준 A1(`4840a33`, 같은 조건).
+- 실제 결과: P1 set1 50/50 · p50 6.6초 · p95 15.3초 · 0.044달러, set2 50/50 · 5.5초 · 13.1초 · 0.032달러. 품번 2개 이상 검색 문항(18건)의 RAG 에이전트 단계 평균 7.92 → 7.49초(0.43초 단축). 판정 유지, 바뀐 13건은 비관련 거절 코드(회차 간 흔들림 수준).
+- 판단: 사전 등록 기준(1초 이상 단축, p95 비증가)에 못 미쳐 효과 없음으로 적었다. 코드는 앞으로 속도를 줄일 여지가 있어 남긴다(조장 결정 11-14). 검색이 실제로 겹친 RAG 행은 7/47이고, 그 행에서 0.7~4.9초씩 줄었다.
+- 확인 못 한 것: P1 set2의 v3-38~50은 Exa 크레딧 소진(HTTP 402 `NO_MORE_CREDITS`)으로 웹 근거 없이 잰 값이다. set1은 영향 없다.
+
+## 2026-11-14 참고(3등급) 웹 검색 미리 출발 G1 무효 → 재측정 진행 중 (브랜치 `jeongun`, fc90941 · eb72d7c · cdb16b1)
+
+- 바꾼 것: 사전 등록(fc90941) 뒤 `backend/multi_agent/agents/docs.py` · `backend/services/exa.py`에서 3등급 웹 검색을 2등급 검색과 같은 시점에 출발시키고, 공식 근거를 쓰면 받은 결과를 버린다(eb72d7c, `SPEC.md` 2줄, 테스트 `tests/multi_agent/test_docs_agent.py` · `tests/services/test_datasheet_rows.py`). 결과 `evals/results/graph/2026-11-14-grade3-early/`(G1, README).
+- 실행한 명령: P1과 같은 조건의 `run_gate --sets 2`.
+- 실제 결과: G1은 무효다. Exa 크레딧이 P1 set2의 v3-38부터 떨어져(HTTP 402 `NO_MORE_CREDITS`) 2등급 · 3등급 단계가 모두 약 0.2초였다(cdb16b1에 무효로 기록, P1 README에도 덧붙임).
+- 다음 할 일: 조장이 Exa 키를 바꿨고, 같은 조건으로 G2와 P1b를 재측정 진행 중이다(`evals/results/graph/2026-11-14-grade3-early/G2*`, `P1b*`). 끝나면 README · `preregister.md`에 결과와 채택 여부를 적는다. `EVAL_REPORT.md` 수치는 웹 최적화 재측정 뒤에 고친다(조장 결정 11-14).
+
+## 2026-11-15 코퍼스 밖 품번 · 판본 웹 공식 검색 병렬 출발 B1 (브랜치 `jeongun`, 68094e3 · 코드 커밋은 다음 항목)
+
+- 목적: 웹을 켠 p95를 줄이려고, 품번 · 판 확인이 "코퍼스에 없음"인 문항에서 2등급(과 3등급) 웹 검색을 문서 에이전트의 내부 검색과 같이 출발시킨다. 사전 등록 `evals/guides/preregister.md` 「2026-11-15 jeongun · 코퍼스 밖 품번 · 판본 웹 공식 검색 병렬 출발 (B′)」(커밋 68094e3).
+- 바꾼 것: `backend/multi_agent/agents/docs.py`(미리 출발 + 결과 재사용), `backend/multi_agent/supervisor.py`(`corpus_absent` 분리, `payload`가 문서 꾸러미에도 `facts` 전달), `SPEC.md` · `MULTI_AGENT.md` 각 1줄, 테스트 `tests/multi_agent/test_agents.py` 3건 · `test_supervisor.py` 꾸러미 칸 1곳.
+- 비교: R1(`evals/results/graph/2026-11-14-no-replan/R1/`, 같은 조건) 대비 대상 26건(v3-32~38 · v3-45~50) 평균 응답 시간 8.80초, 의미 있는 단축 기준 2초.
+- 예산: 2회 상한 1달러(OpenRouter LLM 비용 합). 앞 R1은 0.071달러였다.
+- 명령: `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 uv run python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-15-web-parallel/B1 --sets 2 --keep-going --p95 120` (로그 `B1.log`). 시작 전 Exa 요청 1번이 HTTP 200이어야 한다.
+- 중단 조건: Exa HTTP 402, OpenRouter 403, 비용 1달러 초과. 중단하면 재시도 없이(많아야 1번) 상황을 기록한다.
+- 결과(11-15, 1차 시도): 측정이 시작되지 못했다. Exa 요청 1번은 HTTP 200이었으나 `run_gate`의 `GATE_WARMUP`이 품번 확인 MCP 호출에서 `RetrievalUnavailableError: timeout`으로 죽었다(첫 문항 전, LLM 호출 0, 비용 0). 원인은 원격 DB 첫 응답 지연(23초)으로 MCP 준비 30초 시간 초과(조장 확인 [실측], 두 번째 실행은 warm-up 6.9초). 로컬 DB는 쓰지 않는다. 같은 명령으로 1번 재시도한다.
+- 결과(11-15, 재시도, `evals/results/graph/2026-11-15-web-parallel/`): set1 49/50 · p50 8.3초 · p95 34.4초 · 0.042달러, set2 50/50 · 6.3초 · 25.3초 · 0.032달러(합 0.074달러, 상한 1달러 이내). 대상 26건 평균 8.80 → 20.36초로 늘었고 2등급 단계가 R1의 1~2.5초에서 14~25초로 길어졌다(대상 평균 16.6초, 웹은 돌았음). 대상 26건 모두 거절 통과, 관련 문항 판정 변화는 v3-41 · v3-15뿐(둘 다 R1에서 흔들리던 판정 경로 문항). Exa 402 · OpenRouter 403 없음. 시간: 두 회차 약 30분. 원인은 확인하지 못했다(추정만 README에). 채택 여부는 적지 않았다.
+- 결정(11-15, 조장): 기각. `77ace99`를 `8a12bbd`(`git revert`)로 되돌렸다. 되돌린 6파일은 `77ace99` 직전과 같고 `tests/multi_agent` · `tests/repo` 347 통과. 기준은 R1(`b790004`)로 남는다. 재측정은 하지 않았다.
+
+## 2026-11-15 운영 다운 복구(Exa 키 버전 파기)와 main 배포 시도 (브랜치 `jeongun`)
+
+- 발견: main `7ba86325` 배포(`gcloud run deploy sojafit-api --source <git archive 7ba86325> --no-traffic --tag main-7ba8632 --revision-suffix 7ba8632`, 21:16~21:22 KST)가 리비전 생성에서 실패했다. 원인은 Secret Manager `EXA_API_KEY` 버전 1이 DESTROYED(버전 2는 11-14 13:34 생성, enabled)인데 서비스 설정이 버전 1을 고정해 쓰던 것이다.
+- 영향 [실측]: 운영 100% 리비전 `sojafit-api-574de79-rs`도 같은 버전 1을 써서, 최소 인스턴스 0대에서 새 인스턴스가 뜰 때마다 "Could not fetch secret … Instance startup will now abort"로 시작하지 못했다. 이 로그의 첫 기록은 11-14 22:43 KST다. 21:22 KST에 공개 주소 `/health` · `/login` · `/`가 모두 500이었다.
+- 복구: 같은 이미지(`sha256:87101e5c…`, 코드 `574de79`)에 `--update-secrets EXA_API_KEY=EXA_API_KEY:2 --cpu 1 --memory 1Gi`만 바꿔 리비전 `sojafit-api-574de79-exa2`(태그 `fix-574de79-exa2`)를 0%로 만들고, 태그 주소에서 `/health` 200(냉 기동 16.0초) · `/login` 200 · `/` 200을 확인했다. 조장 승인 뒤 `update-traffic --to-revisions sojafit-api-574de79-exa2=100`(21:26 KST). 공개 주소 세 곳 200, 서비스 Ready True.
+- 정리: 실패한 리비전 `sojafit-api-7ba8632`의 태그 `main-7ba8632`를 지웠다(남아 있으면 서비스 Ready가 False). 리비전 자체와 빌드된 main 이미지(`sha256:3ebfa703…`)는 남겨 두었다.
+- 확인 못 한 것: 로그인 뒤 분석 · 웹 근거 경로(유료 호출이라 하지 않음). 누가 · 왜 버전 1을 파기했는지. 다른 비밀값의 고정 버전은 모두 enabled였다.
+- 다음: main `7ba86325` 배포는 보류 중이다. main API 이미지는 KiCad를 빼고(`INCLUDE_KICAD=0`) `KICAD_RENDERER_URL`의 렌더러(`sojafit-osc-kicad-renderer`, 11-13 이미지)로 보내는데, 그 렌더러가 main의 `include_netlist` 요청을 지원하는지 모른다. 렌더러 재배포 여부를 정한 뒤 진행한다.
+
+## 2026-11-16 표·수치 청크 대조에 같은 쪽 다른 행 값 검사 추가 (브랜치 `jeongun`)
+- 목적: 강사 11/13 코멘트(축 ②)의 "11/16까지 같은 쪽 다른 행으로 바뀐 오류를 잡는 검사를 더하라"에 대응. 사전 등록 `evals/guides/preregister.md` 2026-11-15 항목(구현 전에 커밋).
+- 바꾼 파일: `scripts/eval/chunk_source_check.py`(`--rows` · `--out`, `row_check`, 쪽 검사를 `page_check`로 꺼냄 — 계산은 그대로), `tests/evals/test_chunk_source_check.py`(신규 8개), 결과 `evals/results/d10/chunk_source_check_rows_2026-11-16/`(신규), 폴더 설명 `scripts/eval/EVAL.md` · `tests/evals/EVALS.md` · `evals/results/d10/README.md`, `SOJAFIT.md` 트리 2줄.
+- 명령: `uv run python scripts/eval/chunk_source_check.py --rows`(21초, 같은 시드 1116 · 칸당 3개), `uv run pytest -q tests/evals/test_chunk_source_check.py`.
+- 결과 [실측]: 기존 폴더 출력과 기존 필드 123건 전부 같음(같은 표본). 행 검사 117 일치 · 0 불일치 · 6 미확인(tvs · zener electrical의 부품 행 표). 합성 변이 382건(다른 행 72 · 다른 열 8 · 다른 행 단위 48 · 조건 숫자 254): 쪽 검사 0건, 행 검사 382건 탐지, 깨끗한 12건 통과. 조건 숫자 변이는 점검 중 허점(행 이름 0.9 이상이면 가장 가까운 행에 붙임 → 254건 중 109건 통과)을 찾아 더하고 행 이름이 정확히 같을 때만 일치로 조였다(실제 표본 117건은 모두 점수 1.0이라 결과 불변). 실제 표본 변이 113건: 같은 쪽 다른 행 103건 중 쪽 검사 0 · 6줄 창 18 · 행 검사 103, 같은 행 다른 열 10건 중 행 검사 10.
+- 확인 못 한 것: 부품 행(Device) 표 형식(6건 미확인), 조건 칸 안 숫자의 순서만 바뀐 오류, 청커가 라벨을 바꿔 쓴 경우의 오탐 크기, 선 없는 표, `page_grids` 어댑터 단위 시험(원본 PDF가 저장소 밖), 123개 전수 눈 대조(손 대조 6건), PDF sha256 대조. 표본은 전체 표 행의 약 0.3%.
+- 다음: 부품 행 표 지원 여부는 정운 결정. `docs/deliverables/failure_analysis.md` 91번 줄(검사기 한계 83~86%)에 이번 결과를 반영할지도 정운 결정(이 작업에서는 고치지 않음). 푸시 · PR 없음.
+
+## 2026-11-16 동결 전 문서 정비 (브랜치 `jeongun`, 점검 D 반영, 코드 변경 없음)
+- 목적: 점검 D(운영 · 평가 · 문서)가 찾은 낡은 · 근거 없는 문장을 코드와 결과 파일에 맞추고, 약점 · 실패 절의 빈 곳을 채운다. 결과 파일 · `evals/dataset_v*.jsonl` · `evals/FROZEN.json` · `frontend/` 코드는 건드리지 않았다. 푸시 · PR · 배포 · `gcloud` · 유료 호출 없음. 커밋은 목적마다 하나씩이다.
+- 바꾼 파일과 내용:
+  - `README.md`: 배포 리비전 · 기준일 · 기준 커밋(현재 운영 `sojafit-api-main7ba86325-1115`, `main` `7ba86325`), 1절의 근거 없는 챗봇 문장을 Codex 비교 결과로 교체, 4절 응답 시간 조건별 표, 5절 실제 모드 시작 조건 · 선택 KiCad 렌더러 · 테스트와 평가(동결 검사 · v3 게이트 · Actions 중지), 8절 제3자 소프트웨어 · 라이선스.
+  - `docs/GATES.md`: 머리, G1 현재 리비전 · 11-14 22:43 ~ 11-15 21:26 KST 시작 실패와 복구, G2 현재 코드 미재측정, G5 · G7 상태.
+  - `docs/TOPIC.md`: 근거 없는 문장 삭제와 ※ 2026-11-16 주석(조장 승인).
+  - `EVAL_REPORT.md`: 8.2절(조건별 응답 시간), 11-2절(약점 6행과 속도 레버 표), 머리, 3-D · 8.1의 `DEMO_MODE` 미기록 표시.
+  - `evals/results/graph/2026-11-14-no-replan/v3-15_cap_path_2026-11-14.md`(신규, `SOJAFIT.md` 트리와 `evals/EVALS.md` 표에 한 줄씩), `evals/EVALS.md`(v3 재동결 이력 표, 동결 검사 실행 확인).
+  - `docs/deliverables/failure_analysis.md` 9절, `DELIVERABLES.md` · `submission_checklist.md`(동결 직전 고정 비밀 버전 점검 행, 상태 맞춤), `portfolio-jeongun.md`(응답 시간 · 배포 수치), `frontend/public/assets/ASSETS.md`(`samples/`).
+- 실행한 것과 결과 `[실측]`: `uv run python evals/runners/freeze.py --check` → "동결 이후 바뀐 파일: 없음"(종료 0). `uv run pytest tests/repo -q` → 5 통과. 상대 링크 검사(손댄 파일, 스크립트는 임시 폴더) → 깨짐 0. 결과 파일 `summary` 필드 대조(`p50_s` · `p95_s` · `passed` · `model_env`). `git show`로 읽은 `dataset_v3.jsonl` 두 시점의 sha256 재계산(`2b99b212…` → `05202314…`)과 문항별 대조(다른 칸은 `judges` 하나). `unsupported_numbers` 4가지 입력 직접 실행(100 V 청크에 `100 A` 통과, `[7, W1]` 검사 건너뜀).
+- 판단 · 확인 못 한 것: 배포 리비전 이름 · 전환 시각 · 소스는 조장이 전달한 값이고 직접 확인하지 않았다. 현재 리비전의 로그인 뒤 25단계 점검 기록은 없다. KiCad 라이선스 원문 사본은 저장소에 없고, GPL 이미지 공개 배포 의무는 검토하지 않았다. 렌더러 compose 동작은 코드만 읽었다. v3-16이 웹 켬 Docker 9회 실패한 원인은 못 찾았다. 응답 시간 표의 11-15 밤 수치는 저장소 밖 보고에서 옮겼다(그 결과 폴더는 이 브랜치에 없다). Actions 중지 날짜는 이 작업 기록 외의 근거를 못 찾았다. SPEC · SOJAFIT · ai_tools_log의 머리(기준일 11-12 · `6707002`)는 본문 대조 없이 올리지 않았다. README 8절의 "회로 5종"(실제 `data/circuits/CIRCUITS.md`는 데모 15 · 평가 15) 등 이번 범위 밖 항목은 고치지 않았다.
+- 다음: 동결 뒤 재배포하면 README · GATES G1 리비전을 같은 값으로 고치고, 새 clone에서 키 없는 기동과 스모크(G2)를 다시 잰다. 동결 SHA와 배포 소스의 코드가 같은지 `git diff --stat`로 확인한다. `web-to-main`의 `.env.example`이 main에 들어간 뒤 README 5절 문구와 맞는지 본다. SPEC · SOJAFIT · ai_tools_log 머리는 동결 커밋으로 일괄 갱신한다.
+
+## 2026-11-16 화면을 Codex가 만든 새 프론트엔드로 교체 (브랜치 `jeongun`)
+- 목적: 조장 결정으로 `frontend/`를 저장소 밖 `frontend-fresh/`(React 19 · Vite 8 · TypeScript 7)로 바꾸고, 빌드 · 서빙 · 시험 · 문서를 맞춘다. 푸시 · PR · 배포 없음, 유료 호출 없음.
+- 커밋(`cec42658` 위): ① 새 화면으로 교체(이전 소스 · design.md 삭제, 개발 프록시가 Origin을 `AUTH_ORIGIN`에 맞춤, tsbuildinfo를 `node_modules/.tmp`로) ② Prettier(printWidth 100) ③ `Workbench.tsx`를 `Projects.tsx` · `Reply.tsx`로 분리 ④ 메일 링크 `/verify-email#token=` · `/reset-password#token=`과 `/admin/users` 경로 ⑤ 랜딩 캡처를 `/assets/product/`로(루트 `/product/*`는 FastAPI가 HTML로 대체해 이미지가 깨짐) ⑥ 조건 표 숫자 반올림 · 판정 기준식 한국어 풀이 · 연산자(`>=` 등) 표기 ⑦ 답 마크다운 http(s) 링크만 · 그림 제외 ⑧ 랜딩 예시를 기록된 데모 결과(v3-01) 값으로 ⑨ 원본 회로도 구역(예제 저장 도면 + 클릭 시 웹 검색) · 샘플 넷리스트 링크 ⑩ 등록된 말뭉치 인용 번호 숨김 ⑪ 시험 이전(node --test 13개, Playwright 2개)과 CI 명령 ⑫ README · SPEC · 백엔드 주석 · 서빙 시험.
+- 바꾼 파일: `frontend/` 전체, `SOJAFIT.md` 트리, `.github/workflows/ci.yml`(frontend 잡: `npm test` · `format:check` · `build`), `README.md`, `SPEC.md`, `backend/api/*.py` · `backend/main.py` 주석(동작 변경 없음), `tests/api/test_frontend.py`(경로 15개).
+- 실행한 명령과 결과 `[실측]`: `npm ci && npm run build && npm test` 통과(타입 검사 포함, 단위 13개). `uv run pytest tests/repo -q` 5 통과, `tests/api/test_frontend.py` · `test_openapi.py` 통과. 실제 `backend.main:app`에 `frontend/dist`를 연결해 `/` `/app` `/login` `/verify-email` `/reset-password` `/admin/users` 깊은 주소 등 16개가 index, `/assets/*` · `/assets/samples/*.net` · `/circuit-schematics/*.png`가 파일을 돌려줌(TestClient와 uvicorn:8765, DB 없음). 브라우저 창으로 `/verify-email#token=…`이 비밀번호 설정 폼을 열고 주소에서 토큰이 지워지는 것, `/login?google=error` 안내, 랜딩 이미지 로드를 확인. `docker build -t sojafit-fe-check .`(기본 최종 단계) 성공, `/app/frontend/dist/index.html` 확인 후 이미지 삭제.
+- 확인 못 한 것: 로그인 뒤 전체 흐름(분석 · 승인 · 견적)을 새 화면 + 현재 백엔드로 끝까지 돌리지 않음(다른 세션 `fe-verify`와 조장 손 시험 몫). Playwright 시험은 옮기기만 했고 실행하지 않음(키 없는 데모 서버 + Chrome 필요). 원본 회로도 웹 검색은 외부 검색을 부를 수 있어 호출하지 않음. 메일 · Google · Mouser · 관리자 변경 종단 동작.
+- 뺀 것: 로그인 전 대화 링크의 로그인 뒤 복귀, 일반 참고 회로도 검색(`reference_only`), 가격 수량별 단가·합계 계산, 확대·이동 도면 뷰어, 개인정보처리방침 이전 글(새 글은 축약본), 더미 모드. 자세한 표는 `reports/2026-11-15-점검/fe-integrate.md`.
+- 다음: 조장 손 시험에서 나온 버그를 이 브랜치에 작은 커밋으로. `Dockerfile` · `Dockerfile.recovery`의 `COPY data/circuits/`는 새 화면이 쓰지 않는다(고정 파일이라 두었음).
+- 추가(같은 작업): 커밋 전체 목록 · 인벤토리 표는 `reports/2026-11-15-점검/fe-integrate.md`(위 ①~⑫ 뒤에 입력칸 안내 · 문서 정리 커밋이 더 있다). 개발 프록시의 Origin 바꿔치기는 로컬 uvicorn(`AUTH_ORIGIN=http://localhost:8765`)과 Vite(5199)로 확인했다 `[실측]`: Vite 경유 `POST /api/auth/login`은 Origin 검사를 통과해 503(DB 없음), 같은 요청을 백엔드에 직접 보내면 403 `ORIGIN_MISMATCH`.
+- 알려진 문제: `frontend/public/assets/product/condition-evidence.png`(랜딩 캡처)는 표시 수정 전 화면이라 `>= 0.17142857142857143 A` · `v_in_max * kV`가 그대로 찍혀 있고, `missing-condition.png`는 옛 칸 이름(`허용 전압강하`)이다. 다시 찍으려면 키 없는 데모 서버 전체가 필요해 하지 않았다. 조장 손 시험 뒤 다시 찍을지(또는 그림을 뺄지) 조장이 정한다. 점검 `fe-verify`의 F1(입력칸 라벨이 코드로 보임)은 `8f528922`로 답했다.
+
+## 2026-11-16 main(#138·#139)을 jeongun에 통합하고 #139 동작을 새 화면에 옮김 (브랜치 `jeongun`)
+- 목적: `origin/main`(`ba1ba203`: #138 로컬 compose KiCad 제외, #139 승인 재선택 · 수량별 가격 추정 · LED 대상 차단 · 캐시 헤더)을 `jeongun`에 합치고 새 화면에서 같은 동작이 되게 한다. 푸시 · PR · 배포 · 유료 호출 없음.
+- 커밋: 머지 `b3a1dcae` → 시험 고침 `b6f5c054` → 새 화면 이식 3개(`744d1a4a` 수량별 예상 금액 · `065a9187` LED 등 대상 제외 · `714a89ce` 다른 후보 승인됨 표시) → `a8c3a201` 스키마 문서 · `bd900c89` 통합 시험 → `61d9aada` 시험 주석. 충돌 · 해결 · 시험 수는 `reports/2026-11-16-마무리/merge-main.md`.
+- 합친 규칙: 옛 `frontend/` 파일은 삭제를 유지하고 `App.tsx` · `vite.config.ts` · `FRONTEND.md` · `SRC.md`는 새 화면 쪽. `quote.py` · `quotes.py`는 jeongun의 승인별 견적 복원 · 견적 목록(thread_id)과 #139의 활성 사례 JOIN · 재승인 · `part_number` · `FOR SHARE OF c`를 함께 둠. 동작이 달라진 곳: 사례를 지운 승인은 이제 승인 목록에서 사라진다(#139 규칙, 이전 jeongun은 `case_id: null`로 유지).
+- 확인 [실측]: `uv run pytest -q`(.env 끄고) 실패는 Mac 전용 `test_schematic_render.py` 12개뿐. DB 있는 전체 실행은 그 12개 + `test_rag_storage.py` halfvec 2개(VOYAGE 키 없음, 이번 병합이 건드리지 않은 파일). 실제 PG(`db/*.sql` 전부 적용) 승인 · 견적 · 대화 · 전체 흐름 227 통과. `npm ci && npm test(22) && format:check && build` 통과.
+- 확인 못 한 것: 새 화면 + 이 HEAD의 브라우저 흐름(Playwright 포함)은 돌리지 않음. 가격 estimate는 데모 모드라 실제 Mouser로 확인하지 못함(백엔드 단위 시험과 화면 순수 함수 시험만).
+- 미룸: #139의 새 배포 감지 안내(`DeploymentUpdate`)는 새 화면에 옮기지 않았다(빌드 식별 meta 플러그인 + 화면 곳곳의 `data-refresh-blocked` 표식이 필요). `docs/specs/frontend-screen-redesign.md`에는 그 기능 설명이 그대로 남아 있다. 필수 조건 미확인 시 승인 막기 안내(`ApprovalConditions`)도 옮기지 않았다(서버는 409로 거절함).
+- 이전 항목 보정: 위 "화면을 새 프론트엔드로 교체" 항목의 "뺀 것 — 가격 수량별 단가 · 합계 계산"은 이번에 옮겼다.

@@ -141,7 +141,7 @@ TABLES = {
     'public.approvals': ('사람의 후보 승인(스냅샷의 유일한 사본)', {
         'id': '승인 번호',
         'user_id': '승인한 사용자',
-        'message_id': '승인한 어시스턴트 메시지(고유, 메시지당 1건)',
+        'message_id': '승인한 어시스턴트 메시지(조회 색인 ix_approvals_message). 사례를 지우면 같은 메시지를 다시 승인할 수 있어 활성 승인을 하나로 지키는 것은 DB 제약이 아니라 서비스 코드(run 행 잠금과 활성 사례 검사)다',
         'candidate_part': "승인한 후보 품번의 **표시 이름**(판정 결과가 보여 준 그대로. 예 'TSC 1N4007G'). 승인 JSON에서 꺼낸 칸",
         'verdict': '승인한 판정 IDENTICAL | SPEC_EQUIVALENT | ROLE_SUFFICIENT. 승인 JSON에서 꺼낸 칸',
         'part_number': "견적용 **식별 품번**: 제조사 이름(TSC 등)을 떼고 남은 공백(주문 코드)은 '-'(예 '1N4007G', '1N4148-A0G'). 승인 JSON에서 꺼낸 칸",

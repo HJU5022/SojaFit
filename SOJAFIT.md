@@ -45,17 +45,15 @@ SojaFit (proj3-b)
 │       ├── eval-live.yml   <- 버튼으로 돌리는 진짜 모델 v3 평가와 기준 검사(Secrets 키 사용, 유료)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
-├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정 (2026-11-13 화면 전면 재작성)
+├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정 (2026-11-16 새 화면으로 교체)
 │   ├── FRONTEND.md         <- 폴더 설명
-│   ├── design.md           <- 화면 모양의 기준: 색·글자·간격·상태·움직임·금지 목록
 │   ├── Dockerfile.recovery <- 운영 이미지 digest를 상속해 화면만 빌드·교체하는 복구용 이미지
 │   ├── package.json        <- npm 의존성과 실행 명령
 │   ├── package-lock.json   <- npm 의존성 고정
 │   ├── index.html          <- React 진입 HTML
-│   ├── vite.config.ts      <- React·API 프록시·Vitest와 실제 데모 JSON 기반 dummy virtual module 설정
-│   ├── tsconfig.json       <- TypeScript 프로젝트 참조
-│   ├── tsconfig.app.json   <- 화면 TypeScript 설정
-│   ├── tsconfig.node.json  <- Vite TypeScript 설정
+│   ├── vite.config.ts      <- React 플러그인과 API 프록시(개발·미리보기에서 Origin을 백엔드 AUTH_ORIGIN에 맞춰 보냄)
+│   ├── playwright.config.ts <- Playwright 설정(설치된 Chrome·키 없는 데모 서버, 기본 주소 localhost:8000)
+│   ├── tsconfig.json       <- TypeScript 설정
 │   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
 │   │   ├── PUBLIC.md       <- 폴더 설명
 │   │   ├── circuit-schematics/ <- 검증된 공개 원본에서 고정한 데모 회로도 PNG
@@ -76,74 +74,43 @@ SojaFit (proj3-b)
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
-│   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘·화면 머리 로고)
-│   └── src/                <- 화면 소스와 단위 테스트
+│   │       ├── product/    <- 랜딩이 쓰는 실제 데모 화면 캡처
+│   │       │   ├── condition-evidence.png <- 조건 행과 데이터시트 근거(쪽·표·행)를 보인 검토 화면 캡처
+│   │       │   └── missing-condition.png <- 추가 조건을 물어보는 검토 화면 캡처
+│   │       ├── samples/    <- 새 프로젝트 창의 "샘플 넷리스트 받기"가 내려 주는 공개 라이선스 넷리스트
+│   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
+│   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
+│   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘)
+│   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)
+│   │   ├── TESTS.md        <- 폴더 설명
+│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄 시험
+│   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
+│   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기, LED·표시기·비다이오드 판정 대상 제외 시험
+│   │   ├── approval.test.ts <- 승인 목록에서 후보의 승인 상태(own·other)와 사례 삭제 뒤 재승인 시험
+│   │   ├── demo.spec.ts    <- Playwright: 데모 로그인부터 승인·견적·설정까지의 브라우저 흐름(키 없는 데모 서버 필요)
+│   │   └── account.spec.ts <- Playwright: 설정 저장·A/B 격리·관리자 차단·첨부 넷리스트의 회로 버전
+│   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
-│       ├── main.tsx        <- Router·QueryClient·글꼴·스타일 진입점
-│       ├── App.tsx         <- 경로 표(랜딩·로그인 계열·작업대·설정·관리자)
-│       ├── dummy-circuits.d.ts <- 실제 데모 JSON을 묶는 build-time virtual module 타입
-│       ├── api/            <- 기존 서버 API의 typed fetch 경계
-│       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
-│       │   ├── auth.ts     <- 로그인·가입·데모 버튼 로그인·세션 복원·로그아웃·탈퇴·Google 상태 API
-│       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
-│       │   ├── projects.ts <- 소유 프로젝트·데모·업로드·이름 변경·삭제 API
-│       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
-│       │   ├── externalCircuits.ts <- 공개 원본 회로도 검색 API(GET /api/external-circuits/schematics)
-│       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
-│       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API, 키 없는 데모의 기록 질문 목록
-│       │   ├── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
-│       │   ├── profile.ts   <- 내 설정(사용자 사실 3칸) 조회·저장·삭제 API
-│       │   ├── dummy.ts     <- 개발 전용 비영속 전체 흐름 API
-│       │   └── dummy.test.ts <- 더미 API 상태·비저장·404 테스트
-│       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
-│       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·가입·로그아웃·탈퇴·401 처리, 세션을 잃으면 화면 캐시·탭 저장소 비움
-│       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
-│       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
-│       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
-│       │   ├── useRunStream.ts <- 분석 시작·재개·연결 복구 상태 머신
-│       │   ├── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
-│       │   ├── useConversation.ts <- 검토 한 건의 화면 상태(저장된 질문·실행 중 질문·단계·첨부)
-│       │   └── useNetlistFiles.ts <- 선택·드롭 공통 검증과 취소 가능한 회로 버전 첨부 전송
-│       ├── lib/            <- 화면이 쓰는 순수 함수
-│       │   ├── judgement.ts <- 판정 표기·색 이름·값과 인용 위치 표시
-│       │   ├── circuit.ts  <- 부품 목록과 대상 부품의 넷·이웃 추출
-│       │   ├── circuit.test.ts <- 넷·이웃·다이오드 판별·인용 링크·값 표시 테스트
-│       │   └── inputLabels.ts <- 판정 입력 코드의 화면 이름
-│       ├── pages/          <- 경로마다 하나인 화면
-│       │   ├── LandingPage.tsx <- 공개 랜딩: 예시 검토 문서·쓰는 법·판정 5종·신뢰 수치·한계
-│       │   ├── LoginPage.tsx <- 이메일 로그인·Google 로그인과 계정 연결·데모 모드의 데모 사용자 버튼
-│       │   ├── SignupPage.tsx <- 가입 인증 메일 요청
-│       │   ├── EmailActionPage.tsx <- 메일 링크의 비밀번호 설정·재설정
-│       │   ├── PrivacyPage.tsx <- 로그인 없이 읽는 개인정보처리방침과 목차
-│       │   ├── WorkbenchPage.tsx <- 작업대 셸: 레일·프로젝트 목록·부품 목록·새 프로젝트·원본 회로도·승인 사례
-│       │   ├── WorkbenchPage.test.tsx <- 예제 회로 목록(운영 404·데모·대기)에 따라 새 프로젝트 창과 원본 회로도 버튼(저장된 그림·웹 검색)이 맞게 보이는지 테스트
-│       │   ├── WorkbenchPage.ask.test.tsx <- 부품 목록의 질문 칸이 질문 속 부품 번호로 검토를 열고 질문을 한 번 보내는지, 번호가 없거나 범위 밖이면 안내만 하는지 테스트
-│       │   ├── SettingsPage.tsx <- 내 설정 3칸 저장·삭제, 확인 후 계정 삭제
-│       │   ├── SettingsPage.test.tsx <- 최초 조회 잠금·자동 갱신 초안 보존·변경 후 동기화 테스트
-│       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
-│       ├── components/     <- 화면 조각
-│       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
-│       │   ├── ChatPane.tsx <- 채팅 전용 스크롤·고정 입력창·대화 끝 이동
-│       │   ├── DeploymentUpdate.tsx <- 새 배포 감지·초안과 작업 보존 후 명시적 갱신 안내
-│       │   ├── DeploymentUpdate.test.tsx <- 버전 확인·요청 상한·초안/첨부 보존 갱신 회귀
-│       │   ├── NetlistIntake.tsx <- 빈 프로젝트·대상 선택 전의 채팅 입력과 넷리스트 접수
-│       │   ├── ReviewDetails.tsx <- 질문·부품별 상세 탭과 보존되는 판정·근거·승인 패널
-│       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
-│       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
-│       │   ├── PriceLookup.test.tsx <- 가격 조회 버튼·재시도와 화면 복귀·재연결 자동 조회 차단 테스트
-│       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
-│       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
-│       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)
-│       │   ├── SafeMarkdown.test.tsx <- 표·굵게·목록 렌더와 악성 마크다운(이미지·링크·HTML) 차단 시험
-│       │   ├── ApprovedCases.tsx <- 승인 사례 목록·확인 삭제
-│       │   ├── AuthCard.tsx <- 로그인 계열 화면의 공통 카드
-│       │   └── PageShell.tsx <- 설정·관리 화면의 공통 머리와 폭
-│       ├── styles/         <- 스타일
-│       │   └── app.css     <- 전체 스타일(design.md의 토큰과 눈금)
-│       └── test/           <- 화면 테스트 설정
-│           ├── projects.tsx <- QueryClient 화면 테스트 도구
-│           ├── setup.ts    <- jest-dom matcher와 화면 정리
-│           └── network.ts  <- 손작성 API 응답·fetch 경계 테스트 대역
+│       ├── main.tsx        <- React 진입점·글꼴·스타일
+│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·작업대·설정·승인 사례·관리자)
+│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결
+│       ├── types.ts        <- 공개 API 자료형
+│       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
+│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유
+│       ├── approval.ts     <- 승인 목록에서 후보의 승인 상태(이 후보 승인·다른 후보 승인) 가르기
+│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄)
+│       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름
+│       ├── ui.tsx          <- 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식
+│       ├── Landing.tsx     <- 공개 랜딩
+│       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
+│       ├── Account.tsx     <- 내 설정·승인 사례·관리자 계정·개인정보 안내
+│       ├── Projects.tsx    <- 프로젝트 목록과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 링크)
+│       ├── Workbench.tsx   <- 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전
+│       ├── Reply.tsx       <- 검토 결과 답과 조건 입력 카드
+│       ├── Schematic.tsx   <- 원본 회로도 구역: 예제 프로젝트의 저장된 도면과, 누를 때만 하는 공개 웹 검색(external-circuits)
+│       ├── Candidate.tsx   <- 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회
+│       ├── styles.css      <- 전체 스타일
+│       └── vite-env.d.ts   <- Vite 환경 타입
 │
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
@@ -153,7 +120,7 @@ SojaFit (proj3-b)
 │   ├── auth_email.py       <- 이메일 소유 확인 가입·암호 재설정 토큰·발송 한도·세션 폐기
 │   ├── errors.py           <- 오류 응답 error.code 16개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
 │   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
-│   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). <이름>.py가 frontend/src/api/<이름>.ts와 짝
+│   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). 화면 쪽 짝은 frontend/src/api.ts 하나
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── admin.py        <- 관리자 계정 목록·활성 상태 변경 API(/api/admin/users)
@@ -476,7 +443,9 @@ SojaFit (proj3-b)
 │       │   ├── 2026-11-06-judge-steps/  <- 사전 등록 #39 ~ #42(동결 v2 70문항) 원시 결과를 lab에서 그대로 옮김과 출처 · sha256(sources_2026-11-10.json)
 │       │   ├── 2026-11-10-v3-haiku-sets/  <- 8장 인용 v3 50문항 Haiku 구성 측정(#50) 원시 결과를 그대로 옮김과 출처 · sha256(sources_2026-11-11.json)
 │       │   ├── 2026-11-11-d8-stages/  <- D8 현재 코드 v3 50문항 1세트(문항별 단계 시간 · 모델 호출별 비용)와 집계(stage_summary.json)
-│       │   └── 2026-11-11-d8-stages-rerun/  <- 같은 측정에서 공급자 429로 실패한 8문항 재실행
+│       │   ├── 2026-11-11-d8-stages-rerun/  <- 같은 측정에서 공급자 429로 실패한 8문항 재실행
+│       │   └── 2026-11-14-no-replan/  <- 코퍼스 밖 품번·판본 문서 실패는 재계획하지 않기(R1) 원시 결과와 README
+│       │       └── v3-15_cap_path_2026-11-14.md  <- 재계획 상한 등에 닿은 질문 한 건(R1 set2 v3-15, 28.9초)의 경로·상한·통과 판정 기록
 │       ├── threads/        <- 사용자 분석 thread 확인: 키 없는 compose의 체크포인트 재개 · 사용자 격리(G4), 입력 회귀, 실제 호출 smoke
 │       │   ├── injection_t3_live_2026-11-11_08.jsonl <- 미완료 상태 정리 후 T3 스모크08 원시 결과
 │       │   ├── injection_t3_live_2026-11-11_08.meta.json <- 스모크08 입력·코드 해시
@@ -624,6 +593,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_datasheet_rows.py <- 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
+│   │   ├── test_exa_prefetch.py <- 웹 근거 미리 출발: 기본 꺼짐, 받아 둔 같은 PDF 재사용, 실패 시 원래 경로
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
@@ -661,6 +631,7 @@ SojaFit (proj3-b)
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
 │   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
 │   │   ├── test_import_human_review.py <- 사람 채점 시트 변환의 파싱 · 채움 · 일치율 · 원본 보존(합성 시트)
+│   │   ├── test_chunk_source_check.py <- 청크-원본 대조의 같은 쪽 다른 행 값 변이 시험(합성 표 382건: 쪽 검사 0 · 행 검사 전부 탐지, 깨끗한 12건 통과)
 │   │   ├── test_check_injection_result.py <- 저장한 실측03의 기준 통과와 변이(작업 수 · 상태 · 판정 · 노출) 실패
 │   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
 │   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사
@@ -701,7 +672,7 @@ SojaFit (proj3-b)
 │   │   ├── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
 │   │   ├── stage_report.py  <- run_gate 결과의 단계별 p50 · p95 · 호출당 · 문항당 비용 집계(진짜 중앙값 · 가장 가까운 순위 p95)
 │   │   ├── approval_wait_report.py  <- 사람 대기(재개 · 승인)를 서버 처리 시간과 떼어 DB 시각에서 읽는 읽기 전용 보고
-│   │   ├── chunk_source_check.py  <- 표·수치 청크 표본을 원본 PDF 같은 쪽과 대조(D10 증거)
+│   │   ├── chunk_source_check.py  <- 표·수치 청크 표본을 원본 PDF 같은 쪽과 대조(D10 증거). `--rows`는 같은 행·열 칸 값까지 대조
 │   │   └── tally_codex_v3.py  <- Codex v3 50건 답을 정답과 규칙으로 대조한 집계
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
@@ -895,6 +866,7 @@ SojaFit (proj3-b)
 | `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
 | `frontend/public/` | [PUBLIC.md](frontend/public/PUBLIC.md) | 서비스·운영 |
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
+| `frontend/tests/` | [TESTS.md](frontend/tests/TESTS.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
 | `backend/api/` | [API.md](backend/api/API.md) | 서비스·운영 |
 | `backend/conversations/` | [CONVERSATIONS.md](backend/conversations/CONVERSATIONS.md) | 서비스·운영 |

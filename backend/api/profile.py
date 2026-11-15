@@ -4,7 +4,7 @@
 - 바꾸는 요청(PATCH · DELETE)은 다른 상태 변경 경로처럼 Origin을 확인한다(다르면 403). PATCH는 탈퇴가 진행 중이면 409다.
 - 기억은 분석 저장소(`THREADS_ENABLED=1`의 `app.state.conversations.profile`)에 있다. 없으면 공통 503.
 - 탈퇴는 분석 기록 → Store → 계정 순서로 지우고 지운 건수를 돌려준다. 관리자는 409.
-- 화면 쪽 짝: `frontend/src/api/profile.ts`(탈퇴 `deleteAccount`만 `frontend/src/api/auth.ts`에 있다).
+- 화면 쪽 짝: `frontend/src/api.ts`(화면의 API 호출은 모두 이 파일의 `api()`를 거친다).
 하지 않는 일: 칸 검사 · 문장 만들기 · Store 쓰기 · 의미 검색(`backend/conversations/profile.py`), 대화에서 사실 뽑기,
   분석 기록 지우기(`Conversations.account_deletion`) · 계정 행 지우기(`backend/auth.py`의 `delete_account`).
 출처: SPEC.md 8.5절, docs/specs/user-thread-memory.md "사용자 사실 기억"(탈퇴 `DELETE /api/me` 줄 포함).

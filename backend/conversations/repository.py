@@ -19,10 +19,21 @@ class InvalidRunState(Exception):
     """실행 상태가 요청한 전이에 맞지 않는다."""
 
 
+def stale_run_seconds():
+    """마지막 갱신 뒤 이 시간이 지난 running run은 멈춘 것으로 본다(분석 한 번의 최대 시간 + 60초, 최소 300초)."""
+    return max(300, float(os.getenv('ANALYSIS_MAX_SECONDS', '90')) + 60)
+
+
+# [왜] 삭제를 막아야 하는 running run = 최근에 갱신됐거나, 갱신이 오래됐어도 그 thread의 분석 잠금을 누가 쥔 run. 인스턴스가 내려가 멈춘 run은 막지 않는다(점검 B #3)
+# [주의] 매개변수 하나(stale_run_seconds())가 필요하다. 호출한 쪽 트랜잭션이 끝날 때까지 멈춘 run의 thread 잠금을 쥔다(삭제와 새 실행이 서로 기다리게 하려는 것)
+LIVE_RUN = ("r.status='running' AND (r.updated_at >= CURRENT_TIMESTAMP-(%s * interval '1 second') "
+            "OR NOT pg_try_advisory_xact_lock(hashtextextended(r.thread_id::text,0)))")
+
+
 class ConversationRepository:
     def recover_stale_run(self, user_id, run_id):
         """멈춘 소유 실행만 정리한다. 분석 잠금이 있으면 시각과 관계없이 그대로 둔다."""
-        stale_seconds = max(300, float(os.getenv('ANALYSIS_MAX_SECONDS', '90')) + 60)
+        stale_seconds = stale_run_seconds()
         with auth.connection() as conn:
             row = conn.execute('SELECT r.thread_id FROM runs r JOIN threads t ON t.id=r.thread_id '
                                'JOIN projects p ON p.id=t.project_id WHERE r.id=%s AND p.user_id=%s FOR UPDATE OF p,r',
@@ -44,7 +55,7 @@ class ConversationRepository:
             if project is None:
                 raise ConversationNotFound
             # Run/resume also lock the project; the advisory lock protects checkpoint writers.
-            if conn.execute("SELECT 1 FROM runs WHERE thread_id=%s AND status='running' LIMIT 1", (thread_id,)).fetchone():
+            if conn.execute(f"SELECT 1 FROM runs r WHERE r.thread_id=%s AND {LIVE_RUN} LIMIT 1", (thread_id, stale_run_seconds())).fetchone():
                 raise InvalidRunState
             if not conn.execute('SELECT pg_try_advisory_xact_lock(hashtextextended(%s,0))', (thread_id,)).fetchone()[0]:
                 raise InvalidRunState
