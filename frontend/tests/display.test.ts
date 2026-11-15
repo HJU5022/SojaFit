@@ -11,6 +11,7 @@ import {
   markdownUrl,
   roundLongDecimals,
   sameOriginImage,
+  withoutCorpusCitations,
   safeLink,
 } from '../src/display.ts';
 
@@ -121,4 +122,18 @@ test('sameOriginImage는 같은 출처 경로만 허용한다', () => {
   ]) {
     assert.equal(sameOriginImage(bad), undefined, String(bad));
   }
+});
+
+test('withoutCorpusCitations는 등록된 번호만 숨기고 나머지는 둔다', () => {
+  const evidence = [{ citation_number: '79' }, { citation_number: '80' }, {}];
+  assert.equal(
+    withoutCorpusCitations('누설 전류는 낮습니다 [79] [80].', evidence),
+    '누설 전류는 낮습니다.',
+  );
+  assert.equal(withoutCorpusCitations('값 [79, 12]', evidence), '값 [12]');
+  assert.equal(
+    withoutCorpusCitations('코드 a[79] [미등록] [링크](https://x.example)', evidence),
+    '코드 a [미등록] [링크](https://x.example)',
+  );
+  assert.equal(withoutCorpusCitations('인용 [79]', []), '인용 [79]');
 });

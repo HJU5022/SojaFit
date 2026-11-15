@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { ArrowRight, MessageSquare } from 'lucide-react';
 import { statuses } from './api';
+import { withoutCorpusCitations } from './display';
 import { inputLabel } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
@@ -145,13 +146,13 @@ export function Reply({
           <details className="full-answer">
             <summary>전체 답변 보기</summary>
             <div className="markdown">
-              <Markdown>{r.answer}</Markdown>
+              <Markdown>{withoutCorpusCitations(r.answer, r.evidence)}</Markdown>
             </div>
           </details>
         </>
       ) : r.answer ? (
         <div className="markdown">
-          <Markdown>{r.answer}</Markdown>
+          <Markdown>{withoutCorpusCitations(r.answer, r.evidence)}</Markdown>
         </div>
       ) : null}
       <ErrorBox error={r.error?.message ?? null} />

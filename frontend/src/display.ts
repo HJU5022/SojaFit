@@ -133,3 +133,22 @@ export function markdownUrl(url: string): string {
 export function sameOriginImage(url?: string | null): string | undefined {
   return url && /^\/(?![/\\])/.test(url) ? url : undefined;
 }
+
+/**
+ * 답변 속 `[79]` 같은 말뭉치 인용 번호 중 이 답변의 근거(evidence)에 등록된 번호만 숨긴다. 코드·수치·미등록 괄호·링크 `[글](주소)`는 둔다.
+ * [왜] 번호는 서버 내부 말뭉치 번호라 사용자에게 뜻이 없다. 근거는 "문서 근거" 목록에서 쪽·표·행으로 보인다.
+ */
+export function withoutCorpusCitations(
+  text: string,
+  evidence: { citation_number?: string }[] = [],
+): string {
+  const numbers = new Set(
+    evidence.map((e) => e.citation_number).filter((n) => /^\d+$/.test(n ?? '')),
+  );
+  return text.replace(/[ \t]*\[([^[\]\n]+)\](?!\()/g, (match, group: string) => {
+    const ids = group.split(',').map((id) => id.trim());
+    const remaining = ids.filter((id) => !numbers.has(id));
+    if (remaining.length === ids.length) return match;
+    return remaining.length ? `${match.match(/^[ \t]*/)?.[0] ?? ''}[${remaining.join(', ')}]` : '';
+  });
+}
