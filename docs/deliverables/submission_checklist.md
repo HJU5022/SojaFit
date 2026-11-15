@@ -12,7 +12,7 @@
 
 | 항목 | 요구 | 증거 경로 | 상태 | 마감 |
 |---|---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소. 평가용 계정으로 핵심 시나리오 | [README.md](../../README.md), [GATES.md](../GATES.md) G1, [deploy_574de79](../../evals/results/d10/deploy_574de79/README.md) | 충족: 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`)에서 평가용 계정 A · B 25단계 통과. 마지막으로 확인한 리비전 `sojafit-api-main7ba86325-1115`(11-15 22:29 KST)와 그 뒤 재배포 리비전의 로그인 뒤 점검 기록은 없다(리비전의 정본은 [README.md](../../README.md) 「배포 리비전」, 재배포 확인 대기). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(GATES G1) | 발표 11/18 |
+| G1 배포 주소 | README 맨 위 표의 배포 주소. 평가용 계정으로 핵심 시나리오 | [README.md](../../README.md), [GATES.md](../GATES.md) G1, [deploy_574de79](../../evals/results/d10/deploy_574de79/README.md) | 충족: 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`)에서 평가용 계정 A · B 25단계 통과. 그 뒤 리비전(지금 `sojafit-api-main-a0abece5-1116`, 11-16 04:36 KST)의 로그인 뒤 점검 기록은 없다(리비전의 정본은 [README.md](../../README.md) 「배포 리비전」). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(GATES G1) | 발표 11/18 |
 | 배포 유지 | 발표일까지 배포 유지, 제출 링크·경로·발표 시각 | 없음 | 없음: 확인 기록 없음 | 발표 11/18 |
 | G2 한 줄 기동 | `docker compose up`으로 10분 안에 기동 | [docker-compose.yml](../../docker-compose.yml), [.env.example](../../.env.example), [startup_restart_isolation_2026-11-13.md](../../evals/results/d10/startup_restart_isolation_2026-11-13.md) | 충족: 냉 기동 243.9초, 스모크 28/28(Mac dind 1회, 11-13 `ad8612e`). 그 뒤 Dockerfile · compose · `db/031`이 바뀌어 현재 코드로는 재지 않았다(GATES G2) | D11 11/16 |
 | G3 코퍼스 | 서로 다른 청크 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | [data/manifest.jsonl](../../data/manifest.jsonl), [chunk_sha256.md](../../evals/results/chunking/v4h-2026-11-08/chunk_sha256.md), [GATES.md](../GATES.md) G3 | 부분: 문서 1,360 · 청크 51,967로 수치는 넘지만 GATES 표가 "증거 보강 필요"로 둠(DB에서 본문 해시 재계산 안 함) | D11 11/16 |

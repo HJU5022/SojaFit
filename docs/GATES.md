@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-16
-- 기준 커밋: `76fadcb4`(`main`, PR #140 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(재배포 확인 전). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다. 재배포를 확인하면 README 「배포 리비전」 칸만 고치고 G1은 그 칸을 가리킨다
+- 기준 커밋: `a0abece5`(`main`, PR #141 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-16 04:36 KST `sojafit-api-main-a0abece5-1116`). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다.
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
 
@@ -16,7 +16,7 @@
 
 | 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
 |---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 마지막으로 확인한 리비전 `main7ba86325-1115`와 그 뒤 재배포 리비전의 로그인 뒤 점검 기록은 없다(**【재배포 확인 후 통합 담당이 채움】**). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
+| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 그 뒤 리비전(`main7ba86325-1115` · `main76fadcb4-1116` · 지금 `main-a0abece5-1116`)의 로그인 뒤 25단계 점검 기록은 없다(확인 못 함). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: clone 시작 → `/health` 200 243.9초, 스모크 28/28. 한계는 G2 절) |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요 |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
@@ -31,7 +31,7 @@
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
 | 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
-| 마지막으로 확인한 리비전 `sojafit-api-main7ba86325-1115`(소스 `main` `7ba86325`, 2026-11-15 22:29 KST 100% 전환, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 소스 `76fadcb4` 재배포는 **【확인 대기 · 통합 담당이 채움】** | 이름 · 전환 시각 · 소스는 조장이 전달한 값이고 이 문서를 고치는 동안 `gcloud`로 직접 확인하지 않았다. 이 리비전의 로그인 뒤 25단계 점검은 기록이 없다(확인 못 함). 재배포 리비전의 이름 · 시각 · 점검 결과는 확인 뒤 README 「배포 리비전」 칸에 적고 이 행은 이전 리비전으로 고친다 | [README.md](../README.md) 표 |
+| 이전 리비전 `sojafit-api-main76fadcb4-1116`(소스 `76fadcb4`, 2026-11-16 04:07 ~ 04:36 KST)과 `sojafit-api-main7ba86325-1115`(소스 `7ba86325`, 11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 지금 리비전은 README 「배포 리비전」 칸 | 리비전 이름은 `gcloud run revisions list`로 확인했다(11-16 04:37 KST). 두 리비전 모두 로그인 뒤 25단계 점검 기록은 없다(확인 못 함) | [README.md](../README.md) 표 |
 | 운영 시작 실패와 복구(2026-11-14 22:43 ~ 11-15 21:26 KST) | Secret Manager `EXA_API_KEY` 버전 1이 파기(DESTROYED)됐는데 서비스 설정이 그 버전을 고정해, 최소 인스턴스 0대인 운영 리비전 `574de79-rs`의 새 인스턴스가 시작하지 못했다(21:22 KST `/health` · `/login` · `/` 500). 같은 이미지에 `EXA_API_KEY:2`만 바꾼 리비전 `sojafit-api-574de79-exa2`를 21:26 KST에 100%로 돌려 복구했고, 22:29 KST에 위 현재 리비전으로 바꿨다. 누가 · 왜 버전 1을 파기했는지는 확인하지 못했다 | `docs/worklog/jeongun.md` 11-15 항목 「운영 다운 복구」 |
 | 리비전 `sojafit-api-574de79-rs`(소스 `main` `574de79`, 2026-11-13 12:07 KST 100% 전환, 11-15 21:26 KST까지 100%) 평가용 계정 25단계 | 배포 서버 · 실제 모델로 평가용 계정 A · B 로그인 200, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작(같은 이미지 다이제스트의 새 리비전), 같은 run 재개 200, 승인, 같은 승인 409, 견적, 계정 B의 접근 404. 통과 25 · 실패 0 · 건너뜀 0. 환경변수 32개(`EXA_WEB_SEARCH_ENABLED=1` 포함). 재개 요청을 이 리비전이 처리한 것은 서버 로그로 확인했다. 이 리비전은 `574de79`의 설정 그대로다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md), [서버 로그 발췌](../evals/results/d10/deploy_574de79/restart_server_log_2026-11-13.txt), [smoke_..._2026-11-13_120624.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_120624.json) |
 | 리비전 `sojafit-api-574de79`(소스 `main` `574de79`) 로그인 없는 점검 | 2026-11-13 10:53 KST: `/health` 200(0.11초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34, `/api/auth/me` 401, `/api/auth/demo-login` 404(`DEMO_MODE=0`) | [unauth_checks_raw.txt](../evals/results/d10/deploy_574de79/unauth_checks_raw.txt) |
