@@ -323,7 +323,7 @@ uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json
   ```
 
   비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 이 명령 자체는 이번에 다시 실행하지 않았다(유료). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
-- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡 순서 `npm ci && npm run test:run && npm run build`와 `gitleaks`, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md)). 동결 직전에 `pytest` · `freeze.py --check` · `gitleaks`를 다시 돌려야 한다. Actions에서의 실제 실행 결과는 확인하지 못했다.
+- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡을 당시 순서 `npm ci && npm run test:run && npm run build`로, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md). 지금 `frontend` 잡은 `npm ci` → `npm test` → `npm run format:check` → `npm run build`이고, 새 화면으로 바꾸며 `test:run`은 없어졌다). 동결 직전에 `pytest` · `freeze.py --check` · `gitleaks`를 다시 돌려야 한다. Actions에서의 실제 실행 결과는 확인하지 못했다.
 
 ---
 
@@ -333,9 +333,9 @@ uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json
 
 ```
 SojaFit/
-├── frontend/       React · Vite 화면(로그인 · 가입 · 작업대 · 내 설정 · 사용자 관리) → frontend/FRONTEND.md
+├── frontend/       React · Vite 화면(랜딩 · 로그인 · 가입 · 작업대 · 승인 사례 · 내 설정 · 사용자 관리) → frontend/FRONTEND.md
 ├── backend/        서비스 코드 → backend/BACKEND.md
-│   ├── api/          프로젝트 · 대화와 실행(SSE) · 승인 · 견적 · 내 설정 HTTP 라우터
+│   ├── api/          인증 · 프로젝트 · 대화와 실행(SSE) · 승인 · 견적 · 가격 · 외부 회로도 · 내 설정 · 관리자 HTTP 라우터
 │   ├── projects/     사용자 프로젝트와 정규화 회로 저장, 넷리스트 정규화
 │   ├── conversations/  대화 · 실행 저장, 사용자 분석 서비스(체크포인트 · Store 기억 · 하루 상한)
 │   ├── graph/        D4 단일 그래프: 상태 · 노드 · 조립
@@ -396,7 +396,7 @@ SojaFit/
 |---|---|---|---|
 | KiCad 10(`kicad-cli`) | 원본 회로도 변환 전용 `renderer` 이미지(`Dockerfile`의 `renderer` target, 공식 `ppa:kicad/kicad-10.0-releases`의 `kicad=10.0.*`). 기본 API 이미지에는 넣지 않고 `INCLUDE_KICAD=1`로 빌드할 때만 들어간다(선택). KiCad를 고치지 않고 실행 파일(`kicad-cli`)로 부른다 | GPL-3.0-or-later | [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) |
 | KiCad 라이브러리(심볼 · 풋프린트 · 3D) | 위 `kicad` 패키지에 딸려 와 변환할 때 쓰인다. 저장소에 복사해 두지 않았다 | CC-BY-SA 4.0, KiCad 라이브러리 예외(라이브러리 부품을 쓴 설계에는 그 라이선스를 강제하지 않는다)가 붙는다 | KiCad 프로젝트의 라이선스 안내 `[문서]`. 이 저장소에 원문 사본은 없다(확인 못 함) |
-| 외부 공개 회로도(검색 결과로 화면에 보이는 것) | 사용자가 회로도 검색을 누를 때 확인된 공개 저장소의 고정 commit에서 받아 그림으로 렌더한다. 저장소에 넣지 않는다 | 저장소마다 다르다. 화면이 출처(`attribution`) · 라이선스(`license`) · 원본 링크를 그림 옆에 같이 보인다. 라이선스를 확인하지 못한 자료는 `NOASSERTION`을 일괄 허용하지 않는다 | [`backend/projects/PROJECTS.md`](backend/projects/PROJECTS.md), `frontend/src/components/Schematic.tsx` |
+| 외부 공개 회로도(검색 결과로 화면에 보이는 것) | 사용자가 회로도 검색을 누를 때 확인된 공개 저장소의 고정 commit에서 받아 그림으로 렌더한다. 저장소에 넣지 않는다 | 저장소마다 다르다. 화면이 출처(`attribution`) · 라이선스(`license`) · 원본 링크를 그림 옆에 같이 보인다. 라이선스를 확인하지 못한 자료는 `NOASSERTION`을 일괄 허용하지 않는다 | [`backend/projects/PROJECTS.md`](backend/projects/PROJECTS.md), `frontend/src/Schematic.tsx` |
 | 평가 · 데모용 공개 회로 | 저장소에 사본이 있다 | 프로젝트마다 MIT · CC BY-SA 3.0 · 4.0 등 | [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md) |
 | TSC 데이터시트 | 위 데이터 절 | 사이트 약관: 정보 · 비상업 목적, 고치지 않고 고지 · 출처 유지 | [`data/corpus/CORPUS.md`](data/corpus/CORPUS.md) |
 
