@@ -133,7 +133,7 @@ def delete_analysis_threads(conn, user, ids=None):
             deleted = cur.execute(sql.SQL('DELETE FROM sojafit_agent.{} WHERE thread_id IN (SELECT id::text FROM ({}) o)').format(
                 sql.Identifier(table), sql.SQL(owned)), params).rowcount
         counts['checkpoints'] = deleted
-    # 메시지 · 분석 사건은 thread FK cascade로 함께 지워진다. 화면 대화(public.threads)를 지우면 DB가 분석 thread와 checkpoint도 지우므로(db/028) 이 호출은 건수를 세고 먼저 지우는 용도다
+    # 메시지 · 분석 사건은 thread FK cascade로 함께 지워진다. 화면 대화(public.threads)를 지우면 DB가 분석 thread와 checkpoint도 지우므로(db/020_service_baseline.sql) 이 호출은 건수를 세고 먼저 지우는 용도다
     counts['analysis_threads'] = cur.execute(sql.SQL('DELETE FROM sojafit_agent.threads WHERE id IN ({})').format(sql.SQL(owned)), params).rowcount
     return counts
 
@@ -391,7 +391,7 @@ class Conversations:
     @contextmanager
     def locked(self, user, thread):
         with self.connection() as conn:
-            row = self._owned(conn, user, thread)
+            self._owned(conn, user, thread)  # 소유자가 아니면 404
             self._hold_account(conn, user)  # [왜] 실행이 끝날 때까지 탈퇴가 끼어들어 지운 기록을 다시 만들지 않게 한다
             if not conn.execute('SELECT pg_try_advisory_lock(hashtextextended(%s,0)) AS ok', (str(thread),)).fetchone()['ok']:
                 raise HTTPException(409, '분석을 처리 중입니다. 잠시 후 다시 시도하세요.')
@@ -456,7 +456,6 @@ class Conversations:
         snapshot = self.graph.get_state(self.config(thread))
         state = snapshot.values or {}
         pending = [i.value for task in snapshot.tasks for i in task.interrupts]
-        judgement = state.get('judgement') or {}
         return {'id': str(row['id']), 'mode': self.mode, 'filename': row['filename'], 'target': row['target'], 'version': row['version'],
                 'status': row['status'], 'messages': messages, 'answer': '' if pending or (row.get('input_record') or {}).get('execution_limit_reached') else state.get('answer', ''),
                 'interrupt': pending[0] if pending else None, 'can_approve': False,

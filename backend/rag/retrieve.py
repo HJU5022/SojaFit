@@ -85,7 +85,7 @@ def _connect():
 
 def warmup():
     """document_chunks 본문으로 BM25 색인과 품번 → 문서 색인을 메모리에 만든다."""
-    # [주의] 첫 retrieve() 때 한 번 불린다. 서버 기동 때 미리 부르는 연결은 아직 없어 첫 질문이 느리다
+    # [주의] 첫 retrieve() 때 한 번 불린다. 분석 서비스를 켠 서버는 기동 직후 Conversations.warm()이 데몬 스레드로 미리 부른다
     global _bm25, _parts, _nocover
     with _warmup_lock:
         if _bm25 is not None and _parts is not None and _nocover is not None:

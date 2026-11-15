@@ -9,7 +9,6 @@
 import pytest
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
-from backend.multi_agent import facts as F
 from backend.multi_agent import messages as M
 from backend.multi_agent import messages as Msg
 from backend.multi_agent.agents import docs as D
@@ -189,11 +188,6 @@ def test_search_error_and_empty_filter_result():
     chat = llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [5].'))
     r = run(task(), chat, docs=lambda q, parts: [] if parts else [doc(5)], seen=seen, part={})
     assert [p for _, p in seen] == [['SS14'], None] and r['status'] == 'ok'  # 품번 필터 안 0건이면 필터를 풀어 한 번 더
-
-
-def test_make_facts_checks_parts_and_revisions_against_lists():
-    f = F.make_facts('SS34 Q2611판 말고 1N4001은 어때?', set(), {'ss34'}, {'Q2412'})
-    assert f.parts == {'SS34': True, '1N4001': False} and f.revisions == {'Q2611': False}
 
 
 def test_refusal_messages_are_plain_korean_and_cover_every_refusal_reason():

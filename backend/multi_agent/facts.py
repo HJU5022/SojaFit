@@ -24,13 +24,6 @@ def refs_of(target_part: dict) -> set[str]:
             | {net.get('name', '').lstrip('/') for net in nets}) - {''}
 
 
-def make_facts(question: str, refs: set[str], known_parts: set[str], known_revisions: set[str]) -> Facts:
-    """known_parts는 소문자 품번 집합, known_revisions는 대문자 개정 코드 집합이다."""
-    revisions = revisions_in(question)
-    return Facts(parts={p: p.lower() in known_parts for p in find_parts(question, refs)},
-                 revisions={r: r in known_revisions for r in dict.fromkeys(revisions)})
-
-
 # [왜] 주문 코드 모양만 기본 품번에 붙인다. 코퍼스 주문 정보 표의 꼬리표 31종(RFG · RRG · A0G · R0 · L0G · M6G 등)은 모두
 # R · A · L · M 한 글자 + 글자나 숫자 하나 + 선택 G다(11-06 실측). 그래야 '1N4148 BAT85'의 없는 BAT85를 가리지 않는다
 ORDER_CODE = re.compile(r'[RALM][A-Z0-9]G?')

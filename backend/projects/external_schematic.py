@@ -578,7 +578,6 @@ class ExternalSchematicService:
         return _SearchFailure(reason)
 
     def find(self, query, selected_url=None, *, connections=None):
-        from backend.projects.external_circuit_search import WebSchematicRef
         normalized = " ".join(query.split()).casefold()
         if not 2 <= len(query.strip()) <= 200:
             raise ValueError("검색어는 2~200자여야 합니다.")
@@ -588,7 +587,6 @@ class ExternalSchematicService:
             raise ExternalSchematicNotFound()
         from backend.projects.netlist import circuit_fingerprint
         lookup_key = (normalized,circuit_fingerprint(connections)) if connections is not None else normalized
-        cache_key = lookup_key if selected_url is None else (lookup_key, selected_url)
         retry_until = self._retry_deadline(lookup_key)
         if retry_until is not None and self.wall() >= retry_until:
             self._clear_query_caches(lookup_key)
