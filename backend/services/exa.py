@@ -175,7 +175,7 @@ def _prefetch_pdfs(parts: list[str]) -> dict:
         with httpx.Client(timeout=10, trust_env=False, follow_redirects=False) as client:
             body, _ = _body(client, 'POST', 'https://api.exa.ai/search', 256 * 1024,
                             headers={'x-api-key': os.environ['EXA_API_KEY']},
-                            json={'query': query, 'numResults': MAX_RESULTS, 'includeDomains': filters, 'type': 'lite'})
+                            json={'query': query, 'numResults': MAX_RESULTS, 'includeDomains': filters, 'type': 'auto'})
             results = json.loads(body).get('results') or []
             hits = sorted((h for h in results[:MAX_RESULTS] if isinstance(h, dict)),
                           key=lambda h: _candidate_score(h, parts), reverse=True)
@@ -255,7 +255,7 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
             response_body, _ = _body(client, 'POST', 'https://api.exa.ai/search', 256 * 1024,
                                        headers={'x-api-key': os.environ['EXA_API_KEY']},
                                        json={'query': query, 'numResults': MAX_RESULTS,
-                                             'includeDomains': filters, 'type': 'lite'})
+                                             'includeDomains': filters, 'type': 'auto'})
             payload = json.loads(response_body)
         except (httpx.HTTPError, ValueError, TypeError, KeyError, RecursionError):
             return []
@@ -326,7 +326,7 @@ def _search_grade3_reference(parts: list[str], terms: str, *, transport=None) ->
         with httpx.Client(transport=transport, timeout=10, trust_env=False, follow_redirects=False) as client:
             body, _ = _body(client, 'POST', 'https://api.exa.ai/search', 256 * 1024,
                             headers={'x-api-key': os.environ['EXA_API_KEY']},
-                            json={'query': query, 'numResults': MAX_RESULTS, 'type': 'lite'})
+                            json={'query': query, 'numResults': MAX_RESULTS, 'type': 'auto'})
         payload = json.loads(body)
     except (httpx.HTTPError, ValueError, TypeError, KeyError):
         return []
