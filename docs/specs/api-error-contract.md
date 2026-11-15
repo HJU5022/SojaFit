@@ -60,7 +60,7 @@
 
 - DB를 쓸 수 없는 경우는 모두 503 `UNAVAILABLE`이다: 연결 실패 · 연결 풀 대기(`backend/main.py`의 `database_unavailable`)와 DB 설정 누락(`DATABASE_URL`이 비면 `backend/auth.py`의 `connection`이 같은 문구 `저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.`로 낸다). 설정 누락이 500이 되지 않게 `KeyError` 전체 처리기는 두지 않는다.
 - 분석 SSE의 `failed` 이벤트도 같은 표로 `error.code`를 고른다(`backend/api/conversations.py`의 `public_error`). 분석 전 DB 장애는 `UNAVAILABLE`이다.
-- 화면이 스스로 만드는 코드(`HTTP_ERROR`: 본문 없는 오류 응답, `STREAM_ERROR` · `STREAM_CLOSED` · `RUN_FAILED` · `APPROVAL_NOT_READY`)는 서버 표 밖이다.
+- 화면은 자기 오류 코드를 만들지 않는다. 2026-11-16 새 화면(`frontend/src/api.ts`의 `ApiError`)은 서버가 준 `error.code`를 그대로 담고, 본문 없는 오류 응답은 빈 `code`다. 옛 화면이 만들던 `HTTP_ERROR` · `STREAM_ERROR` · `STREAM_CLOSED` · `RUN_FAILED` · `APPROVAL_NOT_READY`는 화면과 함께 없어졌다.
 - 로그: 오류 응답 · `failed` 이벤트마다 `backend/errors.py`의 `log_error`가 한 줄(`message: request_failed`, `code`, `status`, `request_id`)을 남긴다. 4xx는 INFO(문구 · 본문 없이), 5xx는 ERROR에 traceback(프레임과 예외 이름만)이다. 줄 모양은 `backend/logs.py`의 JSON 한 줄(`severity` · `time` · `logger` · `message`)이다.
 
 - 문자열 `HTTPException.detail`은 기존 공개 메시지로 사용한다.

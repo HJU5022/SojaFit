@@ -72,7 +72,7 @@ PKG = re.compile(r'\b(SOD-?\d+\w*|SOT-?\d+\w*|(?-i:(?:Thin|Micro|Sub) SM[ABCFP]\
 SLOT_KO = {'minimum_value': '최소', 'typical_value': '대표', 'maximum_value': '최대'}
 # 11-05 PDF 대조 뒤 더한 규칙의 글 모양들
 BOTH_DIRECTIONS = re.compile(r'characteristics apply in both directions', re.I)  # TVS 문서 17건의 1쪽 주석(실측)
-# 시험 조건 한 토막: 'IF = 7.5A', 'TJ = 125°C', 'VR = 4.0V'. 'TA'(표 전체 기본 온도)는 cond_sets에서 뺀다
+# 시험 조건 한 토막: 'IF = 7.5A', 'TJ = 125°C', 'VR = 4.0V'. 'TA'(표 전체 기본 온도)는 조건에서 뺀다
 ATOM = re.compile(r'\b(I[A-Z]{1,3}|V[A-Z]{1,3}|T[A-Z])\s*=\s*([-+]?\d+(?:\.\d+)?)\s*([mµμun]?A|[mk]?V|°C)?(?!\w)')
 BARE = re.compile(r'(열\d+|PARAMETER|SYMBOL|UNIT|CONDITIONS?|VALUE|LIMITS?|MIN|MINIMUM|TYP|TYPICAL|NOM|NOMINAL|MAX|MAXIMUM)\.?',
                   re.I)  # 표 제목 없이 열 이름만 있는 머리(이어지는 행)
@@ -92,25 +92,6 @@ WAVE = re.compile(r'\d+\s*/\s*\d+\s*[uµμ]s', re.I)  # 펄스 파형 '10/1000us
 def pkg_keys(text):
     """패키지 이름 → 비교용 열쇠 집합('DO-214AC (SMA)' → {'DO214AC', 'SMA'}, '0805 (Ceramics)' → {'0805'})."""
     return {re.sub(r'[^A-Z0-9]', '', x.upper()) for x in PKG.findall(text or '') + SIZE.findall(text or '')}
-
-
-def cond_sets(text):
-    """글 → 조건 묶음 목록. 같은 기호가 다시 나오면 새 묶음이다('IF = 10A, TJ = 25°C IF = 5A, TJ = 125°C' → 2개)."""
-    sets, cur = [], {}
-    for m in ATOM.finditer(text):
-        if m.group(1) == 'TA':
-            continue
-        if m.group(1) in cur:
-            sets.append(cur)
-            cur = {}
-        cur[m.group(1)] = f'{m.group(1)} = {m.group(2)}{m.group(3) or ""}'
-    if cur:
-        sets.append(cur)
-    out = []
-    for x in sets:
-        if list(x.values()) not in out:
-            out.append(list(x.values()))
-    return out
 
 
 def junk_word(tok, upper):

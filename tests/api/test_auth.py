@@ -273,7 +273,6 @@ def test_google_callback_requires_state_and_logs_in_the_account_with_the_same_em
 
 def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
     import os
-    from pathlib import Path
 
     import psycopg
 
@@ -311,7 +310,6 @@ def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
 
 def test_unlinked_google_admin_with_same_email_requires_explicit_approval(monkeypatch):
     import os
-    from pathlib import Path
 
     import psycopg
 
@@ -1155,7 +1153,6 @@ def test_database_legacy_signup_helper_creates_session_and_rejects_duplicate(mon
     monkeypatch.setenv("K_SERVICE", "sojafit-api")
     headers = {"origin": "http://testserver", "x-forwarded-for": f"2001:db8::{secrets.token_hex(2)}:{secrets.token_hex(2)}"}
     email, password = f"signup-{secrets.token_hex(6)}@example.test", "synthetic-pass-123"
-    client = TestClient(app)
     try:
         token, user_id = auth.signup(email, password, headers["x-forwarded-for"])
         assert token and user_id

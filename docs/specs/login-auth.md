@@ -5,6 +5,7 @@
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 4절 "인증 · 가입"과 8.6절). 이 문서는 구현 방식과 화면 동작의 상세
 - 관련 문서: [google-admin-login.md](google-admin-login.md), [google-user-login.md](google-user-login.md), [api-error-contract.md](api-error-contract.md), [frontend-screen-redesign.md](frontend-screen-redesign.md), [user-thread-memory.md](user-thread-memory.md)
+- 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why
 
@@ -42,7 +43,7 @@
 
 ### 비밀번호 규칙
 
-신규·재설정 비밀번호는 `backend/auth.py`의 `validate_new_password`가 검사한다(12~1024자, 공백뿐·숫자만·1~4자 단위 반복 거절). 길이 기준은 12자 하나다. 화면(`frontend/src/api/auth.ts`의 `newPasswordIssue`)은 같은 조건을 길이 하한→상한→공백뿐→숫자뿐→단순 반복 순으로 검사해 첫 이유 한 줄만 보인다. 기존 비밀번호 로그인에는 이 규칙을 적용하지 않는다. 운영자 CLI는 12자 이상, 1024바이트 이하만 확인한다.
+신규·재설정 비밀번호는 `backend/auth.py`의 `validate_new_password`가 검사한다(12~1024자, 공백뿐·숫자만·1~4자 단위 반복 거절). 길이 기준은 12자 하나다. 새 화면(`frontend/src/Auth.tsx`)은 같은 조건을 입력칸 아래 안내문으로 보이고 `minLength` 12만 걸며, 조건별 첫 이유 한 줄 검사(옛 `newPasswordIssue`)는 없다. 기존 비밀번호 로그인에는 이 규칙을 적용하지 않는다. 운영자 CLI는 12자 이상, 1024바이트 이하만 확인한다.
 
 ### 로그인 실패 안내
 
@@ -54,7 +55,7 @@
 | 422, 403, 429, 503·502·500, 시간 초과, 비JSON 응답, 연결 실패 | 인증 정보 오류로 오인하지 않는 유형별 문구 |
 | 로그인 POST 성공 뒤 `me` 조회 실패 | 세션 확인 실패 문구. 로그인 POST를 자동 재전송하지 않는다 |
 
-비밀번호는 실패 때 비우고 이메일은 유지한다. 본인 계정 삭제 직후의 로그인 화면은 삭제 완료·재가입 안내를 보인다. 이 상태는 `AuthProvider` 메모리에만 두고 다음 로그인·가입 성공, 로그아웃, 새 페이지에서 지운다.
+비밀번호는 실패 때 비우고 이메일은 유지한다. 본인 계정 삭제 직후의 로그인 화면은 삭제 완료·재가입 안내를 보인다. 이 안내가 새 화면(`frontend/src/Auth.tsx`)에 있는지는 확인하지 못했다(옛 화면 기준 문장).
 
 ### 로그인 후 대화 복귀
 
@@ -86,7 +87,7 @@
 |---|---|---|
 | 토큰 | 256bit 무작위(43자), DB에는 HMAC 해시만 저장. 이메일·목적별 활성 토큰 1개이며 재발급하면 이전 토큰 무효. 재발급은 직전 발급 60초 뒤부터 | `backend/auth_email.py` |
 | 유효 시간 | 가입 60분, 재설정 15분 | `auth_email.request_email`, `backend/services/mail.py` |
-| 링크 | `AUTH_ORIGIN`으로만 만들고 URL fragment로 전달. 화면은 토큰을 즉시 주소에서 제거하고 메모리에만 둔다. GET은 계정을 바꾸지 않고 최종 POST에서 행 잠금·트랜잭션으로 한 번만 소비 | `backend/services/mail.py`, `frontend/src/pages/EmailActionPage.tsx` |
+| 링크 | `AUTH_ORIGIN`으로만 만들고 URL fragment로 전달. 화면은 토큰을 즉시 주소에서 제거하고 메모리에만 둔다. GET은 계정을 바꾸지 않고 최종 POST에서 행 잠금·트랜잭션으로 한 번만 소비 | `backend/services/mail.py`, `frontend/src/Auth.tsx` |
 | 발송 | 표준 `smtplib`로 Gmail SMTP. 포트 465(SSL) 또는 587(STARTTLS)만 허용, 인증서 검증, 소켓 timeout 10초, 자동 재시도 없음. `SMTP_USERNAME`이 발신 주소, `SMTP_PASSWORD`는 앱 비밀번호 | `backend/services/mail.py`, `.env.example` |
 | 발송 실패 | 응답과 로그에 원문 예외·토큰을 남기지 않고 같은 조건부 안내를 반환. 메일 설정이 없으면 503 | `auth_email.request_email` |
 | 한도 표 | `auth_email_send_limits`(이메일·IP·서비스 단위 요청 수). 값은 SPEC 4절 | `auth_email._reserve` |
@@ -96,7 +97,7 @@
 
 ### 데모 로그인
 
-`GET /api/auth/demo`와 `POST /api/auth/demo-login`은 `DEMO_MODE=1`에서만 있고 아니면 본문을 읽기 전에 404다(코드 기본값은 `DEMO_MODE=1`, `backend/api/auth.py` `demo_mode`). 계정 이메일은 `demo-a@example.test`, `demo-b@example.test`이고 비밀번호 해시 칸에는 scrypt 형식이 아닌 표식(`auth.DEMO_PASSWORD_HASH`)을 넣는다. 표식이 없는 같은 이메일 계정·관리자·비활성 계정에는 세션을 주지 않는다(404). 로그인 화면의 데모 버튼은 Vite 개발 빌드(`import.meta.env.DEV`)에서만 보이고 production 빌드는 서버가 데모를 켜 놓았어도 보이지 않는다(`frontend/src/pages/LoginPage.tsx`). 로컬 UI 확인용 `VITE_DUMMY_AUTH=1`은 개발 서버에서만 더미 일반 사용자로 인증 경계를 통과시키며 production 빌드는 이 값을 무시한다.
+`GET /api/auth/demo`와 `POST /api/auth/demo-login`은 `DEMO_MODE=1`에서만 있고 아니면 본문을 읽기 전에 404다(코드 기본값은 `DEMO_MODE=1`, `backend/api/auth.py` `demo_mode`). 계정 이메일은 `demo-a@example.test`, `demo-b@example.test`이고 비밀번호 해시 칸에는 scrypt 형식이 아닌 표식(`auth.DEMO_PASSWORD_HASH`)을 넣는다. 표식이 없는 같은 이메일 계정·관리자·비활성 계정에는 세션을 주지 않는다(404). 로그인 화면의 데모 버튼은 서버가 `GET /api/auth/demo`로 데모 모드라고 답할 때만 보인다(`frontend/src/Auth.tsx`, [FRONTEND.md](../../frontend/FRONTEND.md) "화면 원칙"). 옛 화면의 개발 빌드 한정 규칙과 더미 인증(`VITE_DUMMY_AUTH`)은 새 화면에 없다.
 
 ### 관리자와 소유권
 
@@ -117,10 +118,10 @@
 | 7 | 메일 설정 없음 - 두 요청 경로 503, 무인증 가입으로 돌아가지 않음 | `tests/api/test_email_auth.py::test_email_requests_fail_closed_without_smtp` |
 | 8 | SMTP 오류 - 응답·로그에 원문 없음 | `tests/api/test_email_auth.py::test_smtp_errors_never_escape_in_response_or_logs` |
 | 9 | 전환 제약 적용 DB - 기존 계정 유지, 구버전 무인증 신규 INSERT 거절 | `tests/api/test_email_auth.py::test_cutover_preserves_legacy_and_blocks_old_revision_signup` |
-| 10 | 화면의 새 링크·늦은 응답 - 현재 링크 유지, 비밀번호·토큰을 브라우저 저장소에 남기지 않음 | `frontend/src/pages/EmailActionPage.test.tsx` |
-| 11 | 로그인 화면 - 체크박스 없이 `Google 로그인`(활성 시), `/signup` 링크, 처리방침 링크. production 빌드에 데모 버튼 없음 | `frontend/src/pages/LoginPage.test.tsx` |
-| 12 | 같은 401 - 동일 안내·요청 ID, 비밀번호 비움·이메일 유지. 로그인 성공 뒤 `me` 실패 - 세션 확인 실패 문구, 재전송 없음 | `frontend/src/pages/LoginPage.test.tsx` |
-| 13 | 가입 화면 - 이메일만 전송, consent·비밀번호 미전송, 세션 없음 | `frontend/src/pages/SignupPage.test.tsx` |
+| 10 | 화면의 새 링크·늦은 응답 - 현재 링크 유지, 비밀번호·토큰을 브라우저 저장소에 남기지 않음 | (화면 시험은 11-16 교체로 지워짐) |
+| 11 | 로그인 화면 - 체크박스 없이 `Google 로그인`(활성 시), `/signup` 링크, 처리방침 링크. 데모 버튼은 서버가 데모 모드일 때만(11-16 새 화면 규칙) | (화면 시험은 11-16 교체로 지워짐) |
+| 12 | 같은 401 - 동일 안내·요청 ID, 비밀번호 비움·이메일 유지. 로그인 성공 뒤 `me` 실패 - 세션 확인 실패 문구, 재전송 없음 | (화면 시험은 11-16 교체로 지워짐) |
+| 13 | 가입 화면 - 이메일만 전송, consent·비밀번호 미전송, 세션 없음 | (화면 시험은 11-16 교체로 지워짐) |
 | 14 | 잘못된 비밀번호·없는 계정 - 같은 오류. 필드 검증 실패 오류에 입력값 없음. 형식이 틀린 이메일 거절 | `tests/api/test_auth.py::test_login_validation_errors_do_not_echo_credentials`, `::test_login_rejects_malformed_email_without_echoing` |
 | 15 | 계정·IP 로그인 실패 잠금, 집계 구간 만료 | `tests/api/test_auth.py::test_database_login_throttling`, `::test_database_login_ip_limit_blocks_after_thirty_failures_and_window_expires`, `::test_failed_attempt_window_expires` |
 | 16 | 세션 절대·유휴 만료, 로그아웃·비활성 사용자의 세션 거절 | `tests/api/test_auth.py::test_idle_and_absolute_session_expiry_boundaries`, `::test_inactive_user_and_existing_session_are_rejected` |

@@ -213,7 +213,6 @@ def test_external_schematic_safe_errors(client, schematic_boundary, path, except
 
 @pytest.mark.parametrize("suffix", ["", "?q=private-query"])
 def test_external_schematic_access_log_redacts_signed_token_without_query(suffix):
-    import logging
     from backend.logs import hide_query
     record = logging.LogRecord("uvicorn.access", logging.INFO, "", 0,
         '%s - "%s %s HTTP/%s" %d',

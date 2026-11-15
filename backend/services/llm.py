@@ -522,11 +522,3 @@ def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     if isinstance(last_error, (APIConnectionError, APIStatusError)):
         raise last_error  # 연결 · 공급자 오류는 형식 오류로 바꾸지 않고 그대로 올린다
     raise LLMFormatError(f"LLM 출력이 {schema.__name__} 형식을 {1 + MAX_FORMAT_RETRIES}번 모두 어겼다") from last_error
-
-
-def check_langfuse_connection() -> bool:
-    """설정된 Langfuse 키로 인증이 되는지만 확인한다(trace는 만들지 않고, 지금 부르는 곳은 없다)."""
-    # [주의] 키가 없거나 틀리면 SDK가 False를 주거나 예외를 낸다
-    from langfuse import get_client
-
-    return get_client().auth_check()

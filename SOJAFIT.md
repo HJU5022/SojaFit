@@ -1,8 +1,8 @@
 # SojaFit
 
 - 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: `6707002`
+- 기준일: 2026-11-16 (트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사한다. 이름 규칙 · 안내 글은 11-12 이후 줄마다 대조하지 않았다)
+- 기준 커밋: `76fadcb4`
 - 정본 여부: 정본(폴더와 파일 위치)
 - 관련 문서: [README.md](README.md), [AGENTS.md](AGENTS.md), [SPEC.md](SPEC.md)
 
@@ -45,7 +45,7 @@ SojaFit (proj3-b)
 │       ├── eval-live.yml   <- 버튼으로 돌리는 진짜 모델 v3 평가와 기준 검사(Secrets 키 사용, 유료)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
-├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정 (2026-11-16 새 화면으로 교체)
+├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정
 │   ├── FRONTEND.md         <- 폴더 설명
 │   ├── Dockerfile.recovery <- 운영 이미지 digest를 상속해 화면만 빌드·교체하는 복구용 이미지
 │   ├── package.json        <- npm 의존성과 실행 명령
@@ -81,7 +81,7 @@ SojaFit (proj3-b)
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
 │   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘)
-│   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)
+│   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)과 브라우저 시험(Playwright)
 │   │   ├── TESTS.md        <- 폴더 설명
 │   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄 시험
 │   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
@@ -92,15 +92,15 @@ SojaFit (proj3-b)
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- React 진입점·글꼴·스타일
-│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·작업대·설정·승인 사례·관리자)
-│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결
+│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·작업대·설정·승인 사례·관리자)
+│       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·판정 5종과 실행 상태의 화면 표기
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
 │       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유
 │       ├── approval.ts     <- 승인 목록에서 후보의 승인 상태(이 후보 승인·다른 후보 승인) 가르기
 │       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄)
-│       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름
-│       ├── ui.tsx          <- 공통 상태 조각·경로 이동·자원 훅·판정 표기·회로 도식
+│       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내
+│       ├── ui.tsx          <- 경로 이동·자원 훅·공통 조각(로고·상태·판정 배지·창·근거 출처)·회로 도식·마크다운
 │       ├── Landing.tsx     <- 공개 랜딩
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
 │       ├── Account.tsx     <- 내 설정·승인 사례·관리자 계정·개인정보 안내
@@ -116,7 +116,7 @@ SojaFit (proj3-b)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
 │   ├── main.py             <- FastAPI 진입점: 앱 조립만(수명·공통 오류 처리기·요청 ID·대화 본문 한도 미들웨어·api/ 라우터 등록·React 연결). 경로 함수는 api/에 (고정: Dockerfile이 실행)
-│   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
+│   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금·가입 한도, 데모 로그인, Google 가입·로그인과 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── auth_email.py       <- 이메일 소유 확인 가입·암호 재설정 토큰·발송 한도·세션 폐기
 │   ├── errors.py           <- 오류 응답 error.code 16개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
 │   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
@@ -124,7 +124,7 @@ SojaFit (proj3-b)
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── admin.py        <- 관리자 계정 목록·활성 상태 변경 API(/api/admin/users)
-│   │   ├── auth.py         <- 로그인·가입·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 관리자 로그인 경로
+│   │   ├── auth.py         <- 로그인·이메일 가입·비밀번호 재설정·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 가입·로그인 경로
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(GET /api/demo-questions). run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── health.py       <- 서비스 생존 확인 GET /health
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)
@@ -727,7 +727,7 @@ SojaFit (proj3-b)
     │   ├── team-contract.md <- 아키텍처와 조원 계약서: 구조, 설계 질문 8개, 조원 간 계약, 결정 기록
     │   ├── glossary.md     <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
     │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
-    ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
+    ├── assets/             <- 문서에 넣는 구조도 이미지와 원본, 조사 문서의 검증 화면 캡처
     │   ├── ASSETS.md       <- 폴더 설명
     │   ├── schematic-cdfer-2026-11-15.jpg <- CDFER 원본 회로도 선택·출처 표시 실검증 화면
     │   ├── schematic-1n4148-2026-11-15.jpg <- 1N4148 OPBoard 후보 선택·출처 표시 실검증 화면
@@ -753,9 +753,9 @@ SojaFit (proj3-b)
     │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
     │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
     │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
-    │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 흐름
+    │   ├── dummy-full-flow.md  <- (폐기·이력) 옛 화면의 개발 전용 더미 모드 흐름
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
-    │   ├── frontend-screen-redesign.md <- 프론트엔드 화면 구성
+    │   ├── frontend-screen-redesign.md <- (이력) 11-16 교체 전 프런트엔드 화면 구성
     │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
     │   └── external-complete-schematics.md <- 공개 프로젝트 완성 회로도

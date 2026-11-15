@@ -9,7 +9,6 @@
 import pytest
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
-from backend.multi_agent import facts as F
 from backend.multi_agent import messages as M
 from backend.multi_agent import messages as Msg
 from backend.multi_agent.agents import docs as D
@@ -191,11 +190,6 @@ def test_search_error_and_empty_filter_result():
     assert [p for _, p in seen] == [['SS14'], None] and r['status'] == 'ok'  # 품번 필터 안 0건이면 필터를 풀어 한 번 더
 
 
-def test_make_facts_checks_parts_and_revisions_against_lists():
-    f = F.make_facts('SS34 Q2611판 말고 1N4001은 어때?', set(), {'ss34'}, {'Q2412'})
-    assert f.parts == {'SS34': True, '1N4001': False} and f.revisions == {'Q2611': False}
-
-
 def test_refusal_messages_are_plain_korean_and_cover_every_refusal_reason():
     from backend.multi_agent.contracts import REFUSAL_REASONS
     for reason in REFUSAL_REASONS:
@@ -236,7 +230,7 @@ def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():
 
 
 def test_described_ratings_find_parts_with_those_exact_values_then_search_only_them():
-    calls, seen = [], []
+    calls = []
 
     def find(conditions, category, package, limit):
         calls.append((conditions, category, limit, package))

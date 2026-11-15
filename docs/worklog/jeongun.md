@@ -1145,3 +1145,12 @@
 - 확인 못 한 것: 새 화면 + 이 HEAD의 브라우저 흐름(Playwright 포함)은 돌리지 않음. 가격 estimate는 데모 모드라 실제 Mouser로 확인하지 못함(백엔드 단위 시험과 화면 순수 함수 시험만).
 - 미룸: #139의 새 배포 감지 안내(`DeploymentUpdate`)는 새 화면에 옮기지 않았다(빌드 식별 meta 플러그인 + 화면 곳곳의 `data-refresh-blocked` 표식이 필요). `docs/specs/frontend-screen-redesign.md`에는 그 기능 설명이 그대로 남아 있다. 필수 조건 미확인 시 승인 막기 안내(`ApprovalConditions`)도 옮기지 않았다(서버는 409로 거절함).
 - 이전 항목 보정: 위 "화면을 새 프론트엔드로 교체" 항목의 "뺀 것 — 가격 수량별 단가 · 합계 계산"은 이번에 옮겼다.
+
+## 2026-11-16 동결 전 레포 정리 통합과 운영 새 프로젝트 창 버그 수정 (브랜치 `jeongun`)
+- 목적: 정리 세션 4개(backend · frontend · evals/scripts/tests · docs)의 결과를 `jeongun`에 모으고 main PR로 올린다. 동작 변경은 버그 수정 하나뿐이다.
+- 합친 것: docs 14커밋(`jeongun`에 직접), `cleanup-backend`(4) · `cleanup-evals`(4) · `cleanup-frontend`(4 + 버그 수정 `94a5ae1c`)를 `--no-ff`로 머지(`69b7be36`), 충돌 없음. 각 정리 근거는 세션 보고서(`reports/2026-11-16-마무리/cleanup-*.md`, 저장소 밖).
+- 버그(운영 `sojafit-api-main76fadcb4-1116`): `DEMO_MODE=0`이면 `/api/demo-circuits`가 404인데 새 프로젝트 창이 데모 회로 탭을 기본으로 열었다. 그 탭에서 이름 칸 Enter가 `ErrorBox`의 '다시 시도' 버튼(type 없음 → 폼의 기본 제출 버튼)을 눌러 `demo_id: ''`를 보내 422가 났다. 고침: 404면 탭 숨김 + 업로드로 시작, '다시 시도'에 `type="button"`.
+- 확인 [실측]: 가짜 API(404 · 500)로 고치기 전 Enter 제출 1건 재현 → 고친 뒤 0건, 404에서 탭 2개 · 업로드 선택. 머지 HEAD에서 `uv run pytest -q` 실패 12건은 Mac 전용 `test_schematic_render.py`뿐(2472 passed), `tests/repo` 5 passed, `npm test` 22/22 · `format:check` · `build` 통과. 새 clone(`69b7be36`) 키 없는 기동: `/health` 200(87초, 빌드 포함), `http_smoke.py --demo --refusal` 28/28, 새 볼륨 `record_demo.py replay` "재생 결과가 기록과 같습니다", 저장소 Playwright 3 passed, 전체 흐름 스크립트(`walk.mjs`) 22/22. 점검용 compose 프로젝트 2개는 `down -v --rmi local`로 지움.
+- `docs/GATES.md` 줄 번호 참조 15개 대조: 13개는 정리 전후 같은 줄. `nodes.py:460` · `agents/docs.py:230` 2개는 정리 전(`76fadcb4`)에도 이미 다른 줄이었다. 변이 시험을 한 커밋(`9c32d12` 등)의 줄 번호라 고치지 않았다.
+- 확인 못 한 것: 실제 운영 모드(`DEMO_MODE=0`) 서버에서 새 프로젝트 만들기는 재배포 뒤 확인. 실제 모델 · Mouser · 메일 경로는 키 없는 데모라 해당 없음.
+- 다음: PR 머지 → main 기준 재배포 → 운영에서 새 프로젝트(업로드) 확인 → README · GATES 배포 리비전 줄 갱신 → 동결 커밋과 배포 리비전 코드 대조.

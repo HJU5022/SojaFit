@@ -459,8 +459,3 @@ def rank(judgements: list[Judgement], per_verdict: int = 3, total: int = 5,
     unverified = sorted((j for j in judgements if j.verdict == 'NOT_VERIFIED'),
                         key=lambda j: (sum(c.result == 'unverified' for c in j.checks), order[id(j)]))[:total]
     return shown, unverified
-
-
-def worse(a: str, b: str) -> str:
-    """두 판정 중 나쁜 쪽(역할이 둘로 갈릴 때, EC-02)."""
-    return a if ORDER.index(a) >= ORDER.index(b) else b

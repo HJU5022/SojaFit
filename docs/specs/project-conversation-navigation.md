@@ -5,6 +5,7 @@
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 4절 표). 목록·상세 응답의 필드 의미와 화면 동작의 상세
 - 관련 문서: [d5-frontend-service.md](d5-frontend-service.md), [frontend-screen-redesign.md](frontend-screen-redesign.md), [api-error-contract.md](api-error-contract.md)
+- 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why
 
@@ -37,7 +38,7 @@
 | `DELETE /api/threads/{thread_id}` | 로그인·Origin·소유권 확인, 성공 204, 없는 대화·타 사용자 404, 실행 중이거나 분석 잠금 중이면 409. 분석 저장소의 thread·checkpoint·연관 기록을 함께 삭제 | `backend/conversations/repository.py` `delete_thread` |
 | `POST /api/runs/{run_id}/recover` | [api-error-contract.md](api-error-contract.md)를 따른다. 조회 GET은 읽기 전용이며 질문·재개·모델을 재전송하지 않는다 | `backend/api/conversations.py` `recover_run` |
 
-- 프로젝트·대화를 바꾸면 선택 결과를 초기화하고 늦은 응답은 폐기한다. 실행 중 전환 잠금, 로그아웃 시 캐시 제거, 저장 대화의 대상 고정을 유지한다(`frontend/src/pages/WorkbenchPage.tsx`).
+- 프로젝트·대화를 바꾸면 선택 결과를 초기화하고 늦은 응답은 폐기한다. 실행 중 전환 잠금, 로그아웃 시 캐시 제거, 저장 대화의 대상 고정을 유지한다(`frontend/src/Workbench.tsx`).
 - 새 마이그레이션은 없다. 기존 `projects`, `threads`, `messages`, `runs`와 분석 대상 정보를 쓴다.
 
 ## AC
@@ -45,14 +46,14 @@
 | # | Given - When - Then | 테스트 |
 |---|---|---|
 | 1 | 두 계정이 남의 프로젝트·대화·run 조회·삭제 - 없는 자원과 같은 404 | `tests/api/test_conversations.py`, `tests/api/test_threads.py::test_other_user_cannot_access_thread_or_resume` |
-| 2 | 저장 질문·답변·판정 목록과 상세 열기 - 메시지·run 소속 일치, 분석 호출 0회 | `frontend/src/pages/WorkbenchPage.test.tsx` |
-| 3 | A 조회 지연 중 B 선택 뒤 A 응답 도착 - B 대화·결과 유지 | `frontend/src/pages/WorkbenchPage.test.tsx` |
-| 4 | 대상 고정 기록에서 URL 대상 변경 - 저장된 대상을 표시하고 재분석하지 않음 | `frontend/src/pages/WorkbenchPage.test.tsx` |
+| 2 | 저장 질문·답변·판정 목록과 상세 열기 - 메시지·run 소속 일치, 분석 호출 0회 | (화면 시험은 11-16 교체로 지워짐) |
+| 3 | A 조회 지연 중 B 선택 뒤 A 응답 도착 - B 대화·결과 유지 | (화면 시험은 11-16 교체로 지워짐) |
+| 4 | 대상 고정 기록에서 URL 대상 변경 - 저장된 대상을 표시하고 재분석하지 않음 | (화면 시험은 11-16 교체로 지워짐) |
 | 5 | 실행 중 대화 삭제 - 409, 기록 보존 | `tests/api/test_conversations.py`, `tests/api/test_deletion.py` |
-| 6 | 삭제 확인 연속 클릭 - DELETE 1회와 처리 중 버튼 잠금. 현재 대화 삭제 성공 - 새 빈 대화로 전환. 다른 대화 삭제·응답 전 이동 - 현재 선택 유지. 실패 후 재시도 허용 | `frontend/src/pages/WorkbenchPage.test.tsx` |
-| 7 | 브라우저에 고정한 대화 - 같은 계정·프로젝트에서만 위에 표시, 저장소가 막혀도 안내 | `frontend/src/pages/WorkbenchPage.test.tsx` |
-| 8 | 같은 thread의 여러 질문 후 기록 복원·이전 쪽 읽기 - 본문이 순서대로 남고 읽던 위치·입력 초안 유지, 실패해도 기존 본문 유지, 자동 분석 호출 0 | `frontend/src/pages/WorkbenchPage.test.tsx` |
-| 9 | 부품 검색 후 뒤로 가기로 프로젝트 목록 복귀 - 검색어 빈 값·프로젝트 목록 표시. 목록 검색 후 앞으로 가기 및 다른 프로젝트 사이 뒤로/앞으로 이동 - 검색어 초기화 | `frontend/src/pages/WorkbenchPage.test.tsx` |
+| 6 | 삭제 확인 연속 클릭 - DELETE 1회와 처리 중 버튼 잠금. 현재 대화 삭제 성공 - 새 빈 대화로 전환. 다른 대화 삭제·응답 전 이동 - 현재 선택 유지. 실패 후 재시도 허용 | (화면 시험은 11-16 교체로 지워짐) |
+| 7 | 브라우저에 고정한 대화 - 같은 계정·프로젝트에서만 위에 표시, 저장소가 막혀도 안내 | (화면 시험은 11-16 교체로 지워짐) |
+| 8 | 같은 thread의 여러 질문 후 기록 복원·이전 쪽 읽기 - 본문이 순서대로 남고 읽던 위치·입력 초안 유지, 실패해도 기존 본문 유지, 자동 분석 호출 0 | (화면 시험은 11-16 교체로 지워짐) |
+| 9 | 부품 검색 후 뒤로 가기로 프로젝트 목록 복귀 - 검색어 빈 값·프로젝트 목록 표시. 목록 검색 후 앞으로 가기 및 다른 프로젝트 사이 뒤로/앞으로 이동 - 검색어 초기화 | (화면 시험은 11-16 교체로 지워짐) |
 
 ## 구현 상태
 

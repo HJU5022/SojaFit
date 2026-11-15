@@ -341,9 +341,6 @@ def circuit_mechanism(part: dict) -> str:
     if not anode or not cathode or anode == cathode:
         return ''
     nearby = part.get('context_components', [])
-    def pins_on(component, net):
-        return [p for p in component.get('pins', []) if p.get('net') == net]
-
     def pin_text(component):
         return ', '.join(f"{component['ref']}.{p.get('pin')}={p.get('net')}"
                          + (f" ({p.get('function')})" if p.get('function') else '')

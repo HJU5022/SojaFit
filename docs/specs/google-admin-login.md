@@ -5,6 +5,7 @@
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 4절 "Google 가입 · 로그인"과 8.6절). 이 문서는 OIDC 검증, 관리자 최초 연결 승인, 연결 철회의 상세
 - 관련 문서: [google-user-login.md](google-user-login.md)(일반 사용자 가입·연결), [login-auth.md](login-auth.md), [db/DB.md](../../db/DB.md)
+- 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why
 
@@ -59,7 +60,7 @@
 | 설정 | `GOOGLE_AUTH_ENABLED=1`과 `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`이 모두 있어야 켜진다. 콜백 주소는 `AUTH_ORIGIN` + `/api/auth/google/callback`. 비밀은 실행 환경으로 주입하며 저장소에는 이름만 둔다 | `backend/api/auth.py` `google_enabled`, `.env.example` |
 | 쿠키 | 연결 요청 쿠키 `sojafit_google_pending`은 경로 `/api/auth/google`, 15분. `AUTH_ORIGIN`이 https면 Secure. 응답에 `Cache-Control: no-store`, `Referrer-Policy: no-referrer` | `backend/api/auth.py` |
 | 접속 로그 | uvicorn 접속 로그에서 모든 경로의 쿼리를 `?<redacted>`로 바꿔 콜백의 `code`·`state`가 남지 않는다. 요청 경로와 상태 코드는 남는다. Cloud Run 요청 로그는 이 필터 밖이다 | `backend/logs.py` `hide_query` |
-| 로그인 화면 | 설정이 켜져 있을 때만 `Google 로그인` 버튼(GET `/api/auth/google/start`)을 보인다. 설정 조회 실패 시 안내 문구를 보이고 이메일 로그인은 유지한다 | `frontend/src/pages/LoginPage.tsx` |
+| 로그인 화면 | 설정이 켜져 있을 때만 `Google 로그인` 버튼(GET `/api/auth/google/start`)을 보인다. 설정 조회 실패 시 안내 문구를 보이고 이메일 로그인은 유지한다 | `frontend/src/Auth.tsx` |
 | 운영 주의 | `db/migrations/migrate_prod_2b_optional_drop_dead_auth.sql`은 `auth_google_pending`을 삭제하므로 실행하지 않는다 | `db/migrations/MIGRATIONS.md` |
 
 실제 Gmail 주소와 `sub`는 문서·로그·테스트 데이터에 넣지 않고 테스트는 합성 값을 쓴다.
@@ -94,4 +95,4 @@
 - 만료된 연결 요청·상태 행은 관련 요청 때 지운다. 유휴 중에 지우는 정리 작업은 없다.
 - 현재 Google Cloud 앱 게시 상태, 승인된 리디렉션 URI, 비밀 접근 권한, Cloud Run 요청 로그의 콜백 쿼리 보호는 레포로 확인할 수 없다(미확인).
 - 실제 Google 계정으로 로컬·배포 주소의 콜백 왕복에 성공한 기록은 레포에서 확인하지 못했다(미확인). 시험은 합성 응답이다.
-- 개인정보 처리 항목·보관·국외 처리의 확정은 [개인정보처리방침](../../frontend/src/pages/PrivacyPage.tsx)이 미확정 항목으로 표시하고 있다.
+- 개인정보 처리 항목·보관·국외 처리의 확정은 [개인정보 처리 안내](../../frontend/src/Account.tsx)(`Privacy`)이 미확정 항목으로 표시하고 있다.

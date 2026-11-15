@@ -47,7 +47,7 @@
 | `results/parser/` | `parser_accuracy_2026-11-01.json`, `parser_truth_2026-11-01.json`, `parser_speed_2026-11-01.jsonl` | 저장소 밖 | 도구별 행 적중, 정답표, 속도 |
 | `results/parser/` | `parse_gpu_log_2026-11-01.jsonl`, `parse_gpu_recall_2026-11-01.json`, `parse_gpu_witness_unmatched_2026-11-01.json` | 저장소 밖 | 1,360건 GPU 파싱 로그, 표 숫자 재현율, 대조 못 한 값 목록 |
 | `results/bit_search/` | `bit_search_2026-11-03.json`, `bit_search_final_2026-11-03.json`, `bit_search_warm_2026-11-03.json` | `bit_search/bit_search_exp.py` | 후보 수 N별 시간·recall@50, v1 관련 19문항 최종 점수 확인, 비트 검색만 이어서 잰 시간. 해석: [bit-search-measurement-2026-11-03.md](../docs/research/bit-search-measurement-2026-11-03.md) |
-| `results/smoke/` | `smoke_*.json` 13개, `injection_http_*.json` 7개 | `smoke/http_smoke.py`, `smoke/injection_http.py` | HTTP 점검 단계 기록. 아래 표 |
+| `results/smoke/` | `smoke_*.json` 15개, `injection_http_*.json` 7개 | `smoke/http_smoke.py`, `smoke/injection_http.py` | HTTP 점검 단계 기록. 아래 표 |
 
 ### `results/smoke/` 파일
 
@@ -68,6 +68,8 @@
 | `smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042105.json` | `http_smoke.py` | PROD | accounts | 27a410d | 11-11 04:21:05 |
 | `smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042119.json` | `http_smoke.py` | PROD | accounts | 27a410d | 11-11 04:21:19 |
 | `smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json` | `http_smoke.py` | PROD | accounts | 27a410d | 11-11 04:24:39 |
+| `smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_115305.json` | `http_smoke.py` | PROD | accounts | 2f8298e | 11-13 11:53:05 |
+| `smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_120624.json` | `http_smoke.py` | PROD | accounts | 2f8298e | 11-13 12:06:24 |
 | `injection_http_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_225320.json` | `injection_http.py` | PROD | | 9634c5c | 11-11 22:53:20 |
 | `injection_http_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_230021.json` | `injection_http.py` | PROD | | 9634c5c | 11-11 23:00:21 |
 | `injection_http_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_230532.json` | `injection_http.py` | PROD | | 9634c5c | 11-11 23:05:32 |

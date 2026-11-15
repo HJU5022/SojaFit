@@ -1,10 +1,10 @@
 # D5 프론트엔드 서비스 기능 계약
 
-- 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: 6707002
+- 상태: 현행(기능 계약). 화면 구현 설명은 2026-11-16 새 화면 교체에 맞춰 고침
+- 기준일: 2026-11-12(기능 계약), 화면 부분 2026-11-16
+- 기준 커밋: 6707002(기능 계약), `76fadcb4`(화면 부분)
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 2절 흐름, 4절 API 표, 8.4절 견적 승인). 화면이 쓰는 기능 계약의 상세
-- 관련 문서: [frontend-screen-redesign.md](frontend-screen-redesign.md)(화면 구성), [project-conversation-navigation.md](project-conversation-navigation.md), [api-error-contract.md](api-error-contract.md), [circuit-context-diagram.md](circuit-context-diagram.md), [login-auth.md](login-auth.md)
+- 관련 문서: [frontend/FRONTEND.md](../../frontend/FRONTEND.md) · [frontend/src/SRC.md](../../frontend/src/SRC.md)(현재 화면 구조), [frontend-screen-redesign.md](frontend-screen-redesign.md)(11-16 교체 전 화면, 이력), [project-conversation-navigation.md](project-conversation-navigation.md), [api-error-contract.md](api-error-contract.md), [circuit-context-diagram.md](circuit-context-diagram.md), [login-auth.md](login-auth.md)
 
 ## Why
 
@@ -47,7 +47,7 @@
 
 | 항목 | 구현 | 근거 |
 |---|---|---|
-| 프론트 스택 | React + Vite + TypeScript, React Router, TanStack Query, 인증은 React Context(`AuthProvider`), 기본 `fetch` 래퍼, `fetch` 스트림 기반 SSE 훅(`useRunStream`). Redux·Zustand 없음 | `frontend/package.json`, `frontend/src/` |
+| 프론트 스택 | React 19 + Vite 8 + TypeScript 7. 라우터 · 서버 상태 라이브러리 없이 `ui.tsx`의 `navigate()` · `useLocation()`과 `api.ts`의 `api()` · `streamRun()`(`fetch` 스트림 SSE)만 쓴다. 경로 표는 `App.tsx` 한 곳 | `frontend/package.json`, `frontend/src/SRC.md` |
 | 개발 서버 | Vite가 `/api`를 `http://localhost:8000`으로 프록시 | `frontend/vite.config.ts` |
 | 배포 | `Dockerfile` 다단계: `frontend-build`(Node)에서 빌드한 `dist`를 FastAPI 이미지에 복사. FastAPI는 `/api/*`, `/health`, Google 콜백을 먼저 처리하고 나머지 화면 경로는 React 진입 파일로 보낸다 | `Dockerfile`, `backend/web/app.py` |
 | 인증 | HttpOnly 서버 세션 쿠키와 같은 출처 정책. 상세 [login-auth.md](login-auth.md) | `backend/auth.py` |
@@ -57,9 +57,9 @@
 | 진행 단계 | 서버가 보내는 값은 `입력 확인`(시작), `판정`(추가 정보 대기), `완료`(완료·거절, 거절은 상태 `refused`), `오류`(상태 `failed`) | `backend/api/conversations.py` `STAGES` |
 | 브라우저 결과 DTO | 허용 칸 `answer, status, stage, question_type, evidence, judgement, price_parts, refusal, interrupt, request_id, profile_hints`. Plan·TaskReport 전문, 내부 추론, 서버 경로, 내부 예외, prompt·업로드 본문·모델 원문은 반환하지 않는다 | `backend/conversations/dto.py` `BrowserResult` |
 | 승인·견적·사례 API | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}`. 승인·견적은 판정 메시지의 immutable snapshot을 참조 | `backend/api/quotes.py` |
-| 승인 차단·안내 | 후보의 필수 입력이 `missing`이거나 required check가 `unverified`면 승인 API와 화면 모두 막는다. 승인 버튼 바로 아래에 입력할 회로 조건(한글 항목명·형식 예시)과 확인할 필수 사양(이름/코드·미확인 이유·요구값/기록된 시험 조건·필요한 문서 근거)을 구분한다. 회로값/원래 부품/후보 문서의 확인 대상을 서버 이유에 맞춰 안내하고 보완 후 새 검토를 요청한다. 기본 접힘인 native details의 제목에는 입력/사양 항목 수를 표시하고 펼치면 상세 안내를 확인한다. 접기/펼치기는 질문 초안·승인 상태를 유지하며 API 쓰기를 하지 않는다. 중복 missing을 제거하고 모르는 코드의 값·단위를 추정하지 않는다. 안내 영역을 버튼의 aria-describedby에 연결하며 정상·조건부 미확인 후보의 기존 동작은 유지한다 | `backend/services/quote.py`, `frontend/src/components/ReviewDetails.tsx` |
-| 견적 복원·저장 | 프로젝트 견적 GET으로 이력을 복원하고 현재 승인 id의 견적만 선택한다. 프로젝트 전체 이력에는 이전 승인 견적도 남는다. 선택/재진입은 GET만 수행하며 별도 ‘새 견적 작성→견적 저장’에서만 POST한다. 이력 조회 실패 때 저장을 막고 재조회한다. 저장 응답이 끊기면 GET으로 결과를 확인한다 | `frontend/src/components/ReviewDetails.tsx`, `frontend/src/api/quotes.ts` |
-| 가격 경계 | 승인 응답의 식별 품번과 선택/작성 수량으로 사용자가 조회를 눌렀을 때만 `/api/prices?parts=...&quantity=...`를 부른다. quantity는 선택값이며 1~100000 정수다. backend/judge/pricing.py가 동일 품번·같은 통화의 적용 구간을 선택하고 Decimal 곱셈한 estimate(quantity/break_quantity/unit_price/total/currency)를 응답에만 둔다. 다른 품번·혼합 통화·모호한 가격은 estimate=null이며 추정하지 않는다. 수량 변경/포커스/재연결 때 자동 외부 조회는 없다. 가격·재고·estimate는 영속 저장하지 않고 견적 POST에는 수량만 보낸다. 세금·배송비·환율 미포함을 밝힌다 | `frontend/src/components/PriceLookup.tsx`, `backend/api/prices.py`, `backend/judge/pricing.py` |
+| 승인 차단·안내 | 후보의 필수 입력이 `missing`이거나 required check가 `unverified`면 승인 API와 화면 모두 막는다. 승인 버튼 바로 아래에 입력할 회로 조건(한글 항목명·형식 예시)과 확인할 필수 사양(이름/코드·미확인 이유·요구값/기록된 시험 조건·필요한 문서 근거)을 구분한다. 회로값/원래 부품/후보 문서의 확인 대상을 서버 이유에 맞춰 안내하고 보완 후 새 검토를 요청한다. 기본 접힘인 native details의 제목에는 입력/사양 항목 수를 표시하고 펼치면 상세 안내를 확인한다. 접기/펼치기는 질문 초안·승인 상태를 유지하며 API 쓰기를 하지 않는다. 중복 missing을 제거하고 모르는 코드의 값·단위를 추정하지 않는다. 안내 영역을 버튼의 aria-describedby에 연결하며 정상·조건부 미확인 후보의 기존 동작은 유지한다 | `backend/services/quote.py`(서버 차단). 화면의 승인 버튼 아래 안내 · 접기는 새 화면에 아직 없다(`frontend/src/Candidate.tsx`는 문서에 없는 값을 보이기만 하고, 「필수 조건 미확인 승인 안내」는 11-16 통합에서 미뤘다) |
+| 견적 복원·저장 | 프로젝트 견적 GET으로 이력을 복원하고 현재 승인 id의 견적만 선택한다. 프로젝트 전체 이력에는 이전 승인 견적도 남는다. 선택/재진입은 GET만 수행하며 별도 ‘새 견적 작성→견적 저장’에서만 POST한다. 이력 조회 실패 때 저장을 막고 재조회한다. 저장 응답이 끊기면 GET으로 결과를 확인한다 | `frontend/src/Candidate.tsx`, `frontend/src/approval.ts` |
+| 가격 경계 | 승인 응답의 식별 품번과 선택/작성 수량으로 사용자가 조회를 눌렀을 때만 `/api/prices?parts=...&quantity=...`를 부른다. quantity는 선택값이며 1~100000 정수다. backend/judge/pricing.py가 동일 품번·같은 통화의 적용 구간을 선택하고 Decimal 곱셈한 estimate(quantity/break_quantity/unit_price/total/currency)를 응답에만 둔다. 다른 품번·혼합 통화·모호한 가격은 estimate=null이며 추정하지 않는다. 수량 변경/포커스/재연결 때 자동 외부 조회는 없다. 가격·재고·estimate는 영속 저장하지 않고 견적 POST에는 수량만 보낸다. 세금·배송비·환율 미포함을 밝힌다 | `frontend/src/Candidate.tsx`, `frontend/src/display.ts`, `backend/api/prices.py`, `backend/judge/pricing.py` |
 | 권한 | 사용자 소유 행은 `user_id` 또는 프로젝트 관계로 검증한다. 관리자 계정 관리 권한은 프로젝트·대화 열람 권한을 주지 않는다 | `backend/conversations/repository.py` |
 | 판정 이름 | `동일품`, `사양 동등`, `역할상 충분`, `불충족`, `문서로 확인 안 됨`. 모든 판정에 "같은 동작은 보장하지 않는다"를 표시 | [SPEC.md](../../SPEC.md) 3절 |
 | 오류 | `{error:{code,message,request_id}}`와 `X-Request-ID`([api-error-contract.md](api-error-contract.md)). 오류 화면은 `error.message`와 `request_id`만 보인다 | `backend/errors.py` |
@@ -68,14 +68,14 @@
 
 | # | Given - When - Then | 테스트 |
 |---|---|---|
-| AC-01 | 활성 사용자가 로그인 뒤 새로고침 - 서버 세션으로 상태 복원, 토큰은 브라우저 저장소에 없음 | `frontend/src/auth/AuthProvider.test.tsx`, `frontend/src/pages/LoginPage.test.tsx` |
-| AC-02 | 데모 모드의 로그인 사용자가 데모 회로 5종 중 하나로 생성 - 소유 사용자와 회로 출처가 연결된 프로젝트, 부품 후보 확인 | `tests/api/test_projects.py`, `frontend/src/components/CircuitSetup.test.tsx` |
+| AC-01 | 활성 사용자가 로그인 뒤 새로고침 - 서버 세션으로 상태 복원, 토큰은 브라우저 저장소에 없음 | (화면 시험 없음: 옛 시험은 11-16 교체로 지워짐) |
+| AC-02 | 데모 모드의 로그인 사용자가 데모 회로 5종 중 하나로 생성 - 소유 사용자와 회로 출처가 연결된 프로젝트, 부품 후보 확인 | `tests/api/test_projects.py`, `frontend/tests/demo.spec.ts`(브라우저) |
 | AC-03 | UTF-8 `.net`(5 MiB 이하) 업로드 - 성공 시 정규화 JSON·원본 SHA-256·파서 버전·시각만 저장, 원본 바이트·본문·경로는 저장소에 없음. 5 MiB 초과 413, 형식 오류 400, 실패 시 프로젝트 없음 | `tests/projects/test_netlist.py`, `tests/projects/test_project_repository.py`, `tests/api/test_projects.py` |
 | AC-04 | 프로젝트·대상 선택 뒤 질문 - 같은 thread에서 D5 실행, 허용된 SSE 단계와 마지막 `completed` 또는 `refused`를 저장 뒤 전송. 중복 run 409, 내부 상태 전문·토큰 스트림 비노출 | `tests/api/test_conversations.py`, `tests/api/test_threads.py::test_react_run_and_resume_go_through_analysis_service` |
 | AC-05 | 판정이 추가 회로 값 요구 - interrupt 저장, 값 제출 시 같은 thread/checkpoint에서 재개, 최종 상태 조회 가능 | `tests/api/test_threads.py::test_checkpoint_history_and_interrupt_survive_runtime_reconnection`, `::test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases` |
-| AC-06 | 판정 완료 - 후보마다 판정 5종 중 하나와 문서명·쪽·표/행 또는 절 근거, 고지 문구. 안전 DTO의 `checks`는 후보 상세 표로 보이고 값이 없으면 `확인 안 됨`. 필수 입력 `missing` 또는 필수 check `unverified` 후보는 화면·API 모두 승인 불가 | `frontend/src/components/D5Panels.test.tsx`, `tests/api/test_quotes.py` |
-| AC-07 | `price_parts` 있는 완료 결과 - 가격 패널이 `/api/prices`를 별도 호출, 응답은 화면 메모리에만 | `frontend/src/components/PricePanel.test.tsx`, `tests/api/test_prices.py` |
-| AC-08 | 승인 전 견적 요청 409. 승인 뒤 승인 snapshot을 참조하는 견적·승인 사례 저장. 견적 화면은 수량만 저장 | `tests/api/test_quotes.py`, `frontend/src/components/QuotePanels.test.tsx` |
+| AC-06 | 판정 완료 - 후보마다 판정 5종 중 하나와 문서명·쪽·표/행 또는 절 근거, 고지 문구. 안전 DTO의 `checks`는 후보 상세 표로 보이고 값이 없으면 `확인 안 됨`. 필수 입력 `missing` 또는 필수 check `unverified` 후보는 화면·API 모두 승인 불가 | `tests/api/test_quotes.py` |
+| AC-07 | `price_parts` 있는 완료 결과 - 가격 패널이 `/api/prices`를 별도 호출, 응답은 화면 메모리에만 | `frontend/tests/display.test.ts`, `tests/api/test_prices.py` |
+| AC-08 | 승인 전 견적 요청 409. 승인 뒤 승인 snapshot을 참조하는 견적·승인 사례 저장. 견적 화면은 수량만 저장 | `tests/api/test_quotes.py`, `frontend/tests/approval.test.ts`, `frontend/tests/demo.spec.ts`(브라우저) |
 | AC-09 | 사용자 A의 프로젝트·thread·메시지·승인 자료를 B 또는 관리자가 요청 - 404, 본문 조회 불가 | `tests/api/test_conversations.py`, `tests/api/test_threads.py::test_other_user_cannot_access_thread_or_resume` |
 | AC-10 | 프로젝트 삭제 - 회로·thread·메시지·run·견적·연결 승인 사례와 같은 UUID 분석 기록이 한 트랜잭션에서 삭제되고 이후 조회 불가 | `tests/api/test_deletion.py::test_project_delete_removes_its_react_and_analysis_records_only` |
 
@@ -83,7 +83,7 @@
 
 | AC | 상태 |
 |---|---|
-| AC-01~AC-10 | 테스트 파일이 있다. 파일 지정은 주제별 대응이며 AC 문장과 시험 함수의 일치는 대조하지 않았다. DB·checkpoint를 쓰는 사례는 전용 시험 DB가 없으면 skip된다 |
+| AC-01~AC-10 | 서버 쪽 테스트 파일이 있다. 화면 시험은 새 화면 것만 남았고([frontend/tests/TESTS.md](../../frontend/tests/TESTS.md)) AC-01 · AC-06은 화면 단위 시험이 없다. 파일 지정은 주제별 대응이며 AC 문장과 시험 함수의 일치는 대조하지 않았다. DB·checkpoint를 쓰는 사례는 전용 시험 DB가 없으면 skip된다 |
 
 ## 한계
 

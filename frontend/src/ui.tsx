@@ -78,7 +78,8 @@ export function ErrorBox({ error, retry }: { error: Error | string | null; retry
       <div>
         {typeof error === 'string' ? error : error.message}
         {retry && (
-          <button className="text-button" onClick={retry}>
+          // [주의] 폼 안에 놓이는 일이 있어 type="button"이 없으면 제출 버튼이 된다
+          <button type="button" className="text-button" onClick={retry}>
             다시 시도
           </button>
         )}
@@ -161,7 +162,6 @@ export function Source({ cite }: { cite: Citation }) {
     </div>
   );
 }
-export { partsOf, pinsOf } from './circuit';
 export function Circuit({ project, target }: { project: Project | null; target: string }) {
   const part = partsOf(project).find((p) => p.ref === target),
     pins = pinsOf(project, target);

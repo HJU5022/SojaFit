@@ -3,8 +3,9 @@
 - 상태: 현행
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
-- 정본 여부: 정본(연결 개념도의 데이터·표시 계약). 화면 배치는 [frontend-screen-redesign.md](frontend-screen-redesign.md)
+- 정본 여부: 정본(연결 개념도의 데이터·표시 계약). 화면 배치는 [frontend/src/SRC.md](../../frontend/src/SRC.md)(11-16 새 화면. 옛 배치는 [frontend-screen-redesign.md](frontend-screen-redesign.md), 이력)
 - 관련 문서: [verified-circuit-and-datasheet-visuals.md](verified-circuit-and-datasheet-visuals.md)(원본 회로도 탭), [frontend-screen-redesign.md](frontend-screen-redesign.md)
+- 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why
 
@@ -61,7 +62,7 @@ Edge Case
 - 역할 근거·조건·누락 조건·후보·데이터시트 근거는 기존 대화 실행의 안전한 브라우저 응답을 사용한다.
 - 역할명은 `backend/judge/rules/roles.yaml`을 정본으로 읽는 최소 인증 응답에서 `{code, name}`만 제공한다. 프론트에 같은 이름을 하드코딩하거나 저장하지 않는다.
 - 내부 LangGraph 상태나 원시 provider 응답을 브라우저에 노출하지 않는다.
-- 테스트 fixture는 `frontend/src/test/` 아래에서만 import한다. production 요청 실패 시 fixture로 폴백하지 않는다.
+- production 요청 실패 시 fixture로 폴백하지 않는다. 새 화면(11-16)에는 fixture 폴더 자체가 없다.
 - 화면 전용 모델은 순수 adapter에서 다음 형태로 만든다. 같은 정보를 프로젝트·분석 응답에 다른 이름으로 다시 저장하지 않는다.
 
 ```json
@@ -86,7 +87,7 @@ Edge Case
 
 ### 변경 경계
 
-- 프론트: 연결 adapter(`frontend/src/components/circuitContext.ts`), SVG 개념도(`frontend/src/components/CircuitContextDiagram.tsx`), 상태 표시, 노드·후보 선택 연동
+- 프론트(11-16 새 화면): 연결 추출(`frontend/src/circuit.ts`), SVG 연결 개념도(`frontend/src/ui.tsx`), 상태 표시, 노드·후보 선택 연동
 - 백엔드: 역할 코드·이름을 제공하는 최소 인증 읽기 계약 `GET /api/judge/roles`(`backend/api/conversations.py:159-162`)
 - 수정하지 않음: 업로드·견적 영속화, 숫자 판정 규칙
 
@@ -136,14 +137,14 @@ AC-08 · 노드 상세
 
 | AC | 테스트 | 상태 |
 |---|---|---|
-| AC-01, AC-08 | `frontend/src/components/circuitContext.test.ts`(`:44`) | 구현. 화면 렌더링 대조는 `frontend/src/components/CircuitContextDiagram.test.tsx` |
-| AC-02 | `frontend/src/components/CircuitContextDiagram.test.tsx:142` | 구현 |
-| AC-03 | `frontend/src/components/CircuitContextDiagram.test.tsx:131,154` | 구현 |
+| AC-01, AC-08 | (옛 화면 시험은 11-16 교체로 지워짐) 새 단위 시험 `frontend/tests/circuit.test.ts`는 부품 목록 · 핀 · 넷 뽑기만 본다 | 구현. 개념도 렌더링 시험은 없다 |
+| AC-02 | (옛 화면 시험은 지워짐) | 시험 없음 |
+| AC-03 | (옛 화면 시험은 지워짐) | 시험 없음 |
 | AC-04, AC-05, AC-06 | | 대응 테스트 미대조 |
-| AC-07 | `frontend/src/components/circuitContext.test.ts:64` | 구현. 상태 이름은 `frontend/src/components/CircuitContextDiagram.tsx:9-15` |
+| AC-07 | (옛 화면 시험은 지워짐) | 시험 없음 |
 | 역할 이름 API | `tests/api/test_conversations.py:183-188` | 구현 |
 
 ## 한계
 
-- 표시 계약의 확대·이동 조작은 이 문서의 범위가 아니다. 현재 동작은 [frontend-screen-redesign.md](frontend-screen-redesign.md)에 둔다.
+- 표시 계약의 확대·이동 조작은 이 문서의 범위가 아니다. 새 화면(11-16)에는 도면 확대 · 이동이 없다. 옛 동작은 [frontend-screen-redesign.md](frontend-screen-redesign.md)(이력)에 있다.
 - 화면 AC 04~06의 개별 테스트 대응은 확인하지 않았다.

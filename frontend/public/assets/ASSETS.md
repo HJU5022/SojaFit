@@ -8,6 +8,4 @@
 - `ASSETS.md` — 이 폴더 설명.
 - `product/` — 랜딩이 쓰는 실제 데모 화면 캡처 2장(`condition-evidence.png` · `missing-condition.png`). [왜] FastAPI는 `/assets`와 `/circuit-schematics`만 정적으로 열어서, 루트의 다른 경로는 `index.html`로 대체된다.
 - `samples/` — 새 프로젝트 창이 내려 주는 샘플 넷리스트. [SAMPLES.md](samples/SAMPLES.md)
-- `sojafit-icon.svg` — 사용자 제공 `new_logo.png`의 격자형 S 심볼을 옮긴 투명 SVG. 원본의 밝은색·중간 회색·회색 셀을 유지한다. 지금은 `index.html`의 파비콘으로만 쓴다(2026-11-16 새 화면의 머리 로고는 `src/ui.tsx`의 인라인 SVG).
-
-2026-11-13 화면 재작성 때 이전 랜딩의 캡처 3장(`landing-guide-*.png`), 기판 배경(`landing-circuit-background.png`), 가로 로고(`sojafit-logo.svg`)는 쓰는 곳이 없어 지웠다.
+- `sojafit-icon.svg` — 사용자 제공 `new_logo.png`의 격자형 S 심볼을 옮긴 투명 SVG. 원본의 밝은색·중간 회색·회색 셀을 유지한다. `index.html`의 파비콘으로만 쓴다(화면의 머리 로고는 `src/ui.tsx`의 인라인 SVG).

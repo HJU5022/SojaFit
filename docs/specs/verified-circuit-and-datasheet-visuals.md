@@ -5,6 +5,7 @@
 - 기준 커밋: 6707002
 - 정본 여부: 정본(데모 회로 원본 회로도 카탈로그, 데이터시트·패키지 외형 링크 규칙)
 - 관련 문서: [circuit-context-diagram.md](circuit-context-diagram.md), [official-datasheet-evidence.md](official-datasheet-evidence.md), [data/circuits/CIRCUITS.md](../../data/circuits/CIRCUITS.md)
+- 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why
 
@@ -40,11 +41,11 @@
 | 정적 PNG | `frontend/public/circuit-schematics/<데모 ID>.png` 15개. 로딩 시 SHA-256 일치를 검사한다. 빌드된 `frontend/dist`가 있으면 그쪽을 검사한다 | `backend/projects/visuals.py:40-58` |
 | 출처 의미 | 저장소 커밋은 저장소 맥락이다. CDN 바이트의 출처 증명은 `original_url`과 `source_sha256`이다 | `backend/projects/visuals.py:18-30` |
 | 카탈로그 API | `GET /api/demo-circuits`. 로그인 필요, `DEMO_MODE=1`에서만(아니면 404). 쿼리 `q`(ID·이름 부분 일치), `offset`(0 이상), `limit`(1~100, 기본 100). 응답 `Cache-Control: private, max-age=300`. 각 항목은 `id`, `name`, `schematic` | `backend/api/projects.py:69-80` |
-| 원본 회로도 창 | 카탈로그가 도착한 뒤에만 버튼을 보인다. 프로젝트의 `demo_id`가 카탈로그 항목과 같고 `schematic`이 있으면 저장된 그림, 아니면(올린 넷리스트, 카탈로그 404인 운영에서 `demo_id`가 남은 옛 프로젝트 포함) 웹 검색을 보인다 | `frontend/src/pages/WorkbenchPage.tsx` |
+| 원본 회로도 창 | 카탈로그가 도착한 뒤에만 버튼을 보인다. 프로젝트의 `demo_id`가 카탈로그 항목과 같고 `schematic`이 있으면 저장된 그림, 아니면(올린 넷리스트, 카탈로그 404인 운영에서 `demo_id`가 남은 옛 프로젝트 포함) 웹 검색을 보인다 | `frontend/src/Schematic.tsx` |
 | 데이터시트 URL | `data/manifest.jsonl`의 `source_url`에서 URL-decode한 PDF 파일명을 소문자로 바꿔 정확히 일치할 때만 사용한다. 호출자가 준 URL은 출처로 받지 않는다 | `backend/rag/source_metadata.py:18-60` |
 | 패키지 외형 페이지 | `data/package-outline-pages.json`(문서 1,360개)을 오프라인 도구가 Docling JSON에서 만든다. 허용된 표제와 같은 페이지에 그림이 있는 최초 페이지. 없으면 도구가 실패한다 | `backend/rag/pipeline/package_outlines.py:40-70`, 문서 수는 JSON 키 수를 직접 셈 |
 | 응답 정규화 | 모델·클라이언트가 보낸 URL·외형 페이지는 버리고 서버 메타데이터로 덮어쓴다 | `backend/conversations/dto.py:79-86,249,265` |
-| 링크 | 외부 PDF는 inline 삽입·프록시 없이 새 탭 링크(`target="_blank"`, `rel="noreferrer noopener"`)로 연다 | `frontend/src/components/EvidencePanel.tsx:36-37` |
+| 링크 | 외부 PDF는 inline 삽입·프록시 없이 새 탭 링크(`target="_blank"`, `rel="noreferrer noopener"`)로 연다 | `frontend/src/Schematic.tsx`(외부 회로도 링크), `frontend/src/Candidate.tsx`(제품 링크) |
 
 ## AC
 
@@ -64,7 +65,7 @@
 | 카탈로그 API | `tests/api/test_projects.py` | 구현. 검색·범위 케이스 대응은 대조하지 않음 |
 | 외형 페이지 index | `tests/rag/test_package_outlines.py` | 구현 |
 | 안전 인용 DTO | `tests/conversations/test_dto.py` | 구현 |
-| 화면 | `frontend/src/components/CircuitSchematic.test.tsx`, `frontend/src/components/D5Panels.test.tsx` | 구현. 패키지 문구 3종은 `frontend/src/components/D5Panels.test.tsx:632,644,654` |
+| 화면 | (화면 시험은 11-16 교체로 지워짐. 새 단위 시험 `frontend/tests/display.test.ts`는 링크 · 이미지 허용 규칙만 본다) | 구현. 패키지 문구 3종의 화면 시험은 없다 |
 
 ## 한계
 
