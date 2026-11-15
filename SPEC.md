@@ -165,7 +165,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/projects/{id}/threads` | 로그인 | - | 200 `list[ThreadSummary]` `[{id, project_id, title, created_at, last_activity_at, latest_run_id, status}]` | 404 | 프로젝트의 사용자 대화를 다시 엶(G4 사용자별 thread) |
     | `POST /api/projects/{id}/threads` | 로그인 | - | 201 `Thread` | 404 | 새 대화 = 같은 UUID의 분석 thread(G4, 8.5 삭제 범위) |
     | `GET /api/threads/{id}` | 로그인 | 선택 쿼리 `limit` 1~100(기본 50) · `before_message_id` | 200 `ThreadDetail` `{id, project_id, title, target_ref, target_locked, latest_run, messages, next_before_message_id}` | 404 · 422 · 503 | 대화의 저장한 메시지를 최근 쪽부터 쪽 단위로 다시 읽음(G4 사용자별 thread) |
-    | `DELETE /api/threads/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run) | 대화 하나와 같은 UUID 분석 기록을 지움(8.5 삭제) |
+    | `DELETE /api/threads/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 마지막 갱신이 300초(`ANALYSIS_MAX_SECONDS`+60 중 큰 값)보다 오래되고 분석 잠금도 없는 멈춘 run은 막지 않음) | 대화 하나와 같은 UUID 분석 기록을 지움(8.5 삭제) |
     | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음 · 키 없는 데모의 기록 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품, 키 없는 데모에서 기록하지 않은 회로 · 대상 · 질문 · 조건이면 데모 질문 목록을 문구에 담음) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
     | `GET /api/runs/{id}` | 로그인 | - | 200 `Run` `{id, thread_id, message_id, result}` | 404 | 연결이 끊겨도 저장한 마지막 상태를 다시 읽음(다시 실행하지 않음) |
     | `POST /api/runs/{id}/recover` | 로그인 | - | 200 `Run` | 404 | 소유한 run의 오래된 상태만 정리하고 `Run`을 돌려줌(분석 · 모델 호출 · 질문 재전송 없음) |
@@ -185,7 +185,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
     | `GET /api/projects/{id}` | 로그인 | - | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
     | `PATCH /api/projects/{id}` | 로그인 | `RenameProject` `{name 1~200자}` | 200 `Project` | 404 · 422 | 프로젝트 이름 바꾸기 |
-    | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
+    | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 멈춘 run은 막지 않음, 위 대화 삭제와 같은 기준) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
     | `GET /api/judge/roles` | 로그인 | - | 200 `list[RoleLabel]` `[{code, name}]` | | 역할 23개 이름(5절 `roles.yaml`), 역할 코드 표시와 역할 선택 interrupt(4단계) |
     | `POST /api/approvals/{id}/quotes` | 로그인 | `QuoteBody` `{quantity 1~100000}` | 201 `Quote` `{id, approval_id, part_number, quantity, created_at}` | 404 · 409 | 승인한 후보로 가격 없는 견적을 저장(7단계, 8.4, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
     | `GET /api/messages/{id}/approvals` | 로그인 | - | 200 `list[SavedApproval]` `[{id, message_id, candidate_part, verdict, case_id, created_at, quotes: list[Quote]}]`(소유 assistant 메시지만, `case_id`는 승인 사례를 지우면 null, `Cache-Control: no-store`) | 404 | 새로고침 뒤 승인·견적 상태를 복원(8.4). 가격·재고 칸 없음 |

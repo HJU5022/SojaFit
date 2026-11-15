@@ -105,6 +105,37 @@ def test_delete_blocks_running_and_locked_threads_but_allows_paused_input(storag
     assert calls == [[thread]]
 
 
+def test_stale_running_run_no_longer_blocks_thread_or_project_delete_but_a_held_lock_still_does(storage):
+    """점검 B #3: 인스턴스가 내려가 멈춘 running run이 대화 · 프로젝트 삭제를 영영 막던 것을 푼다. 분석 잠금을 쥔 thread는 계속 막는다."""
+    from backend.api.projects import delete_owned_with_checkpoints
+    from backend.conversations.repository import InvalidRunState
+    repo, (owner, _), project, connect = storage
+    thread, sibling = repo.create_thread(owner, project), repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': '멈춘 질문'})
+    fresh, _ = repo.start(owner, sibling, {'question': '방금 질문'})
+    with connect() as conn:
+        conn.execute("UPDATE runs SET updated_at=CURRENT_TIMESTAMP-interval '1 hour' WHERE id=%s", (run,))
+    with connect() as lock:  # 오래됐어도 잠금을 쥔 thread는 아직 도는 것이다
+        lock.execute('SELECT pg_advisory_lock(hashtextextended(%s,0))', (thread,))
+        try:
+            with pytest.raises(InvalidRunState):
+                repo.delete_thread(owner, thread, lambda conn, ids: None)
+            with pytest.raises(InvalidRunState):
+                delete_owned_with_checkpoints(owner, project, lambda conn, ids: None)
+        finally:
+            lock.execute('SELECT pg_advisory_unlock(hashtextextended(%s,0))', (thread,))
+    repo.delete_thread(owner, thread, lambda conn, ids: None)  # 멈춘 run의 대화는 지워진다
+    with pytest.raises(InvalidRunState):  # 방금 갱신된 run은 그대로 막는다(프로젝트 삭제 포함)
+        repo.delete_thread(owner, sibling, lambda conn, ids: None)
+    with pytest.raises(InvalidRunState):
+        delete_owned_with_checkpoints(owner, project, lambda conn, ids: None)
+    with connect() as conn:
+        conn.execute("UPDATE runs SET updated_at=CURRENT_TIMESTAMP-interval '1 hour' WHERE id=%s", (fresh,))
+    delete_owned_with_checkpoints(owner, project, lambda conn, ids: None)
+    with connect() as conn:
+        assert conn.execute('SELECT count(*) FROM projects WHERE id=%s', (project,)).fetchone()[0] == 0
+
+
 @pytest.fixture
 def storage(monkeypatch):
     url = os.getenv('TEST_AUTH_DATABASE_URL')
