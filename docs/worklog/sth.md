@@ -1,3 +1,24 @@
+## 2026-11-15 공급자 제한 수정 8010 반영
+- 요청/계획: 테스트 DB와 GitHub 토큰을 유지하고 방금 수정한 공급자 제한 코드를 8010에 반영한다. 유료 호출·푸시는 하지 않는다. 현재 실행 이미지·전체 환경·DB/renderer ID·DB 볼륨·업무10테이블의 행 수/내용 해시·backend/db/frontend 정적파일 해시를 먼저 보존한다. 실행 중 분석0건에서 API만 교체하고, Docker build는 --pull=false --network=none/180초, API readiness는60초를 상한으로 한다. 외부 실검색·모델·평가 호출은 중단 조건 없이 실행하지 않는다.
+- 반영: 현재 컨테이너의 frontend/dist에는 별도 검색 입력 안내가 직접 반영돼 있어 런타임 자산을 그대로 보존했다. 실행 이미지 digest를 상속하고 현재 backend/dist 사본에 external_schematic.py·schematic_discovery.py·schematic_source.py 세 파일만 덮어쓴 COPY-only 이미지를 만들었다. 후보 이미지의 나머지 backend/db/화면 파일 해시가 전부 기존 런타임과 같음을 확인했다. 전체 환경은 메모리에서 그대로 전달했으며 GitHub 토큰·다른 비밀값은 출력하거나 파일에 저장하지 않았다.
+- 격리 검증: 새 이미지에서 Docker network=none 및 Python socket 차단 아래 실제 API 라우터/서비스/다운로드 코드와 MockTransport를 연결했다. 503(Retry-After10) → 동일검색503(7) → 다른검색503(7) → 제한해제200. 같은 공급자의 후보 검사 중단, 대기 중 재클릭/다른 검색의 추가 HTTP0회, 정상 부분 후보 선택 유지 확인. 실행 중인 새8010 컨테이너의 독립 Python 프로세스에서도 동일 검사를 통과했다. 운영 API 프로세스의 서비스 상태는 주입·변경하지 않았다.
+- 실제 보존/HTTP: API b069146f0554, 이미지 sha256:03acde9745a7617ff8f689cb1df2beb98d659bce3d116ec5528ad135f232eabb. 전체 환경 정확히 동일(토큰 포함), 테스트DB2bd06404148d/renderer100d87f9520c 및 DB볼륨 동일, 주요10테이블 행 수/해시 동일. 실행 파일 해시는 검증 이미지와 일치. localhost:8010의 /health·/login200, 제공 index SHA256 동일, 비로그인 회로도 검색401로 인증 경계 유지. 검증 이미지를 로컬 sojafit:sth-local에도 지정해 다음 재생성 시 보존한다.
+- 기록/한계: 증빙·백업·Docker 컨텍스트·모의 검증 스크립트는 저장소 밖 provider-cooldown-8010-20261115-172909에 보관했다. 첫 보존 검사의 psql JSON 줄바꿈 파싱 오류는 실행환경 변경 전에 발생했고 파싱을 보완해 같은 절차를 통과했다. 실제 공급자·GitHub·Exa·LLM·임베딩·가격 호출0, DB마이그레이션·운영 변경·커밋·푸시0. 브라우저에서 실제 공급자 한도 초과를 발생시키는 검사는 하지 않았다. 프로세스 재시작 시 제한 상태가 초기화되는 기존 한계는 유지한다.
+
+## 2026-11-15 공급자 한도 이후 중복 조회 차단
+- 요청: STH에서 제한 시간 동안 재요청을 막고 같은 공급자의 남은 후보 검사를 중단한다. 실제·유료 API 호출 및 푸시 없이 모의 테스트로 확인한다. 앞선 8010 토큰 반영 기록은 보존한다.
+- 원인/수정: ExternalSchematicService가 실패 예외를 캐시하지 않아 반복 클릭 시 검사를 재수행했고, 후보 반복도 한도 후 계속됐다. schematic_source에 최대128건의 호스트/인증별 제한 해제 시각을 저장하고 download_bounded가 제한 호스트의 새 HTTP 요청을 차단한다. GitHub 후보 반복은 해당 공급자의 한도 확인 시 중단한다. 같은 검색은 성공 캐시 TTL이 지나도 원래 제한 시각까지 검색/검증을 다시 실행하지 않으며, Retry-After는 남은 시간으로 감소한다. 성공 후보·다른 호스트·다른 GitHub 인증 범위는 보존한다.
+- 파일/계약: backend/projects/{external_schematic,schematic_discovery,schematic_source}.py와 PROJECTS.md, 관련 projects/API 모의 시험, docs/specs/external-complete-schematics.md. 주요 SPEC은 수정하지 않았으며 4절의 한도/재요청 차단 계약 반영을 PR 코멘트로 제안한다. 파일 신설·의존성·DB 스키마 변경 없음.
+- 검증: PYTHON_DOTENV_DISABLED=1, uv run --no-sync --offline pytest -q. 신규5건은 수정 전5실패/수정 후5통과. 토큰 교체 회귀1건도 수정 전실패를 확인한 뒤 보완했다. 첫 관련 전체 검사475통과/3실패는 테스트 간 공유 제한 상태 때문이었으며 각 모의 시나리오의 상태를 격리한 뒤 동일 실패3건 포함 집중14건 통과. 최종 tests/projects/test_external_schematic.py·test_schematic_discovery.py·test_external_circuit_search.py·test_official_schematic.py·test_schematic_render.py, tests/api/test_external_circuits.py, tests/repo/test_repo_layout.py 합계480통과(19.10초). 대기3300초/캐시900초, 제한 해제 후 복구, 다른 URL·호스트·인증, 정상 후보 보존, 128건 상한과 만료 정리를 모의 검증했다.
+- 최종 차분: git diff --check 통과. 추가 차분의 로컬 비밀값 대조/공급자 키 패턴 발견0건, evals 변경0건. 작업 중 별도로 추가된 Schematic 입력 안내·테스트와 작업서 절은 수정하지 않고 보존했다. 해당 UI의 검증 결과는 이번 백엔드 검사480건에 포함하지 않는다.
+- 제한: 8010에는 이번 코드 미반영. 실제 회로도 검색·모델·외부 유료 API·운영 DB·동결 평가셋 재측정·커밋·푸시 없음. 프로세스별 메모리이므로 재시작/여러 worker 사이의 전역 차단은 보장하지 않는다. 단일 API 실행 범위이며 공유 저장소가 필요해지면 확장한다.
+
+## 2026-11-15 로컬 8010 GitHub 토큰 반영
+- 요청: 사용자가 .env.local에 저장한 GITHUB_TOKEN을 8010에 반영하고 인증 적용을 확인한다. 토큰값 출력·유료 API·운영 DB 변경·푸시는 하지 않는다.
+- 반영: 실행 중 API의 이미지 digest와 전체 환경을 메모리에서 보존하고 GITHUB_TOKEN만 교체했다. Compose의 메모리 override를 config --format json으로 대조한 뒤 up -d --no-deps --no-build --pull never --force-recreate --wait --wait-timeout 60 api를 실행했다. 비밀값을 포함하는 override와 config 결과는 파일·로그·채팅에 남기지 않았다.
+- 검증: API 실행 환경이 기존 환경+토큰과 정확히 일치하며 이미지·command·entrypoint 동일. 테스트 DB/renderer 컨테이너 ID와 DB 볼륨 유지. /health 및 /login HTTP 200. 컨테이너 안의 실제 download_bounded 경로로 GET https://api.github.com/rate_limit 1회 성공, core limit 5000·remaining 4993으로 인증 한도 적용 확인. .env.local은 Git ignore 대상이다.
+- 제한: 실제 회로도 검색·Exa·LLM·임베딩·가격 호출 0회. DB 마이그레이션·운영 변경·커밋·푸시 없음. 호출 한도 후 중복 검사 차단은 이번 작업에 포함하지 않았다. 인증 한도 확인은 실제 회로도 검색 성공을 뜻하지 않는다.
+
 ## 2026-11-15 누적 화면 수정 로컬 커밋 준비
 - 사용자 요청: 지금까지 수정한 화면 코드를 STH에 로컬 커밋한다. 원격 푸시·PR 등록·운영 변경은 하지 않는다. 실행 이미지·DB·캡처·로그·임시 검증 스크립트는 저장소 밖에 유지한다.
 - 분리: 작업대 삭제/검색 상태, 설정 초안/동기화, 로그인 복귀, 가격 수동 조회의 네 목적과 종합 점검/8010 기록을 별도 커밋으로 구성한다. 공유 SRC/트리/작업 기록은 각 목적에 맞는 부분만 인덱스에 넣고 작업 파일의 최종 내용은 유지한다. 주요 문서는 신규 테스트 파일의 SOJAFIT 트리 두 줄 예외뿐이며 SPEC/ADR/동결 평가 파일은 변경하지 않는다.

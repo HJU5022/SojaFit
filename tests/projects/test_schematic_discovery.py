@@ -12,6 +12,65 @@ REF = GitHubRepositoryRef("o", "r", "https://github.com/o/r")
 SHA, TREE = "a" * 40, "b" * 40
 API = "https://api.github.com/repos/o/r"
 RAW = f"https://raw.githubusercontent.com/o/r/{SHA}/"
+
+
+@pytest.fixture(autouse=True)
+def isolated_provider_limits(monkeypatch):
+    from backend.projects import schematic_source
+    monkeypatch.setattr(schematic_source, '_RATE_LIMITS', {})
+
+
+@pytest.mark.parametrize('status', [403, 429])
+def test_provider_cooldown_blocks_other_urls_but_keeps_hosts_and_credentials_separate(monkeypatch, status):
+    from backend.projects import schematic_source
+    clock = [1000.0]
+    monkeypatch.setattr(schematic_source, '_rate_clock', lambda: clock[0])
+    monkeypatch.setenv('GITHUB_TOKEN', 'first-fixture-token')
+    calls = []
+
+    def handle(request):
+        calls.append(str(request.url))
+        if len(calls) == 1:
+            return httpx.Response(status, headers={'retry-after': '10', 'x-ratelimit-remaining': '0'})
+        return httpx.Response(200, content=b'ok')
+
+    def download(url, client):
+        return download_bounded(url, max_bytes=100, allowed_hosts=frozenset({'api.github.com', 'other.example'}), client=client)
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        with pytest.raises(ExternalSchematicRateLimited):
+            download(API, client)
+        clock[0] += 2.2
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            download(API + '/branches/main', client)
+        assert error.value.retry_after == 8
+        assert calls == [API]
+        assert download('https://other.example/board', client)[0] == b'ok'
+        monkeypatch.setenv('GITHUB_TOKEN', 'second-fixture-token')
+        assert download(API, client)[0] == b'ok'
+        monkeypatch.setenv('GITHUB_TOKEN', 'first-fixture-token')
+        clock[0] = 1010
+        assert download(API, client)[0] == b'ok'
+        assert len(calls) == 4
+
+
+def test_provider_limits_are_bounded_and_public_download_limit_survives_token_change(monkeypatch):
+    from backend.projects import schematic_source as limits
+    clock = [1000]
+    monkeypatch.setattr(limits, '_rate_clock', lambda: clock[0])
+    for index in range(130):
+        limits.remember_provider_limit(ExternalSchematicRateLimited(10, host=f'{index}.example'))
+    assert len(limits._RATE_LIMITS) == 128
+    limits.remember_provider_limit(ExternalSchematicRateLimited(10, host='raw.githubusercontent.com'))
+    monkeypatch.setenv('GITHUB_TOKEN', 'different-fixture-token')
+    clock[0] = 1005
+    assert limits.provider_rate_limit('raw.githubusercontent.com').retry_after == 5
+    limits.remember_provider_limit(limits.provider_rate_limit('raw.githubusercontent.com'))
+    clock[0] = 1010
+    assert limits.provider_rate_limit('raw.githubusercontent.com') is None
+    limits.remember_provider_limit(ExternalSchematicRateLimited(5, host='fresh.example'))
+    assert len(limits._RATE_LIMITS) == 1
+
 SUPPORT = (b'(symbol (lib_id "Connector:TestPoint") (at 30 20 0) (property "Value" "TestPoint")) '
            b'(wire (pts (xy 20 20) (xy 30 20)))')
 BOARD = (b'(kicad_sch (symbol (at 20 20 0) (property "Value" "ATtiny85-20PU")) ' + SUPPORT + b')')

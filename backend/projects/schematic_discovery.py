@@ -20,6 +20,7 @@ from .schematic_source import (
     ALLOWED_LICENSES, ExternalSchematicConfigurationError, ExternalSchematicInvalidSource,
     ExternalSchematicRateLimited, ExternalSchematicUpstreamError, VerifiedSchematicSource,
     normalize_license_id,
+    provider_rate_limit, remember_provider_limit,
 )
 
 # Match the renderer's bounded selected-hierarchy input limit. This remains a
@@ -70,6 +71,8 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
             if not safe_public_https_url(url, allowed_hosts=allowed_hosts):
                 raise ExternalSchematicInvalidSource()
             parsed = urlsplit(url)
+            if limited := provider_rate_limit(parsed.hostname):
+                raise limited
             # Resolve once and connect to that inspected public address. Host and
             # TLS SNI retain the original hostname for certificate verification.
             mock = isinstance(client._transport, httpx.MockTransport)
@@ -106,10 +109,12 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                         response.headers.get("x-ratelimit-remaining") == "0" or "retry-after" in response.headers
                     )
                 ):
-                    raise ExternalSchematicRateLimited(
+                    limited = ExternalSchematicRateLimited(
                         _retry_after(response.headers), host=parsed.hostname,
                         phase=phase, status_code=response.status_code,
                     )
+                    remember_provider_limit(limited)
+                    raise limited
                 if response.status_code == 401 and parsed.hostname in _API:
                     raise ExternalSchematicConfigurationError()
                 if response.status_code in {404, 410, 451}:

@@ -10,13 +10,16 @@ import time
 from collections import OrderedDict
 from concurrent.futures import Future
 from dataclasses import dataclass, replace
+from math import ceil
 from threading import Lock
+from urllib.parse import urlsplit
 
 from backend.projects.schematic_source import (
     ALLOWED_LICENSES, ExternalSchematicConfigurationError, ExternalSchematicInvalidSource,
     ExternalSchematicInvalidToken, ExternalSchematicNotFound, ExternalSchematicRateLimited,
     ExternalSchematicUpstreamError,
     VerifiedSchematicSource,
+    provider_rate_key, provider_rate_limit, remember_provider_limit,
 )
 
 TTL = 900
@@ -269,11 +272,25 @@ class ExternalSchematicService:
             value = self.retry_until.get(query)
             if value is not None:
                 self.retry_until.move_to_end(query)
-            return value
+            return value[0] if value is not None else None
 
-    def _set_retry_deadline(self, query, deadline):
+    def _retry_error(self, query):
         with self.retry_lock:
-            self.retry_until[query] = deadline
+            entry = self.retry_until.get(query)
+        if entry is not None and entry[1] is not None and entry[0] > self.wall():
+            host, phase, status, key = entry[1]
+            if key == provider_rate_key(host):
+                return ExternalSchematicRateLimited(ceil(entry[0] - self.wall()), host=host, phase=phase, status_code=status)
+        return None
+
+    def _set_retry_deadline(self, query, deadline, error=None):
+        with self.retry_lock:
+            previous = self.retry_until.get(query)
+            if (previous is not None and previous[1] is not None and previous[0] > self.wall()
+                    and previous[1][3] == provider_rate_key(previous[1][0])):
+                return
+            metadata = (error.host, error.phase, error.status_code, provider_rate_key(error.host)) if error is not None else None
+            self.retry_until[query] = (deadline, metadata)
             self.retry_until.move_to_end(query)
             while len(self.retry_until) > self.queries.capacity:
                 self.retry_until.popitem(last=False)
@@ -304,6 +321,19 @@ class ExternalSchematicService:
         rate_error = None
         retry_budget = 1
         counts = {"candidate_count": 0, "inspect_rejected": 0, "render_rejected": 0}
+
+        def inspect_candidate(candidate):
+            hosts = ('api.github.com', 'raw.githubusercontent.com', 'codeload.github.com') if isinstance(candidate, GitHubRepositoryRef) else (
+                (urlsplit(candidate.source_url).hostname, urlsplit(candidate.page_url).hostname)
+                if isinstance(candidate, WebSchematicRef) else ())
+            for host in hosts:
+                if limited := provider_rate_limit(host):
+                    raise limited
+            try:
+                return tuple(self.inspect(candidate, query=query))
+            except ExternalSchematicRateLimited as error:
+                remember_provider_limit(error)
+                raise
 
         def retry_once(operation):
             nonlocal saw_upstream_failure, retry_budget
@@ -346,7 +376,7 @@ class ExternalSchematicService:
                     counts['inspect_rejected'] += 1
                     continue
                 try:
-                    sources = retry_once(lambda: self.inspections.get((candidate, query), lambda: tuple(self.inspect(candidate, query=query))))
+                    sources = retry_once(lambda: self.inspections.get((candidate, query), lambda: inspect_candidate(candidate)))
                 except ExternalSchematicInvalidSource:
                     counts["inspect_rejected"] += 1
                     continue
@@ -421,11 +451,13 @@ class ExternalSchematicService:
                 for candidate in inspectable:
                     inspected += 1
                     try:
-                        found.extend(scoped_sources(retry_once(lambda candidate=candidate: self.inspections.get((candidate,query),lambda:tuple(self.inspect(candidate, query=query))))))
+                        found.extend(scoped_sources(retry_once(lambda candidate=candidate: self.inspections.get((candidate,query),lambda:inspect_candidate(candidate)))))
                     except ExternalSchematicInvalidSource:
                         continue
                     except ExternalSchematicRateLimited as error:
                         local_rate = error
+                        if error.host in {'api.github.com', 'raw.githubusercontent.com', 'codeload.github.com'}:
+                            break
                     except ExternalSchematicUpstreamError:
                         local_upstream = True
                         continue
@@ -435,7 +467,7 @@ class ExternalSchematicService:
                 )
                 if local_rate is not None or local_upstream:
                     retry_after = local_rate.retry_after if local_rate is not None else 60
-                    self._set_retry_deadline(lookup_key, self.wall() + retry_after)
+                    self._set_retry_deadline(lookup_key, self.wall() + retry_after, local_rate)
                 if not found:
                     if local_rate is not None:
                         raise local_rate
@@ -469,7 +501,7 @@ class ExternalSchematicService:
             pool_upstream = pool_upstream or render_upstream
             if (render_rate is not None or render_upstream) and self._retry_deadline(lookup_key) is None:
                 retry_after = pool_rate.retry_after if pool_rate is not None else 60
-                self._set_retry_deadline(lookup_key, self.wall() + retry_after)
+                self._set_retry_deadline(lookup_key, self.wall() + retry_after, pool_rate)
             self.validated.replace(lookup_key, (sources, pool_rate, pool_upstream))
             self._remember_choices(lookup_key, sources)
             if not sources:
@@ -560,7 +592,16 @@ class ExternalSchematicService:
         retry_until = self._retry_deadline(lookup_key)
         if retry_until is not None and self.wall() >= retry_until:
             self._clear_query_caches(lookup_key)
-        result = self.queries.get(lookup_key, lambda: self._find(normalized,connections))
+        def produce():
+            if limited := self._retry_error(lookup_key):
+                raise limited
+            try:
+                return self._find(normalized, connections)
+            except ExternalSchematicRateLimited as error:
+                self._set_retry_deadline(lookup_key, self.wall() + error.retry_after, error)
+                raise
+
+        result = self.queries.get(lookup_key, produce)
         cached_result = result
         if selected_url is not None and result is not None and not isinstance(result, _SearchFailure):
             if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], VerifiedSchematicSource):

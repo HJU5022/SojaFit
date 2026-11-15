@@ -50,9 +50,12 @@ def test_failure_diagnostics_do_not_log_query_or_source(service, caplog):
 
 @pytest.fixture
 def service(monkeypatch):
+    from backend.projects import schematic_source
     monkeypatch.setenv("AUTH_SECRET", "unit-test-only-padding".ljust(32, "x"))
     counts = Counter()
     clock = [1000]
+    monkeypatch.setattr(schematic_source, '_RATE_LIMITS', {})
+    monkeypatch.setattr(schematic_source, '_rate_clock', lambda: clock[0])
     repo = "group/board"
     commit = "c" * 40
     url = "https://github.com/" + repo
@@ -278,6 +281,82 @@ def test_rate_limit_is_preserved_when_no_candidate_works(service):
     with pytest.raises(ExternalSchematicRateLimited) as error:
         worker.find("board")
     assert error.value.retry_after == 60
+
+
+@pytest.mark.parametrize('partial', [False, True])
+def test_provider_limit_stops_candidates_and_blocks_reclick_until_original_deadline(service, partial):
+    worker, counts, clock, source = service
+    refs = tuple(GitHubRepositoryRef('group', str(i), f'https://github.com/group/{i}') for i in range(4))
+    worker.search = lambda *args: counts.update(search=1) or refs
+    inspected = []
+
+    def inspect(ref, **kwargs):
+        inspected.append(ref)
+        if clock[0] < 4300 and (not partial or ref != refs[0]):
+            raise ExternalSchematicRateLimited(3300, host='api.github.com', phase='github_api', status_code=403)
+        return (source,)
+
+    worker.inspect = inspect
+    if partial:
+        first = worker.find('SS33 diode')
+    else:
+        with pytest.raises(ExternalSchematicRateLimited):
+            worker.find('SS33 diode')
+    assert inspected == list(refs[:2 if partial else 1])
+    for advance in (1, 901, 1000):
+        clock[0] = 1000 + advance
+        if partial and advance == 1:
+            assert worker.find('SS33 diode', first.source_url).source_url == first.source_url
+        else:
+            with pytest.raises(ExternalSchematicRateLimited) as error:
+                worker.find('SS33 diode')
+            assert error.value.retry_after == 3300 - advance
+        assert counts['search'] == 1
+        assert len(inspected) == (2 if partial else 1)
+        assert worker._retry_deadline('ss33 diode') == 4300
+    clock[0] = 4300
+    assert worker.find('SS33 diode').sheet_count == 2
+    assert counts['search'] == 2
+    assert len(inspected) == (2 if partial else 1) + len(refs)
+
+
+def test_rate_limited_web_provider_skips_its_next_candidate_but_keeps_other_provider(service):
+    worker, _, _, source = service
+    refs = tuple(replace(_official_ref(), source_url=f'https://{host}/{i}.pdf')
+                 for i, host in enumerate(('blocked.example', 'blocked.example', 'good.example')))
+    worker.search = lambda *args: refs
+    inspected = []
+
+    def inspect(ref, **kwargs):
+        inspected.append(ref)
+        if ref == refs[0]:
+            raise ExternalSchematicRateLimited(60, host='blocked.example', phase='public_asset', status_code=429)
+        return (replace(source, source_type='manufacturer_official', evidence_grade=2,
+                        source_url=ref.source_url, asset_kind='pdf', source_sha256='a' * 64),)
+
+    worker.inspect = inspect
+    worker.render = lambda source: (b'one', b'two')
+    assert worker.find('SS33 diode').source_url == refs[2].source_url
+    assert inspected == [refs[0], refs[2]]
+
+
+def test_query_rate_limit_does_not_block_a_new_github_credential(service, monkeypatch):
+    import os
+    worker, _, _, source = service
+    ref = GitHubRepositoryRef('group', 'board', 'https://github.com/group/board')
+    worker.search = lambda *args: (ref,)
+
+    def inspect(*args, **kwargs):
+        if os.getenv('GITHUB_TOKEN') == 'first-fixture-token':
+            raise ExternalSchematicRateLimited(60, host='api.github.com', phase='github_api', status_code=403)
+        return (source,)
+
+    worker.inspect = inspect
+    monkeypatch.setenv('GITHUB_TOKEN', 'first-fixture-token')
+    with pytest.raises(ExternalSchematicRateLimited):
+        worker.find('SS33 diode')
+    monkeypatch.setenv('GITHUB_TOKEN', 'second-fixture-token')
+    assert worker.find('SS33 diode').sheet_count == 2
 
 
 def test_concurrent_requests_coalesce(service):
