@@ -16,7 +16,7 @@
 | `recordings/calls.jsonl` | 데이터 | LLM 호출마다 한 줄: `sha256`(노드·system·user·schema 이름을 묶은 해시, 재생의 찾기 키), `node`, `schema`, `response`(파싱한 응답). 키·헤더·모델 이름·비용은 없음 |
 | `recordings/outcomes.json` | 데이터 | 기록 날짜(`recorded_at`), 노드별 모델(`models`), DB 지문(`db`: 문서·청크 수와 청크 id·본문 sha256 목록의 해시), 질문별(`questions`) 입력·경로·답·판정·거절 코드·인터럽트와 재개 값 |
 
-- 현재 기록은 데모 질문 10개(회로 6곳), 호출 18줄이다. 기록일 2026-11-12, 코드 `8e769db` [실측: `calls.jsonl` 18줄, `outcomes.json`의 `questions` 10개 · `recorded_at`]. 프롬프트나 그래프 코드가 바뀌면 기록 키가 달라져 재생이 멈추므로(`ReplayMiss`, 503 `UNAVAILABLE`) 코드를 바꾼 뒤에는 `scripts/demo/record_demo.py replay`로 확인하고 필요하면 다시 기록한다.
+- 현재 기록은 데모 질문 10개(회로 6곳), 호출 18줄이다. 기록일 2026-11-15(UTC), 코드 `c483bab0` [실측: `calls.jsonl` 18줄, `outcomes.json`의 `questions` 10개 · `recorded_at`]. 프롬프트나 그래프 코드가 바뀌면 기록 키가 달라져 재생이 멈추므로(`ReplayMiss`, 503 `UNAVAILABLE`) 코드를 바꾼 뒤에는 `scripts/demo/record_demo.py replay`로 확인하고 필요하면 다시 기록한다.
 - 프롬프트에 청크 id가 들어가므로 빈 볼륨에 `corpus-load`로 넣은 DB에서만 맞는다. 같은 대화의 두 번째 질문부터는 이전 입력이 프롬프트에 붙어 기록과 달라지므로 데모 질문은 새 대화의 첫 질문으로만 재생된다.
 
 ## 실행·시연
