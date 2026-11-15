@@ -97,7 +97,7 @@ export default function LoginPage() {
           : <p className="login-lead" role="status">Google 계정 확인 중입니다.</p>}
     </section>}
     {google && !finishingGoogle && <><form method="get" action="/api/auth/google/start"><button className="btn btn-large" disabled={busy}>Google 계정으로 계속</button></form><p className="login-or">또는</p></>}
-    <form onSubmit={submit}>
+    <form onSubmit={submit} data-refresh-blocked={busy}>
       <label className="field"><span>이메일</span><input className="input" name="email" type="email" autoComplete="username" required maxLength={100} autoFocus /></label>
       <label className="field"><span>비밀번호</span><input className="input" name="password" type="password" autoComplete="current-password" required maxLength={1024} aria-describedby={failure ? 'login-error' : undefined} /></label>
       {failure ? <div className="notice" role="alert" id="login-error"><p {...requestIdProps(failure)}>{loginErrorMessage(failure)}</p>

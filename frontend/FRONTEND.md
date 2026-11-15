@@ -40,7 +40,7 @@
 - `package.json` — npm 의존성과 실행 명령.
 - `package-lock.json` — npm 의존성 고정.
 - `index.html` — React 진입 HTML.
-- `vite.config.ts` — React·API 프록시·Vitest와 더미 회로 가상 모듈 설정.
+- `vite.config.ts` — React·API 프록시·Vitest와 더미 회로 가상 모듈 설정. 운영 빌드 HTML에 빌드 식별용 UTC 시각(meta sojafit-build)을 넣어 로고만 변경된 배포도 감지한다. 비밀값/환경 설정을 HTML에 넣지 않는다.
 - `tsconfig.json` — TypeScript 프로젝트 참조.
 - `tsconfig.app.json` — 화면 TypeScript 설정.
 - `tsconfig.node.json` — Vite TypeScript 설정.

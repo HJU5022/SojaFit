@@ -28,12 +28,14 @@ it.each([true, false])('locks profile editing until the initial response arrives
   expect(affiliation).toHaveValue(populated ? '기존 회로팀' : '')
   expect(role).toHaveValue(populated ? 'design' : '')
   expect(mounting).toHaveValue(populated ? 'smd' : '')
+  expect(affiliation.closest('form')).toHaveAttribute('data-refresh-blocked', 'false')
   fireEvent.change(affiliation, { target: { value: '새로 입력한 회로팀' } })
   fireEvent.change(role, { target: { value: 'purchasing' } })
   fireEvent.change(mounting, { target: { value: 'through_hole' } })
   expect(affiliation).toHaveValue('새로 입력한 회로팀')
   expect(role).toHaveValue('purchasing')
   expect(mounting).toHaveValue('through_hole')
+  expect(affiliation.closest('form')).toHaveAttribute('data-refresh-blocked', 'true')
 })
 
 function profileApi() {

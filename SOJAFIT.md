@@ -124,6 +124,8 @@ SojaFit (proj3-b)
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
 │       │   ├── ChatPane.tsx <- 채팅 전용 스크롤·고정 입력창·대화 끝 이동
+│       │   ├── DeploymentUpdate.tsx <- 새 배포 감지·초안과 작업 보존 후 명시적 갱신 안내
+│       │   ├── DeploymentUpdate.test.tsx <- 버전 확인·요청 상한·초안/첨부 보존 갱신 회귀
 │       │   ├── NetlistIntake.tsx <- 빈 프로젝트·대상 선택 전의 채팅 입력과 넷리스트 접수
 │       │   ├── ReviewDetails.tsx <- 질문·부품별 상세 탭과 보존되는 판정·근거·승인 패널
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도

@@ -164,7 +164,8 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
 
   // 질문을 보내기 전에는 제목과 입력창만 보인다. 회로 · 조건 대조 · 속성은 검토가 시작되면 나타난다.
   const started = history.length > 0 || Boolean(live) || chat.loading
-  return <div ref={root} className={`review${started ? '' : ' review-idle'}`} style={{ '--props': `${propsWidth}px` } as CSSProperties}>
+  return <div ref={root} className={`review${started ? '' : ' review-idle'}`} style={{ '--props': `${propsWidth}px` } as CSSProperties}
+    data-refresh-blocked={Boolean(chat.text || attachmentPending || attachments.busy || running || chat.loading || (waiting && (role || Object.values(answers).some(Boolean))))}>
     {attachments.dragging && <div className="attachment-drop-guide" role="status" aria-label="파일 놓기"><Paperclip aria-hidden="true" /><p>.net·.txt 파일 하나를 놓으면 채팅에 첨부됩니다.</p><p className="fine">파일당 5 MiB 이하 · 전송 전에 확인할 수 있습니다.</p></div>}
     <div className="review-body" role="region" aria-label="검토 내용">
     <div className="review-main">

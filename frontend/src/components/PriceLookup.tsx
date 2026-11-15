@@ -12,7 +12,7 @@ export default function PriceLookup({ parts }: { parts: string[] }) {
     if (!open) void prices.refetch({ cancelRefetch: false })
     setOpen(value => !value)
   }
-  return <div className="approval">
+  return <div className="approval" data-refresh-blocked={prices.isFetching}>
     <button className="btn" aria-expanded={open} onClick={toggle}>{open ? '가격·재고 닫기' : '가격·재고 조회'}</button>
     {open && (prices.isPending ? <div className="skeleton" role="status"><span className="sr-only">가격과 재고를 조회하는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /></div>
       : prices.error ? <div className="notice" role="alert"><p {...requestIdProps(prices.error)}>가격을 조회하지 못했습니다. {errorMessage(prices.error)}</p><button className="btn" onClick={() => void prices.refetch({ cancelRefetch: false })}>다시 조회</button></div>

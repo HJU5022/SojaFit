@@ -106,7 +106,7 @@ function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto;
     const quantity = Math.max(1, Math.floor(Number(new FormData(event.currentTarget).get('quantity'))) || 1)
     void act(async () => setQuote(await createQuote(approval!.id, quantity)))
   }
-  return <div className="approval">
+  return <div className="approval" data-refresh-blocked={busy}>
     <p className="approval-state">{approval ? <ShieldCheck aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}{approval ? '승인됨' : checking ? '승인 상태 확인 중' : saved.error ? '승인 상태 확인 안 됨' : other ? '다른 후보가 승인됨' : '승인 전'}</p>
     {approval && <p className="property-note">{reviewer}</p>}
     {other && <p className="property-note">이 질문에서 승인한 후보: {other.candidate_part}</p>}

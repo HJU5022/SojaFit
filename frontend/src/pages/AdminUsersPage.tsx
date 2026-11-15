@@ -35,7 +35,7 @@ export default function AdminUsersPage() {
     {error ? <p className="notice" role="alert" {...requestIdProps(error)}>계정 정보를 처리하지 못했습니다. {errorMessage(error)}</p> : null}
     {busy && users.length === 0 ? <div className="skeleton" role="status"><span className="sr-only">계정 정보를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>
       : users.length === 0 ? (!error && <p className="empty">등록된 계정이 없습니다.</p>)
-        : <div className="table-scroll"><table className="rows rows-static">
+        : <div className="table-scroll" data-refresh-blocked={busy}><table className="rows rows-static">
           <caption className="sr-only">계정 목록과 접근 상태</caption>
           <thead><tr><th scope="col">이메일</th><th scope="col">역할</th><th scope="col">상태</th><th scope="col">조작</th></tr></thead>
           <tbody>{users.map(account => <tr key={account.id} className={account.is_active ? undefined : 'dim-row'}>

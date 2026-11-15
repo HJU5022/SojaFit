@@ -223,7 +223,7 @@ export default function WorkbenchPage() {
   }
 
   if (!user) return null
-  return <div className="app">
+  return <div className="app" data-refresh-blocked={Boolean(question || pending || filter || busy || deletingThread)}>
     <nav ref={navigation} className={`rail${navOpen ? ' rail-open' : ''}`} aria-label="프로젝트와 검토">
       <div className="rail-top"><a className="brand" href="/app"><img src="/assets/sojafit-icon.svg" alt="" width={22} height={22} />SojaFit</a>
         <div className="rail-tools"><button className="icon-btn" onClick={openCreator} aria-label="새 프로젝트" title="새 프로젝트"><FilePlus2 aria-hidden="true" /></button>
