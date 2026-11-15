@@ -308,8 +308,21 @@ npm run test:run                       # 화면 단위 시험
 
 ```bash
 uv run pytest -q                                                              # 회귀 테스트(키·DB 없이 도는 것만)
+uv run python evals/runners/freeze.py --check                                 # 동결 평가셋 해시 검사(무료, 키 · DB · 네트워크 불필요)
 uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json> 5 hybrid  # 검색 지표(코퍼스 DB와 임베딩 키 필요)
 ```
+
+- `freeze.py --check`는 2026-11-16에 실행했고 "동결 이후 바뀐 파일: 없음"(종료 코드 0)이었다. 동결 해시 v1 · v2 · v3의 기록은 [`evals/FROZEN.json`](evals/FROZEN.json), v3의 재동결 이력은 [EVAL_REPORT.md](EVAL_REPORT.md) 2절 표와 [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md)에 있다.
+- **v3 기준 게이트(유료, 키 필요).** 평가자가 다시 돌리려면 `.env`에 `OPENROUTER_API_KEY`, `VOYAGE_API_KEY`, 코퍼스를 적재한 `DATABASE_URL`, `LANGFUSE_*` 키가 있어야 하고, 서비스와 같은 검색 설정으로 재려면 `DEMO_MODE=0`을 **명시**한다(안 쓰면 코드 기본값 1 = BM25만이라 위 응답 시간 표의 "미기록" 행처럼 조건이 달라진다). 웹 근거까지 재려면 `EVAL_WEB=1`과 `EXA_WEB_SEARCH_ENABLED=1` · `EXA_API_KEY`가 더 필요하고 Exa 검색 요금이 따로 든다.
+
+  ```bash
+  DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 \
+    uv run --env-file .env python -m evals.runners.run_gate evals/dataset_v3.jsonl --out eval-out --sets 1 --keep-going
+  uv run python -m evals.runners.gate_report evals/dataset_v3.jsonl eval-out   # 무료. 기준 미달이면 종료 코드 1
+  ```
+
+  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 이 명령 자체는 이번에 다시 실행하지 않았다(유료). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
+- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡 대신 로컬에서 같은 명령을 돌린다: 위 `pytest` · `freeze.py --check`, `frontend`는 `npm ci && npm run test:run && npm run build`, 비밀값 검사는 `gitleaks`([G7 증거](docs/GATES.md)). Actions에서의 실제 실행 결과는 확인하지 못했다.
 
 ---
 
