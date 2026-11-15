@@ -134,7 +134,8 @@ def test_interval_and_daily_usd_get_different_codes(spent, code, monkeypatch):
 def test_pending_condition_is_condition_pending():
     @contextmanager
     def locked(user, thread):
-        yield None, {'version': 1}
+        # [왜] message()는 조건 대기를 보기 전에 대상 부품이 지원 대상인지 본다(#139). 실제 _owned() 행처럼 connections와 target을 준다
+        yield None, {'version': 1, 'target': 'D1', 'connections': {'components': [{'ref': 'D1', 'value': '1N4007', 'footprint': 'Diode_THT:D_DO-41', 'description': 'Diode'}], 'nets': []}}
     svc = service(_purge_expired=lambda: None, locked=locked, _reconcile=lambda conn, row: None,
                   graph=SimpleNamespace(get_state=lambda config: SimpleNamespace(next=('판정',), tasks=[SimpleNamespace(interrupts=[object()])])))
     with pytest.raises(ApiError) as error:
