@@ -1,5 +1,10 @@
 # jeongun 작업 기록
 
+## 2026-11-15 web-to-main 동결 전 백엔드 수정(로컬 커밋만, 푸시 · PR 없음)
+- 목적: 11-15 점검(`reports/2026-11-15-점검/합본-동결전-목록.md`)의 백엔드 수정을 `web-to-main`에 커밋 하나에 목적 하나로 쌓아 PR 준비 상태로 둔다. `frontend/`는 건드리지 않는다.
+- 그룹 1(동작 불변): A4 `a3411700`(macOS RLIMIT_AS), A1 `c4667658`(`None.result()` 크래시), A2(a) `4aa14a55`(외부 실패 경고 로그), D3 `f732afba`(`.env.example` 키 없는 데모 기본). 전체 pytest [실측]: 기준선 31 실패 → 14 실패(새 실패 0, 모두 cairo 없음 12 + `/private/tmp` 경로 2), 통과 2344 → 2371.
+- 그룹 2 정확도 확인: 사전 등록 `evals/guides/preregister.md`(2026-11-15 동결 전 백엔드 수정 묶음). 웹 끔 v3 50×1을 before · after 한 번씩, 상한 4회 · LLM 0.3달러 · Exa 0회. 명령 `uv run --env-file <.env> python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-16-fixes-<팔> --sets 1 --keep-going`(`DEMO_MODE=0 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 EVAL_WEB=0 WEB_PREFETCH=0 EXA_WEB_SEARCH_ENABLED=0 EXA_API_KEY=`). 중단 조건: Exa 요청 흔적, 서비스 DB 쓰기, 예산 초과.
+
 ## 2026-11-13 main 574de79 배포(Cloud Run)
 - 배포: `main` `574de79`(PR #127 병합, 인용 숫자 검사 포함)를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-574de79 --revision-suffix 574de79`(빌드 ~10:50 KST 끝). 리비전 `sojafit-api-574de79`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
 - 이전 100% 리비전은 `fadde2a`가 아니라 `sojafit-api-00086-zn6`(11-13 10:28 KST 생성, 이미지는 `fadde2a`와 같은 `sha256:95d6f571…`)였다. `fadde2a` 대비 환경변수 2개(`EXA_WEB_SEARCH_ENABLED=1`, 비밀 `EXA_API_KEY:1`)가 더해진 설정 변경이다. `574de79`도 이 32개 설정을 그대로 이었다(이름 · 값 · 비밀 참조 비교 [실측]).
