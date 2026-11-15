@@ -8,17 +8,21 @@
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 외부 검색 구현(`backend/services/exa.py`), 체크포인터 만들기(부르는 쪽이 넘긴다).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/build.py(조립 방식을 따름)
 """
+import math
+import re
 from functools import partial
 
 from langgraph.graph import END, START, StateGraph
 
 from backend.graph.memory import read_profile
+from backend.graph.nodes import QUANTITY_CLAIM
 from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import Reason
 from backend.multi_agent.messages import refusal_for
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
+from backend.rag.units import to_si
 
 KEYS = set(MultiState.__annotations__) - {'path', 'reports'}
 
@@ -32,6 +36,25 @@ def parse_node(state: dict, *, parse) -> dict:
             'answer': '', 'check': {}, 'refusal': {}, 'memory_refs': [], 'path': ['입력 읽기']}
 
 
+URL_IN_REPLY = re.compile(r'https?://|www\.|\b[A-Za-z][\w-]*\.[A-Za-z]{2,}\b')  # shortcut: 글자.글자 모양은 모두 주소로 보고 막는다(안전 쪽 오탐), 필요하면 좁힌다
+
+
+def _quantities(text: str) -> set[tuple[float, str]]:
+    """글 속 숫자+단위 주장을 (SI 값, 단위)로. mA ↔ A 같은 접두어 차이는 같은 값으로 본다."""
+    return {(si[0], si[1]) if (si := to_si(float(n.replace(',', '')), u)) else (float(n.replace(',', '')), u)
+            for n, u in QUANTITY_CLAIM.findall(text)}
+
+
+def chat_reply_is_safe(state: dict, reply: str) -> bool:
+    """Supervisor의 reply를 검사 없이 답으로 내도 되는가: 일상 대화이고, 주소가 없고, 사용자 글에 없던 숫자+단위를 말하지 않을 때만(점검 C #3)."""
+    if state.get('question_type') != 'chat' or URL_IN_REPLY.search(reply):
+        return False
+    given = _quantities(' '.join([str(state.get('question') or ''), str(state.get('conditions') or ''),
+                                   *map(str, state.get('conversation_history') or [])]))
+    return all(any(unit == u and math.isclose(value, v, rel_tol=1e-6, abs_tol=1e-12) for v, u in given)
+               for value, unit in _quantities(reply))
+
+
 def finish_node(state: dict) -> dict:
     """끝내기: 일상 대화는 계획의 reply가 답이다. 서브에이전트를 거친 답은 이미 answer에 있다."""
     if not state.get('reports'):
@@ -40,6 +63,11 @@ def finish_node(state: dict) -> dict:
             reason = Reason.VERIFY_FAILED
             return {'answer': refusal_for(reason, state.get('facts') or {}),
                     'refusal': {'code': reason.value}, 'memory_refs': [], 'path': ['끝']}
+        if not chat_reply_is_safe(state, reply):
+            # [왜] 이 길은 인용 · 숫자 검사를 안 거친다. 주입 문장이 Supervisor를 속여 finish로 보내도 고정 안내문만 나가게 한다
+            reason = Reason.OUT_OF_SCOPE
+            message = refusal_for(reason, state.get('facts') or {})
+            return {'answer': message, 'refusal': {'code': reason.value, 'message': message}, 'memory_refs': [], 'path': ['끝']}
         return {'answer': reply, 'path': ['끝']}
     return {'path': ['끝']}
 
