@@ -6,9 +6,8 @@
 - 담당: 서비스·운영.
 - `frontend/` 도구 루트는 표준 Vite가 package.json·index.html·vite.config.ts를 함께 요구하므로 사용자 승인으로 한 종류 규칙의 좁은 예외입니다. `src/` 등은 예외가 아닙니다.
 
-## 2026-11-16 새 화면으로 교체
-- 조장 결정으로 화면 전체를 Codex가 저장소 밖에서 만든 새 프론트엔드(React 19 · Vite 8 · TypeScript 7)로 바꿨습니다. 이전 화면(2026-11-13 재작성본)은 git 기록에 있습니다.
-- 새 화면은 `react-router` · React Query · 더미 모드 없이 `src/api.ts`의 fetch 경계와 `ui.tsx`의 경로 처리를 씁니다.
+## 이력
+- 2026-11-16에 화면 전체를 새 프론트엔드(React 19 · Vite 8 · TypeScript 7)로 교체했습니다. 이전 화면은 git 기록에 있습니다.
 
 ## 실행과 확인
 - 개발: `npm ci`, `npm run dev`(주소 `http://localhost:5173`). `/api` · `/health`는 `http://localhost:8000`으로 프록시합니다. 백엔드는 상태를 바꾸는 요청의 Origin이 `AUTH_ORIGIN`(기본 `http://localhost:8000`)과 같아야 해서, 프록시가 Origin을 그 값으로 바꿔 보냅니다. 다른 주소의 백엔드면 `SOJAFIT_API_TARGET`(프록시 대상)과 `SOJAFIT_AUTH_ORIGIN`(Origin 값)을 정합니다.
@@ -31,4 +30,4 @@
 - `tsconfig.json` — TypeScript 설정.
 - `public/` — 정적 이미지·샘플 넷리스트. [PUBLIC.md](public/PUBLIC.md)
 - `src/` — 화면 소스. [SRC.md](src/SRC.md)
-- `tests/` — 화면 순수 함수 단위 시험. [TESTS.md](tests/TESTS.md)
+- `tests/` — 화면 순수 함수 단위 시험과 브라우저 시험(Playwright). [TESTS.md](tests/TESTS.md)
