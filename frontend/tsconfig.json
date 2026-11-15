@@ -18,7 +18,8 @@
   },
   "include": [
     "src",
-    "tests/*.test.ts",
-    "vite.config.ts"
+    "tests/*.ts",
+    "vite.config.ts",
+    "playwright.config.ts"
   ]
 }

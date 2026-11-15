@@ -7,9 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/*.ts\" vite.config.ts",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/*.ts\" vite.config.ts",
-    "test": "node --test tests/*.test.ts"
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/*.ts\" vite.config.ts playwright.config.ts",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/*.ts\" vite.config.ts playwright.config.ts",
+    "test": "node --test tests/*.test.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-kr": "^5.3.1",

@@ -52,6 +52,7 @@ SojaFit (proj3-b)
 │   ├── package-lock.json   <- npm 의존성 고정
 │   ├── index.html          <- React 진입 HTML
 │   ├── vite.config.ts      <- React 플러그인과 API 프록시(개발·미리보기에서 Origin을 백엔드 AUTH_ORIGIN에 맞춰 보냄)
+│   ├── playwright.config.ts <- Playwright 설정(설치된 Chrome·키 없는 데모 서버, 기본 주소 localhost:8000)
 │   ├── tsconfig.json       <- TypeScript 설정
 │   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
 │   │   ├── PUBLIC.md       <- 폴더 설명
@@ -82,7 +83,11 @@ SojaFit (proj3-b)
 │   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘·화면 머리 로고)
 │   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)
 │   │   ├── TESTS.md        <- 폴더 설명
-│   │   └── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·http(s) 링크만 허용 시험
+│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용 시험
+│   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
+│   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기 시험
+│   │   ├── demo.spec.ts    <- Playwright: 데모 로그인부터 승인·견적·설정까지의 브라우저 흐름(키 없는 데모 서버 필요)
+│   │   └── account.spec.ts <- Playwright: 설정 저장·A/B 격리·관리자 차단·첨부 넷리스트의 회로 버전
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- React 진입점·글꼴·스타일

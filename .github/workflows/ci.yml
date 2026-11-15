@@ -46,7 +46,7 @@ jobs:
           name: test-results
           path: test-results.xml
 
-  # 프런트 단위 테스트와 빌드.
+  # 프런트 단위 시험(node --test)·서식 검사(Prettier)·타입 검사와 빌드. 브라우저 시험(npm run test:e2e)은 데모 서버가 필요해 CI에 두지 않는다.
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -54,14 +54,15 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      # [왜] Dockerfile 빌드 단계(node:24-slim)와 같은 버전. 잠금 파일의 vitest 5·jsdom 31이 Node 22.12 이상을 요구해 20은 안 된다.
+      # [왜] Dockerfile 빌드 단계(node:24-slim)와 같은 버전. node --test가 .ts 시험 파일을 바로 읽으려면 Node 22.18 이상이어야 한다.
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npm run test:run
+      - run: npm test
+      - run: npm run format:check
       - run: npm run build
   # 평가 회귀(키 없음): 기록한 LLM 응답으로 데모 질문 5개(v3 문항 3개 포함)를 서비스와 같은 멀티 그래프로 끝까지 돌리고,
   # 경로 · 판정 · 거절 · DB 지문이 기록(data/demo/recordings/outcomes.json)과 다르면 실패한다(scripts/demo/record_demo.py replay).
