@@ -4,6 +4,7 @@ import { ArrowLeft, FileText, Printer, Trash2 } from 'lucide-react';
 import { api, verdicts } from './api';
 import { Amount } from './Candidate';
 import { formatAmount, opLabel, safeLink } from './display';
+import { ecoFields } from './report';
 import {
   Badge,
   Disclaimer,
@@ -272,7 +273,7 @@ export function CaseReport({ id, email }: { id: number; email: string }) {
     </div>
   );
 }
-/** 보고서 본문. 불러오기와 분리해 시험이 저장 값만으로 그려 볼 수 있다(`tests/report.test.ts`). */
+/** 보고서 본문: 불러온 사례 값만 그린다. ECO 칸 값은 `report.ts` `ecoFields`가 만든다. */
 export function ReportBody({
   d,
   roles,
@@ -284,7 +285,7 @@ export function ReportBody({
 }) {
   const c = d.candidate,
     role = c?.role ? `${c.role} ${roles?.find((r) => r.code === c.role)?.name ?? ''}`.trim() : null,
-    passed = c?.checks.filter((check) => check.result.toLowerCase() === 'pass').length ?? 0;
+    eco = ecoFields(d, role, verdicts[d.verdict]);
   // [왜] 값이 null이면 손으로 적는 빈칸(.report-blank)으로 둔다. 없는 값을 지어 넣지 않는다(#56)
   const facts = (rows: [string, React.ReactNode][]) => (
     <dl className="report-facts">
@@ -313,12 +314,7 @@ export function ReportBody({
       </header>
       <section>
         <h2>변경 내용</h2>
-        {/* [왜] 영문 품번 뒤 조사(을/를, 로/으로)는 끝 글자 읽기에 따라 달라 화살표로 쓴다. 셋 중 하나라도 없으면 반쪽 문장 대신 빈칸 */}
-        {d.target_ref && d.target_value && d.candidate_part ? (
-          <p>{`${d.target_ref} 부품 교체: ${d.target_value} → ${d.candidate_part}`}</p>
-        ) : (
-          <div className="report-blank" />
-        )}
+        {eco.change ? <p>{eco.change}</p> : <div className="report-blank" />}
       </section>
       <section>
         <h2>변경 사유</h2>
@@ -326,11 +322,7 @@ export function ReportBody({
       </section>
       <section>
         <h2>변경 영향</h2>
-        <p>
-          {c?.checks.length
-            ? `판정 ${verdicts[d.verdict]} · 조건 ${c.checks.length}개 중 ${passed}개 통과(기술 검토 근거 3절)`
-            : `판정 ${verdicts[d.verdict]}(기술 검토 근거 2절)`}
-        </p>
+        <p>{eco.impact}</p>
         <div className="report-blank" />
       </section>
       <section>
@@ -348,31 +340,19 @@ export function ReportBody({
                 <th scope="col">적용 날짜</th>
                 <th scope="col">재고 상태</th>
                 <th scope="col">재고 처리</th>
-                <th scope="col">영향 범위</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>{d.target_ref}</td>
-                <td>{role}</td>
-                <td>{d.target_value}</td>
-                <td>{d.candidate_part}</td>
-                {/* [왜] 회로 판 0(회로 없음)·null은 이전 판도 빈칸 */}
-                <td>{d.circuit_version ? `v${d.circuit_version} →` : '→'}</td>
-                <td />
-                <td />
-                <td />
-                <td>
-                  {['BOM', '사양', '파일', '원가', '구매'].map((k) => (
-                    <label key={k}>
-                      <input type="checkbox" /> {k}
-                    </label>
-                  ))}
-                </td>
+                {eco.row.map((v, i) => (
+                  <td key={i}>{v}</td>
+                ))}
               </tr>
             </tbody>
           </table>
         </div>
+        {/* [왜] 체크 칸 입력(input)은 전역 입력 스타일로 크게 그려지고 열 폭을 넘겨, 인쇄에서 작은 상자로 나오는 글자 ☐로 쓴다 */}
+        <p>영향 범위: ☐ BOM ☐ 사양 ☐ 파일 ☐ 원가 ☐ 구매</p>
       </section>
       <h2 className="report-part">기술 검토 근거</h2>
       <section>
