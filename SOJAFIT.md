@@ -211,6 +211,7 @@ SojaFit (proj3-b)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── db_pool.py      <- 검색용 DB 연결 풀(DSN별, pgvector 등록)
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
 │   │   ├── spec_lookup.py  <- 사양 코드 목록 · 찾기 순서 규칙(카드 도구 · 판정 import). 사양 표와 SQL 조회는 11-10에 지움(ADR 0016)
 │   │   ├── card_read.py    <- 카드(표 행 청크)에서 값 · 원문 인용 읽기(코드 먼저, 못 읽은 카드만 LLM)와 코드 확인
@@ -554,6 +555,7 @@ SojaFit (proj3-b)
 │   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
+│   │   ├── test_charge_pool.py <- 예산 차감이 공용 연결 풀을 쓰고, 풀이 0.5초 안에 못 주면 새 연결로 같은 트랜잭션을 도는지(가짜 풀)
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
 │   │   ├── test_profile.py <- 사용자 사실 기억: 칸 검사·틀 문장·version·지우기·의미 순위(가짜 임베딩)·설정 API, 격리 DB 색인 표
 │   │   └── test_repository.py  <- 소유권·원자성·접근 권한·삭제 잠금 시험
@@ -604,6 +606,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_datasheet_rows.py <- 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
+│   │   ├── test_exa_parallel.py <- 웹 PDF 후보 동시 내려받기·순서 유지, 요청 개정과 다른 파일 건너뜀
 │   │   ├── test_exa_prefetch.py <- 웹 근거 미리 출발: 기본 꺼짐, 받아 둔 같은 PDF 재사용, 실패 시 원래 경로
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)

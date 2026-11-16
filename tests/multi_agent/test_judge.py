@@ -604,3 +604,40 @@ def test_displayed_conditions_drop_ungrounded_reads_and_use_resume_values(monkey
     rows = {x['code']: x['value'] for x in result['judgement']['input_conditions']}
     assert rows['i_max'] == '0.25 A' and rows['v_drop_allowed'] == '0.8 V'
     assert '999' not in str(rows)
+
+
+def test_identical_checks_run_concurrently_but_are_consumed_in_candidate_order(monkeypatch):
+    """_identical를 후보마다 동시에 시작해도 결과 순서 · 판정은 차례로 부른 것과 같다."""
+    import threading
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {'1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
+    cands = ['1N4148 R0G', '1N4148 T0G', '1N4148 A0G']
+    read = dict(READ, original_part='1N4148 A0G', candidates=cands)
+    docs = [{'chunk_id': 7, 'content': 'A0G, R0G and T0G are physically identical.'}]
+    running, peak, lock = [0], [0], threading.Lock()
+
+    def retriever(q, parts=None):
+        with lock:
+            running[0] += 1
+            peak[0] = max(peak[0], running[0])
+        threading.Event().wait(0.05)
+        with lock:
+            running[0] -= 1
+        return docs
+    out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=retriever)
+    assert [x['part'] for x in out['judgement']['results']] == cands and peak[0] > 1
+    serial = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=lambda q, parts=None: docs)
+    assert out['judgement']['results'] == serial['judgement']['results']
+
+
+def test_identical_error_surfaces_at_the_failing_candidates_turn(monkeypatch):
+    """검색 오류는 원래처럼 판정 도구 실패 보고로 끝난다."""
+    from backend.graph.mcp_retriever import RetrievalUnavailableError
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {'1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
+    read = dict(READ, original_part='1N4148 A0G', candidates=['1N4148 R0G'])
+
+    def boom(q, parts=None):
+        raise RetrievalUnavailableError('down')
+    out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=boom)
+    assert out['path'] == ['판정'] and 'spec table tool failed' in out['reports'][-1]['message' if 'message' in out['reports'][-1] else 'summary']
