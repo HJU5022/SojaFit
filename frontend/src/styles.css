@@ -849,6 +849,8 @@ form {
 .sidebar-projects {
   flex: 1;
   overflow: auto;
+  /* [왜] 목록은 세로로만 내린다. 줄 너비는 아래 .folder-items 칸이 막고, 이것은 그 위의 안전장치다(#54) */
+  overflow-x: hidden;
   min-height: 0;
   margin-top: 26px;
 }
@@ -899,6 +901,10 @@ form {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* [왜] 글자만 있는 대화 · 프로젝트 링크는 block이어야 끝에 …가 그려진다(flex면 글자가 익명 칸에 들어가 잘리기만 한다, #54) */
+.thread-row > a {
+  display: block;
 }
 .thread-row.selected,
 .folder-items > a.selected {
@@ -975,6 +981,8 @@ form {
 }
 .folder-items {
   display: grid;
+  /* [왜] 기본 auto 칸은 가장 긴 대화 이름 폭까지 늘어 목록이 옆으로 스크롤됐다. 칸을 사이드바 폭에 묶어 이름을 말줄임한다(#54) */
+  grid-template-columns: minmax(0, 1fr);
   padding-left: 18px;
 }
 .sidebar-bottom {
