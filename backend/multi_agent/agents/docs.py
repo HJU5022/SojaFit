@@ -616,6 +616,10 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             if query and not relax:
                 if revisions_all_absent(revision_text, payload.get('facts')) or exact_parts_absent(exact_parts):
                     break  # [왜] 요청한 개정판이나 정확 품번이 코퍼스에 없다고 확인됐다. 필터를 푼 재검색도 0건이라 건너뛴다(끝난 뒤 흐름은 0건 재검색과 같다)
+                if task.parts and {p.upper() for p in task.parts} < requested_parts(current_question):
+                    # [왜] 비교 질문을 부품마다 나눈 할 일이면 필터를 푼 재검색이 질문의 다른 품번 문서를 가져와 그 품번으로 답했다
+                    #      ("1N4007이랑 1N4148 차이"의 1N4007 할 일이 1N4148 trr을 되풀이, #66). 웹 공식 검색 · 재계획은 그대로 간다
+                    break
                 relax = True  # [왜] 품번 필터 안에서 0건이면 필터를 풀어 한 번 더 찾는다(예전 검색 에이전트의 no_result 재시도와 같음)
                 continue
             break  # 보여 줄 근거가 하나도 없으면 LLM을 부르지 않는다

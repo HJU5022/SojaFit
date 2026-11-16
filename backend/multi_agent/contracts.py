@@ -117,8 +117,10 @@ class Plan(BaseModel):
                                        description='next=parts_list only: the part kinds the user asks to list or count; empty = every part')
     # [왜] 앞 답 · 근거를 다시 보여 달라는 말에 Supervisor가 "다시 조회하지 않고 말씀드리지 않겠습니다"라고 썼다(#64).
     #      그래프는 앞 답을 갖고 있지 않으므로 화면에 남은 답의 근거 단추를 코드가 고정 문구로 알려 준다
-    reply_kind: Literal['', 'earlier_answer'] = Field(
-        default='', description="next=finish only: 'earlier_answer' when the user asks to see an earlier answer or its evidence again "
+    # [왜] 일반 설명 끝 고정 문장을 LLM이 '데이tásheet 근거가 아닌…'으로 깨뜨려 썼다(#66). 표시만 받고 문장은 코드가 붙인다
+    reply_kind: Literal['', 'general', 'earlier_answer'] = Field(
+        default='', description="next=finish only: 'general' for a general electronics explanation (the code appends a fixed note), "
+                                "'earlier_answer' when the user asks to see an earlier answer or its evidence again "
                                 "(the code replies with a fixed pointer to it); empty otherwise")
 
     @model_validator(mode='after')

@@ -23,7 +23,7 @@ from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import Reason, TaskReport
-from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, NEED_NETLIST, refusal_for
+from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, refusal_for
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
 from backend.services.llm import is_llm_failure
@@ -76,6 +76,8 @@ def finish_node(state: dict) -> dict:
             reason = Reason.OUT_OF_SCOPE
             message = refusal_for(reason, state.get('facts') or {})
             return {'answer': message, 'refusal': {'code': reason.value, 'message': message}, 'memory_refs': [], 'path': ['끝']}
+        if (state.get('plan') or {}).get('reply_kind') == 'general':
+            reply = f'{reply.rstrip().removesuffix(GENERAL_NOTE).rstrip()} {GENERAL_NOTE}'  # 고정 문장은 코드가 붙인다(#66)
         return {'answer': reply, 'path': ['끝']}
     return {'path': ['끝']}
 

@@ -242,6 +242,19 @@ def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():
     assert seen[0][1] == ['TS40P05G'] and r['searches'][0]['parts'] == ['TS40P05G'] and r['status'] == 'ok'
 
 
+def test_comparison_task_for_one_part_does_not_release_the_filter_to_the_other_compared_part():
+    """#66: "1N4007이랑 1N4148 차이"를 부품마다 나눈 1N4007 할 일이 0건이면 필터를 풀지 않는다.
+    풀면 질문의 다른 품번(1N4148) 문서로 답해 trr 문장이 두 번 나왔다. 질문에 없던 품번을 받은 재계획 할 일은 예전처럼 푼다."""
+    seen = []
+    other = lambda q, parts: [] if parts else [doc(9, 'trr 4 ns', parts=['1N4148'])]
+    r = run(task(parts=['1N4007'], query='1N4007 trr'), llm(), docs=other, seen=seen, question='1N4007이랑 1N4148 차이가 뭐야?', part={})
+    assert [p for _, p in seen] == [['1N4007']] and r['status'] == 'fail' and r['reason'] == 'no_result' and r['llm_calls'] == 0
+    seen = []
+    r = run(task(parts=['SS16']), llm(D.DocsAnswer(grade='enough', answer='VRRM은 60 V이다 [9].')), docs=lambda q, parts: [] if parts else [doc(9, 'VRRM 60 V')],
+            seen=seen, question='D1 대체 후보를 찾아서 VRRM도 알려 줘', part={})
+    assert [p for _, p in seen] == [['SS16'], None] and r['status'] == 'ok'
+
+
 def test_described_ratings_find_parts_with_those_exact_values_then_search_only_them():
     calls = []
 

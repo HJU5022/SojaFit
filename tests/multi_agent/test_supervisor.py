@@ -257,6 +257,9 @@ def test_prompts_keep_constraints_but_no_routing_table():
     for gone in ('After a search report', 'After a writer report', 'After a verifier report', '`verifier`', '`writer`'):
         assert gone not in S.PROMPT, gone
     assert 'do not restate its table' in S.SYNTH_PROMPT
+    # #66: 일반 설명 끝 문장은 코드가 붙여 프롬프트에 그 문장을 두지 않는다(LLM이 베껴 깨뜨렸다). 두 부품 비교는 부품마다 할 일, 그래프는 보여 주지 않음
+    from backend.multi_agent.messages import GENERAL_NOTE
+    assert GENERAL_NOTE not in S.PROMPT and 'one `docs` task per part' in S.PROMPT and 'never their graphs' in S.PROMPT
 
 
 def test_collect_replans_once_on_retryable_failure_but_not_on_confirmed_refusal():

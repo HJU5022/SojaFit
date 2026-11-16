@@ -18,13 +18,13 @@
 | `기억 읽기` | Store에서 선호 실장 방식만 읽어 `mount_preference`에 둠(`graph.memory.read_profile`) | 없음 |
 | `품번·판 확인` | 질문의 품번·개정판이 코퍼스에 있는지 확인(`facts.py`, MCP `check_corpus`) | 없음 |
 | `Supervisor` | 계획: 범위 판정, 질문 종류, 할 일(최대 `MAX_TASKS`)과 지시서. 일상 대화·가격·부품 목록·견적·범위 밖·코퍼스 밖은 여기서 끝냄. 서비스가 부품 없는 회로를 넘겼는데(회로 없는 대화) 정격이 아닌 할 일이 있으면 코드가 `circuit_missing` 거절로 끝냄(SPEC 8.9) | `supervisor` |
-| `RAG 에이전트` | 검색 → 다른 품번 줄·다른 판 거르기 → 근거 채점 + 답 쓰기 → 근거가 없거나 일부 답이면 다른 검색어로 재검색 → 인용 검사 → 보고 | `docs_answer` |
+| `RAG 에이전트` | 검색 → 다른 품번 줄·다른 판 거르기 → 근거 채점 + 답 쓰기 → 근거가 없거나 일부 답이면 다른 검색어로 재검색 → 인용 검사 → 보고. 비교 질문을 부품마다 나눈 할 일(`parts` ⊂ 질문 품번)은 0건이어도 품번 필터를 풀지 않음(#66) | `docs_answer` |
 | `Spec 에이전트` | 하위 그래프 `회로 읽기` → `대체 부품 판정`. 읽기 LLM 1번, 빠진 값은 인터럽트로 묻고, 사양 값 비교는 `backend/judge/verdict.py`가 함 | `judge_read` |
 | `답 모으기` | 코드만. 보고 상태와 상한을 보고 길을 정함 | 없음 |
 | `답 정리` | 할 일 1개의 답(판정은 코드 답 틀) | 없음 |
 | `종합` | 보고를 코드로 이을 수 없을 때만(조건은 [SPEC.md](../../SPEC.md) 2절 "종합으로 가는 조건"). 판정 표는 코드가 그대로 붙임 | `synth` |
 | `답 검사` | 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답·판정 결과·질문에 있던 숫자인지 검사. 걸리면 거절 | 없음 |
-| `끝내기`, `거절`, `가격 안내`, `부품 목록`, `견적 안내` | 마무리. 끝내기는 계획의 `reply_kind`가 `earlier_answer`면 reply 대신 고정 안내 `messages.EARLIER_ANSWER`(#64). 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고(첫 줄 아래 종류별 개수), 계획의 `part_kinds`가 있으면 그 종류만 심볼 칸을 더해 옮기며(다이오드는 LED 포함, 없으면 한 줄, #59), 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답. 견적 안내(질문 종류 `quote`, #60)는 `graph.nodes.quote_answer`가 견적을 만드는 화면 길(판정 → 승인 → 수량 → 견적 목록)을 고정 문구 `messages.QUOTE_GUIDE`로 답함(승인 기록을 읽지 않아 한 문구) | 없음 |
+| `끝내기`, `거절`, `가격 안내`, `부품 목록`, `견적 안내` | 마무리. 끝내기는 계획의 `reply_kind`가 `earlier_answer`면 reply 대신 고정 안내 `messages.EARLIER_ANSWER`(#64), `general`이면 reply 뒤에 `messages.GENERAL_NOTE`를 붙임(#66). 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고(첫 줄 아래 종류별 개수), 계획의 `part_kinds`가 있으면 그 종류만 심볼 칸을 더해 옮기며(다이오드는 LED 포함, 없으면 한 줄, #59), 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답. 견적 안내(질문 종류 `quote`, #60)는 `graph.nodes.quote_answer`가 견적을 만드는 화면 길(판정 → 승인 → 수량 → 견적 목록)을 고정 문구 `messages.QUOTE_GUIDE`로 답함(승인 기록을 읽지 않아 한 문구) | 없음 |
 
 - 노드별 모델: `backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 정본이고, 선정 이유는 ADR 0014·0017이다.
 - 상한(질문당): 할 일 수, 재계획, Supervisor LLM 호출, 서브에이전트 실행, 문서 할 일의 검색 횟수는 `contracts.py`의 `MAX_TASKS`, `MAX_REPLANS`, `MAX_SUPERVISOR_CALLS`, `MAX_AGENT_RUNS`, `MAX_SEARCHES`다. 넘으면 거절한다.
@@ -45,7 +45,7 @@
 | `contracts.py` | 계획서 `Plan`, 할 일 `Task`, 보고서 `TaskReport`, 짧은 보고 `AgentReport`, 이유 코드 `Reason`, 질문당 상한 |
 | `state.py` | 멀티 상태 `MultiState`와 판정 하위 그래프 상태 `JudgeState`·`JudgeOut`, 보고 합치기 규칙 `add_or_reset` |
 | `facts.py` | 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만듦(MCP 도구로 묻는 `make_lookup`, 노드 `facts_node`) |
-| `messages.py` | 거절 사유를 사용자 문구로 바꾸는 `refusal_message`·`refusal_for`(실측값 `measurement` · 회로 전체 값 `circuit_value` · 제조사만 준 교체 `maker_missing`은 대신 물을 말을 담은 따로 문구, #63), 가격 안내 `price_message`, 판정 결과를 코드 틀 답으로 만드는 `render_judgement` |
+| `messages.py` | 거절 사유를 사용자 문구로 바꾸는 `refusal_message`·`refusal_for`(실측값 `measurement` · 회로 전체 값 `circuit_value` · 제조사만 준 교체 `maker_missing`은 대신 물을 말을 담은 따로 문구, #63), 가격 안내 `price_message`, 앞 답 안내 `EARLIER_ANSWER`(#64)와 일반 설명 끝 문장 `GENERAL_NOTE`(#66), 판정 결과를 코드 틀 답으로 만드는 `render_judgement` |
 | `revisions.py` | 사용자가 지정한 판본 추출, 검색 결과·판정 행 파일명에서 판본 확인 |
 | `supervisor.py` | 계획 `plan_node`, 배분 `after_plan`(Send), 답 모으기 `collect_node`, 답 정리 `single_node`, 종합 `synth_node`, 답 검사 `check_node`, 사실 글 `render_facts` |
 | `agents/` | 서브에이전트(설명 파일은 이 문서): `docs.py` RAG 에이전트, `judge.py` Spec 에이전트, `part_names.py` 품번 바로잡기(LLM 없음), `__init__.py` |
