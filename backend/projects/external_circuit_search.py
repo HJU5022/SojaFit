@@ -33,8 +33,6 @@ class ExternalCircuitSearchConfigurationError(ExternalCircuitSearchError):
 
 PROJECT_RESERVED_PATHS = {
     "github.com": frozenset({"features", "topics", "explore", "marketplace", "settings", "orgs", "users", "login", "signup"}),
-    "gitlab.com": frozenset({"explore", "users", "groups", "help", "dashboard", "projects", "admin", "login"}),
-    "codeberg.org": frozenset({"explore", "users", "user", "groups", "help", "dashboard", "projects", "admin", "login"}),
 }
 
 
