@@ -2200,6 +2200,27 @@ form {
   font-weight: 500;
   white-space: nowrap;
 }
+/* 부품 점검표(#68): 종류별 개수 칩이 곧 종류 거르기다. 표는 좁은 화면에서 .audit-scroll 안에서 민다 */
+.kind-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.kind-chips button {
+  min-height: 32px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+.kind-chips button[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: white;
+}
+.parts-table {
+  min-width: 640px;
+}
 .nav-scrim {
   display: none;
 }

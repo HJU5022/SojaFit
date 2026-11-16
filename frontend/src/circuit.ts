@@ -19,13 +19,15 @@ export function pinsOf(project: Project | null, ref: string) {
       })),
   );
 }
-/** ref에 은/는을 붙인다. 끝 글자를 한국어로 읽은 받침으로 고른다(숫자는 영·일·이·삼…, 영문은 엘·엠·엔·알만 받침). 서버 _topic과 같은 규칙. */
-function topic(ref: string) {
+/** 끝 글자를 한국어로 읽은 받침이 있나(숫자는 영·일·이·삼…, 영문은 엘·엠·엔·알만 받침). 서버 _topic과 같은 규칙. */
+function hasFinal(ref: string) {
   const last = ref.slice(-1).toUpperCase(),
     code = last.charCodeAt(0);
-  const final =
-    code >= 0xac00 && code <= 0xd7a3 ? (code - 0xac00) % 28 > 0 : '013678LMNR'.includes(last);
-  return ref + (final ? '은' : '는');
+  return code >= 0xac00 && code <= 0xd7a3 ? (code - 0xac00) % 28 > 0 : '013678LMNR'.includes(last);
+}
+/** ref에 은/는을 붙인다. */
+function topic(ref: string) {
+  return ref + (hasFinal(ref) ? '은' : '는');
 }
 type PartLike = { ref: string; value?: string; footprint?: string; description?: string };
 /** 판정 대상으로 고를 수 없는 부품의 종류('LED' · '표시기' · '다이오드가 아닌 부품'). 고를 수 있으면 빈 문자열. */
@@ -86,4 +88,16 @@ export function duplicateAction(
 ): { action: 'continue'; projectId: number; name: string } | { action: 'create' } {
   const same = duplicates.find((d) => d.matches.includes('netlist'));
   return same ? { action: 'continue', projectId: same.id, name: same.name } : { action: 'create' };
+}
+/** 부품 점검표의 "이 부품 검토"가 입력창에 미리 써 두는 질문(#68). 보내기는 사용자가 누른다. */
+export function reviewQuestion(ref: string) {
+  return `${ref}${hasFinal(ref) ? '을' : '를'} 다른 부품으로 바꿔도 될까?`;
+}
+/** 부품 점검표에 보일 줄: 종류(빈 문자열이면 전체)와 "판정 지원 부품만"으로 거른다(#68). 분류 · 지원 여부는 서버 값이다. */
+export function filterParts<T extends { kind: string; judge_supported: boolean }>(
+  parts: T[],
+  kind: string,
+  supportedOnly: boolean,
+) {
+  return parts.filter((p) => (!kind || p.kind === kind) && (!supportedOnly || p.judge_supported));
 }

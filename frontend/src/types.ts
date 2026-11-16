@@ -205,3 +205,22 @@ export type ExternalSchematic = {
   choices: SchematicChoice[];
   circuit_version: number | null;
 };
+/** GET /api/projects/{id}/parts?circuit_version= 의 한 줄(#68). 종류 · 판정 지원 · 데이터시트는 서버가 에이전트와 같은 규칙으로 정한다. */
+export type PartCheck = {
+  ref: string;
+  value: string;
+  footprint: string;
+  symbol: string;
+  kind: string;
+  kind_name: string;
+  judge_supported: boolean;
+  /** 판정이 받지 않는 이유 구절("LED라서" · "다이오드가 아니라서"). 받으면 null */
+  judge_reason: string | null;
+  /** 코퍼스에 데이터시트가 있는 품번. 없으면 null */
+  datasheet: string | null;
+};
+export type PartsCheck = {
+  circuit_version: number;
+  parts: PartCheck[];
+  counts: { kind: string; name: string; count: number }[];
+};
