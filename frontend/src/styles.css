@@ -363,6 +363,13 @@ form {
   color: var(--muted);
   font-size: 17px;
 }
+/* 지금 판정하는 부품 종류(다이오드)를 첫 화면에서 분명히 밝힌다. */
+.hero-scope {
+  max-width: 640px;
+  margin: 0 auto 23px;
+  font-size: 14px;
+  color: var(--muted);
+}
 .hero > .button {
   display: flex;
   width: max-content;
@@ -582,9 +589,6 @@ form {
   justify-content: space-between;
   gap: 20px;
   font-size: 13px;
-}
-.landing footer > span {
-  color: var(--muted);
 }
 .auth-page {
   min-height: 100dvh;
@@ -1902,9 +1906,6 @@ form {
     display: flex;
     flex-wrap: wrap;
     padding: 30px 22px;
-  }
-  .landing footer > span {
-    display: none;
   }
   .landing footer > a:last-child {
     font-size: 13px;

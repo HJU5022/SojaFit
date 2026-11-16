@@ -39,21 +39,21 @@ export function Landing() {
       </header>
       <main>
         <section className="hero">
-          <h1>
-            부품은 바뀌어도,
-            <br />
-            판단에는 근거가.
-          </h1>
+          <h1>대체 부품을 내 회로에 써도 되는지 데이터시트로 판정합니다.</h1>
           <p className="hero-copy">
-            단종, 품절, 원가 때문에 다이오드를 바꿔야 할 때.
-            <br className="desktop-only" /> 회로 역할과 데이터시트로 교체 후보를 검토하세요.
+            KiCad 넷리스트에서 부품의 회로 역할과 필요한 전압·전류 조건을 정하고, 후보 데이터시트의
+            표 값과 비교해 판정합니다. 판정마다 데이터시트의 쪽·표·행을 인용합니다.
+          </p>
+          {/* [주의] 판정 규칙은 다이오드에만 있다(SPEC 1절 "하는 일"·"하지 않는 것"). 다른 부품이 된다고 읽히게 쓰지 않는다 */}
+          <p className="hero-scope">
+            지금 지원: 다이오드(소형 MCU 회로, 회로 역할 23종). 다른 부품은 아직 판정하지 않습니다.
           </p>
           <a className="button primary" href="/login">
             내 회로 검토하기 <ArrowRight size={18} />
           </a>
           <div className="hero-sample">
             <div className="sample-top">
-              <span>다이오드 교체 검토</span>
+              <span>검토 예시</span>
               <span>기록된 데모 결과 · v3-01</span>
             </div>
             <div className="sample-body">
@@ -114,10 +114,7 @@ export function Landing() {
           </div>
         </section>
         <section id="principle" className="principle">
-          <h2>
-            원래 정격보다,
-            <br />이 회로에 필요한 조건.
-          </h2>
+          <h2>비교 기준: 원래 부품 정격과 회로 조건</h2>
           <p>같은 후보라도 무엇을 기준으로 보느냐에 따라 판단이 달라집니다.</p>
           <div className="comparison">
             <div className="segmented" aria-label="비교 기준">
@@ -167,17 +164,13 @@ export function Landing() {
           </div>
         </section>
         <section id="how" className="how">
-          <h2>
-            회로에서 시작해,
-            <br />
-            근거까지 확인하세요.
-          </h2>
+          <h2>검토 과정</h2>
           <ol>
             <li>
               <FileText />
               <div>
                 <h3>넷리스트를 올리고 부품을 고르세요.</h3>
-                <p>KiCad 넷리스트에서 다이오드와 핀 연결을 확인합니다.</p>
+                <p>KiCad 넷리스트에서 바꿀 부품(지금은 다이오드)과 핀 연결을 확인합니다.</p>
               </div>
             </li>
             <li>
@@ -199,11 +192,7 @@ export function Landing() {
           </ol>
         </section>
         <section className="product-proof">
-          <h2>
-            빠진 조건은 묻고,
-            <br />
-            판정 근거는 펼쳐봅니다.
-          </h2>
+          <h2>실제 검토 화면</h2>
           <p>기록된 데모를 이 작업대에서 실행한 화면입니다.</p>
           <div>
             <figure>
@@ -273,11 +262,12 @@ export function Landing() {
           </div>
         </section>
         <section className="limits">
-          <h2>마지막 판단은 사람이 합니다.</h2>
+          <h2>판정의 한계와 승인</h2>
           <div>
+            {/* [왜] "같은 동작은 보장하지 않습니다"는 위 예시 결과(Disclaimer)에 있어 이 화면에서 두 번 쓰지 않는다 */}
             <p>
-              같은 동작은 보장하지 않습니다. 지금은 다이오드를 검토하며, 실제 적용 전에는 사용
-              조건과 실장 변경을 확인해야 합니다.
+              판정은 데이터시트에 적힌 값과 회로 조건의 비교입니다. 실제 적용 전에는 사용 조건과
+              실장(패키지·기판) 변경을 확인해야 합니다.
             </p>
             <p>사람이 후보를 승인한 뒤에만 수량을 넣어 견적서를 저장합니다.</p>
             <a className="button primary" href="/login">
@@ -288,7 +278,6 @@ export function Landing() {
       </main>
       <footer>
         <Brand />
-        <span>회로를 이해하고, 근거로 교체합니다.</span>
         <a href="/privacy">개인정보 처리방침</a>
       </footer>
     </div>
