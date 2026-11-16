@@ -12,6 +12,7 @@
 | thread id | `str(threads.id)`가 LangGraph `thread_id` 정본이다. 분석 서비스(`sojafit_agent`)의 thread는 화면용 `public.threads`와 같은 UUID다 | `memory_service.py` `ensure_thread` |
 | 대화 문맥 | 현재 질문은 `input`, 같은 thread의 이전 사용자 입력은 내부 `conversation_history`로 분리한다. 질문 50건 상한 안에서 이력을 최대 20,000자로 제한하며 12개 개수 제한은 두지 않는다. assistant 답변·승인 사례는 포함하지 않는다. 공개 API 요청·응답 형식은 그대로다 | `memory_service.py` `_conversation_history`, `message` |
 | 회로 버전 | `public.threads.circuit_version`은 생성 당시 버전으로 고정한다. 상세·새 실행·분석 시작·재개는 `project_circuit_versions`에서 해당 버전을 읽으며 이후 업로드가 과거 대화를 바꾸지 않는다 | `repository.py`, `memory_service.py`, `db/031_circuit_versions.sql` |
+| 대화 이름 | `public.threads.title`(033, NULL 허용)이 있으면 그 이름, 없으면 첫 사용자 질문 60자(`thread_title`)를 목록 · 상세의 `title`로 쓴다. 이름 변경은 소유자 조건 UPDATE 하나이고 분석 thread · 대상 부품은 건드리지 않는다 | `repository.py` `_summaries`, `rename_thread`, `db/033_thread_titles.sql` |
 | 체크포인트·사용자 사실 | 분석 서비스에만 있다. 사용자 사실은 Store namespace `(user_id, "profile")`에 둔다 | `profile.py` `namespace` |
 | 승인 사례 | 비활성이다. 분석 입력의 `approved_memories`는 항상 빈 목록이고 Store에도 쓰지 않는다. 승인 기록은 `public.approvals`(견적 승인)에만 남는다 | `memory_service.py:442`(`'approved_memories': []`), 같은 파일 머리말 |
 | 토큰 상한 | 사용자·서비스 하루 상한은 호출 전에 원자적으로 차감한다. 값은 `memory_service.py`의 `USER_DAILY_TOKENS`·`SERVICE_DAILY_TOKENS`이고 계약은 [SPEC.md](../../SPEC.md) | `memory_service.py:55-56` |
@@ -33,4 +34,4 @@
 | `profile.py` | 사용자 사실 3칸 장기 기억: 칸 검사, 틀 문장, Store 덮어쓰기(version)·지우기, Voyage 의미 검색(키가 없거나 데모 모드면 순위 없이) |
 | `dto.py` | 브라우저 결과 허용 목록 `BrowserResult`, 그래프 상태에서 공개 값만 고르는 `public_state`, 저장 결과 변환 `result_dto` |
 | `models.py` | 실행 상태와 저장 허용 결과 형식(`SafeResult` 등) |
-| `repository.py` | 소유자 조건이 붙은 대화 저장소 `ConversationRepository`: thread 생성·삭제, run 시작·종료·재개·정리, 목록과 페이지 단위 메시지 조회(SELECT만) |
+| `repository.py` | 소유자 조건이 붙은 대화 저장소 `ConversationRepository`: thread 생성·삭제·이름 변경, run 시작·종료·재개·정리, 프로젝트별 · 전체 목록과 페이지 단위 메시지 조회(SELECT만) |

@@ -76,6 +76,15 @@ export type Thread = {
   latest_run_id: string | null;
   circuit_version: number;
 };
+/** GET /api/threads 한 줄: 모든 프로젝트의 대화(사이드바 "대화"). title은 고친 이름, 없으면 첫 질문으로 만든 이름. */
+export type ThreadListItem = {
+  id: string;
+  project_id: number;
+  project_name: string;
+  title: string;
+  created_at: string;
+  last_activity_at: string;
+};
 type Message = {
   id: number;
   run_id: string;

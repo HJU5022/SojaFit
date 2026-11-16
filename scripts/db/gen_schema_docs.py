@@ -121,6 +121,7 @@ TABLES = {
         'project_id': '소속 프로젝트',
         'circuit_version': '대화가 고정한 회로 버전(생성 뒤 변경 불가)',
         'created_at': '만든 시각',
+        'title': '사용자가 고친 대화 이름(공백 제거 1~200자). NULL이면 첫 질문으로 만든 이름을 보인다',
     }),
     'public.runs': ('질문 한 번의 실행과 공개 결과', {
         'id': 'run UUID(URL에 노출)',

@@ -93,7 +93,7 @@ SojaFit (proj3-b)
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- React 진입점·글꼴·스타일
-│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·작업대·설정·승인 사례·관리자)
+│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·새 대화·작업대·프로젝트 목록·설정·승인 사례·관리자)
 │       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·판정 5종과 실행 상태의 화면 표기
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
@@ -105,7 +105,8 @@ SojaFit (proj3-b)
 │       ├── Landing.tsx     <- 공개 랜딩
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
 │       ├── Account.tsx     <- 내 설정·승인 사례·관리자 계정·개인정보 안내
-│       ├── Projects.tsx    <- 프로젝트 목록과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 링크)
+│       ├── Conversations.tsx <- 사이드바 대화 목록(이름 변경·삭제)·프로젝트 폴더와 새 대화 화면(넷리스트 첨부·기존 회로 고르기)
+│       ├── Projects.tsx    <- 프로젝트 목록(이름 변경·삭제·일괄 삭제)과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 링크)
 │       ├── Workbench.tsx   <- 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전
 │       ├── Reply.tsx       <- 검토 결과 답과 조건 입력 카드
 │       ├── Schematic.tsx   <- 원본 회로도 구역: 예제 프로젝트의 저장된 도면, 그 밖의 프로젝트는 열 때 한 번 하는 공개 웹 검색(external-circuits), 눌러 큰 창
@@ -328,6 +329,7 @@ SojaFit (proj3-b)
 │   ├── 030_google_onboarding.sql <- 새 기준선의 명시적 Google 가입·재확인 연결과 관리자 승인 대기 표
 │   ├── 031_circuit_versions.sql <- 프로젝트 회로 버전 보존·기존 대화 backfill·대화별 버전 고정
 │   ├── 032_approval_reselection.sql <- 승인·견적 이력을 보존한 사례 삭제 후 재승인용 제약 변경
+│   ├── 033_thread_titles.sql <- 사용자가 고친 대화 이름 칸(threads.title, NULL이면 첫 질문 이름)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명

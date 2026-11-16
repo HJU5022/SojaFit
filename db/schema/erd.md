@@ -127,6 +127,7 @@ erDiagram
         bigint project_id FK
         timestamptz created_at
         int circuit_version FK
+        text title
     }
     runs {
         uuid id PK

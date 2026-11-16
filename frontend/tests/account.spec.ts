@@ -30,9 +30,13 @@ test('설정 저장·복원과 A/B 계정 격리', async ({ page }) => {
 test('첨부한 넷리스트는 새 버전·대화를 만들고 기존 대화의 회로를 보존한다', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: '데모 사용자 B' }).click();
+  await expect(page).toHaveURL(/\/app/);
+  await page.getByRole('link', { name: '프로젝트', exact: true }).click();
+  // [주의] 프로젝트가 없으면 빈 화면에도 같은 이름 버튼이 있다
   await page.getByRole('button', { name: '새 프로젝트', exact: true }).first().click();
   await page.getByRole('button', { name: '나중에 첨부', exact: true }).click();
-  await page.getByLabel('프로젝트 이름').fill('넷리스트 첨부 검증 ' + Date.now());
+  const name = '넷리스트 첨부 검증 ' + Date.now();
+  await page.getByLabel('프로젝트 이름').fill(name);
   await page.getByRole('button', { name: '프로젝트 만들기' }).click();
   await expect(page.getByLabel('검토할 다이오드')).toBeVisible();
   const net = (ref: string) =>
@@ -52,4 +56,9 @@ test('첨부한 넷리스트는 새 버전·대화를 만들고 기존 대화의
   await page.goto(first);
   await expect(page.getByLabel('검토할 다이오드')).toContainText('D1');
   await expect(page.getByLabel('검토할 다이오드')).not.toContainText('D2');
+  // 프로젝트 목록 줄의 삭제 버튼으로 이 시험의 프로젝트를 지운다(확인 창)
+  await page.goto('/projects');
+  await page.getByRole('button', { name: name + ' 삭제', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click();
+  await expect(page.getByRole('heading', { name, exact: true })).toHaveCount(0);
 });

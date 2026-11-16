@@ -15,7 +15,7 @@
 | 제공 | 로그인 · Google 가입 · 로그인(일반 사용자 · 관리자) · 이메일 인증 가입 · 비밀번호 재설정 · 데모 모드 버튼 로그인 · 관리자 계정 · 가격 조회 · 외부 원본 회로도 조회 · 공통 오류 응답 |
 | 제공 | 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 대화 상세 조회 · 삭제, 탈퇴 · 프로젝트 삭제, 보관 기간 청소 |
 | 제공 | 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`). 멀티 그래프의 `기억 읽기` 노드가 선호 실장 방식으로 후보 순서만 바꾼다(8.5) |
-| 제공 | React 작업대(랜딩 · 로그인 · 가입 · 프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 원본 회로도 · 후보 승인 · 견적 · 승인 사례 · 내 설정 · 사용자 관리 · 처리방침) |
+| 제공 | React 작업대(랜딩 · 로그인 · 가입 · 대화 목록 · 프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 원본 회로도 · 후보 승인 · 견적 · 승인 사례 · 내 설정 · 사용자 관리 · 처리방침) |
 | 키 없는 데모 | `DEMO_REPLAY=1`의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생한다(7절). 기록은 데모 질문 10개(`data/demo/recordings/`)뿐이라 기록에 없는 질문은 받지 않는다 |
 | 없음 | 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기(승인 사례는 새 분석에 넘기지 않음, 8.5) |
 
@@ -65,10 +65,12 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 1~7단계는 React 작업대(`/app`)에서 씁니다: 회로 업로드 · 대상 선택(2), 역할 질문과 판정 답의 조건 표(3 · 4), 찾기 · 판정 질문(5 · 6), "가격·재고" 조회(6), 후보 승인 뒤 견적 저장 · 복원 · 목록과 견적별 실시간 가격(7). 8단계의 사례 재사용은 아직 없습니다. 승인 사례는 승인 기록으로만 남고 새 분석에 넘기지 않습니다(8.5 "승인 기록").
 
-화면 경로(`frontend/src/App.tsx`)와 백엔드가 보내는 주소: 공개 `/` · `/login`(Google 콜백이 `/login` · `/login?google=finish` · `/login?google=error`로 돌려보냄) · `/signup` · `/password-reset` · `/verify-email` · `/reset-password`(가입·재설정 메일 링크 `…#token=…`. 토큰은 읽은 뒤 주소에서 지움) · `/privacy`, 로그인 뒤 `/app`(`?project=&thread=`) · `/settings` · `/approved` · `/admin`(이전 `/admin/users`도 같은 화면). 그 밖의 주소는 로그인 전이면 `/login`으로, 로그인 뒤면 "페이지를 찾을 수 없습니다"를 보입니다. 화면 표기: 조건 표의 숫자는 유효숫자 3자리로 줄이고(받은 값은 마우스를 올리면 보임), 판정 기준식(`v_in_max * kV`)은 한국어로 풀며, 서버가 준 링크는 http(s)만 쓰고 답의 그림은 그리지 않습니다.
+화면 경로(`frontend/src/App.tsx`)와 백엔드가 보내는 주소: 공개 `/` · `/login`(Google 콜백이 `/login` · `/login?google=finish` · `/login?google=error`로 돌려보냄) · `/signup` · `/password-reset` · `/verify-email` · `/reset-password`(가입·재설정 메일 링크 `…#token=…`. 토큰은 읽은 뒤 주소에서 지움) · `/privacy`, 로그인 뒤 `/app`(인자가 없으면 새 대화 화면, `?project=&thread=`는 작업대) · `/projects`(프로젝트 목록) · `/settings` · `/approved` · `/admin`(이전 `/admin/users`도 같은 화면). 그 밖의 주소는 로그인 전이면 `/login`으로, 로그인 뒤면 "페이지를 찾을 수 없습니다"를 보입니다. 화면 표기: 조건 표의 숫자는 유효숫자 3자리로 줄이고(받은 값은 마우스를 올리면 보임), 판정 기준식(`v_in_max * kV`)은 한국어로 풀며, 서버가 준 링크는 http(s)만 쓰고 답의 그림은 그리지 않습니다.
+
+대화가 먼저이고 프로젝트는 회로 하나를 묶는 폴더입니다. 사이드바 맨 위 "새 대화"는 빈 대화 화면(`/app`)을 엽니다. 거기서 넷리스트(`.net`)를 첨부하면 파일 이름(확장자 뺌)으로 프로젝트를 만들고(`POST /api/projects/upload`), 기존 프로젝트나 데모 회로(`DEMO_MODE=1`)를 고르면 그 회로로 작업대(`/app?project=`)를 엽니다. 이름이나 회로가 겹치는 409면 기존 프로젝트 열기와 새 프로젝트로 만들기(`allow_duplicate=true`) 중에서 고릅니다. 대화(thread)는 작업대에서 첫 질문을 보낼 때 생깁니다. 사이드바 "대화"는 모든 프로젝트의 대화를 마지막 활동 순으로 보이고(`GET /api/threads`) 줄마다 ⋯ 메뉴에서 이름 변경(`PATCH /api/threads/{id}`, 그 자리에서 고침) · 삭제(`DELETE /api/threads/{id}`, 확인 창)를 합니다. "프로젝트"는 프로젝트를 폴더처럼 펼쳐 그 대화와 "이 회로로 새 대화"를 보입니다. 프로젝트 목록(`/projects`)은 줄마다 이름 변경(그 자리에서 고침, `PATCH /api/projects/{id}`) · 삭제 아이콘 버튼과 선택 칸을 두고, 고른 프로젝트를 확인 창 하나로 차례로 지웁니다(`DELETE /api/projects/{id}`를 하나씩 부르고, 분석 중이라 409로 실패한 것은 이름과 이유를 보이고 선택에 남김).
 
 1. 로그인합니다.
-2. KiCad 넷리스트를 올리고 바꿀 부품을 고릅니다(예: D1).
+2. KiCad 넷리스트를 올리거나 기존 회로를 고르고, 바꿀 부품을 고릅니다(예: D1).
 3. 회로 역할 설명을 봅니다.
 4. 역할에서 정한 대체 조건을 봅니다.
 5. 후보를 정합니다. 대체 조건으로 코퍼스에서 찾은 후보에 사용자가 넣은 품번을 더합니다.
@@ -151,8 +153,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처는 `docs/reference/team-contract.md`를 따른다(9절).
-- HTTP API: 동작(메서드 + 경로) 50개, 경로 42개입니다. `/openapi.json`(`/docs`)에 동작 43개(경로 35개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 12개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 40개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/types.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
-  - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 26개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
+- HTTP API: 동작(메서드 + 경로) 52개, 경로 43개입니다. `/openapi.json`(`/docs`)에 동작 45개(경로 36개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 13개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 42개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/types.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+  - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 27개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
     | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
@@ -166,6 +168,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/demo-questions` | 로그인 | - | 200 `list[DemoQuestion]` `[{id, kind, circuit, demo_id, target, question, conditions, resume: {answers, role} \| null}]` | 404(재생 모드 아님) · 503(기록 파일 · 분석 서비스 없음) | 키 없는 데모에서 화면이 기록한 질문을 데모 회로 · 대상별 버튼으로 보이고 같은 글자로 보냄(G2, 7절). 기록한 답 · 판정은 싣지 않음 |
     | `GET /api/projects/{id}/threads` | 로그인 | - | 200 `list[ThreadSummary]` `[{id, project_id, title, created_at, last_activity_at, latest_run_id, status}]` | 404 | 프로젝트의 사용자 대화를 다시 엶(G4 사용자별 thread) |
     | `POST /api/projects/{id}/threads` | 로그인 | - | 201 `Thread` | 404 | 새 대화 = 같은 UUID의 분석 thread(G4, 8.5 삭제 범위) |
+    | `GET /api/threads` | 로그인 | - | 200 `list[ThreadListItem]` `[{id, project_id, project_name, title, created_at, last_activity_at}]`(마지막 활동이 최근인 순, `Cache-Control: no-store`) | | 모든 프로젝트의 내 대화를 한 목록으로 다시 엶(사이드바 "대화", G4 사용자별 thread). `title`은 고친 이름, 없으면 첫 질문 60자 |
+    | `PATCH /api/threads/{id}` | 로그인 | `RenameThread` `{title}`(겹친 공백을 한 칸으로 줄이고 앞뒤를 뗀 뒤 1~200자) | 200 `ThreadListItem` | 404 · 422 | 대화 이름 바꾸기. 분석 기록 · 대상 부품은 그대로 |
     | `GET /api/threads/{id}` | 로그인 | 선택 쿼리 `limit` 1~100(기본 50) · `before_message_id` | 200 `ThreadDetail` `{id, project_id, title, target_ref, target_locked, latest_run, messages, next_before_message_id}` | 404 · 422 · 503 | 대화의 저장한 메시지를 최근 쪽부터 쪽 단위로 다시 읽음(G4 사용자별 thread) |
     | `DELETE /api/threads/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 마지막 갱신이 300초(`ANALYSIS_MAX_SECONDS`+60 중 큰 값)보다 오래되고 분석 잠금도 없는 멈춘 run은 막지 않음) | 대화 하나와 같은 UUID 분석 기록을 지움(8.5 삭제) |
     | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음 · 키 없는 데모의 기록 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품, 키 없는 데모에서 기록하지 않은 회로 · 대상 · 질문 · 조건이면 데모 질문 목록을 문구에 담음) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
@@ -472,6 +476,16 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 부품 사양 표(`part_specifications`)를 읽던 MCP 사양 도구 2종(`get_part_specs` · `find_parts_by_specs`)은 없다(ADR 0016). 판정 값 · 후보 찾기는 서비스와 평가 실행기 모두 카드에서 읽는 `card_specs.default_specs()` · `card_find.default_find()`를 쓴다(3절).
 - GIVEN 숫자 조건 목록(`code`, `slot` min|typ|max, `gte`·`lte`, SI 단위)과 선택한 분류·패키지, 원래 부품의 패키지 목록(`original_packages`)·분류(`original_category`), WHEN 카드 찾기(`card_find.default_find()`가 돌려주는 find)를 부르면, THEN 조건마다 그 품번의 행 하나 이상이 채우는 품번을 모두 줄 세운 뒤 최대 `limit`(기본 50)개 반환하고 각 품번에 채운 행·인용·분류·패키지를 붙인다. 순서는 원래 부품과 같은 패키지 → 같은 분류 → 기준에 가까운 것(조건마다 값/기준, 이하 조건은 기준/값을 내고 그중 가장 큰 비율이 작은 것) → 품번 순이다(8.3 찾기 순위). 원래 부품의 두 값은 순서에만 쓰고 거르지 않는다. 판정은 하지 않는다(지킬 것 7).
 - LangGraph 연동은 stdio MCP 클라이언트(`backend/graph/mcp_retriever.py`)가 `search_corpus` · `check_corpus`를 부르는 데까지 했다(서비스 · 평가 실행기는 사실 확인에 쓴다). PDF 다운로드·검증·적재 및 가산 항목 증명은 후속 작업이다. 평가 G5의 실시간 조회 비활성 조건은 유지한다.
+
+### 8.8 대화 목록과 프로젝트 정리
+
+- GIVEN 사용자 A의 두 프로젝트에 있는 대화와 사용자 B의 대화, WHEN A가 `GET /api/threads`를 부르면, THEN A의 대화만 마지막 활동(만든 시각 · 마지막 메시지 · 마지막 run 갱신 중 늦은 것)이 최근인 순으로 오고 줄마다 `project_name`이 있습니다.
+- GIVEN 이름을 고치지 않은 대화, WHEN 목록 · 상세를 읽으면, THEN `title`은 첫 질문 60자(질문이 없으면 "새 대화")입니다. GIVEN 이름을 고친 대화, THEN 목록 · 프로젝트별 목록 · 상세의 `title`이 모두 고친 이름입니다.
+- GIVEN 빈 글자 · 공백뿐 · 200자 초과 · 모르는 칸, WHEN `PATCH /api/threads/{id}`, THEN 공통 422이고 저장소를 부르지 않습니다. 줄바꿈 · 겹친 공백은 한 칸으로, 앞뒤 공백은 떼고 저장합니다.
+- GIVEN B의 대화 id, WHEN A가 이름을 바꾸면, THEN 404이고 B의 대화 이름은 그대로입니다.
+- GIVEN 로그인한 사용자, WHEN 사이드바 "새 대화"를 누르면, THEN 프로젝트 만들기 창 없이 빈 대화 화면(`/app`)이 열립니다. WHEN 거기서 `.net`을 첨부하면, THEN 파일 이름으로 프로젝트를 만들고 그 작업대로 갑니다. 같은 이름 · 같은 회로면 409 목록의 "열기" 또는 "새 프로젝트로 만들기"를 고를 수 있습니다.
+- GIVEN 대화 줄의 ⋯ 메뉴, WHEN "이름 변경"으로 고치고 Enter(또는 다른 곳 클릭)를 하면, THEN 저장하고 목록에 새 이름이 보입니다. Esc면 저장하지 않습니다.
+- GIVEN 프로젝트 목록, WHEN 줄의 삭제 버튼(`aria-label` "<이름> 삭제")을 누르고 확인하면, THEN 그 프로젝트만 지워집니다. GIVEN 여러 개를 고르고 "선택 삭제" 확인, WHEN 그중 하나가 분석 중(409)이면, THEN 나머지는 지워지고 실패한 프로젝트 이름과 서버 문구가 보이며 그 프로젝트는 선택된 채 남습니다.
 
 ## 9. 미정 항목
 

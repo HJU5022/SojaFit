@@ -1,4 +1,4 @@
-/** 페이지·세션 경계. 로그아웃 때 업무 상태를 폐기한다. 출처: SPEC 8.6절. */
+/** 페이지·세션 경계. 로그아웃 때 업무 상태를 폐기한다. 사이드바는 대화가 먼저다(SPEC 2절). 출처: SPEC 8.6절. */
 import { useEffect, useState } from 'react';
 import {
   CheckCheck,
@@ -11,13 +11,14 @@ import {
   X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { Brand, ErrorBox, Loading, navigate, useLocation, useResource } from './ui';
+import { Brand, ErrorBox, Loading, navigate, useLocation } from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
 import { Admin, ApprovedCases, Privacy, Settings } from './Account';
-import { NewProject, ProjectList } from './Projects';
+import { ConversationNav, NewConversation } from './Conversations';
+import { ProjectList } from './Projects';
 import { Workbench } from './Workbench';
-import type { Project, User } from './types';
+import type { User } from './types';
 function Shell({
   user,
   path,
@@ -29,16 +30,10 @@ function Shell({
   children: React.ReactNode;
   onLogout: () => void;
 }) {
-  const projects = useResource<Project[]>('/projects'),
-    [open, setOpen] = useState(false),
-    [create, setCreate] = useState(false),
+  const [open, setOpen] = useState(false),
     [error, setError] = useState<Error | null>(null);
-  const projectId = new URLSearchParams(location.search).get('project');
-  useEffect(() => {
-    const fn = () => projects.reload();
-    window.addEventListener('projects-changed', fn);
-    return () => window.removeEventListener('projects-changed', fn);
-  }, []);
+  const params = new URLSearchParams(path.split('?')[1]),
+    pathname = path.split('?')[0];
   useEffect(() => setOpen(false), [path]);
   return (
     <div className="app-shell">
@@ -65,11 +60,11 @@ function Shell({
             <X size={20} />
           </button>
         </div>
-        <button className="new-project-button" onClick={() => setCreate(true)}>
-          <Plus size={17} />새 프로젝트
+        <button className="new-project-button primary" onClick={() => navigate('/app')}>
+          <Plus size={17} />새 대화
         </button>
         <nav>
-          <a href="/app" className={path.startsWith('/app') ? 'nav-active' : ''}>
+          <a href="/projects" className={pathname === '/projects' ? 'nav-active' : ''}>
             <Folder size={17} />
             프로젝트
           </a>
@@ -78,27 +73,7 @@ function Shell({
             승인 사례
           </a>
         </nav>
-        <div className="sidebar-projects">
-          <p>내 회로</p>
-          {projects.loading ? (
-            <Loading />
-          ) : projects.error ? (
-            <ErrorBox error={projects.error} retry={projects.reload} />
-          ) : projects.data?.length ? (
-            projects.data.map((p) => (
-              <a
-                key={p.id}
-                className={String(p.id) === projectId ? 'selected' : ''}
-                href={'/app?project=' + p.id}
-              >
-                <span className="circuit-dot" />
-                {p.name}
-              </a>
-            ))
-          ) : (
-            <p className="muted">아직 프로젝트가 없습니다.</p>
-          )}
-        </div>
+        <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
         <div className="sidebar-bottom">
           <a href="/settings">
             <SettingsIcon size={17} />내 설정
@@ -148,12 +123,6 @@ function Shell({
         </div>
         <main className="app-sheet">{children}</main>
       </div>
-      {create && (
-        <NewProject
-          close={() => setCreate(false)}
-          onCreated={(p) => navigate('/app?project=' + p.id)}
-        />
-      )}
     </div>
   );
 }
@@ -241,19 +210,21 @@ export default function App() {
         ) : (
           <div className="page-content">
             <h1>관리자만 접근할 수 있습니다.</h1>
-            <a href="/app">프로젝트로</a>
+            <a href="/app">새 대화로</a>
           </div>
         )
+      ) : pathname === '/projects' ? (
+        <ProjectList />
       ) : pathname === '/app' ? (
         project ? (
           <Workbench key={project} projectId={project} threadId={thread} />
         ) : (
-          <ProjectList />
+          <NewConversation />
         )
       ) : (
         <div className="page-content">
           <h1>페이지를 찾을 수 없습니다.</h1>
-          <a href="/app">프로젝트로</a>
+          <a href="/app">새 대화로</a>
         </div>
       )}
     </Shell>
