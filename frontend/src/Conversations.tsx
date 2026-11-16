@@ -4,7 +4,7 @@ import { ChevronRight, CornerDownLeft, Paperclip, Pencil, Plus, Trash2, X } from
 import { api, ApiError } from './api';
 import { projectNameFromQuestion } from './circuit';
 import { isSendKey } from './display';
-import { ErrorBox, Loading, Modal, navigate, RowMenu, useResource } from './ui';
+import { ErrorBox, Loading, Modal, navigate, RowMenu, useNetlistAttach, useResource } from './ui';
 import { NewProject, refreshNavigation } from './Projects';
 import { openWithQuestion } from './Workbench';
 import type { Demo, Project, ThreadListItem } from './types';
@@ -287,12 +287,14 @@ export function ConversationNav({
     </div>
   );
 }
-/** "새 대화" 화면: 질문 입력창 하나(#30). 넷리스트는 입력창 안에서 첨부한다(클립 · 끌어 놓기). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
+/** "새 대화" 화면: 질문 입력창 하나(#30). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
 export function NewConversation() {
   const [question, setQuestion] = useState(''),
     [attachment, setAttachment] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<Error | null>(null);
+  // [왜] 새 대화 업로드(POST /api/projects/upload)는 .net만 받는다. 작업대 첨부는 .txt도 받는다
+  const attach = useNetlistAttach('.net', setAttachment);
   async function start(allowDuplicate = false) {
     setBusy(true);
     setError(null);
@@ -332,23 +334,14 @@ export function NewConversation() {
   const duplicates: { id: number; name: string }[] =
     error instanceof ApiError && error.status === 409 ? (error.details?.duplicates ?? []) : [];
   return (
-    <div className="page-content new-chat">
+    <div className="page-content new-chat" {...attach.dropZone}>
       <h1>새 대화</h1>
-      <p className="page-intro">
-        궁금한 부품이나 바꿀 부품을 물어보세요. 회로 검토가 필요하면 KiCad 넷리스트(.net)를
-        첨부하세요.
-      </p>
+      <p className="page-intro">궁금한 부품이나 바꿀 부품을 물어보세요.</p>
       <form
         className="composer"
         onSubmit={(e) => {
           e.preventDefault();
           if (!disabled) void start();
-        }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          const file = e.dataTransfer.files[0];
-          if (file) setAttachment(file);
         }}
       >
         {attachment && (
@@ -383,21 +376,7 @@ export function NewConversation() {
           placeholder="예: 1N4148 역전압은 몇 V야? · D1을 1N5819로 바꿔도 될까?"
         />
         <div className="composer-controls">
-          <label className="attach-button">
-            <Paperclip size={17} />
-            <span>넷리스트</span>
-            <input
-              type="file"
-              accept=".net"
-              onChange={(e) => {
-                setAttachment(e.target.files?.[0] ?? null);
-                e.target.value = ''; // 같은 파일을 다시 고를 수 있게
-              }}
-            />
-          </label>
-          <a className="composer-hint" href="/assets/samples/attiny85-time-switch.net" download>
-            샘플 넷리스트 받기
-          </a>
+          {attach.button}
           <button
             className="primary send"
             disabled={disabled}
@@ -436,6 +415,7 @@ export function NewConversation() {
           </div>
         </div>
       )}
+      {attach.overlay}
     </div>
   );
 }

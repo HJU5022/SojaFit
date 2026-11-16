@@ -1,11 +1,14 @@
 /** 공통 상태·접근성·회로 표시. 서버 값을 시각화하며 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import {
   AlertCircle,
   ArrowUpRight,
   CircuitBoard,
+  Download,
   Ellipsis,
   LoaderCircle,
+  Paperclip,
+  Plus,
   RotateCw,
   X,
 } from 'lucide-react';
@@ -256,13 +259,17 @@ export function ResizeHandle({
     />
   );
 }
-/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화·프로젝트 줄 · 작업대 상단이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. */
+/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화·프로젝트 줄 · 작업대 상단 · 입력창 + 단추가 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. up이면 단추 위로 편다. */
 export function RowMenu({
   label,
   items,
+  icon = <Ellipsis size={16} />,
+  up = false,
 }: {
   label: string;
   items: { label: string; icon: ReactNode; danger?: boolean; onSelect: () => void }[];
+  icon?: ReactNode;
+  up?: boolean;
 }) {
   const [open, setOpen] = useState(false),
     ref = useRef<HTMLDivElement>(null);
@@ -283,8 +290,10 @@ export function RowMenu({
     };
   }, [open]);
   return (
-    <div className="row-menu" ref={ref}>
+    <div className={'row-menu' + (up ? ' up' : '')} ref={ref}>
+      {/* [왜] type="button": 입력창 form 안에서 눌러도 보내기(submit)가 되지 않게 한다 */}
       <button
+        type="button"
         className="icon-button"
         aria-label={label}
         title={label}
@@ -292,13 +301,14 @@ export function RowMenu({
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        <Ellipsis size={16} />
+        {icon}
       </button>
       {open && (
         <div role="menu" aria-label={label}>
           {items.map((item) => (
             <button
               key={item.label}
+              type="button"
               role="menuitem"
               className={item.danger ? 'danger' : undefined}
               onClick={() => {
@@ -314,6 +324,90 @@ export function RowMenu({
       )}
     </div>
   );
+}
+/** 입력창 넷리스트 첨부(#40): + 단추가 위로 여는 메뉴(파일 고르기 · 샘플 넷리스트 받기)와 영역 어디든 끌어 놓기. 새 대화 · 작업대가 같이 쓴다.
+ *  accept 밖의 파일은 붙이지 않고 짧게 알린다(서버도 다시 검사한다. 새 대화 업로드는 .net만 받는다). */
+export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
+  const input = useRef<HTMLInputElement>(null),
+    [over, setOver] = useState(false),
+    [rejected, setRejected] = useState(false);
+  function pick(file: File | undefined) {
+    if (!file) return;
+    const ok = accept.split(',').some((ext) => file.name.toLowerCase().endsWith(ext));
+    setRejected(!ok);
+    if (ok) onFile(file);
+  }
+  const hasFiles = (e: DragEvent) => e.dataTransfer.types.includes('Files');
+  return {
+    input,
+    dropZone: {
+      onDragEnter: (e: DragEvent) => {
+        if (hasFiles(e)) setOver(true);
+      },
+      onDragOver: (e: DragEvent) => {
+        if (hasFiles(e)) e.preventDefault();
+      },
+      onDrop: (e: DragEvent) => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        setOver(false);
+        pick(e.dataTransfer.files[0]);
+      },
+    },
+    // [왜] 덮개가 영역 전체를 덮고 끌기 이벤트를 혼자 받는다. 자식 요소 사이를 지날 때 깜빡이지 않고, 덮개를 벗어날 때만 닫힌다
+    overlay: over && (
+      <div className="drop-overlay" onDragLeave={() => setOver(false)}>
+        여기에 놓으면 넷리스트를 첨부해요
+      </div>
+    ),
+    button: (
+      <div className="attach-button">
+        {/* 파일 입력은 메뉴 밖에 두어 메뉴가 닫혀도 남는다(작업대 넷리스트 요청 카드가 ref로 연다) */}
+        <input
+          ref={input}
+          type="file"
+          accept={accept}
+          tabIndex={-1}
+          aria-hidden
+          onChange={(e) => {
+            pick(e.target.files?.[0]);
+            e.target.value = ''; // 같은 파일을 다시 고를 수 있게
+          }}
+        />
+        <RowMenu
+          label="첨부 메뉴"
+          icon={<Plus size={18} />}
+          up
+          items={[
+            {
+              label: '넷리스트 첨부 (.net)',
+              icon: <Paperclip size={14} />,
+              onSelect: () => input.current?.click(),
+            },
+            {
+              label: '샘플 넷리스트 받기',
+              icon: <Download size={14} />,
+              onSelect: () => {
+                // [왜] 문서에 붙인 링크를 눌러 내려받는다. 메뉴가 닫히며 지워질 링크에 기대지 않는다
+                const a = Object.assign(document.createElement('a'), {
+                  href: '/assets/samples/attiny85-time-switch.net',
+                  download: '',
+                });
+                document.body.append(a);
+                a.click();
+                a.remove();
+              },
+            },
+          ]}
+        />
+        {rejected && (
+          <small className="composer-hint" role="alert">
+            {accept.replaceAll(',', ' · ')} 파일만 첨부할 수 있어요.
+          </small>
+        )}
+      </div>
+    ),
+  };
 }
 export function Source({ cite }: { cite: Citation }) {
   return (

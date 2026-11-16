@@ -23,6 +23,7 @@ import {
   navigate,
   ResizeHandle,
   RowMenu,
+  useNetlistAttach,
   useResource,
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
@@ -239,10 +240,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [rename, setRename] = useState(false),
     [reload, setReload] = useState(0);
   const controller = useRef<AbortController | null>(null),
-    fileInput = useRef<HTMLInputElement>(null),
     runId = useRef<string | null>(null),
     scope = useRef(0),
     end = useRef<HTMLDivElement>(null);
+  const attach = useNetlistAttach('.net,.txt', setAttachment);
   const parts = partsOf(project.data),
     usable = parts.filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p)),
     // [왜] 과거 LED 대화처럼 지원하지 않는 부품이 대상이면 보내기 전에 이유를 보인다(서버도 422)
@@ -598,7 +599,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             />
             <CircuitSection project={project.data} target={target} threadId={threadId} />
           </aside>
-          <section className="conversation">
+          <section className="conversation" {...attach.dropZone}>
             <div className="conversation-heading">
               <h2>{detail?.title || '새 검토'}</h2>
               {threadId && (
@@ -729,7 +730,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                       onAttach={() => {
                         // 첨부하고 보내면 같은 질문을 이어서 다시 묻도록 비어 있는 입력창에 앞 질문을 둔다
                         if (!question.trim()) setQuestion(lastQuestion);
-                        fileInput.current?.click();
+                        attach.input.current?.click();
                       }}
                     />
                   )}
@@ -774,12 +775,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 onSubmit={(e) => {
                   e.preventDefault();
                   void send();
-                }}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files[0];
-                  if (file) setAttachment(file);
                 }}
               >
                 {attachment && (
@@ -827,17 +822,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   }
                 />
                 <div className="composer-controls">
-                  <label className="attach-button">
-                    <Paperclip size={17} />
-                    <span>넷리스트</span>
-                    {/* 실행 중에도 파일은 고를 수 있다. 보내기는 아래 버튼이 막는다 */}
-                    <input
-                      ref={fileInput}
-                      type="file"
-                      accept=".net,.txt"
-                      onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
+                  {/* 실행 중에도 파일은 고를 수 있다. 보내기는 아래 버튼이 막는다 */}
+                  {attach.button}
                   <details className="conditions-editor">
                     <summary>사용 조건</summary>
                     <label>
@@ -865,6 +851,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               </form>
               <Disclaimer />
             </div>
+            {attach.overlay}
           </section>
         </div>
       )}

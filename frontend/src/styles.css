@@ -959,6 +959,16 @@ form {
 .row-menu [role='menu'] .danger {
   color: #9f352f;
 }
+/* 위로 펴는 메뉴(입력창 + 단추, #40): 화면 아래쪽 입력창에서 단추 위 · 왼쪽 맞춤으로 연다. */
+.row-menu.up [role='menu'] {
+  top: auto;
+  bottom: calc(100% + 4px);
+  left: 0;
+  right: auto;
+}
+.row-menu.up [role='menu'] button {
+  white-space: nowrap;
+}
 .folder-toggle {
   flex: 1;
   min-width: 0;
@@ -1510,13 +1520,9 @@ form {
   padding: 8px 12px 12px;
 }
 .attach-button {
-  flex-direction: row;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  margin: 0;
-  color: var(--muted);
+  gap: 8px;
 }
 .attach-button input {
   position: absolute;
@@ -1525,9 +1531,6 @@ form {
   min-height: 0;
   opacity: 0;
   overflow: hidden;
-}
-.attach-button:focus-within {
-  outline: 2px solid #508a99;
 }
 .conditions-editor {
   font-size: 13px;
@@ -1559,6 +1562,26 @@ form {
 .composer-hint {
   font-size: 12px;
   color: var(--muted);
+}
+/* 넷리스트 끌어 놓기 덮개(#40): 새 대화 화면 · 작업대 대화 영역 전체를 덮는다. */
+.new-chat,
+.conversation {
+  position: relative;
+}
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2d5d69;
+  background: #f3f7f8e6;
+  border: 2px dashed #508a99;
+  border-radius: 10px;
 }
 .attachment {
   padding: 10px 12px;
