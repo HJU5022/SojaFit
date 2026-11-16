@@ -80,6 +80,7 @@
 |---|---|
 | `injection_baseline_live_2026-11-11_03.jsonl`, 동명 `.meta.json`·`.budget.json`, `injection_baseline_approval_2026-11-11_03.json` | 110작업 실측03의 원시·메타·예산·승인 |
 | `injection_baseline_live_2026-11-11_03_human_jeongun.jsonl` | 실측03의 별도 사본(행 수·검토자 표기는 `injection-results.md`) |
+| `injection_baseline_live_2026-11-11_03.reviewer_correction.json` | 실측03 · 스모크08 원시의 `reviewer`=`team_lead` 정정 기록(실제 판정자 심태현 110건, 원시 해시 · 확인 출처). 원시 파일은 바꾸지 않음 |
 | `injection_t3_live_2026-11-11_08.jsonl`, 동명 `.meta.json`·`.budget.json`, `injection_t3_approval_2026-11-11_08.json` | T3 스모크08(`t3_smoke_v1`)의 원시·메타·예산·승인 |
 | `injection_t3_smoke_live_2026-11-11_07.jsonl`, 동명 `.meta.json`·`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json` | T3 스모크07의 원시·메타·예산·승인 |
 | `injection_remaining_review_queue_2026-11-11.json` | 실측03·스모크08의 원시 SHA·행·정상 짝·검토 대기 목록 |
