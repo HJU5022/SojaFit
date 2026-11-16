@@ -90,7 +90,12 @@ def main():
     with ThreadPoolExecutor(a.jobs) as pool:
         runs = list(pool.map(lambda q: run_one(q, *qs[q], a.work / "q", home), ids))
     ver = subprocess.run(["codex", "--version"], capture_output=True, text=True).stdout.strip()
-    (OUT / "runs.json").write_text(json.dumps({"codex": ver, "model": MODEL, "runs": runs}, ensure_ascii=False, indent=1), encoding="utf-8")
+    # [왜] --only로 일부만 다시 돌리면(예: 사용량 한도로 시작 못 한 문항) 앞 실행 기록은 두고 그 id만 바꾼다. 바뀐 id는 attempts에 남긴다
+    old = json.loads((OUT / "runs.json").read_text(encoding="utf-8")) if (OUT / "runs.json").exists() else {"runs": [], "attempts": []}
+    keep = [r for r in old["runs"] if r["id"] not in {r["id"] for r in runs}]
+    attempts = old.get("attempts", []) + [r for r in old["runs"] if r["id"] in {r["id"] for r in runs}]
+    merged = {"codex": ver, "model": MODEL, "runs": sorted(keep + runs, key=lambda r: r["id"]), "attempts": attempts}
+    (OUT / "runs.json").write_text(json.dumps(merged, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps({"done": len(runs), "nonzero": [r for r in runs if r["exit"] != 0]}, ensure_ascii=False))
 
 

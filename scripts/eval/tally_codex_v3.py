@@ -1,21 +1,24 @@
 """Codex v3 50문항 답을 동결 정답과 규칙으로 대조해 tally.jsonl을 쓴다. LLM·네트워크 호출 없음.
 
-실행(저장소 루트): .venv/bin/python scripts/eval/tally_codex_v3.py
+실행(저장소 루트): .venv/bin/python scripts/eval/tally_codex_v3.py [결과 폴더]
+결과 폴더를 주면 그 폴더의 codex_answers.md를 채점한다(기본은 11-12 폴더). 답이 없는 문항은 not_run으로 센다.
 규칙으로 못 정하는 항목은 needs_human=true, codex_verdict="사람 판정 필요"로 남긴다.
 """
 import json
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "evals/results/graph/2026-11-12-codex-v3-50"
+DEFAULT = ROOT / "evals/results/graph/2026-11-12-codex-v3-50"
+OUT = ROOT / sys.argv[1] if len(sys.argv) > 1 else DEFAULT
 gold = {json.loads(l)["id"]: json.loads(l) for l in (ROOT / "evals/dataset_v3.jsonl").open(encoding="utf-8")}
 svc = {r["id"]: r for r in json.loads((ROOT / "evals/results/graph/2026-11-12-d9-improve2/set1.json").read_text(encoding="utf-8"))["rows"]}
 
 ans = {}
 for m in re.finditer(r"^## (v3-\d+)\n- 결론: (.*)\n- 근거: (.*)$", (OUT / "codex_answers.md").read_text(encoding="utf-8"), re.M):
     ans[m[1]] = {"c": m[2], "e": m[3]}
-assert len(ans) == 50 and set(ans) == set(gold)
+assert set(ans) <= set(gold) and (OUT != DEFAULT or len(ans) == 50)  # [왜] 11-16 격리 실행은 사용량 한도로 답 없는 문항이 있을 수 있다
 
 REFUSE = r"모릅니다|모른다|확인하지 못|확인할 수 없|확인되지 않|않겠습니다|보류|범위 밖|선정하지 않|확정하지 않|확정할 수 없|승인할 수 없|답할 수 없"
 UNIT = r"\d[\d,\.]*\s?(?:V|A|mA|µA|ns|°C|W|VA|MHz|kHz|ms|µs|mW|dBµV/m)(?![A-Za-z0-9])"
@@ -37,8 +40,14 @@ ROLE = {"v3-22": [r"OR", r"역"], "v3-23": [r"플라이백"], "v3-24": [r"클램
 
 rows = []
 for i in sorted(gold):
-    g, a = gold[i], ans[i]
-    t = a["c"] + " " + a["e"]
+    g = gold[i]
+    if i not in ans:
+        rows.append(dict(id=i, kind=g["kind"], sub=g["question_type"] if g["kind"] == "relevant" else g["irrelevant_type"], codex_verdict="not_run",
+                         rule="답 없음(실행이 끝나지 않음)", needs_human=False, service_metric=svc[i]["answer_metric"]))
+        continue
+    a = ans[i]
+    # [왜] 값 비교는 표기만 맞춘다: "75 ns"와 "75ns"는 같은 값이다(11-16 격리 실행 답이 숫자와 단위 사이를 띄움). 값 · 단어는 바꾸지 않는다
+    t = re.sub(r"(\d)\s+(ns|ms|µs|mA|µA|A|V|W|°C)(?![A-Za-z])", r"\1\2", a["c"] + " " + a["e"])
     kind = g["kind"]
     sub = g["question_type"] if kind == "relevant" else g["irrelevant_type"]
     r = dict(id=i, kind=kind, sub=sub, gold_summary="", codex_verdict="", rule="", needs_human=False, note="")
@@ -94,7 +103,7 @@ for i in sorted(gold):
             if miss:
                 r["codex_verdict"], r["rule"] = "wrong", f"핵심 역할어 누락 {miss}"
             else:
-                r["codex_verdict"], r["rule"], r["needs_human"] = "사람 판정 필요", "역할 개념 키워드 일치(provisional correct). 정답은 넷리스트 핀·넷 연결까지 요구, Codex는 넷리스트 미열람 명시 → 연결 정확성은 규칙으로 못 가림", True
+                r["codex_verdict"], r["rule"], r["needs_human"] = "사람 판정 필요", "역할 개념 키워드 일치(provisional correct). 정답은 넷리스트 핀·넷 연결까지 요구, " + ("Codex는 넷리스트 미열람 명시 → " if OUT == DEFAULT else "") + "연결 정확성은 규칙으로 못 가림", True
     rows.append(r)
 
 (OUT / "tally.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
