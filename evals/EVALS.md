@@ -89,14 +89,14 @@
 | `2026-11-10-v3-haiku-sets/` | v3 50문항 Haiku 구성(#50) 원시. 출처 · sha256은 `sources_2026-11-11.json` | `EVAL_REPORT.md` 3 · 8장 |
 | `2026-11-11-d8-stages/`, `2026-11-11-d8-stages-rerun/` | D8 v3 50문항 단계 시간 · 호출별 비용과 집계 `stage_summary.json`, 공급자 429로 실패한 문항 재실행 | `EVAL_REPORT.md` 8장, [d8-stage-remeasure-plan.md](../docs/experiments/d8-stage-remeasure-plan.md) |
 | `2026-11-11-langfuse-probe/`, `2026-11-11-langfuse-probe-v2/` | 동결 v3-01 한 문항의 Langfuse 수신 점검(입력 `v3-01-only.jsonl`) | 사전 등록 "2026-11-11 D8 추적 보완 뒤 한 문항 수신 점검". 해석 문서 없음 |
-| `2026-11-11-langfuse-ragas-probe/`, `-v2/`, `-v3/` | 같은 한 문항으로 RAGAS 점수 전송 점검 | 해석 문서 없음 |
+| `2026-11-11-langfuse-ragas-probe/`, `2026-11-11-langfuse-ragas-probe-v2/`, `2026-11-11-langfuse-ragas-probe-v3/` | 같은 한 문항으로 RAGAS 점수 전송 점검 | 해석 문서 없음 |
 | `2026-11-11-ndocs-acc/` | `FIND_N_DOCS` 값별 v3 50문항 정확도 | 폴더 `SUMMARY.md`, `EVAL_REPORT.md` 8장, [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
 | `2026-11-11-speed-e-warm/`, `2026-11-11-speed-f-find-ndocs/`, `2026-11-11-speed-g-all/` | 응답 시간 레버 비교(데우기 공통 · 찾기 문서 수 · A~D 레버). `speed-g-all/E-v3-50-warm-n5/set1.json`은 `ndocs-acc/N5/set1.json`과 바이트가 같은 파일 | 각 폴더 `SUMMARY.md`, [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
-| `2026-11-11-speed-s1-docs-retry/`, `-s2-warmup/`, `-s3-cite-repair/` | 문서 재시도 · 데우기 · 인용 보정 켬/끔 | [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
+| `2026-11-11-speed-s1-docs-retry/`, `2026-11-11-speed-s2-warmup/`, `2026-11-11-speed-s3-cite-repair/` | 문서 재시도 · 데우기 · 인용 보정 켬/끔 | [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
 | `2026-11-11-synth-01-repeat10/`, `2026-11-11-synth-both-agents/` | 합성 문항 반복 · 두 에이전트 실행(입력 jsonl 포함) | 해석 문서 없음 |
 | `2026-11-12-codex-v3-50/` | Codex v3 50문항 답과 규칙 · 사람 판정 집계(`TALLY.md`, `scripts/eval/tally_codex_v3.py`) | `EVAL_REPORT.md` 10장 |
 | `2026-11-12-d9-improve2/` | D9 v3 50문항 멀티 게이트와 `report.json` | `EVAL_REPORT.md` 3 · 4장, [GATES.md](../docs/GATES.md) |
-| `2026-11-12-d9-judge-dev-multi/`, `-single/` | 판정 연습 44문항 멀티 · 단일(입력 `judge_dev_44.jsonl`은 두 폴더가 같은 파일) | `EVAL_REPORT.md` 4장 |
+| `2026-11-12-d9-judge-dev-multi/`, `2026-11-12-d9-judge-dev-single/` | 판정 연습 44문항 멀티 · 단일(입력 `judge_dev_44.jsonl`은 두 폴더가 같은 파일) | `EVAL_REPORT.md` 4장 |
 | `2026-11-12-d9-langfuse-capture/` | Langfuse 수집 확인 실행 | `EVAL_REPORT.md` 7장 |
 | `2026-11-12-d9-v3-single/` | v3 단일 그래프 | `EVAL_REPORT.md` 4장 |
 | `2026-11-12-v3-16-warm-recheck/` | v3-16 한 문항 데운 뒤 재확인 | 해석 문서 없음 |
