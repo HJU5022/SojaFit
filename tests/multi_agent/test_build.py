@@ -537,6 +537,18 @@ def test_condition_only_follow_up_rejudges_the_candidate_named_in_the_history():
     assert state['__interrupt__'][0].value['missing'] == ['v_drop_allowed']
 
 
+def test_rejudge_follow_up_takes_the_candidate_from_the_brief_when_the_read_leaves_it_empty():
+    """#64: 지금 말에 품번이 없어 읽기가 후보를 비워도, 판정 할 일 목표의 품번(SS14)으로 판정한다. 대상 기호 · 원래 부품은 후보가 아니다."""
+    read = J.JudgeRead(role='R01', original_part='1N4148', values=[J.Value(name='v_in_max', number=5, unit='V', quote='5V')])
+    p = Plan(question_type='candidate_judge', next='tasks',
+             tasks=[Task(id=1, agent='judge', kind='candidate_judge', goal='Re-judge whether SS14 can replace D1 (1N4148).')])
+    config, graph = {'configurable': {'thread_id': 'c64b'}}, judge_app(scripted(supervisor=[p], judge_read=[read]))
+    state = graph.invoke({'input': '입력 전압은 5V, 부하 전류는 1.5A야', 'conversation_history': ['그럼 D1을 SS14로 바꿔도 돼?']}, config)
+    if '__interrupt__' in state:
+        state = graph.invoke(Command(resume={'answers': {}}), config)
+    assert [r['part'] for r in state['judgement']['results']] == ['SS14'] and '**SS14:' in state['answer']
+
+
 def test_request_to_see_an_earlier_answer_again_gets_the_fixed_pointer_without_llm_text():
     """#64: "아까 SS14 판정 근거 다시 보여줘"는 일상 대화로 끝내되 LLM 글 대신 화면에 남은 근거 자리를 알려 주는 고정 문구다."""
     from backend.multi_agent.messages import EARLIER_ANSWER

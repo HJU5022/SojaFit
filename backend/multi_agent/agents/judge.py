@@ -24,8 +24,8 @@ from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
-from backend.multi_agent.agents.part_names import MAKER, ground_part_names
-from backend.multi_agent.facts import ORDER_CODE
+from backend.multi_agent.agents.part_names import MAKER, ground_part_names, part_tokens
+from backend.multi_agent.facts import ORDER_CODE, refs_of
 from backend.multi_agent.revisions import document_revision, requested_revisions, revisions_for_part
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.spec_lookup import THT_PACKAGES
@@ -220,6 +220,12 @@ def judge_read_agent(state: dict, *, chat) -> dict:
     read = _validate_circuit_role(read, state.get('target_part') or {})
     # [왜] 읽기가 같은 질문에서 품번을 'SS34'(넷리스트)·'SS26'(사용 조건), '1N5231'·'TSC 1N5231B'로 회차마다 다르게 적었다(11-10 6회 반복). 사용자 글의 품번으로 코드가 맞춘다
     original, candidates = ground_part_names(read.original_part, read.candidates, state)
+    task, part = state.get('task') or {}, state.get('target_part') or {}
+    if not candidates and task.get('kind') == 'candidate_judge':
+        # [왜] 판정 뒤 조건만 준 말("입력 전압은 5V, 부하 전류는 1.5A야")은 후보가 Supervisor 지시서 목표에만 있다(#64).
+        #      읽기가 후보를 비우면 목표의 품번(원래 부품 · 대상 값 제외)을 후보로 쓴다. 회로 값은 그대로 지금 말에서만 읽는다
+        skip = {original.upper(), str(part.get('value') or '').upper()}
+        candidates = [p for p in part_tokens(task.get('goal', ''), refs_of(part)) if p.upper() not in skip]
     read = read.model_copy(update={'original_part': original, 'candidates': candidates})
     return {'judge_read': read.model_dump(mode='json'), 'path': ['판정 읽기']}
 
