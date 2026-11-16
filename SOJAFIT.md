@@ -890,7 +890,9 @@ SojaFit (proj3-b)
     │   │   ├── 05-trace-scores-tab.jpg  <- 같은 trace의 점수 탭(점수 13개가 trace에 붙음)
     │   │   ├── 06-scores-list.jpg  <- 운영 프로젝트 점수 목록(점수마다 trace 연결)
     │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 1.68K · 점수 22.25K · 비용 $1.17, 최근 1일)
-    │   ├── presentation/   <- 발표 자료(예정)
+    │   ├── presentation/   <- 최종 발표 덱(11-18)
+    │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
+    │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 덱 20장(본편 17 + Q&A 백업 3)
     │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "파일" 절
     │       └── sojafit-demo-2026-11-17.mp4  <- 1분 48초, 정상 경로(v3-01 판정·승인·견적·보고서) + 실패 경로 3개, 화면마다 자막
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
