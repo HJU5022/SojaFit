@@ -605,6 +605,27 @@ def test_rejudge_follow_up_takes_the_candidate_from_the_brief_when_the_read_leav
     assert [r['part'] for r in state['judgement']['results']] == ['SS14'] and '**SS14:' in state['answer']
 
 
+@pytest.mark.parametrize('start', ['named', 'empty'])
+def test_same_part_question_in_a_two_diode_circuit_is_identical_without_the_condition_card(start):
+    """#65 회귀(11-17 실측 thread 54ca8d98): 다이오드 둘(D1 · D2 = SS34) 회로의 새 대화에서 "D1을 SS34로 그대로 둬도 돼?".
+    읽기는 프롬프트대로 원래 부품을 후보에 넣지 않아(candidates=[]) 조건 카드가 다시 나왔고, 재개하면 후보 0개로 '자료를 찾지 못했어요' 거절이었다.
+    named: 서비스가 질문의 D1을 대상으로 정한 실제 길. empty: 대상이 빈 대화에서 '대상 확인'으로 D1을 고른 길(#62)."""
+    from backend.multi_agent.supervisor import Facts
+    read = J.JudgeRead(role='R02', role_alt='R01', role_evidence=['D1.K_1 → +5V', 'D1.A_2 → VBUS'], original_part='SS34', candidates=[])
+    p = Plan(question_type='candidate_judge', next='tasks',
+             tasks=[Task(id=1, agent='judge', kind='candidate_judge', goal='Judge whether SS34 can stay in place as D1 in the circuit.')])
+    chat = scripted(supervisor=[p], judge_read=[read])
+    graph, config = two_diode_app(chat, lookup=lambda state: Facts(parts={'SS34': True})), {'configurable': {'thread_id': f'c65-{start}'}}
+    first = {**UNRESOLVED, 'input': 'D1을 SS34로 그대로 둬도 돼?'}
+    out = graph.invoke({**first, 'target': 'D1', 'target_choices': []} if start == 'named' else first, config)
+    if start == 'empty':
+        assert out['__interrupt__'][0].value['target_choices'] == UNRESOLVED['target_choices']
+        out = graph.invoke(Command(resume={'answers': {}, 'role': '', 'target': 'D1'}), config)
+    assert '__interrupt__' not in out and not out.get('refusal')
+    assert [(x['part'], x['verdict']) for x in out['judgement']['results']] == [('SS34', 'IDENTICAL')]
+    assert '**SS34: 동일품**' in out['answer'] and chat.calls == ['supervisor', 'judge_read']
+
+
 def test_request_to_see_an_earlier_answer_again_gets_the_fixed_pointer_without_llm_text():
     """#64: "아까 SS14 판정 근거 다시 보여줘"는 일상 대화로 끝내되 LLM 글 대신 화면에 남은 근거 자리를 알려 주는 고정 문구다."""
     from backend.multi_agent.messages import EARLIER_ANSWER

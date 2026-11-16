@@ -226,6 +226,12 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         #      읽기가 후보를 비우면 목표의 품번(원래 부품 · 대상 값 제외)을 후보로 쓴다. 회로 값은 그대로 지금 말에서만 읽는다
         skip = {original.upper(), str(part.get('value') or '').upper()}
         candidates = [p for p in part_tokens(task.get('goal', ''), refs_of(part)) if p.upper() not in skip]
+        # [왜] "D1을 SS34로 그대로 둬도 돼?"(D1 = SS34)는 원래 부품의 품번이 곧 후보다. 읽기는 원래 부품을 후보에 넣지 않고(judge_read.md)
+        #      위 목표 대체도 원래 품번을 빼서 후보가 비었다. 그래서 동일품 건너뛰기(#65)가 돌지 않아 조건 카드를 묻고, 재개 뒤 후보 0개로 not_found 거절이었다(11-17 실측)
+        # [주의] 지금 질문의 품번이 원래 품번 하나뿐일 때만이다. 주문 코드(SS34 R0G) · 다른 품번이 함께 있으면 그대로 둔다(#65 주문 코드는 묻는다)
+        # shortcut: 원래 품번만 적은 판정 할 일을 모두 같은 품번 질문으로 본다("D1 SS34 바꿔도 돼?"도 동일품), 읽기가 '그대로 둠'을 따로 낼 때 그 칸으로 가린다
+        if not candidates and original and {p.upper() for p in part_tokens(state.get('question', ''), refs_of(part))} == {original.upper()}:
+            candidates = [original]
     read = read.model_copy(update={'original_part': original, 'candidates': candidates})
     return {'judge_read': read.model_dump(mode='json'), 'path': ['판정 읽기']}
 
