@@ -140,7 +140,8 @@ def test_vishay_vrrm_equality_row_is_verified_without_borrowing_vrm(maker, symbo
     assert rows[0]['citation']['source_url'] == doc['source_url']
     for symbol in ('VR', 'VRM', 'VRM = VR', 'VRRM or VR', 'VRRM / VRWM / VR', 'VRRM VRWM VR'):
         assert J._grade2_rows(lambda *a: [{**doc, 'symbol': symbol}], 'BAS16', {'VRRM'}, maker) == []
-    assert J.outside_corpus(J.JudgeRead(role='R01', maker_wanted=maker), {}) is None
+    # [왜] 판정은 아직 TSC 내부 행만 쓴다. 다른 제조사 지정은 등급2 행 어댑터와 별개로 maker_missing으로 거절한다(#146 회귀)
+    assert J.outside_corpus(J.JudgeRead(role='R01', maker_wanted=maker), {})[0] == J.Reason.MAKER_MISSING
 
 
 @pytest.mark.parametrize(('maker', 'host'), [

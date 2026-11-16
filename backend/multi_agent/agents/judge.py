@@ -905,14 +905,9 @@ def _original_from_text(read: JudgeRead, text: str) -> str:
 def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason, str] | None:
     """사용자가 꼭 요구한 것이 코퍼스 밖이면 (거절 사유, 요약). 이름 · 항목만 대조한다(숫자 판단 없음, SPEC 8.3)."""
     maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
-    supported_makers = {
-        # TSC is supported by the internal corpus and verified official PDFs.
-        'TSC', 'VISHAY', 'VISHAYSEMICONDUCTORS', 'INFINEON',
-        'TI', 'TEXASINSTRUMENTS', 'ONSEMI',
-        'ST', 'STMICROELECTRONICS', 'ADI', 'ANALOGDEVICES',
-    }
-    if (maker and maker not in supported_makers
-            and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON')):
+    # [왜] #146이 Vishay · TI · ST · ADI · onsemi를 통과시켰지만 아래 판정은 TSC 내부 카드 행을 그대로 써
+    #      "비셰이 1N5817"에 TSC 1N5817.pdf로 판정 답이 나갔다. 9c87ba36처럼 TSC · Infineon만 통과시키고 나머지는 maker_missing으로 거절한다
+    if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON'):
         return Reason.MAKER_MISSING, f'required maker {read.maker_wanted} is not a supported Grade 2 manufacturer'  # 품번 문구가 아닌 제조사 문구(#63)
     # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
     #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)

@@ -221,6 +221,7 @@ def test_roles_own_names_reach_the_thresholds(monkeypatch):
 GATE = [  # (읽기 칸, 사실 확인, 거절 사유)
     ({'required_specs': [{'words': '55°C에서 고장률 10FIT 이하', 'code': 'none'}]}, {}, 'not_found'),
     ({'maker_wanted': 'ROHM'}, {}, 'maker_missing'),  # 품번 문구가 아닌 제조사 문구(#63)
+    ({'maker_wanted': 'Vishay'}, {}, 'maker_missing'),  # TSC 내부 행으로 다른 제조사 후보를 판정하지 않는다(#146 회귀)
     ({'revision_wanted': '2027년판'}, {}, 'revision_missing'),
     ({'revision_wanted': 'G2710'}, {'revisions': {'G2710': False}}, 'revision_missing'),
 ]
