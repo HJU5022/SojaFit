@@ -549,7 +549,10 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 # 내부 재검색이 품번 필터를 풀어도 외부 검색은 처음 맡은 품번을 유지한다.
                 task_words = {word.upper() for word in WORD.findall(task.query)}
                 web_parts = filter_parts or [p for p in out['parts'] if p.upper() in task_words] or out['parts']
-            searches.append({'query': out['query'], 'parts': used_parts, 'top': [[d['file'], d['page']] for d in out['docs']]})
+            # [왜] 필터를 푼 재검색은 query · parts가 첫 검색과 같게 찍혀 같은 호출을 되풀이한 것처럼 보인다.
+            #      filter_released로 이 검색이 품번 필터 없이(코퍼스 전체에서) 찾았는지 남긴다(강사 11/16 코멘트 ③)
+            searches.append({'query': out['query'], 'parts': used_parts, 'filter_released': relax,
+                             'top': [[d['file'], d['page']] for d in out['docs']]})
             if not foreign_rating:
                 docs = keep_docs(out['docs'], used_parts, revision_text, exact_parts)
                 # Variant notes are a second retrieval and must obey the same

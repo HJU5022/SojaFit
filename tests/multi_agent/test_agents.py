@@ -188,6 +188,7 @@ def test_search_error_and_empty_filter_result():
     chat = llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [5].'))
     r = run(task(), chat, docs=lambda q, parts: [] if parts else [doc(5)], seen=seen, part={})
     assert [p for _, p in seen] == [['SS14'], None] and r['status'] == 'ok'  # 품번 필터 안 0건이면 필터를 풀어 한 번 더
+    assert [s['filter_released'] for s in r['searches']] == [False, True]  # 두 번째 검색이 필터를 푼 것임을 기록에서 구분한다
 
 
 def test_refusal_messages_are_plain_korean_and_cover_every_refusal_reason():
