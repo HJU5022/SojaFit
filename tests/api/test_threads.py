@@ -71,14 +71,26 @@ PARTS = [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D2', 'value': 'RED', 'descri
     (PARTS, 'd1 대신 1N5819는?', ['D1']),  # 대소문자는 가리지 않고 넷리스트의 ref를 돌려준다
     (PARTS, 'D10을 바꾸고 싶어', ['D10']),  # D10 안의 D1은 D1이 아니다
     (PARTS, 'D1N4148 대체품', ['D1', 'D3', 'D10']),  # 품번 안의 D1도 아니다 → 회로의 지원 다이오드 전부
-    (PARTS, 'D2를 바꿔도 돼?', ['D1', 'D3', 'D10']),  # LED는 지원 부품이 아니라 고르지 않는다
+    (PARTS, 'D2 옆의 D3을 바꿔도 돼?', ['D3']),  # 지원 다이오드를 적었으면 함께 적은 LED는 상관없다
     (PARTS, 'D1과 D3 중 뭘 바꿔야 해?', ['D1', 'D3']),  # 둘 다 적으면 둘 중에서 묻는다
-    ([{'ref': 'D1', 'value': 'SS34'}, {'ref': 'R1', 'value': '10k'}], '대체 후보를 찾아 주세요.', ['D1']),  # 지원 다이오드가 하나뿐
-    ([{'ref': 'D2', 'value': 'RED', 'description': 'Light emitting diode'}], 'D2 바꿔줘', []),
+    ([{'ref': 'D1', 'value': 'SS34'}, {'ref': 'R1', 'value': '10k'}], '대체 후보를 찾아 주세요.', ['D1']),  # 회로 ref가 없으면 유일한 다이오드
 ])
 def test_target_choices_read_the_question_then_the_circuit(parts, question, refs):
     from backend.conversations.memory_service import target_choices
     assert [c['ref'] for c in target_choices({'parts': parts}, question)] == refs
+
+
+@pytest.mark.parametrize('question, ref', [('D2를 바꿔도 돼?', 'D2'), ('r1 대신 다른 저항은?', 'R1')])
+def test_target_choices_reject_a_named_unsupported_part_like_an_explicit_target(question, ref):
+    """질문이 회로의 미지원 부품만 가리키면 유일한 다이오드로 넘어가지 않고, 그 부품을 직접 지정한 것과 같은 422 · 문구다(SPEC 8.9)."""
+    from backend.conversations.memory_service import _require_supported_target, target_choices
+    circuit = {'parts': [{'ref': 'D1', 'value': 'SS34'}, *PARTS[1:2], {'ref': 'R1', 'value': '10k'}]}  # 지원 다이오드는 D1 하나
+    with pytest.raises(HTTPException) as named:
+        target_choices(circuit, question)
+    with pytest.raises(HTTPException) as explicit:
+        _require_supported_target(circuit, ref)
+    assert (named.value.status_code, named.value.detail) == (explicit.value.status_code, explicit.value.detail) == (422, explicit.value.detail)
+    assert ref in named.value.detail
 
 
 def target_service(monkeypatch, parts, locked=None):

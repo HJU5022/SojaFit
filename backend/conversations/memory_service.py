@@ -116,17 +116,24 @@ def target_choices(connections, question=''):
     """대상 부품 후보 [{ref, value}]: 질문에 적힌 지원 다이오드가 있으면 그것만, 없으면 회로의 지원 다이오드 전부(SPEC 8.9).
 
     지원 여부는 `_require_supported_target`와 같은 규칙이다. 하나면 그 부품으로 진행하고, 둘 이상이면 사용자에게 묻는다. LLM은 고르지 않는다.
+    질문에 회로의 부품 ref가 있는데 모두 지원 대상이 아니면 그 부품의 422를 낸다. 회로 전체로 넘어가는 것은 질문에 회로 ref가 없을 때뿐이다.
     """
+    parts = connections.get('components', connections.get('parts', []))
     diodes = []
-    for part in connections.get('components', connections.get('parts', [])):
+    for part in parts:
         try:
             _require_supported_target(connections, part['ref'])
         except HTTPException:
             continue
         diodes.append({'ref': part['ref'], 'value': part.get('value') or ''})
     # [주의] \b는 한글도 글자로 봐 'D1을'에서 D1을 못 찾는다. 앞뒤가 영문 · 숫자가 아닐 때만 그 부품으로 본다(D10 · D1N4148 안의 D1은 아님)
-    named = [d for d in diodes if re.search(rf'(?<![A-Za-z0-9]){re.escape(d["ref"])}(?![A-Za-z0-9])', question or '', re.I)]
-    return named or diodes
+    named = [p['ref'] for p in parts if re.search(rf'(?<![A-Za-z0-9]){re.escape(p["ref"])}(?![A-Za-z0-9])', question or '', re.I)]
+    chosen = [d for d in diodes if d['ref'] in named]
+    if named and not chosen:
+        # [왜] 질문이 회로의 다른 부품(LED · 표시기 · 다이오드 아님)을 가리키면 유일한 다이오드로 몰래 바꾸지 않는다.
+        #      그 부품을 target_ref로 보낸 것과 같은 422 · 같은 문구로 막는다(SPEC 8.9)
+        _require_supported_target(connections, named[0])
+    return chosen or diodes
 
 
 @lru_cache(maxsize=1)
