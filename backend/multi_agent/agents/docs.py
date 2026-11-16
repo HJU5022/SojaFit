@@ -205,6 +205,16 @@ def fetch_variant_notes(parts: list[str], retriever) -> list[dict]:
         return []  # 주석은 보탬이라 도구가 실패해도 본 검색 결과로 답한다
 
 
+def exact_parts_absent(exact_parts: set[str]) -> bool:
+    """요청한 정확 품번이 코퍼스 어느 카드도 통과시킬 수 없다고 검색 색인이 알려 주는가(모르면 False)."""
+    # [왜] 품번 필터 검색이 0건이면 필터를 푼 재검색도 keep_docs의 _mentions_exact_part에서 전부 떨어져 2.3~5.4초만 쓴다(v3-32~38). 가짜 retriever·색인 없음이면 예전처럼 푼다
+    try:
+        from backend.rag.retrieve import part_may_pass_exact
+        return bool(exact_parts) and not any(part_may_pass_exact(p) for p in exact_parts)
+    except Exception:
+        return False
+
+
 def revisions_all_absent(revision_text: str, facts: dict | None) -> bool:
     """요청한 개정 코드가 전부 코퍼스에 없다고 사실 확인이 알려 줬는가(하나라도 모르면 False).
 
@@ -586,8 +596,8 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 break
         if not docs and not (part and task.kind == 'role'):
             if query and not relax:
-                if revisions_all_absent(revision_text, payload.get('facts')):
-                    break  # [왜] 요청한 개정판이 코퍼스에 없다고 확인됐다. 필터를 푼 재검색도 0건이라 건너뛴다(끝난 뒤 흐름은 0건 재검색과 같다)
+                if revisions_all_absent(revision_text, payload.get('facts')) or exact_parts_absent(exact_parts):
+                    break  # [왜] 요청한 개정판이나 정확 품번이 코퍼스에 없다고 확인됐다. 필터를 푼 재검색도 0건이라 건너뛴다(끝난 뒤 흐름은 0건 재검색과 같다)
                 relax = True  # [왜] 품번 필터 안에서 0건이면 필터를 풀어 한 번 더 찾는다(예전 검색 에이전트의 no_result 재시도와 같음)
                 continue
             break  # 보여 줄 근거가 하나도 없으면 LLM을 부르지 않는다

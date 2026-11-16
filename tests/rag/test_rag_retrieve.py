@@ -221,17 +221,18 @@ def test_concurrent_first_reads_publish_all_indexes_together(monkeypatch):
             (2, 1, '[sample.pdf · 1쪽] reverse voltage 1000 V', 1)]
     reads = []
     class Connection:
-        def execute(self, *_):
+        def execute(self, sql, *_):
+            self.sql = sql
             reads.append(1)
             time.sleep(.02)
             return self
         def fetchall(self):
-            return rows
+            return [('https://x/sample.pdf',)] if 'source_documents' in self.sql else rows
     @contextmanager
     def connect():
         yield Connection()
     monkeypatch.setattr(R, '_connect', connect)
-    for key in ('_bm25', '_parts', '_nocover'):
+    for key in ('_bm25', '_parts', '_nocover', '_runs'):
         monkeypatch.setattr(R, key, None)
     start = threading.Barrier(4)
     def first_read(_):
@@ -240,7 +241,7 @@ def test_concurrent_first_reads_publish_all_indexes_together(monkeypatch):
         assert R._bm25 is not None and R._parts is not None and R._nocover == {2}
     with ThreadPoolExecutor(max_workers=4) as pool:
         list(pool.map(first_read, range(4)))
-    assert len(reads) == 1
+    assert len(reads) == 2  # 청크 읽기 1번 + 파일 이름 읽기 1번(스레드 4개가 불러도 한 번만)
 
 
 def test_retrieve_with_threaded_embed_equals_sequential_reference(monkeypatch):
@@ -325,3 +326,15 @@ def test_pool_connection_releases_and_reset_runs_even_on_error(monkeypatch):
         with db_pool.connection() as conn:
             R._dense(conn, 'q', {1})
     assert [e if not e.startswith('SELECT') else 'SELECT' for e in events] == ['SET enable_indexscan = off', 'SELECT', 'RESET enable_indexscan', 'rollback']  # 실패해도 RESET이 돌고 연결은 rollback으로 반납된다
+
+
+def test_part_may_pass_exact_is_false_only_when_no_card_can_name_it(monkeypatch):
+    """표지·본문·파일 이름 어디에도 없을 때만 False. 영문·숫자 밖 글자가 든 품번이나 색인 없음·다른 DSN은 True."""
+    monkeypatch.setenv('DATABASE_URL', 'dsn')
+    monkeypatch.setattr(R, '_runs', ('dsn', {'SS34'}, {'TS4148', 'F15'}))
+    assert [R.part_may_pass_exact(p) for p in ('ss34', 'TS4148', 'F15', '1N5408X', 'SS3')] == [True, True, True, False, False]
+    assert R.part_may_pass_exact('SMAJ6.5A') is True
+    monkeypatch.setenv('DATABASE_URL', 'other')
+    assert R.part_may_pass_exact('1N5408X') is True
+    monkeypatch.setattr(R, '_runs', None)
+    assert R.part_may_pass_exact('1N5408X') is True

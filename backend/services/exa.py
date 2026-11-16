@@ -268,7 +268,8 @@ def _stale_revision(url: str, terms: str) -> bool:
     """요청 판본 코드가 있는데 파일명 판본이 그중 어느 것도 아니면 True(docs_agent가 이 파일의 행을 모두 버린다)."""
     # [왜] revision_matches는 (요청 판본이 비어 있지 않을 때) 문서 판본이 요청 판본 집합에 들어 있어야만 True다. 요청 판본의 문자형 코드는 모두 terms에 붙어 온다(docs.py가 덧붙임).
     #      문서 판본은 document_revision의 첫 규칙(`_F16.pdf` 꼴)만 본다. 다른 꼴은 판단하지 않고 받는다
-    requested = {c.upper() for c in re.findall(r'(?<!\S)([A-Za-z][0-9]{2,4})(?!\S)', terms or '')}
+    # [왜] 개정 코드 꼴(`B2305` · `F15`: 글자+숫자 4자리 또는 2자리)만 센다. 검색어 속 `Q101`(AEC Q101) 같은 3자리 토큰은 개정이 아니라, 이것으로 PDF를 버리면 docs_agent가 남길 파일을 잃는다
+    requested = {c.upper() for c in re.findall(r'(?<!\S)([A-Za-z](?:[0-9]{4}|[0-9]{2}))(?!\S)', terms or '')}
     match = re.search(r'(?:_|\b)([A-Za-z]\d{2,4})(?=\.pdf$)', urlsplit(url).path.rsplit('/', 1)[-1], re.I)
     return bool(requested and match and match.group(1).upper() not in requested)
 

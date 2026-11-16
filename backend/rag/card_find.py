@@ -339,8 +339,9 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
 
 
 def _connect():
-    import psycopg
-    return psycopg.connect(os.environ['DATABASE_URL'])
+    # [왜] 카드 읽기마다 새 연결을 맺지 않고 검색과 같은 풀을 쓴다. 여기서는 SET · 세션 상태를 바꾸지 않아 연결을 돌려줘도 새지 않는다
+    from backend.rag import db_pool
+    return db_pool.connection()
 
 
 def load_cards(keys):

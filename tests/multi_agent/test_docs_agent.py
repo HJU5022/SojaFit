@@ -1202,3 +1202,25 @@ def test_first_figure_read_overlaps_pdf_answer_and_report_is_unchanged():
     (a0, a1), (f0, f1) = spans['PdfOnlyAnswer'], spans['RecoveryFigure']
     assert f0 < a1 and a0 < f1  # 두 호출이 시간상 겹친다
     assert report['status'] == 'ok' and report['llm_calls'] == 2 and 'W4' in report['answer']
+
+
+def test_relax_search_is_skipped_for_exact_part_absent_from_corpus(monkeypatch):
+    from backend.rag import retrieve as R
+
+    def run():
+        calls = []
+        payload = dict(question='품번 1N5408X의 VRRM은?', task=dict(id=1, agent='docs', kind='rating', goal='VRRM', query='1N5408X VRRM', parts=['1N5408X']))
+        report = D.docs_agent(payload, retriever=lambda q, parts=None: calls.append(parts) or [],
+                              chat=lambda *a, **k: pytest.fail('LLM 호출 없음'))['reports'][0]
+        return calls, report
+    monkeypatch.setenv('DATABASE_URL', 'dsn')
+    monkeypatch.setattr(R, '_runs', None)  # 색인 없음: 예전처럼 푼다
+    base_calls, base = run()
+    assert base_calls.count(None) == 1
+    monkeypatch.setattr(R, '_runs', ('dsn', {'1N5819'}, {'TS4148'}))
+    calls, report = run()
+    assert calls == [['1N5408X']]
+    for key in ('status', 'reason', 'docs', 'references', 'summary', 'llm_calls'):
+        assert report[key] == base[key]
+    monkeypatch.setattr(R, '_runs', ('dsn', {'1N5819'}, {'1N5408X'}))  # 본문에 이름이 있으면 푼다
+    assert run()[0].count(None) == 1

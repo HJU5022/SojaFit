@@ -155,10 +155,10 @@ def part_docs_index():
     index = None
 
     def load():
-        import psycopg
+        from backend.rag import db_pool
         from backend.rag.retrieve import COVER
         built = {}
-        with psycopg.connect(os.environ['DATABASE_URL']) as conn:
+        with db_pool.connection() as conn:  # [왜] 검색과 같은 풀. 읽기만 한다
             result = conn.execute('SELECT d.document_key, c.chunk_index, c.table_name, c.content FROM document_chunks c JOIN source_documents d'
                                   " ON d.id = c.document_id WHERE c.chunk_index = 0 OR c.table_name ILIKE '%ORDER%'"
                                   ' ORDER BY d.document_key, c.chunk_index')

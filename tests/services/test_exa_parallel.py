@@ -83,6 +83,11 @@ def test_no_requested_revision_never_skips(env):
     assert sorted(env['gets']) == [A, B]
 
 
+def test_aec_q101_token_is_not_a_revision(env):
+    run('reverse voltage AEC Q101')
+    assert sorted(env['gets']) == [A, B]  # Q101은 개정 코드 꼴이 아니라 건너뛰지 않는다
+
+
 def test_skip_only_for_letter_digit_filename(env):
     env['urls'] = [BASE + 'SS34.pdf', BASE + 'SS34_Rev_B.pdf', C]
     run('reverse voltage G17')

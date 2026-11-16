@@ -35,7 +35,9 @@ _corpus = None  # (DSN, 그때의 _parts, corpus_known 결과). 코퍼스는 프
 _corpus_lock = Lock()
 _bm25 = None  # (BM25Okapi, 청크 id 목록). warmup()이 한 번 만든다
 _parts = None  # (품번 소문자 → 문서 id 집합, 문서 id → 청크 id 목록). warmup()이 같이 만든다
+_runs = None  # (DSN, 표지 품번 대문자 집합, 모든 청크 본문·파일 이름의 `[A-Z0-9]+` 연속 집합). warmup()이 같이 만든다
 _nocover = None  # 표지 청크가 아닌 청크 id 집합. warmup()이 같이 만든다
+RUN = re.compile(r'[A-Z0-9]+')
 COVER = re.compile(r'\[.+?\] 이 데이터시트의 품번: (.*)')  # chunk.py doc_cards가 만드는 표지 청크(chunk_index 0)
 
 
@@ -87,7 +89,7 @@ def _connect():
 def warmup():
     """document_chunks 본문으로 BM25 색인과 품번 → 문서 색인을 메모리에 만든다."""
     # [주의] 첫 retrieve() 때 한 번 불린다. 분석 서비스를 켠 서버는 기동 직후 Conversations.warm()이 데몬 스레드로 미리 부른다
-    global _bm25, _parts, _nocover
+    global _bm25, _parts, _nocover, _runs
     with _warmup_lock:
         if _bm25 is not None and _parts is not None and _nocover is not None:
             return
@@ -98,8 +100,24 @@ def warmup():
         # [주의] 적재 전 빈 DB에서는 BM25Okapi가 0으로 나눈다. 청크가 없으면 키워드 후보 없이 dense만 쓴다
         index = (BM25Okapi([tokens(r[2]) for r in rows]) if rows else None, [r[0] for r in rows])
         _parts = part_index([r[:3] for r in rows])
+        with _connect() as conn:
+            names = [unquote(os.path.basename(urlparse(r[0]).path)) for r in conn.execute('SELECT source_url FROM source_documents').fetchall()]
+        _runs = (os.environ.get('DATABASE_URL'), {k.upper() for k in _parts[0]},
+                 {t for r in rows for t in RUN.findall(r[2].upper())} | {t for n in names for t in RUN.findall(n.upper())})
         _nocover = {r[0] for r in rows if r[3] is not None}  # [왜] 표지 청크는 품번 목록뿐이라 품번 질문에 BM25로 1위가 되고 근거 페이지가 없다(page_number가 없는 청크)
         _bm25 = index  # Publish readiness only after the part and page indexes are ready.
+
+
+def part_may_pass_exact(part: str) -> bool:
+    """retrieve()가 돌려줄 수 있는 어떤 카드가 `_mentions_exact_part(card, {part})`를 통과할 수 있는가. 모르면 True다."""
+    # [왜] 그 함수는 doc_parts(표지 품번) · file · content에서 품번을 찾는다(내부 카드에는 parts · title · row가 없다). 품번이 영문·숫자뿐이면 '앞뒤가 영문·숫자가 아님'은
+    #      '대문자 본문의 `[A-Z0-9]+` 연속 중 하나와 같음'과 같다. 어느 청크 본문·파일 이름에도 그 연속이 없고 표지에도 없으면 필터를 푼 검색도 0건이다
+    # [주의] 색인이 안 만들어졌거나 DSN이 바뀌었거나 품번에 영문·숫자 밖 글자가 있으면 True(예전 동작)
+    runs = _runs
+    if runs is None or runs[0] != os.environ.get('DATABASE_URL') or not (part.isascii() and part.isalnum()):
+        return True
+    part = part.upper()
+    return part in runs[1] or part in runs[2]
 
 
 def corpus_known():
