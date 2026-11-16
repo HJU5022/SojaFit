@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ChevronRight, CornerDownLeft, Paperclip, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { api, ApiError } from './api';
 import { projectNameFromQuestion } from './circuit';
+import { isSendKey } from './display';
 import { ErrorBox, Loading, Modal, navigate, RowMenu, useResource } from './ui';
 import { refreshNavigation } from './Projects';
 import { openWithQuestion } from './Workbench';
@@ -266,6 +267,11 @@ export function NewConversation() {
           autoFocus
           maxLength={4000}
           onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => {
+            if (!isSendKey(e.nativeEvent)) return; // Shift+Enter · 한글 조합 중 Enter는 그대로(#38)
+            e.preventDefault();
+            if (!disabled) void start();
+          }}
           placeholder="예: 1N4148 역전압은 몇 V야? · D1을 1N5819로 바꿔도 될까?"
         />
         <div className="composer-controls">

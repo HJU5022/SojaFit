@@ -1,5 +1,5 @@
 /**
- * 서버가 준 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수.
+ * 서버가 준 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수와 입력창 키 판정(`isSendKey`).
  * 하지 않는 일: 값 비교·판정(backend/judge가 한다), 받은 값의 변경(보이는 글만 만든다), 네트워크.
  * 출처: SPEC.md 3절(화면 표기), backend/judge/conditions.py(기준식 문법).
  */
@@ -175,4 +175,13 @@ export function estimateRows(estimate: PriceEstimate | null | undefined): [strin
     ['적용 단가', `${estimate.unit_price} ${estimate.currency}`],
     [`예상 금액 (${estimate.quantity}개)`, `${estimate.total} ${estimate.currency}`],
   ];
+}
+/** 질문 입력창에서 보내기 키인가: Enter는 보내고 Shift+Enter는 줄을 바꾼다. 한글 조합 중(isComposing · keyCode 229)의 Enter는 글자 확정이라 보내지 않는다(#38). */
+export function isSendKey(e: {
+  key: string;
+  shiftKey: boolean;
+  isComposing: boolean;
+  keyCode: number;
+}) {
+  return e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229;
 }

@@ -25,6 +25,7 @@ import {
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
 import { NEEDS_CIRCUIT, partsOf, unsupportedPartReason } from './circuit';
+import { isSendKey } from './display';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply, TargetChoice } from './Reply';
 import { SchematicSection } from './Schematic';
@@ -758,6 +759,11 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   id="question"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (!isSendKey(e.nativeEvent)) return; // Shift+Enter · 한글 조합 중 Enter는 그대로(#38)
+                    e.preventDefault();
+                    if (!sendDisabled) void send();
+                  }}
                   maxLength={4000}
                   // [왜] 실행 중에도 다음 질문을 쓸 수 있게 막지 않는다. 조건 입력을 기다릴 때만 막는다
                   disabled={!!waiting}
