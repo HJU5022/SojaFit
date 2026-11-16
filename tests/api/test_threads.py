@@ -72,7 +72,7 @@ PARTS = [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D2', 'value': 'RED', 'descri
     (PARTS, 'D10을 바꾸고 싶어', ['D10']),  # D10 안의 D1은 D1이 아니다
     (PARTS, 'D1N4148 대체품', ['D1', 'D3', 'D10']),  # 품번 안의 D1도 아니다 → 회로의 지원 다이오드 전부
     (PARTS, 'D2 옆의 D3을 바꿔도 돼?', ['D3']),  # 지원 다이오드를 적었으면 함께 적은 LED는 상관없다
-    (PARTS, 'D1과 D3 중 뭘 바꿔야 해?', ['D1', 'D3']),  # 둘 다 적으면 둘 중에서 묻는다
+    (PARTS, 'D3과 D1 둘 다 바꿔도 돼?', ['D3']),  # 둘 다 적으면 앞에 적은 하나(대상은 대화마다 하나, 나머지는 답 끝 안내, #62)
     ([{'ref': 'D1', 'value': 'SS34'}, {'ref': 'R1', 'value': '10k'}], '대체 후보를 찾아 주세요.', ['D1']),  # 회로 ref가 없으면 유일한 다이오드
 ])
 def test_target_choices_read_the_question_then_the_circuit(parts, question, refs):
@@ -140,14 +140,17 @@ def target_service(monkeypatch, parts, locked=None):
     return service, inserted
 
 
-def test_ensure_thread_without_target_infers_or_returns_choices(monkeypatch):
+def test_ensure_thread_without_target_infers_or_leaves_it_empty(monkeypatch):
     service, inserted = target_service(monkeypatch, PARTS)
     assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, 'D3을 바꿔도 돼?') is None
     assert inserted == ['D3']  # 질문에 적은 부품으로 분석 thread를 만든다
     service, inserted = target_service(monkeypatch, PARTS)
-    assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, '1N5819로 바꿔도 돼?') == [
-        {'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': 'SS34'}, {'ref': 'D10', 'value': '1N4148'}]
-    assert inserted == []  # 못 정하면 분석 thread를 만들지 않는다(대상은 NOT NULL)
+    assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, '1N5819로 바꿔도 돼?') is None
+    assert inserted == ['']  # 못 정하면 대상 없이 만든다. 고를 부품은 그래프의 '대상 확인'이 필요할 때만 묻는다(#62)
+    service, inserted = target_service(monkeypatch, PARTS)
+    assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, 'D9 바꿔도 돼?') == \
+        '이 회로에 D9는 없어요. 넷리스트에서 다이오드 D1(1N4007), D3(SS34), D10(1N4148)를 찾았어요.'
+    assert inserted == []  # 회로에 없는 기호면 코드가 답할 글만 돌려주고 분석 thread는 만들지 않는다
     service, inserted = target_service(monkeypatch, PARTS, locked='D1')
     assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, 'D3도 볼까?') is None
     assert inserted == ['D1']  # 이미 고정한 대상이 있으면 다시 정하지 않는다(INSERT는 ON CONFLICT로 그대로)
@@ -485,6 +488,31 @@ def test_circuitless_conversation_runs_without_a_target_then_adopts_the_attached
     assert app.ensure_thread(a, thread, '', {}, None, question='D1을 SS14로 바꿔도 돼?') is None
     result = app.message(a, thread, 'D1을 SS14로 바꿔도 돼?')
     assert result['target'] == 'D1' and app.graph.get_state(app.config(thread)).values['target_part']['ref'] == 'D1'
+
+
+def test_two_diode_conversation_asks_the_target_after_the_plan_and_resumes_on_the_real_graph(runtime):
+    """지원 다이오드가 둘이면 대상 없이 분석 thread를 만들고, 실제 멀티 그래프(가짜 LLM)의 '대상 확인'이 계획 뒤에 묻는다.
+    고른 부품을 고정하고 재개하면 Supervisor를 다시 부르지 않고 그 부품으로 답한다(#62)."""
+    from backend.multi_agent.agents.docs import DocsAnswer
+    from backend.multi_agent.build import build_graph
+    from backend.multi_agent.contracts import Plan, Task
+    app, (a, _), _ = runtime
+    calls, replies = [], {'supervisor': [Plan(question_type='rating', next='tasks', tasks=[Task(id=1, agent='docs', kind='rating', goal='VRRM', query='diode VRRM')])],
+                          'docs_answer': [DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [7].')]}
+    chat = lambda node, system, user, schema: calls.append(node) or replies[node].pop(0)
+    doc = {'chunk_id': 7, 'file': 'a.pdf', 'page': 1, 'content': 'VRRM 40 V', 'table': None, 'doc_parts': []}
+    app.graph = build_graph(chat=chat, retriever=lambda q, parts=None: [doc], checkpointer=app.saver, store=app.store)
+    circuit = {'components': [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'SS34'}],
+               'nets': [{'name': 'VIN', 'nodes': [{'ref': 'D1', 'pin': '1'}, {'ref': 'D2', 'pin': '1'}]}]}
+    thread, question = seed_thread(app, a, connections=circuit), '다이오드 역전압 몇 V야?'
+    assert app.ensure_thread(a, thread, '', {}, None, question=question) is None
+    asked = app.message(a, thread, question)
+    assert asked['target'] == '' and asked['interrupt']['target_choices'] == [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'SS34'}]
+    app.ensure_thread(a, thread, '', {}, 'D2')  # API 재개가 고른 부품을 먼저 고정한다
+    done = app.resume(a, thread, {}, '', asked['version'])
+    assert done['status'] == 'DONE' and done['target'] == 'D2' and done['answer'].startswith('VRRM은 40 V')
+    assert calls == ['supervisor', 'docs_answer'] and app.graph.get_state(app.config(thread)).values['target_part']['ref'] == 'D2'
+    assert [m['content'] for m in done['messages'] if m['role'] == 'user'] == [question, '선택한 부품: D2']
 
 
 def test_react_thread_maps_to_one_owned_analysis_thread_with_fixed_target(runtime):

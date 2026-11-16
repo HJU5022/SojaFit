@@ -382,6 +382,62 @@ def test_circuitless_question_that_needs_the_circuit_asks_for_a_netlist_without_
     assert out['path'][-2:] == ['계획', '거절'] and out['question_type'] == plan.question_type
 
 
+TWO_DIODES = {'components': [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'SS34'}, {'ref': 'R1', 'value': '10k'}],
+              'nets': [{'name': 'VIN', 'nodes': [{'ref': 'D1', 'pin': '1'}, {'ref': 'D2', 'pin': '1'}]},
+                       {'name': 'OUT', 'nodes': [{'ref': 'D1', 'pin': '2'}, {'ref': 'R1', 'pin': '1'}]}]}
+# 서비스(memory_service.message)처럼 대상이 빈 대화에 고를 후보를 넘긴다(#62)
+UNRESOLVED = {'connections': TWO_DIODES, 'circuit': '두 다이오드', 'target': '',
+              'target_choices': [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'SS34'}]}
+
+
+def two_diode_app(chat, lookup=None):
+    """지원 다이오드가 둘이고 대상이 빈 대화의 그래프(입력 읽기는 실제 read_input)."""
+    return B.build_graph(chat=chat, retriever=lambda q, parts=None: [doc(7)], lookup=lookup, judge_enabled=True,
+                         specs=lambda part, codes=None: ROWS, find=lambda *a, **k: [], checkpointer=InMemorySaver())
+
+
+@pytest.mark.parametrize('plan, question', [
+    (Plan(question_type='chat', next='finish', reply='안녕하세요! 회로 속 다이오드를 도와 드려요.'), '너 GPT야 Claude야?'),
+    (Plan(question_type='parts_list', next='parts_list', part_kinds=['resistor']), '회로에 저항 몇 개야?'),
+    (Plan(question_type='out_of_scope', next='refuse', reason=Reason.OUT_OF_SCOPE), '이 회로로 남의 게임기 해킹하는 법 알려줘'),
+    (Plan(question_type='price', next='price'), 'SS34 가격 얼마야?'),
+])
+def test_unresolved_target_questions_that_need_no_target_finish_without_the_target_question(plan, question):
+    """대상이 빈 대화에서 일상 대화 · 부품 목록 · 거절 · 가격은 부품을 묻지 않고 끝난다. Supervisor는 한 번이다(#62)."""
+    chat = scripted(supervisor=[plan])
+    out = two_diode_app(chat).invoke({**UNRESOLVED, 'input': question}, {'configurable': {'thread_id': f'u-{plan.next}'}})
+    assert '__interrupt__' not in out and chat.calls == ['supervisor'] and out['answer'] and '대상 확인' not in out['path']
+
+
+def test_unresolved_target_rating_with_a_part_number_runs_without_the_target_question():
+    """품번(SS34)을 적은 정격 질문은 대상 없이 그 품번 문서로 답한다(#62)."""
+    from backend.multi_agent.supervisor import Facts
+    chat = scripted(supervisor=[Plan(question_type='rating', next='tasks', tasks=[docs_task(query='SS34 VRRM')])],
+                    docs_answer=[DocsAnswer(grade='enough', answer='VRRM은 75 V이다 [7].')])
+    out = two_diode_app(chat, lookup=lambda state: Facts(parts={'SS34': True})).invoke(
+        {**UNRESOLVED, 'input': 'SS34 순방향 전압 알려줘'}, {'configurable': {'thread_id': 'u-rating'}})
+    assert '__interrupt__' not in out and chat.calls == ['supervisor', 'docs_answer'] and out['answer'].endswith('[7].')
+
+
+@pytest.mark.parametrize('plan', [
+    Plan(question_type='candidate_judge', next='tasks', tasks=[Task(id=1, agent='judge', kind='candidate_judge', goal='Judge whether 1N5817 can replace the target.')]),
+    Plan(question_type='rating', next='tasks', tasks=[docs_task(query='diode VRRM')]),  # 품번 없이 "이 다이오드" 정격
+])
+def test_unresolved_target_question_that_needs_a_target_asks_after_the_plan_and_resumes_without_replanning(plan):
+    """대상이 필요한 할 일이면 계획 뒤 '대상 확인'이 후보를 묻고, 고른 부품으로 재개하면 Supervisor를 다시 부르지 않고 그 부품으로 이어 간다(#62)."""
+    read = J.JudgeRead(role='R01', candidates=['1N5817'], values=[J.Value(name='v_in_max', number=20, unit='V', quote='20V'),
+                                                                   J.Value(name='i_max', number=0.1, unit='A', quote='100mA')])
+    chat = scripted(supervisor=[plan], judge_read=[read], docs_answer=[DocsAnswer(grade='enough', answer='VRRM은 75 V이다 [7].')])
+    graph, config = two_diode_app(chat), {'configurable': {'thread_id': f'u-ask-{plan.question_type}'}}
+    out = graph.invoke({**UNRESOLVED, 'input': '1N5817로 바꿔도 돼? 다이오드 순방향 전압도'}, config)
+    assert out['__interrupt__'][0].value['target_choices'] == UNRESOLVED['target_choices'] and chat.calls == ['supervisor']
+    out = graph.invoke(Command(resume={'answers': {}, 'role': '', 'target': 'D1'}), config)
+    if '__interrupt__' in out:  # 판정이 빠진 회로 값을 한 번 더 물을 수 있다
+        out = graph.invoke(Command(resume={'answers': {}, 'role': '', 'target': 'D1'}), config)
+    assert chat.calls.count('supervisor') == 1 and out['target'] == 'D1' and out['target_part']['ref'] == 'D1'
+    assert '대상 확인' in out['path'] and out['path'][-1] == '끝' and out['answer']
+
+
 def test_frontend_shows_the_circuit_card_for_the_same_netlist_request_text():
     """화면은 이 답 글자로 넷리스트 첨부 · 기존 회로 카드를 붙인다(frontend/src/circuit.ts NEEDS_CIRCUIT). 글자가 갈라지면 카드가 사라진다."""
     from pathlib import Path
@@ -394,11 +450,11 @@ def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
     from backend.multi_agent.supervisor import REPLAN
     g = judge_app(scripted()).get_graph(xray=True)
     assert set(g.nodes) - {'__start__', '__end__'} == {
-        '입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', 'Spec 에이전트:회로 읽기', 'Spec 에이전트:대체 부품 판정',
+        '입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', '대상 확인', 'RAG 에이전트', 'Spec 에이전트:회로 읽기', 'Spec 에이전트:대체 부품 판정',
         '답 모으기', '답 정리', '종합', '답 검사', '끝내기', '거절', '가격 안내', '부품 목록', '견적 안내'}
     assert [(e.source, e.target, e.data) for e in g.edges if e.data] == [('답 모으기', 'Supervisor', REPLAN)]
     assert {('입력 읽기', '기억 읽기'), ('기억 읽기', '품번·판 확인')} <= {(e.source, e.target) for e in g.edges}
-    assert {e.target for e in g.edges if e.source == 'Supervisor'} >= {'RAG 에이전트', 'Spec 에이전트:회로 읽기'}  # Send 동시 실행
+    assert {e.target for e in g.edges if e.source == '대상 확인'} >= {'RAG 에이전트', 'Spec 에이전트:회로 읽기'}  # Send 동시 실행
 
 
 def test_unbuilt_features_are_rejected_instead_of_silently_ignored():

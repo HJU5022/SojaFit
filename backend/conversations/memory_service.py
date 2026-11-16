@@ -121,10 +121,16 @@ def _require_supported_target(connections, target):
         raise HTTPException(422, f'{_topic(target)} 다이오드가 아니라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.')
 
 
-def target_choices(connections, question=''):
-    """대상 부품 후보 [{ref, value}]: 질문에 적힌 지원 다이오드가 있으면 그것만, 없으면 회로의 지원 다이오드 전부(SPEC 8.9).
+def _named(text, ref):
+    """글에 회로 기호 ref가 따로 적힌 자리(없으면 None).
+    [주의] \\b는 한글도 글자로 봐 'D1을'에서 D1을 못 찾는다. 앞뒤가 영문 · 숫자가 아닐 때만 그 부품으로 본다(D10 · D1N4148 안의 D1은 아님)"""
+    return re.search(rf'(?<![A-Za-z0-9]){re.escape(ref)}(?![A-Za-z0-9])', text or '', re.I)
 
-    지원 여부는 `_require_supported_target`와 같은 규칙이다. 하나면 그 부품으로 진행하고, 둘 이상이면 사용자에게 묻는다. LLM은 고르지 않는다.
+
+def target_choices(connections, question=''):
+    """대상 부품 후보 [{ref, value}]: 질문에 적힌 지원 다이오드가 있으면 앞에 적힌 하나, 없으면 회로의 지원 다이오드 전부(SPEC 8.9).
+
+    지원 여부는 `_require_supported_target`와 같은 규칙이다. 하나면 그 부품으로 진행하고, 둘 이상이면 그래프가 계획을 본 뒤 필요할 때만 묻는다. LLM은 고르지 않는다.
     질문에 회로의 부품 ref가 있는데 모두 지원 대상이 아니면 그 부품의 422를 낸다. 회로 전체로 넘어가는 것은 질문에 회로 ref가 없을 때뿐이다.
     """
     parts = connections.get('components', connections.get('parts', []))
@@ -135,14 +141,34 @@ def target_choices(connections, question=''):
         except HTTPException:
             continue
         diodes.append({'ref': part['ref'], 'value': part.get('value') or ''})
-    # [주의] \b는 한글도 글자로 봐 'D1을'에서 D1을 못 찾는다. 앞뒤가 영문 · 숫자가 아닐 때만 그 부품으로 본다(D10 · D1N4148 안의 D1은 아님)
-    named = [p['ref'] for p in parts if re.search(rf'(?<![A-Za-z0-9]){re.escape(p["ref"])}(?![A-Za-z0-9])', question or '', re.I)]
+    named = [p['ref'] for p in parts if _named(question, p['ref'])]
     chosen = [d for d in diodes if d['ref'] in named]
     if named and not chosen:
         # [왜] 질문이 회로의 다른 부품(LED · 표시기 · 다이오드 아님)을 가리키면 유일한 다이오드로 몰래 바꾸지 않는다.
         #      그 부품을 target_ref로 보낸 것과 같은 422 · 같은 문구로 막는다(SPEC 8.9)
         _require_supported_target(connections, named[0])
-    return chosen or diodes
+    # [왜] 대상은 대화마다 하나다. 둘 이상 적었으면('D1 D2 둘 다') 앞에 적힌 것을 보고, 나머지는 답 끝에 새 대화에서 물어 달라고 적는다(other_targets_note, #62)
+    return sorted(chosen, key=lambda d: _named(question, d['ref']).start())[:1] or diodes
+
+
+DIODE_REF = re.compile(r'(?<![A-Za-z0-9])D\d+(?![A-Za-z0-9])', re.I)  # 다이오드 기호 모양(D9). D1N4148 · SS34 안은 아님
+
+
+def absent_diode_reply(connections, question):
+    """질문이 회로에 없는 다이오드 기호(D9)만 적었으면 그 사실과 회로의 지원 다이오드를 알리는 답(코드 글, #62). 아니면 빈 글자."""
+    parts = connections.get('components', connections.get('parts', []))
+    asked = DIODE_REF.findall(question or '')
+    if not asked or any(_named(question, p['ref']) for p in parts):
+        return ''
+    found = ', '.join(d['ref'] + (f"({d['value']})" if d['value'] else '') for d in target_choices(connections))
+    return f'이 회로에 {_topic(asked[0].upper())} 없어요. 넷리스트에서 다이오드 {found}를 찾았어요.'
+
+
+def other_targets_note(connections, question, target):
+    """질문에 적었지만 이 대화의 대상이 아닌 지원 다이오드를 알리는 답 끝 한 줄(#62). 없으면 빈 글자.
+    [왜] 대상은 대화마다 고정이라(target_locked) 같은 대화에서 다시 물어도 그 부품을 보지 않는다. 새 대화로 안내한다"""
+    others = [d['ref'] for d in target_choices(connections) if d['ref'] != target and _named(question, d['ref'])]
+    return f"\n\n이 대화는 {target}만 검토해요. {_topic(', '.join(others))} 새 대화에서 따로 물어봐 주세요." if target and others else ''
 
 
 @lru_cache(maxsize=1)
@@ -471,7 +497,8 @@ class Conversations:
 
         [주의] 입력 회로 대신 소유 대화의 고정 버전을 읽는다. filename · connections 인자는 기존 호출 호환용이다.
         target이 None이면 이미 만든 분석 thread의 대상을 쓰고, 없으면 `target_choices`로 정한다(SPEC 8.9).
-        후보가 둘 이상이면 분석 thread를 만들지 않고 그 후보 목록을 돌려준다(호출자가 사용자에게 묻는다). 정했으면 None.
+        후보가 둘 이상이면 대상 없이(빈 글자) 만든다. 고를 부품은 그래프의 '대상 확인'이 계획을 본 뒤 필요할 때만 묻는다(#62).
+        질문이 회로에 없는 다이오드 기호(D9)만 적었으면 분석 thread를 만들지 않고 그 사실을 알리는 답 글을 돌려준다(호출자가 그대로 답한다). 그 밖에는 None.
 
         키 없는 데모면 기록한 회로 · 대상(question을 주면 질문 · 사용 조건까지)인지 먼저 본다(아니면 422, 기록이 없으면 503)."""
         with self.connection() as conn:
@@ -486,7 +513,7 @@ class Conversations:
         connections = pinned['connections']
         # React 정규화 회로는 parts, 데모 회로는 components다.
         connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
-        empty = not connections['components']
+        empty = unresolved = not connections['components']
         if target is None:
             if locked and locked['target']:
                 choices = [{'ref': locked['target'], 'value': ''}]
@@ -498,10 +525,12 @@ class Conversations:
                 choices = target_choices(connections, question)
             if not choices:
                 raise HTTPException(422, '회로에 판정할 수 있는 다이오드가 없습니다. 다이오드가 있는 넷리스트를 첨부해 주세요.')
-            if len(choices) > 1:
-                return choices
-            target = choices[0]['ref']
-        if target or not empty:
+            if not empty and (reply := absent_diode_reply(connections, question)):
+                return reply
+            # [왜] 지원 다이오드가 여럿이면 묻지 않고 대상 없이(빈 글자) 분석한다. 일상 대화 · 부품 목록 · 품번 정격은 대상이 필요 없다(#62)
+            unresolved = empty or len(choices) > 1
+            target = '' if unresolved else choices[0]['ref']
+        if target or not unresolved:
             _require_supported_target(connections, target)
         if self.mode == 'demo':
             from backend.services import demo
@@ -566,7 +595,7 @@ class Conversations:
         # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
         self._purge_expired()
         with self.locked(user, thread) as (conn, row):
-            if row['target'] or row['connections']['components']:  # 회로 없는 대화만 대상 없이 돈다(ensure_thread)
+            if row['target']:  # 회로 없는 대화 · 지원 다이오드가 여럿인 대화는 대상 없이(빈 글자) 돈다(ensure_thread)
                 _require_supported_target(row['connections'], row['target'])
             self._reconcile(conn, row)
             if has_pending_question(self.graph.get_state(self.config(thread))):
@@ -601,6 +630,8 @@ class Conversations:
             inputs = {'input': content, 'conversation_history': conversation_history,
                       'connections': row['connections'], 'circuit': row['filename'], 'target': row['target'],
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,
+                      # [왜] 대상이 없으면 그래프의 '대상 확인'이 계획을 본 뒤 이 후보에서 묻는다(#62). 매 질문 덮어써 앞 질문의 후보가 남지 않게 한다
+                      'target_choices': [] if row['target'] else target_choices(row['connections']),
                       # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
                       'approved_memories': []}
             with _reporting(progress):
@@ -642,6 +673,8 @@ class Conversations:
             content = '조건 답변:\n' + ('\n'.join(f'{key}: {value}' for key, value in answers.items()) or '모름')
             if role:
                 content += f'\n선택한 역할: {role}'
+            if 'target_choices' in pending[0]:  # 대상 부품을 물었다(호출자가 고른 부품을 분석 thread에 먼저 고정한다)
+                content = f"선택한 부품: {row['target']}"
             record = row.get('input_record') or {'version': version, 'question': None, 'conditions': None, 'resumes': []}
             record.pop('execution_limit_reached',None)
             record['resumes'].append({'answers': answers, 'role': role})
@@ -650,7 +683,7 @@ class Conversations:
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
             hints = self._profile_hints(user, record.get('question'))
             with _reporting(progress):
-                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
+                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role, 'target': row['target']}), budget, request_id)
         return {**self.detail(user, thread, hints), 'web_search_unavailable': web_unavailable}
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):

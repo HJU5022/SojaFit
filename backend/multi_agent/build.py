@@ -1,4 +1,4 @@
-"""멀티 에이전트 조립: 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 · Spec 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
+"""멀티 에이전트 조립: 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → 대상 확인 → RAG 에이전트 · Spec 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
 
 - 역할: 노드와 연결을 정하고 compile한다. 노드 이름은 강의처럼 한국어로 달아 `get_graph().draw_mermaid()` 그림이 그대로 읽히게 한다.
   답 모으기 → Supervisor 되돌림(재계획, 설계 v2)이 유일한 고리다. 서브에이전트는 RAG 에이전트(`agents/docs.py`, 노드 하나)와
@@ -154,6 +154,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_node('기억 읽기', read_profile)  # Store(사용자 사실)에서 선호 실장 방식만 읽는다. Store 없이 compile하면(평가 실행기) 선호 없음
     g.add_node('품번·판 확인', partial(facts_step, lookup=lookup))
     g.add_node('Supervisor', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled, web_enabled=web_enabled))  # 계획(LLM 1번)
+    g.add_node('대상 확인', nodes.target_choice)  # [왜] 대상이 빈 대화는 계획을 본 뒤 대상이 필요한 할 일일 때만 고를 부품을 묻는다(인터럽트, #62)
     g.add_node('RAG 에이전트', guarded(partial(docs_agent, retriever=retriever, chat=chat, find=find,
                                        web_search=web_search if web_enabled else None,
                                        web_search_fallback=web_search_fallback if web_enabled else None), 'docs', '문서'))  # find: 품번 없이 정격만 준 질문의 품번 찾기
@@ -171,6 +172,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_edge('입력 읽기', '기억 읽기')
     g.add_edge('기억 읽기', '품번·판 확인')
     g.add_edge('품번·판 확인', 'Supervisor')
+    g.add_edge('Supervisor', '대상 확인')
     agents = ['RAG 에이전트']
     if judge_enabled:
         g.add_node('Spec 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever,
@@ -178,7 +180,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
                                                        web_search_fallback=judge_web_search_fallback if web_enabled else None))
         agents.append('Spec 에이전트')
     # [왜] 목록(path_map)의 이름 = 노드 이름이라 그림에 라벨이 붙지 않는다. 할 일이 둘이면 두 에이전트에 동시에 Send
-    g.add_conditional_edges('Supervisor', sup.after_plan, ['끝내기', '가격 안내', '부품 목록', '견적 안내', '거절', '답 모으기', *agents])  # 답 모으기: 재계획이 '있는 답으로'
+    g.add_conditional_edges('대상 확인', sup.after_plan, ['끝내기', '가격 안내', '부품 목록', '견적 안내', '거절', '답 모으기', *agents])  # 답 모으기: 재계획이 '있는 답으로'
     for agent in agents:
         g.add_edge(agent, '답 모으기')  # [왜] 같은 단계에서 동시에 돈 서브에이전트가 모두 끝나야 모으기가 한 번 돈다
     # [왜] 설계 v2(11-07): 모으기가 다시 해 볼 만한 실패를 보면 Supervisor로 한 번 되돌린다(MAX_REPLANS). 이 간선만 키가 노드 이름과 달라 그림에 조건이 라벨로 보인다
