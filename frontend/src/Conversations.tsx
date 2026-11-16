@@ -1,10 +1,12 @@
 /** 대화가 먼저인 입구: 사이드바의 대화 목록·프로젝트 폴더와 "새 대화" 빈 화면. 프로젝트 하나는 회로 하나다. 출처: SPEC 2절, 4절, 8.8. */
 import { useEffect, useState } from 'react';
-import { ArrowRight, ChevronRight, FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ChevronRight, CornerDownLeft, Paperclip, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { api, ApiError } from './api';
+import { projectNameFromQuestion } from './circuit';
 import { ErrorBox, Loading, Modal, navigate, RowMenu, useResource } from './ui';
 import { refreshNavigation } from './Projects';
-import type { Demo, Project, ThreadListItem } from './types';
+import { openWithQuestion } from './Workbench';
+import type { Project, ThreadListItem } from './types';
 /** 사이드바 "대화"(모든 프로젝트, 최근 활동 순)와 "프로젝트"(펼치면 그 대화). 대화 목록은 한 번 받아 프로젝트별로 나눈다. */
 export function ConversationNav({
   projectId,
@@ -176,123 +178,145 @@ export function ConversationNav({
     </div>
   );
 }
-/** "새 대화" 빈 화면. 넷리스트를 첨부하면 파일 이름으로 프로젝트를 만들고, 기존 회로를 고르면 그 회로의 작업대를 연다. 대화는 첫 질문 때 생긴다. */
+/** "새 대화" 화면: 질문 입력창 하나(#30). 넷리스트는 입력창 안에서 첨부한다(클립 · 끌어 놓기). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
 export function NewConversation() {
-  const projects = useResource<Project[]>('/projects'),
-    demos = useResource<Demo[]>('/demo-circuits'); // [주의] 운영(DEMO_MODE=0)은 404라 데모 회로 묶음만 빠진다
-  const [choice, setChoice] = useState(''),
+  const [question, setQuestion] = useState(''),
+    [attachment, setAttachment] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState<Error | null>(null),
-    [source, setSource] = useState<File | Demo | null>(null);
-  async function start(from: File | Demo, allowDuplicate = false) {
+    [error, setError] = useState<Error | null>(null);
+  async function start(allowDuplicate = false) {
     setBusy(true);
     setError(null);
-    setSource(from);
-    const query = allowDuplicate ? '?allow_duplicate=true' : '';
     try {
       let project: Project;
-      if (from instanceof File) {
-        if (from.size > 5 * 1024 * 1024) throw new Error('넷리스트는 5 MiB 이하여야 합니다.');
+      if (attachment) {
+        if (attachment.size > 5 * 1024 * 1024) throw new Error('넷리스트는 5 MiB 이하여야 합니다.');
         const body = new FormData();
         // [왜] 이름을 먼저 묻지 않는다. 파일 이름(확장자 뺌)으로 만들고 프로젝트 목록에서 바꿀 수 있다
         body.set(
           'name',
-          from.name
+          attachment.name
             .replace(/\.[^.]*$/, '')
             .trim()
             .slice(0, 200) || '새 회로',
         );
-        body.set('file', from);
-        project = await api('/projects/upload' + query, 'POST', body);
+        body.set('file', attachment);
+        project = await api(
+          '/projects/upload' + (allowDuplicate ? '?allow_duplicate=true' : ''),
+          'POST',
+          body,
+        );
       } else
-        project = await api('/projects' + query, 'POST', { name: from.name, demo_id: from.id });
+        // [왜] 회로 없는 대화도 프로젝트 하나에 담는다(대화는 프로젝트에 속한다). 질문에서 지은 이름은 겹쳐도 되니 409를 묻지 않는다
+        project = await api('/projects?allow_duplicate=true', 'POST', {
+          name: projectNameFromQuestion(question),
+        });
       refreshNavigation();
-      navigate('/app?project=' + project.id);
+      await openWithQuestion(project.id, question);
     } catch (e) {
       setError(e as Error);
-    } finally {
       setBusy(false);
     }
   }
-  // 409: 같은 이름이나 같은 회로의 프로젝트가 있다. 그 프로젝트를 열지, 그래도 새로 만들지 고르게 한다
+  const disabled = busy || (!question.trim() && !attachment);
+  // 409: 같은 이름이나 같은 회로의 프로젝트가 있다(넷리스트 첨부). 그 회로로 이어 갈지, 그래도 새로 만들지 고르게 한다
   const duplicates: { id: number; name: string }[] =
     error instanceof ApiError && error.status === 409 ? (error.details?.duplicates ?? []) : [];
   return (
     <div className="page-content new-chat">
       <h1>새 대화</h1>
-      <p className="page-intro">회로를 정하면 바꿀 부품과 후보를 질문할 수 있습니다.</p>
-      <label className="file-drop">
-        <FileUp />
-        KiCad 넷리스트 첨부
-        <input
-          type="file"
-          accept=".net"
-          disabled={busy}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = ''; // 같은 파일을 다시 고를 수 있게
-            if (file) void start(file);
-          }}
-        />
-        <small>.net · UTF-8 · 최대 5 MiB · 파일 이름으로 프로젝트를 만듭니다</small>
-      </label>
-      <small>
-        넷리스트가 없다면{' '}
-        <a href="/assets/samples/attiny85-time-switch.net" download>
-          샘플 넷리스트 받기
-        </a>
-      </small>
+      <p className="page-intro">
+        궁금한 부품이나 바꿀 부품을 물어보세요. 회로 검토가 필요하면 KiCad 넷리스트(.net)를
+        첨부하세요.
+      </p>
       <form
+        className="composer"
         onSubmit={(e) => {
           e.preventDefault();
-          const [kind, id] = choice.split(':');
-          if (kind === 'project') return navigate('/app?project=' + id);
-          const demo = demos.data?.find((d) => d.id === id);
-          if (demo) void start(demo);
+          if (!disabled) void start();
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files[0];
+          if (file) setAttachment(file);
         }}
       >
-        <label>
-          기존 회로에서 시작
-          <select aria-label="회로 선택" value={choice} onChange={(e) => setChoice(e.target.value)}>
-            <option value="">{projects.loading ? '불러오는 중…' : '회로를 선택하세요'}</option>
-            {!!projects.data?.length && (
-              <optgroup label="내 프로젝트">
-                {projects.data.map((p) => (
-                  <option key={p.id} value={'project:' + p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {!!demos.data?.length && (
-              <optgroup label="데모 회로">
-                {demos.data.map((d) => (
-                  <option key={d.id} value={'demo:' + d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
+        {attachment && (
+          <div className="attachment">
+            <Paperclip size={14} />
+            {attachment.name}
+            <button
+              type="button"
+              aria-label="첨부 제거"
+              title="첨부 제거"
+              onClick={() => setAttachment(null)}
+            >
+              <X size={14} />
+            </button>
+            <small>보내면 파일 이름으로 프로젝트를 만들고 이 회로로 대화를 시작합니다.</small>
+          </div>
+        )}
+        <label className="sr-only" htmlFor="new-question">
+          새 대화 질문
         </label>
-        <button className="primary" disabled={busy || !choice}>
-          대화 시작
-          <ArrowRight size={16} />
-        </button>
+        <textarea
+          id="new-question"
+          value={question}
+          autoFocus
+          maxLength={4000}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="예: 1N4148 역전압은 몇 V야? · D1을 1N5819로 바꿔도 될까?"
+        />
+        <div className="composer-controls">
+          <label className="attach-button">
+            <Paperclip size={17} />
+            <span>넷리스트</span>
+            <input
+              type="file"
+              accept=".net"
+              onChange={(e) => {
+                setAttachment(e.target.files?.[0] ?? null);
+                e.target.value = ''; // 같은 파일을 다시 고를 수 있게
+              }}
+            />
+          </label>
+          <a className="composer-hint" href="/assets/samples/attiny85-time-switch.net" download>
+            샘플 넷리스트 받기
+          </a>
+          <button
+            className="primary send"
+            disabled={disabled}
+            aria-label="질문 보내기"
+            title="질문 보내기"
+          >
+            <CornerDownLeft size={17} />
+          </button>
+        </div>
       </form>
-      {busy && <Loading label="회로를 준비하는 중" />}
-      <ErrorBox error={projects.error} retry={projects.reload} />
+      {busy && <Loading label="대화를 준비하는 중" />}
       <ErrorBox error={duplicates.length ? null : error} />
-      {duplicates.length > 0 && source && (
+      {duplicates.length > 0 && (
         <div className="notice" role="alert">
           <p>같은 이름이나 같은 회로의 프로젝트가 있습니다.</p>
           <div className="duplicate-actions">
             {duplicates.map((d) => (
-              <a key={d.id} className="button" href={'/app?project=' + d.id}>
-                {d.name} 열기
-              </a>
+              <button
+                key={d.id}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true);
+                  openWithQuestion(d.id, question).catch((e) => {
+                    setError(e as Error);
+                    setBusy(false);
+                  });
+                }}
+              >
+                {d.name} 프로젝트로 계속
+              </button>
             ))}
-            <button disabled={busy} onClick={() => start(source, true)}>
+            <button type="button" disabled={busy} onClick={() => start(true)}>
               새 프로젝트로 만들기
             </button>
           </div>

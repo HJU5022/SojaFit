@@ -235,6 +235,13 @@ def test_circuitless_question_that_needs_the_circuit_asks_for_a_netlist_without_
     assert out['path'][-2:] == ['계획', '거절'] and out['question_type'] == plan.question_type
 
 
+def test_frontend_shows_the_circuit_card_for_the_same_netlist_request_text():
+    """화면은 이 답 글자로 넷리스트 첨부 · 기존 회로 카드를 붙인다(frontend/src/circuit.ts NEEDS_CIRCUIT). 글자가 갈라지면 카드가 사라진다."""
+    from pathlib import Path
+    from backend.multi_agent.messages import NEED_NETLIST as SERVER
+    assert SERVER == NEED_NETLIST and f"'{SERVER}'" in Path('frontend/src/circuit.ts').read_text(encoding='utf-8')
+
+
 def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
     """[왜] 그림이 강의처럼 읽혀야 한다(MULTI_AGENT.md 11-09 노드 이름). 노드 이름이 한국어이고, 조건 라벨은 답 모으기 → Supervisor 되돌림 하나뿐이다."""
     from backend.multi_agent.supervisor import REPLAN
