@@ -478,7 +478,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 데모 모드 또는 외부 검색 미허용, WHEN 웹 후보 검색을 요청하면, THEN 외부 호출 없이 disabled를 반환한다.
 - GIVEN 실시간 검색 명시 허용과 EXA_API_KEY, WHEN Exa 검색이 성공하면, THEN HTTPS TSC 공식 도메인 URL만 미검증 후보로 반환한다.
 - GIVEN 키 누락 또는 외부 검색 실패, WHEN 웹 후보 검색을 요청하면, THEN 키·오류 본문을 노출하지 않고 각각 missing_key 또는 unavailable을 반환하며 재시도하지 않는다.
-- GIVEN 분석 중 Exa 검색 호출 실패(402 · 429 · 시간 초과 · HTTP 오류, #28 11-16), WHEN 답을 돌려주면, THEN 검색 결과는 예전처럼 빈 목록이고(재시도 · 재계획 그대로) 그 실행의 공개 결과에 `web_search_unavailable: true`를 실어 화면이 답 위에 "웹 검색을 잠시 쓸 수 없어 등록된 자료로만 답했어요."를 보인다. run 기록에도 저장해 다시 읽어도 보인다. 공식 PDF 받기 · 미리 받기 실패는 넣지 않는다(`backend/services/exa.py` `request_scope`).
+- GIVEN 분석 중 Exa 검색 호출 실패(402 · 429 · 시간 초과 · HTTP 오류, #28 11-16), WHEN 답을 돌려주면, THEN 검색 결과는 예전처럼 빈 목록이고(재시도 · 재계획 그대로) 답에 웹 근거([W] · [R])가 없으면 그 실행의 공개 결과에 `web_search_unavailable: true`를 실어 화면이 답 위에 "웹 검색을 잠시 쓸 수 없어 등록된 자료로만 답했어요."를 보인다. run 기록에도 저장해 다시 읽어도 보인다. 공식 PDF 받기 · 미리 받기 실패는 넣지 않는다(`backend/services/exa.py` `request_scope`).
 - GIVEN 공개 TSC 목록의 출처와 문서명이 확인되지 않는 문서 ID, WHEN 웹 검색하면, THEN 외부 호출 없이 unverified를 반환한다. 사용자 자유 문장은 전송하지 않는다.
 - GIVEN 로컬 TSC 표본 PDF의 문서 ID, WHEN MCP 무결성 도구를 호출하면, THEN PDF 서명·바이트 크기·SHA-256을 manifest와 대조하고 내용 검증은 완료하지 않았다고 표시한다.
 - GIVEN 공개 예제 회로 ID와 부품 기호, WHEN MCP 회로 정보 도구를 호출하면, THEN 고정 카탈로그의 connections.json에서 해당 부품 주변 정보를 반환한다. 임의 파일 경로는 받지 않는다.

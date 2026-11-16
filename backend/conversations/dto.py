@@ -283,10 +283,12 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
                         entry.update(source_metadata(entry['document']) or {'source_url': '', 'outline_page': None})
                     if entry not in evidence:
                         evidence.append(entry)
+    # [왜] 한 등급 검색만 실패하고 다른 등급의 웹 근거([W] 공식 PDF · [R] 참고 링크)가 답에 있으면 "등록된 자료로만 답했어요"가 틀린 말이다(#28)
+    web_used = any(entry.get('source_type') in ('external_web', 'web_reference') for entry in evidence)
     return BrowserResult(answer=answer if isinstance(answer, str) else '', status=status, stage=stage,
                          evidence=evidence, refusal=answer if status == 'refused' and isinstance(answer, str) else '',
                          question_type=question_type if isinstance(question_type, str) and question_type in question_types else '',
                          price_parts=[p for p in state.get('price_parts', []) if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(state.get('price_parts', []), list) else [],
                          interrupt=safe_interrupt, error=error, judgement=judgement, request_id=request_id,
-                         web_search_unavailable=state.get('web_search_unavailable') is True,
+                         web_search_unavailable=state.get('web_search_unavailable') is True and not web_used,
                          profile_hints=[{key: str(hint.get(key, '')) for key in ('kind', 'value', 'text')} for hint in profile_hints][:3])
