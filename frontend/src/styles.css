@@ -642,6 +642,9 @@ form {
 }
 .auth-page {
   min-height: 100dvh;
+  /* [왜] 개인정보 처리방침 링크(.privacy-link)를 카드 밖 화면 맨 아래에 둔다(#20) */
+  display: flex;
+  flex-direction: column;
   /* [왜] 오류 · 안내 문장이 '6/번'처럼 낱말 중간에서 줄을 바꾸지 않게 한다(랜딩과 같은 규칙) */
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -706,8 +709,9 @@ form {
 .privacy-link {
   display: block;
   text-align: center;
-  margin-top: 28px;
-  font-size: 13px;
+  margin-top: auto;
+  padding: 40px 20px 24px;
+  font-size: 12px;
   color: var(--muted);
 }
 /* 로그인 실패 아래의 잠금 규칙 · 재설정 링크 안내 */
@@ -736,6 +740,14 @@ form {
 }
 .privacy-page p {
   font-size: 15px;
+}
+/* 화면 아래 링크로 여는 개인정보 처리 안내 작은 창(#20) */
+.dialog .privacy-text h2 {
+  font-size: 15px;
+  margin: 20px 0 6px;
+}
+.dialog .privacy-text p {
+  font-size: 14px;
 }
 /* 224px 탐색 + 남은 너비. 검토는 270px 문맥 + 가변 대화. */
 .app-shell {
@@ -881,6 +893,8 @@ form {
 }
 .sidebar-bottom {
   padding-top: 15px;
+  /* [왜] 목록(.sidebar-projects)을 숨긴 화면에서도 계정 영역을 사이드바 맨 아래에 둔다(#21) */
+  margin-top: auto;
 }
 .account-info {
   display: flex;

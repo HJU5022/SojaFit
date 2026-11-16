@@ -11,10 +11,10 @@ import {
   X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { Brand, ErrorBox, Loading, navigate, useLocation } from './ui';
+import { Brand, ErrorBox, followLink, Loading, navigate, useLocation } from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
-import { Admin, ApprovedCases, Privacy, Settings } from './Account';
+import { Admin, ApprovedCases, Privacy, PrivacyLink, Settings } from './Account';
 import { ConversationNav, NewConversation } from './Conversations';
 import { ProjectList } from './Projects';
 import { Workbench } from './Workbench';
@@ -73,7 +73,10 @@ function Shell({
             승인 사례
           </a>
         </nav>
-        <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
+        {/* [왜] 내 설정·사용자 관리는 계정 화면이라 대화·프로젝트 목록을 보이지 않는다(#21). 돌아가기는 위 "새 대화"·메뉴로 한다 */}
+        {pathname !== '/settings' && !pathname.startsWith('/admin') && (
+          <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
+        )}
         <div className="sidebar-bottom">
           <a href="/settings">
             <SettingsIcon size={17} />내 설정
@@ -111,9 +114,7 @@ function Shell({
             </button>
           </div>
           <ErrorBox error={error} />
-          <a className="privacy-small" href="/privacy">
-            개인정보 처리방침
-          </a>
+          <PrivacyLink className="privacy-small" />
         </div>
       </aside>
       <div className="app-frame">
@@ -154,7 +155,11 @@ export default function App() {
   useEffect(() => {
     void check();
     window.addEventListener('session-expired', logout);
-    return () => window.removeEventListener('session-expired', logout);
+    document.addEventListener('click', followLink);
+    return () => {
+      window.removeEventListener('session-expired', logout);
+      document.removeEventListener('click', followLink);
+    };
   }, []);
   const publicPage =
     pathname === '/' ||

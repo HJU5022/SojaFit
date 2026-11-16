@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, FileText, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
 import { Brand, Badge, Disclaimer } from './ui';
+import { PrivacyLink } from './Account';
 export function Landing() {
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -378,7 +379,7 @@ export function Landing() {
       </main>
       <footer>
         <Brand />
-        <a href="/privacy">개인정보 처리방침</a>
+        <PrivacyLink />
       </footer>
     </div>
   );

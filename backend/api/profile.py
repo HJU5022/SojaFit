@@ -30,7 +30,7 @@ def _profile_module():
 class ProfileUpdate(BaseModel):
     """바꿀 칸만 보낸다. 세 칸 밖의 이름(사용자 id 포함)은 422다."""
     model_config = ConfigDict(extra='forbid', strict=True,
-                              json_schema_extra={'examples': [{'affiliation': '예시전자 회로설계팀', 'job_role': 'design', 'mounting_preference': 'smd'}]})
+                              json_schema_extra={'examples': [{'affiliation': '예시전자 회로설계팀', 'job_role': '회로 설계', 'mounting_preference': 'smd'}]})
     affiliation: str | None = None
     job_role: str | None = None
     mounting_preference: str | None = None
