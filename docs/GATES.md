@@ -2,6 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-16(11-17 재측정 행은 [evals/results/d12/](../evals/results/d12/README.md), 대상 `main` `799ae636`)
+- 동결: 채점 기준 `9c87ba36`(11-16 24:00). 최종 동결 태그 `freeze-2026-11-17`(PR #150 병합 커밋, 코드는 배포 소스 `28b14600`과 같음).
 - 기준 커밋: `a0abece5`(`main`, PR #141 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-17 06:07 KST `sojafit-api-main-28b14600-1117`, 그 전 11-17 04:52 KST `sojafit-api-main-799ae636-1117`, 11-16 04:36 KST `sojafit-api-main-a0abece5-1116`). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다.
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
@@ -186,7 +187,7 @@
 
 | 항목 | 상태 |
 |---|---|
-| 시연 영상 파일 | 11-17 녹화: `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`(1:48, 동결 커밋 `9c87ba36`). 상세는 [DELIVERABLES.md](deliverables/DELIVERABLES.md) 남은 일 |
+| 시연 영상 파일 | 11-17 녹화: `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`(1:35, 채점 기준 동결 `9c87ba36`, 시연 · 배포 코드 `28b14600`). 상세는 [DELIVERABLES.md](deliverables/DELIVERABLES.md) 남은 일 |
 | GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다. 동결 직전에 로컬 `gitleaks`를 다시 돌려야 한다 |
 | 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
 | 다른 조원 포트폴리오(오세창 · 심태현) | 11-17 초안 있음(조장 위임 AI 작성): [portfolio-osc.md](deliverables/portfolio-osc.md), [portfolio-sth.md](deliverables/portfolio-sth.md). 본인 확인 전 |
