@@ -445,7 +445,9 @@ def extract(raw, url, parts, terms, *, grade=None):
             heading = page.crop((0, 0, page.width, min(page.height, 165))).extract_text(x_tolerance=1) or ''
             return slug in {line.strip().upper() for line in heading.splitlines()}
 
-        document_part = _covered_part(parts, all_texts) if grade == 2 else ''
+        # [왜] #146의 문서 품번 · 글 행 읽기도 TSC에서는 9c87ba36에 없던 행(기호 없는 '6.8 V' 등)을 더한다. 새 제조사에만 쓴다
+        document_part = (_covered_part(parts, all_texts)
+                         if grade == 2 and host not in {'services.taiwansemi.com', 'www.infineon.com'} else '')
         # A family PDF is allowed to answer a single part only when its first
         # page names that exact part. This is used by TI and Vishay PDFs whose
         # filename is the product identity; never infer a related suffix.
