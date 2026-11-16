@@ -219,7 +219,7 @@ export function CircuitSection({
   target: string;
   threadId: string | null;
 }) {
-  const usable = partsOf(project).filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p));
+  const usable = partsOf(project).filter((p) => !unsupportedPartReason(p));
   return (
     <section className="circuit-section" id="circuit-section">
       <h2>회로</h2>
@@ -350,7 +350,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     scope = useRef(0);
   const attach = useNetlistAttach('.net,.txt,.kicad_sch', setAttachment);
   const parts = partsOf(project.data),
-    usable = parts.filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p)),
+    usable = parts.filter((p) => !unsupportedPartReason(p)),
     // [왜] 과거 LED 대화처럼 지원하지 않는 부품이 대상이면 보내기 전에 이유를 보인다(서버도 422)
     targetReason = (() => {
       const chosen = parts.find((p) => p.ref === target);
