@@ -39,7 +39,11 @@ class Reason(str, Enum):
     OUT_OF_SCOPE = 'out_of_scope'            # 서비스 대상이 아님(전자부품이 아님 등)
     PART_MISSING = 'part_missing'            # 품번이 코퍼스 목록에 없음(확정: 목록 대조)
     REVISION_MISSING = 'revision_missing'    # 요청한 개정판이 없음(확정: 목록 대조)
-    NOT_FOUND = 'not_found'                  # 두 번 찾았는데 못 찾음(추정: 정말 없다고 단정하지 않는다)
+    NOT_FOUND = 'not_found'                  # 두 번 찾았는데 못 찾음(추정: 정말 없다고 단정하지 않는다) · 다이오드가 아닌 부품
+    # [왜] 셋은 not_found로 묶여 "이 부품 자료를 찾지 못했어요"를 받았다. 사용자가 대신 물을 것이 달라 사유를 나눈다(#63)
+    MEASUREMENT = 'measurement'              # 사용자 보드 · 로트를 잰 값(데이터시트에 없음)
+    CIRCUIT_VALUE = 'circuit_value'          # 효율 · 소비 전력 · 바꾼 뒤 출력 전압 같은 회로 전체 값(데이터시트가 싣지 않음)
+    MAKER_MISSING = 'maker_missing'          # 품번 없이 TSC가 아닌 제조사 · 브랜드로 고르라는 요구(후보 찾기는 TSC 데이터시트만)
     LIMIT_REACHED = 'limit_reached'          # 질문당 상한 초과 · 계획 형식 실패
     VERIFY_FAILED = 'verify_failed'          # 답 검사(인용 · 숫자)에 걸림
     SEARCH_ERROR = 'search_error'            # 검색 장애(오류이며 정상 거절이 아니다)
@@ -50,7 +54,7 @@ class Reason(str, Enum):
 
 
 REFUSAL_REASONS = frozenset({Reason.OUT_OF_SCOPE, Reason.PART_MISSING, Reason.REVISION_MISSING, Reason.NOT_FOUND,
-                             Reason.LIMIT_REACHED, Reason.VERIFY_FAILED, Reason.SEARCH_ERROR})
+                             Reason.MEASUREMENT, Reason.CIRCUIT_VALUE, Reason.MAKER_MISSING, Reason.LIMIT_REACHED, Reason.VERIFY_FAILED, Reason.SEARCH_ERROR})
 RETRY_REASONS = frozenset({Reason.NO_RESULT, Reason.ALL_REJECTED, Reason.PARTIAL})
 
 

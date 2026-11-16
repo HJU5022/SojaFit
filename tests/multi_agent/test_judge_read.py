@@ -220,7 +220,7 @@ def test_roles_own_names_reach_the_thresholds(monkeypatch):
 # ── 코퍼스 밖 요구 거절(SPEC 8.3): 규칙 · 조건을 만들기 전에 코드가 대조해 거절한다 ──
 GATE = [  # (읽기 칸, 사실 확인, 거절 사유)
     ({'required_specs': [{'words': '55°C에서 고장률 10FIT 이하', 'code': 'none'}]}, {}, 'not_found'),
-    ({'maker_wanted': 'ROHM'}, {}, 'part_missing'),
+    ({'maker_wanted': 'ROHM'}, {}, 'maker_missing'),  # 품번 문구가 아닌 제조사 문구(#63)
     ({'revision_wanted': '2027년판'}, {}, 'revision_missing'),
     ({'revision_wanted': 'G2710'}, {'revisions': {'G2710': False}}, 'revision_missing'),
 ]

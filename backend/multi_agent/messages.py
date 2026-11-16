@@ -29,6 +29,12 @@ def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] 
         Reason.PART_MISSING: f'{named}의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.',
         Reason.REVISION_MISSING: f'요청하신 판({", ".join(revisions) if revisions else "개정판"})의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.',
         Reason.NOT_FOUND: '이 부품 자료를 찾지 못했어요. 정확한 품번이나 부품에 적힌 글자를 알려 주시면 다시 찾아볼게요.',
+        # [왜] 아래 셋은 '찾지 못함'이 아니라 서비스가 하지 않는 일이다. 대신 물을 말을 하나씩 알려 준다(#63)
+        Reason.MEASUREMENT: "직접 측정한 값은 데이터시트에 없어 알려 드릴 수 없어요. 대신 'D1 최대 접합 온도 알려줘'처럼 데이터시트에 적힌 정격 · 특성값을 물어봐 주세요.",
+        Reason.CIRCUIT_VALUE: ("효율 · 소비 전력 · 바꾼 뒤 출력 전압 같은 회로 전체의 값은 계산하지 않아요. 부품 정격을 데이터시트로 비교해 "
+                               "바꿔도 되는지만 판정하니 'D1을 SS14로 바꿔도 될까?'처럼 물어봐 주세요."),
+        Reason.MAKER_MISSING: ("지금은 TSC(Taiwan Semiconductor) 데이터시트로 후보를 찾고 판정해요. 다른 제조사 부품을 원하시면 바꿀 품번을 알려 주시고, "
+                               "TSC 후보를 원하시면 'D1 대체품 찾아줘'처럼 물어봐 주세요."),
         Reason.LIMIT_REACHED: '확인하는 데 시간이 너무 오래 걸려 멈췄어요. 질문을 조금 더 구체적으로 다시 해 주세요.',
         Reason.VERIFY_FAILED: '답변의 근거를 확인하지 못해 답을 보여 드릴 수 없어요. 질문을 다시 해 주세요.',
         Reason.SEARCH_ERROR: '지금은 자료를 확인할 수 없어요. 잠시 후 다시 시도해 주세요.',  # 공급자 장애 · 품번 확인 시간 초과(#29 문구 11-16)

@@ -96,6 +96,20 @@ def test_out_of_scope_and_plan_format_failure_are_refused():
     assert out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '거절'] and out['refusal']['code'] == 'limit_reached'
 
 
+@pytest.mark.parametrize('question, question_type, reason, words', [
+    ('D1 실제로 측정한 온도 알려줘', 'rating', Reason.MEASUREMENT, "'D1 최대 접합 온도 알려줘'"),
+    ('D1을 1N5819로 바꾸면 효율이 몇 % 좋아져?', 'candidate_judge', Reason.CIRCUIT_VALUE, '회로 전체의 값은 계산하지 않아요'),
+    ('D1을 삼성 부품으로 바꿔줘', 'candidate_find', Reason.MAKER_MISSING, "'D1 대체품 찾아줘'"),
+])
+def test_refusals_that_are_not_a_missing_document_get_their_own_fixed_message(question, question_type, reason, words):
+    """#63: 실측값 · 회로 전체 값 · 제조사만 준 교체는 '찾지 못함' 문구가 아니라 사유마다 대신 물을 말을 주는 고정 문구다. LLM은 Supervisor 1번뿐."""
+    chat = scripted(supervisor=[Plan(question_type=question_type, next='refuse', reason=reason)])
+    out = app(chat).invoke({'input': question})
+    assert out['path'][-1] == '거절' and out['refusal']['code'] == reason.value and chat.calls == ['supervisor']
+    assert out['answer'] == refusal_for(reason, {}) and words in out['answer']
+    assert out['answer'] != refusal_for(Reason.NOT_FOUND, {})
+
+
 def test_missing_part_fact_reaches_the_plan_and_refusal_names_the_part():
     from backend.multi_agent.supervisor import Facts
     seen = []

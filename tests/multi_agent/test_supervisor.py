@@ -326,6 +326,10 @@ def test_declined_parts_are_appended_with_their_refusal_reason():
     out = S.single_node(state)
     # [왜] 여러 개를 묻는 질문의 코퍼스 밖 부분을 말없이 빼지 않는다(c20-15)
     assert out['answer'].startswith('VRRM은 40 V이다 [7].') and "답하지 않은 부분 'TSC ES1DQ의 VRRM'" in out['answer'] and 'ES1DQ' in out['answer']
+    # #63: 실측값 부분은 '찾지 못함'이 아니라 실측값 문구로 남긴다
+    p = plan(task(1), declined=[{'ask': 'D1 실측 온도', 'reason': 'measurement'}]).model_dump(mode='json')
+    out = S.single_node({**state, 'plan': p})
+    assert f"답하지 않은 부분 'D1 실측 온도': {S.refusal_for(Reason.MEASUREMENT, {})}" in out['answer']
     import pytest
     from pydantic import ValidationError
     with pytest.raises(ValidationError):

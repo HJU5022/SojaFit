@@ -901,7 +901,7 @@ def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason
     }
     if (maker and maker not in supported_makers
             and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON')):
-        return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not a supported Grade 2 manufacturer'
+        return Reason.MAKER_MISSING, f'required maker {read.maker_wanted} is not a supported Grade 2 manufacturer'  # 품번 문구가 아닌 제조사 문구(#63)
     # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
     #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)
     missing = {name.upper() for name, ok in (facts.get('parts') or {}).items() if not ok}
