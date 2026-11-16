@@ -1,6 +1,16 @@
 /** 프로젝트·대화·실행 작업대. 서버의 고정 회로 버전과 결과를 사용한다. 출처: SPEC 4·7·8절. */
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Paperclip, Plus, Send, Square, Trash2, X } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  LoaderCircle,
+  Paperclip,
+  Plus,
+  Send,
+  Square,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { api, ApiError, statuses, streamRun } from './api';
 import {
   Circuit,
@@ -57,6 +67,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [error, setError] = useState<Error | null>(null),
     [stopped, setStopped] = useState(false),
     [pendingQuestion, setPendingQuestion] = useState(''),
+    // 이번 실행에서 받은 진행 단계(SSE status의 stage). 마지막이 지금 단계다
+    [steps, setSteps] = useState<string[]>([]),
     [selected, setSelected] = useState<{ c: Candidate; r: Run } | null>(null),
     [showQuotes, setShowQuotes] = useState(false),
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
@@ -95,6 +107,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     setBusy(false);
     setStopped(false);
     setPendingQuestion('');
+    setSteps([]);
     setSelected(null);
     setLoading(!!threadId);
     runId.current = null;
@@ -187,9 +200,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         if (event === 'run_started') {
           liveRun = data.run_id;
           runId.current = data.run_id;
+          setSteps([]);
           setActive({ id: data.run_id, thread_id: tid, message_id: null, result: freshResult() });
         } else {
-          if (event !== 'status') terminal = data;
+          // [왜] 재계획이면 같은 단계가 다시 온다. 앞의 것을 지우고 끝에 붙여 마지막이 늘 지금 단계가 되게 한다
+          if (event === 'status')
+            setSteps((s) => [...s.filter((x) => x !== data.stage), data.stage]);
+          else terminal = data;
           setActive({ id: liveRun ?? '', thread_id: tid, message_id: null, result: data });
         }
       });
@@ -474,7 +491,21 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     )}
                   {active && running && !stopped && (
                     <div className="progress" role="status">
-                      <Loading label={active.result.stage || '검토를 시작하는 중'} />
+                      {/* 끝난 단계는 체크, 지금 단계는 도는 표시. 단계는 저장하지 않아 새로고침 뒤에는 한 줄만 보인다 */}
+                      <ol className="progress-steps" aria-label="검토 진행 단계">
+                        {(steps.length ? steps : [active.result.stage || '검토를 시작하는 중']).map(
+                          (s, i, all) => (
+                            <li key={s} className={i < all.length - 1 ? 'done' : 'current'}>
+                              {i < all.length - 1 ? (
+                                <Check size={14} />
+                              ) : (
+                                <LoaderCircle size={14} className="spin" />
+                              )}
+                              {s}
+                            </li>
+                          ),
+                        )}
+                      </ol>
                       <button
                         onClick={() => {
                           controller.current?.abort();

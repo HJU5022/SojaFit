@@ -221,7 +221,7 @@ class FailingAnalysis:
     def __init__(self, error): self.error = error
     def admission(self, user): pass
     def ensure_thread(self, *args, **kwargs): pass  # run은 질문 · 조건도 키워드로 넘긴다(키 없는 데모의 스트림 전 확인)
-    def message(self, user, thread, text, conditions='', request_id=''):
+    def message(self, user, thread, text, conditions='', request_id='', progress=None):
         logging.getLogger('backend.conversations').warning('fake_step')
         raise self.error
 

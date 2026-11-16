@@ -50,7 +50,7 @@ def test_thread_delete_uses_safe_errors(web, monkeypatch, failure_kind, status):
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None, refuse=None):
-        self.calls, self.targets, self.version, self.hints = [], {}, 1, []
+        self.calls, self.targets, self.version, self.hints, self.nodes = [], {}, 1, [], []
         self.state, self.interrupt, self.error, self.refuse = state or {'answer': 'ok'}, interrupt, error, refuse
         self.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values=self.state))
     def config(self, thread): return {'configurable': {'thread_id': thread}}
@@ -66,8 +66,11 @@ class FakeAnalysis:
         if self.error:
             raise self.error
         return {'interrupt': self.interrupt, 'version': self.version, 'profile_hints': self.hints}
-    def message(self, user, thread, text, conditions='', request_id=''): return self._run('message', thread, text, conditions)
-    def resume(self, user, thread, answers, role, version, request_id=''): return self._run('resume', thread, answers, role, version)
+    def message(self, user, thread, text, conditions='', request_id='', progress=None):
+        for node in self.nodes:  # 실제 서비스처럼 그래프 노드가 시작할 때마다 노드 이름으로 알린다
+            progress(node)
+        return self._run('message', thread, text, conditions)
+    def resume(self, user, thread, answers, role, version, request_id='', progress=None): return self._run('resume', thread, answers, role, version)
     def detail(self, user, thread): return {'version': self.version}
 
 
@@ -294,6 +297,25 @@ def test_first_run_creates_analysis_thread_and_saves_before_completed(web):
     assert repo.calls == ['start', ('commit', 'completed')]
 
 
+def sse_frames(text):
+    """SSE 본문을 (이벤트 이름, data) 목록으로 나눈다."""
+    return [(lines[0].removeprefix('event: '), json.loads(lines[1].removeprefix('data: ')))
+            for block in text.strip().split('\n\n') if (lines := block.split('\n'))]
+
+
+def test_run_streams_a_status_frame_per_new_stage_before_the_last_frame(web):
+    """노드가 시작할 때마다 화면 단계가 바뀌면 status 하나. 같은 단계 · 표에 없는 노드는 보내지 않고, 마지막 frame은 그대로 하나다."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis = FakeAnalysis()
+    analysis.nodes = ['입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', 'Spec 에이전트', '회로 읽기',
+                      '대체 부품 판정', '답 모으기', '답 정리', '답 검사', '끝내기']
+    with web(analysis, FakeRepo(thread, run)) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': 'hello', 'target_ref': 'D1'}, headers=ORIGIN).text)
+    assert [name for name, _ in frames] == ['run_started'] + ['status'] * 7 + ['completed']
+    assert [data['stage'] for name, data in frames if name == 'status'] == ['입력 확인', '품번 확인', '질문 분석', '문서 검색', '회로 역할 읽기', '후보 판정', '답 작성']
+    assert all(data['status'] == 'running' and data['answer'] == '' for name, data in frames if name == 'status')
+
+
 @pytest.fixture
 def native_input_path(monkeypatch):
     """Real HTTP/service/graph; fake SQL, auth and model replies only."""
@@ -370,6 +392,23 @@ def test_free_http_names_stay_out_of_model_prompts_but_conditions_reach(web,nati
     assert {'supervisor','docs_answer' if case_id=='T1' else 'judge_read'}<={node for node,_ in prompts}
     assert all(name not in user for _,user in prompts)
     assert any('CONDITION_SURFACE' in user for _,user in prompts)
+
+
+@pytest.mark.parametrize('case_id, stages', [('T1', ['입력 확인', '품번 확인', '질문 분석', '문서 검색', '답 작성']),
+                                             ('T5', ['입력 확인', '품번 확인', '질문 분석', '회로 역할 읽기', '후보 판정', '답 작성'])])
+def test_live_stages_come_from_the_real_graph_nodes(web, native_input_path, case_id, stages):
+    """진짜 그래프의 노드 이름이 진행 단계 표와 맞는지 본다(노드 이름을 바꾸면 여기서 깨진다)."""
+    from backend.conversations import memory_service
+    from backend.services.langfuse_prompts import AnalysisTimings
+    analysis, repo, _, _, question = native_input_path(case_id, 'synthetic.net')
+    graph = analysis.graph
+    # [왜] 고정 장치의 _invoke는 callback 없이 그래프만 돈다. 실제 _invoke처럼 노드 시간 callback에 진행 알림을 붙인다
+    analysis._invoke = lambda conn, tid, payload, budget, request_id='': graph.invoke(
+        payload, {**analysis.config(tid), 'callbacks': [AnalysisTimings(on_node=memory_service._progress.get())]})
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{repo.thread}/runs', json={'question': question, 'target_ref': 'D1'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'completed' and all(name == 'status' for name, _ in frames[1:-1])
+    assert [data['stage'] for name, data in frames if name == 'status'] == stages
 
 
 def test_free_resume_text_reaches_later_question_history_not_immediate_read(web,native_input_path):
@@ -595,7 +634,7 @@ def test_disconnected_stream_keeps_running_and_saves_terminal():
         def finish(self, *args): self.result = args
     repo = Repo()
     analysis = FakeAnalysis()
-    def slow():
+    def slow(progress):
         time.sleep(0.05)
         return {'interrupt': None}
     async def run():

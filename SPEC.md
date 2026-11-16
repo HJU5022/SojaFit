@@ -244,12 +244,13 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | `INTERNAL_ERROR` | 500 | 예상 못 한 오류, 내용은 로그에만. 표에 없는 5xx도 이 코드 |
 
   분석 거절(SSE `refused`)은 요청 실패가 아니라 분석 결과라 이 표 밖입니다. 서버 로그는 stdout에 JSON 한 줄씩(`severity` · `time` · `logger` · `message`, 요청 안의 줄은 `request_id`)이고, 오류 응답 · `failed` 이벤트마다 `code` · `status`를 담은 줄 하나를 남깁니다. 4xx는 INFO(문구 · 본문 없이), 5xx와 예상 못 한 예외는 ERROR에 traceback(프레임과 예외 이름만, 예외 메시지는 빼고)입니다. 질문 글 · 조건 · 넷리스트 · 이메일 · 비밀번호 · 토큰 · 키는 로그에 적지 않습니다(`backend/logs.py`).
-- run · 재개의 SSE 이벤트(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, `text/event-stream`, `/docs`에도 같은 설명): frame마다 `event: 이름`과 `data: JSON` 한 줄입니다. 순서는 `run_started` → `status` → 마지막 하나이고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`). 공개 결과는 허용 목록 `BrowserResult`(`backend/conversations/dto.py`)의 칸 `answer · status · stage · question_type · evidence · judgement · price_parts · refusal · interrupt · request_id · profile_hints`만 담고, `GET /api/runs/{id}`의 `result`와 같은 모양입니다(저장하지 않는 `profile_hints`는 거기서 빈 목록).
+- run · 재개의 SSE 이벤트(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, `text/event-stream`, `/docs`에도 같은 설명): frame마다 `event: 이름`과 `data: JSON` 한 줄입니다. 순서는 `run_started` → `status` 하나 이상 → 마지막 하나이고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`). 공개 결과는 허용 목록 `BrowserResult`(`backend/conversations/dto.py`)의 칸 `answer · status · stage · question_type · evidence · judgement · price_parts · refusal · interrupt · request_id · profile_hints`만 담고, `GET /api/runs/{id}`의 `result`와 같은 모양입니다(저장하지 않는 `profile_hints`는 거기서 빈 목록).
 
   | 이벤트 | 언제 | data 칸 |
   |---|---|---|
   | `run_started` | 스트림을 열자마자, 분석 전 | `{run_id, request_id}` |
   | `status` | 분석을 시작할 때 한 번 | 공개 결과, `status: running` · `stage: 입력 확인` |
+  | `status`(진행) | 실행 중 그래프 노드가 시작해 화면 단계가 바뀔 때마다(0개 이상, 11-16) | 같은 모양, `stage`는 노드 → 단계 표(`NODE_STAGES`): `입력 읽기` → 입력 확인, `품번·판 확인` → 품번 확인, `Supervisor` → 질문 분석, `RAG 에이전트` → 문서 검색, `회로 읽기` → 회로 역할 읽기, `대체 부품 판정` → 후보 판정, `답 모으기` · `답 정리` · `종합` · `답 검사` → 답 작성. 바로 앞과 같은 단계는 다시 보내지 않고, 표에 없는 노드(`기억 읽기` · `가격 안내` · `끝내기` · `거절`)는 보내지 않습니다. 동시 실행(Send) · 재계획이면 순서가 섞이거나 같은 단계가 다시 올 수 있습니다. 모델의 생각 글은 보내지 않습니다 |
   | `requires_input` | 판정에 회로 값 · 역할이 더 필요할 때(마지막) | 공개 결과, `status: requires_input` · `stage: 판정` · `interrupt: {missing, role_choices, question}` |
   | `completed` | 분석이 답을 냈을 때(마지막) | 공개 결과, `status: completed` · `stage: 완료` · `answer` · `question_type` · `evidence` · `judgement` · `price_parts` · `profile_hints` |
   | `refused` | 범위 밖 · 근거 없음으로 답하지 않을 때(마지막, 오류가 아님) | `completed`와 같은 칸, `status: refused` · `refusal`(= `answer`) |

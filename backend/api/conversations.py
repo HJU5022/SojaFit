@@ -129,7 +129,9 @@ class Run(BaseModel):
 # [왜] run · 재개는 SSE라 response_model로 적을 수 없다. /docs에는 이벤트 이름과 data 모양을 설명으로 적는다(SPEC 4절과 같은 내용)
 SSE_RESPONSE = {200: {'description': (
     'text/event-stream. 각 frame은 `event: 이름`과 `data: JSON` 한 줄이다. 순서: '
-    '`run_started` `{run_id, request_id}` → `status` (공개 결과, status=running, stage=입력 확인) → 마지막 하나: '
+    '`run_started` `{run_id, request_id}` → `status` (공개 결과, status=running, stage=입력 확인) → '
+    '진행 단계가 바뀔 때마다 `status` 0개 이상 (같은 모양, stage=품번 확인 · 질문 분석 · 문서 검색 · 회로 역할 읽기 · 후보 판정 · 답 작성 중 하나. '
+    '그래프 노드가 시작할 때 보내며, 동시 실행 · 재계획이면 순서가 섞이거나 같은 이름이 다시 올 수 있다) → 마지막 하나: '
     '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`, 수정 가능한 재개 오류면 선택 error `{code, message}`) · '
     '`completed` · `refused` (stage=완료, answer · evidence · judgement · refusal · profile_hints) · '
     '`failed` (stage=오류, 공개 결과에 `error: {code, message}`, code는 공통 오류 표). '
@@ -213,6 +215,11 @@ def recover_run(run_id: UUID, request: Request, response: Response, user_id: int
 
 # [왜] failed는 시스템 오류다. 거절(refused, 답할 수 없는 질문)은 답이라 finished(완료)로 끝난다. 둘을 같은 말로 쓰지 않는다
 STAGES = {'running': '입력 확인', 'judge': '판정', 'finished': '완료', 'failed': '오류'}
+# 실행 중 진행 단계: 그래프 노드 이름(backend/multi_agent/build.py) → 화면에 보일 단계 이름(SPEC 4절 SSE 표).
+# [왜] 표에 없는 노드(기억 읽기 · Spec 에이전트 묶음 · 가격 안내 · 끝내기 · 거절)는 따로 보이지 않는다. 마지막 frame이 곧 온다
+NODE_STAGES = {'입력 읽기': STAGES['running'], '품번·판 확인': '품번 확인', 'Supervisor': '질문 분석', 'RAG 에이전트': '문서 검색',
+               '회로 읽기': '회로 역할 읽기', '대체 부품 판정': '후보 판정',
+               '답 모으기': '답 작성', '답 정리': '답 작성', '종합': '답 작성', '답 검사': '답 작성'}
 
 
 def frame(kind, payload):
@@ -263,13 +270,26 @@ def public_error(exc, request_id, run_id):
 
 
 def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resuming=False):
-    """분석 서비스 호출(call)을 스레드에서 돌리고, 결과를 저장한 뒤 마지막 상태 하나를 보낸다."""
+    """분석 서비스 호출 call(progress)을 스레드에서 돌리며 진행 단계를 보내고, 결과를 저장한 뒤 마지막 상태 하나를 보낸다."""
     queue = asyncio.Queue()
+    loop, stage = asyncio.get_running_loop(), STAGES['running']
+
+    def show(node):
+        """(이벤트 루프에서) 노드 하나가 시작했다. 화면 단계 이름이 바뀌었을 때만 status frame을 보낸다."""
+        nonlocal stage
+        if NODE_STAGES.get(node, stage) != stage:
+            stage = NODE_STAGES[node]
+            queue.put_nowait(frame('status', result_dto({}, request_id=request_id, status='running', stage=stage).model_dump()))
+
+    # [왜] 분석은 스레드 풀에서 돈다(동시 Send면 여러 스레드). asyncio.Queue는 스레드에 안전하지 않아 루프 쪽으로 넘겨 넣는다.
+    #      넘긴 순서대로 돌고, 분석 호출이 끝나기 전에 넘겨지므로 마지막 frame보다 늘 앞이다
+    progress = lambda node: loop.call_soon_threadsafe(show, node)
+
     async def execute():
         error = None
         await queue.put(frame('status', result_dto({}, request_id=request_id, status='running', stage=STAGES['running']).model_dump()))
         try:
-            kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(), request_id))
+            kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(progress), request_id))
             # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
             saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement)}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
@@ -319,7 +339,7 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
     await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
                             question=body.question, conditions=body.conditions)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
-    call = lambda: analysis.message(user_id, thread, body.question, body.conditions, request_id=request_id)
+    call = lambda progress: analysis.message(user_id, thread, body.question, body.conditions, request_id=request_id, progress=progress)
     return stream(repo, user_id, thread, run_id, request_id, analysis, call)
 
 
@@ -344,5 +364,6 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
         raise
     await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
     # [왜] 분석 서비스는 현재 결과 버전의 조건 질문만 재개한다. React run은 버전을 모르므로 지금 버전을 읽어 넘긴다
-    call = lambda: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'], request_id=request_id)
+    call = lambda progress: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'],
+                                            request_id=request_id, progress=progress)
     return stream(repo, user_id, thread, str(run_id), request_id, analysis, call, resuming=True)

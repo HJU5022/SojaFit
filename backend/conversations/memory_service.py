@@ -2,6 +2,7 @@
 
 React 작업대의 run·재개는 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
 HTTP 입구는 그 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
+`message` · `resume`의 `progress`는 그래프 노드가 시작할 때마다 노드 이름으로 불린다(SSE `status` 진행 단계, SPEC 4절).
 분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
 회로 이름 · 연결 정보는 `public.threads → project_circuit_versions`의 고정 버전에서 읽는다(`_owned`).
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
@@ -28,6 +29,7 @@ import time
 import logging
 from decimal import Decimal
 from contextlib import ExitStack, contextmanager
+from contextvars import ContextVar
 from functools import lru_cache
 from uuid import uuid4
 
@@ -59,6 +61,19 @@ USER_TOKENS_FULL = f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_T
 SERVICE_TOKENS_FULL = f'오늘 서비스 전체 분석 사용량(하루 {SERVICE_DAILY_TOKENS:,} 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 
 MAX_CONVERSATION_HISTORY_CHARS = 20_000
+# 이번 run의 노드 진행 알림(message · resume의 progress). `_invoke`가 읽어 노드 시간 callback에 붙인다.
+# [왜] `_invoke` 인자로 넘기지 않는다. 시험 · 평가 실행기(evals/runners/run_injection_baseline.py)가 `_invoke`를 지금 인자 그대로 바꿔 끼운다
+_progress = ContextVar('analysis_progress', default=None)
+
+
+@contextmanager
+def _reporting(progress):
+    """with 안에서 부르는 `_invoke`가 노드가 시작할 때마다 progress(노드 이름)를 부르게 한다."""
+    token = _progress.set(progress)
+    try:
+        yield
+    finally:
+        _progress.reset(token)
 
 
 def _conversation_history(contents, *, max_chars=MAX_CONVERSATION_HISTORY_CHARS):
@@ -471,7 +486,7 @@ class Conversations:
         except psycopg.Error:
             RETENTION_LOGGER.warning('retention_purge_failed')
 
-    def message(self, user, thread, text, conditions='', request_id=''):
+    def message(self, user, thread, text, conditions='', request_id='', progress=None):
         # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
         self._purge_expired()
         with self.locked(user, thread) as (conn, row):
@@ -511,7 +526,8 @@ class Conversations:
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,
                       # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
                       'approved_memories': []}
-            self._invoke(conn, thread, inputs, budget, request_id)
+            with _reporting(progress):
+                self._invoke(conn, thread, inputs, budget, request_id)
         return self.detail(user, thread, hints)
 
     def _profile_hints(self, user, question):
@@ -522,7 +538,7 @@ class Conversations:
             LOGGER.warning('profile_hints_unavailable')
             return []
 
-    def resume(self, user, thread, answers, role, version, request_id=''):
+    def resume(self, user, thread, answers, role, version, request_id='', progress=None):
         with self.locked(user, thread) as (conn, row):
             if version != row['version']:
                 raise HTTPException(409, '새 결과의 조건 질문을 다시 확인하세요.')
@@ -556,14 +572,15 @@ class Conversations:
                 conn.execute('UPDATE threads SET input_record=%s WHERE id=%s', (Jsonb(record), thread))
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
             hints = self._profile_hints(user, record.get('question'))
-            self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
+            with _reporting(progress):
+                self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
         return self.detail(user, thread, hints)
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
         from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
         from backend.services import langfuse_prompts, service_trace
         from backend.services.demo import ReplayMiss
-        timings = langfuse_prompts.AnalysisTimings()
+        timings = langfuse_prompts.AnalysisTimings(on_node=_progress.get())  # 노드 시작 알림은 message · resume이 progress를 줬을 때만
         started = time.monotonic()
         # [왜] 모델 호출별 추적을 analysis-metadata와 같은 trace_id로 묶으려고 실행 시작에 trace_id를 정한다(키가 없으면 빈 값)
         trace_id = uuid4().hex
