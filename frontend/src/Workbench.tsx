@@ -6,7 +6,6 @@ import {
   LoaderCircle,
   Paperclip,
   Pencil,
-  Plus,
   Send,
   Square,
   Trash2,
@@ -29,17 +28,7 @@ import { partsOf, unsupportedPartReason } from './circuit';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply, TargetChoice } from './Reply';
 import { SchematicSection } from './Schematic';
-import type {
-  Candidate,
-  DemoQuestion,
-  Detail,
-  Project,
-  Quote,
-  Result,
-  Role,
-  Run,
-  Thread,
-} from './types';
+import type { Candidate, DemoQuestion, Detail, Project, Quote, Result, Role, Run } from './types';
 const freshResult = (): Result => ({
   answer: '',
   status: 'running',
@@ -53,7 +42,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   const project = useResource<Project>(
       `/projects/${projectId}${threadId ? '?thread_id=' + threadId : ''}`,
     ),
-    threads = useResource<Thread[]>(`/projects/${projectId}/threads`),
     roles = useResource<Role[]>('/judge/roles'),
     questions = useResource<DemoQuestion[]>('/demo-questions'),
     quotes = useResource<Quote[]>(`/projects/${projectId}/quotes`);
@@ -170,7 +158,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     const d = await api<Detail>('/threads/' + tid);
     setDetail(d);
     if (d.target_ref) setTarget(d.target_ref); // 서버가 정했거나 사용자가 고른 대상
-    threads.reload();
     refreshNavigation();
     return d;
   }
@@ -411,36 +398,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               ))}
               {project.data && <SchematicSection project={project.data} threadId={threadId} />}
             </section>
-            <div className="review-nav">
-              <div>
-                <h2>검토 기록</h2>
-                {/* [왜] 새 검토는 빈 대화를 만들고 옮겨 갈 뿐이다. 실행 중인 검토는 서버에서 계속된다(기록 링크와 같음) */}
-                <button className="icon-button" aria-label="새 검토" onClick={newReview}>
-                  <Plus size={18} />
-                </button>
-              </div>
-              <a className={!threadId ? 'active' : ''} href={'/app?project=' + projectId}>
-                부품 고르기
-              </a>
-              {threads.loading ? (
-                <Loading />
-              ) : threads.error ? (
-                <ErrorBox error={threads.error} retry={threads.reload} />
-              ) : threads.data?.length ? (
-                threads.data.map((t) => (
-                  <a
-                    key={t.id}
-                    className={t.id === threadId ? 'active' : ''}
-                    href={`/app?project=${projectId}&thread=${t.id}`}
-                  >
-                    <span>{t.title || '새 검토'}</span>
-                    <small>{t.status ? statuses[t.status] : '질문 대기'}</small>
-                  </a>
-                ))
-              ) : (
-                <p className="muted">아직 검토 기록이 없습니다.</p>
-              )}
-            </div>
           </aside>
           <section className="conversation">
             <div className="conversation-heading">

@@ -1213,43 +1213,6 @@ form {
 .pin-list b {
   font-weight: 500;
 }
-.review-nav > div:first-child {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.review-nav h2 {
-  font-size: 13px;
-}
-.review-nav > a {
-  display: block;
-  padding: 10px 9px;
-  border-radius: 5px;
-  text-decoration: none;
-  line-height: 1.6;
-  font-size: 13px;
-  margin-bottom: 5px;
-  overflow-wrap: anywhere;
-}
-.review-nav > a.active {
-  background: #e5ecef;
-}
-.review-nav > a span {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.review-nav small {
-  display: block;
-  font-size: 13px;
-  margin-top: 5px;
-}
-.review-nav > p {
-  font-size: 13px;
-  margin: 15px 8px;
-}
 .conversation {
   display: flex;
   flex-direction: column;
@@ -2313,23 +2276,6 @@ form {
   }
   .circuit small {
     font-size: 13px;
-  }
-  .review-nav {
-    border-top: 1px solid var(--line);
-    padding-top: 10px;
-    margin-top: 7px;
-  }
-  .review-nav > div:first-child {
-    margin-bottom: 0;
-  }
-  .review-nav h2 {
-    font-size: 13px;
-  }
-  .review-nav > a {
-    font-size: 13px;
-  }
-  .review-nav > p {
-    margin: 5px 8px;
   }
   .conversation {
     height: auto;
