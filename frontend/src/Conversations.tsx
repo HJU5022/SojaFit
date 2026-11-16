@@ -1,6 +1,17 @@
 /** 대화가 먼저인 입구: 사이드바의 대화 목록·프로젝트 폴더와 "새 대화" 빈 화면. 프로젝트 하나는 회로 하나다. 출처: SPEC 2절, 4절, 8.8. */
 import { useEffect, useState } from 'react';
-import { ChevronRight, CornerDownLeft, Paperclip, Pencil, Plus, Trash2, X } from 'lucide-react';
+import {
+  ChevronRight,
+  CircuitBoard,
+  CornerDownLeft,
+  FilePlus,
+  Info,
+  Paperclip,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { api, ApiError } from './api';
 import { projectNameFromQuestion } from './circuit';
 import { isSendKey } from './display';
@@ -287,12 +298,8 @@ export function ConversationNav({
     </div>
   );
 }
-const EXAMPLES = [
-  ['1N4148 역전압은 몇 V야?', '부품 정격 묻기'],
-  ['D1을 1N5819로 바꿔도 될까?', '+로 넷리스트 첨부 후 교체 검토'],
-  ['이 회로에서 D1 역할이 뭐야?', '넷리스트 첨부 후 회로 역할'],
-];
-/** "새 대화" 화면: 가운데 짧은 안내와 예시, 아래 질문 입력창 하나(#30 #41). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
+const SAMPLE = '/assets/samples/attiny85-time-switch.net';
+/** "새 대화" 화면: 가운데 공통 안내(첨부 · 샘플 회로 두 줄과 지원 범위 한 줄), 아래 질문 입력창 하나(#30 #41 #45). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
 export function NewConversation() {
   const [question, setQuestion] = useState(''),
     [attachment, setAttachment] = useState<File | null>(null),
@@ -334,31 +341,40 @@ export function NewConversation() {
       setBusy(false);
     }
   }
+  // [왜] 샘플 회로는 고른 파일처럼 첨부 칩으로만 붙이고 보내지 않는다. API가 아니라 정적 파일이라 fetch로 받는다
+  async function attachSample() {
+    setError(null);
+    try {
+      const res = await fetch(SAMPLE);
+      if (!res.ok) throw new Error('샘플 회로를 불러오지 못했습니다.');
+      setAttachment(new File([await res.text()], SAMPLE.split('/').pop()!, { type: 'text/plain' }));
+    } catch (e) {
+      setError(e as Error);
+    }
+  }
   const disabled = busy || (!question.trim() && !attachment);
   // 409: 같은 이름이나 같은 회로의 프로젝트가 있다(넷리스트 첨부). 그 회로로 이어 갈지, 그래도 새로 만들지 고르게 한다
   const duplicates: { id: number; name: string }[] =
     error instanceof ApiError && error.status === 409 ? (error.details?.duplicates ?? []) : [];
   return (
     <div className="page-content new-chat" {...attach.dropZone}>
-      {/* [왜] 채팅 앱처럼 안내는 가운데, 입력창은 아래에 둔다(#41). 예시는 입력창을 채우기만 하고 보내지 않는다 */}
+      {/* [왜] 채팅 앱처럼 안내는 가운데, 입력창은 아래에 둔다(#41). 회로가 붙기 전이라 특정 부품을 가정한 예시 질문은 두지 않는다(#45) */}
       <div className="new-chat-guide">
         <h1>무엇을 검토할까요?</h1>
-        <div className="example-cards">
-          {EXAMPLES.map(([example, caption]) => (
-            <button
-              key={example}
-              type="button"
-              onClick={() => {
-                setQuestion(example);
-                document.getElementById('new-question')?.focus();
-              }}
-            >
-              {example}
-              <small>{caption}</small>
-            </button>
-          ))}
+        <div className="start-options">
+          <button type="button" onClick={() => attach.input.current?.click()}>
+            <FilePlus size={16} />
+            넷리스트 첨부하기 (.net)
+          </button>
+          <button type="button" onClick={attachSample}>
+            <CircuitBoard size={16} />
+            샘플 회로로 시작하기
+          </button>
         </div>
-        <p>지금은 다이오드를 판정합니다 · 판정은 데이터시트 근거가 있을 때만 냅니다</p>
+        <p>
+          <Info size={14} />
+          지금 지원: 다이오드 · 판정마다 데이터시트 인용
+        </p>
       </div>
       {busy && <Loading label="대화를 준비하는 중" />}
       <ErrorBox error={duplicates.length ? null : error} />
@@ -424,7 +440,7 @@ export function NewConversation() {
             e.preventDefault();
             if (!disabled) void start();
           }}
-          placeholder="예: 1N4148 역전압은 몇 V야? · D1을 1N5819로 바꿔도 될까?"
+          placeholder="+로 넷리스트를 첨부해 회로를 읽히거나, 궁금한 부품을 물어보세요"
         />
         <div className="composer-controls">
           {attach.button}

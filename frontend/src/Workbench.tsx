@@ -899,9 +899,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                       ? '위에서 바꿀 부품을 고르면 이어서 검토합니다.'
                       : waiting
                         ? '위의 사용 조건을 입력하면 이어서 검토합니다.'
-                        : target
-                          ? `${target}의 교체 후보나 궁금한 점을 입력하세요.`
-                          : '바꿀 부품과 후보를 입력하세요. 예: D1을 1N5819로 바꿔도 될까요?'
+                        : // [왜] 특정 부품 번호를 예로 들지 않는다. 회로가 없으면 새 대화와 같은 안내(#45)
+                          project.data?.circuit_version
+                          ? '이 회로에서 궁금한 점이나 바꿀 부품을 물어보세요'
+                          : '+로 넷리스트를 첨부해 회로를 읽히거나, 궁금한 부품을 물어보세요'
                   }
                 />
                 <div className="composer-controls">
