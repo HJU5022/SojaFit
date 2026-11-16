@@ -71,6 +71,15 @@ export const NEEDS_CIRCUIT = '이 질문은 회로가 있어야 검토할 수 �
 export function projectNameFromQuestion(question: string) {
   return question.replace(/\s+/g, ' ').trim().slice(0, 30).trim() || '새 대화';
 }
+/** 고른 파일 이름이 받는 확장자(accept, 쉼표로 나눈 `.net,.kicad_sch` 꼴) 중 하나로 끝나는지. 대소문자 · 앞뒤 공백은 무시한다. 서버도 다시 검사한다. */
+export function acceptsFile(name: string, accept: string) {
+  const lower = name.trim().toLowerCase();
+  return accept.split(',').some((ext) => lower.endsWith(ext));
+}
+/** KiCad 회로도(`.kicad_sch`)인지(#52). 아니면 넷리스트로 본다. 서버는 회로도를 렌더러로 넷리스트와 그림으로 바꾼다. */
+export function isSchematicFile(name: string) {
+  return acceptsFile(name, '.kicad_sch');
+}
 /** 넷리스트 업로드 409의 중복 후보(SPEC 4절 `details.duplicates`, 서버가 최근 순)로 할 일을 정한다(#48). 같은 넷리스트가 있으면 그 프로젝트로 이어 가고, 이름만 겹치면 새로 만든다. */
 export function duplicateAction(
   duplicates: { id: number; name: string; matches: string[] }[],

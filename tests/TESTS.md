@@ -28,7 +28,7 @@
 | `conversations/` | 대화 저장소·공개 DTO·사용자 사실 기억 시험. [CONVERSATIONS.md](conversations/CONVERSATIONS.md) |
 | `db/` | 서비스 DB 문서 생성 도구와 커밋된 문서-DB 일치 시험. [DB.md](db/DB.md) |
 | `evals/` | 동결 감시·평가 실행기·채점기·인젝션 기준선 시험. [EVALS.md](evals/EVALS.md) |
-| `fixtures/` | 단위 테스트용 가공 회로(설명 파일 없음). `netlists/minimal.net`과 `netlists/invalid.net`은 합성 KiCad export 정상/미완성 표본 |
+| `fixtures/` | 단위 테스트용 가공 회로(설명 파일 없음). `netlists/minimal.net`과 `netlists/invalid.net`은 합성 KiCad export 정상/미완성 표본, `netlists/minimal.kicad_sch`는 합성 KiCad 회로도 한 장(#52) |
 | `graph/` | 단일 그래프 노드·MCP 검색기 시험. [GRAPH.md](graph/GRAPH.md) |
 | `judge/` | 판정 코드 시험. [JUDGE.md](judge/JUDGE.md) |
 | `mcp_skill/` | MCP 서버 도구 시험. [MCP_SKILL.md](mcp_skill/MCP_SKILL.md) |

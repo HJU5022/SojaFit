@@ -334,6 +334,7 @@ SojaFit (proj3-b)
 │   ├── 032_approval_reselection.sql <- 승인·견적 이력을 보존한 사례 삭제 후 재승인용 제약 변경
 │   ├── 033_thread_titles.sql <- 사용자가 고친 대화 이름 칸(threads.title, NULL이면 첫 질문 이름)
 │   ├── 034_admin_audit.sql <- 관리자 작업 이력 표 admin_audit(가림 해제 사유 · 정지 · 재활성화 · 탈퇴 처리, 앱은 INSERT만)
+│   ├── 035_circuit_schematics.sql <- 회로 버전에 붙은 업로드 KiCad 회로도 원문 표 circuit_schematics(그림은 저장 안 함, #52)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -664,6 +665,7 @@ SojaFit (proj3-b)
 │   └── fixtures/           <- 단위 테스트용 가공 데이터
 │       └── netlists/        <- 외부 원본을 쓰지 않은 합성 KiCad 업로드 표본
 │           ├── minimal.net <- 연결 정보와 버릴 원본 marker가 있는 최소 정상 표본
+│           ├── minimal.kicad_sch <- D1 · R1을 선 하나로 이은 합성 KiCad 회로도 한 장(KiCad 10 kicad-cli 변환 확인, #52)
 │           └── invalid.net <- 괄호가 닫히지 않은 잘못된 표본
 │
 ├── scripts/                <- 서비스 코드 밖에서 손으로 돌리는 일회성 측정·점검 스크립트, 주제별 하위 폴더

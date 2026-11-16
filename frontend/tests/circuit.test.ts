@@ -2,7 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  acceptsFile,
   duplicateAction,
+  isSchematicFile,
   partsOf,
   pinsOf,
   projectNameFromQuestion,
@@ -112,4 +114,23 @@ test('업로드 409 중복: 같은 넷리스트면 그 프로젝트로 잇고, �
     { action: 'continue', projectId: 5, name: '샘플' },
   );
   assert.deepEqual(duplicateAction([]), { action: 'create' });
+});
+test('첨부 파일 종류: .kicad_sch는 회로도, 받는 확장자 밖은 거절한다(#52)', () => {
+  const newChat = '.net,.kicad_sch';
+  assert.equal(acceptsFile('board.kicad_sch', newChat), true);
+  assert.equal(acceptsFile(' Board.KiCad_Sch ', newChat), true);
+  assert.equal(acceptsFile('circuit.net', newChat), true);
+  assert.equal(acceptsFile('circuit.txt', newChat), false); // 새 대화는 .txt를 받지 않는다(작업대만)
+  assert.equal(acceptsFile('circuit.txt', '.net,.txt,.kicad_sch'), true);
+  for (const name of [
+    'board.sch',
+    'board.kicad_pcb',
+    'board.kicad_sch.txt',
+    'board.kicad_pro',
+    'kicad_sch',
+  ])
+    assert.equal(acceptsFile(name, newChat), false, name);
+  assert.equal(isSchematicFile('board.KICAD_SCH'), true);
+  assert.equal(isSchematicFile('board.net'), false);
+  assert.equal(isSchematicFile('board.sch'), false); // KiCad 5 옛 형식은 받지 않는다
 });

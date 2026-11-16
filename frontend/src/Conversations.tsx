@@ -312,15 +312,16 @@ export function NewConversation() {
     [attachment, setAttachment] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<Error | null>(null);
-  // [왜] 새 대화 업로드(POST /api/projects/upload)는 .net만 받는다. 작업대 첨부는 .txt도 받는다
-  const attach = useNetlistAttach('.net', setAttachment);
+  // [왜] 새 대화 업로드(POST /api/projects/upload)는 .net · .kicad_sch만 받는다. 작업대 첨부는 .txt도 받는다
+  const attach = useNetlistAttach('.net,.kicad_sch', setAttachment);
   async function start() {
     setBusy(true);
     setError(null);
     try {
       let project: Project;
       if (attachment) {
-        if (attachment.size > 5 * 1024 * 1024) throw new Error('넷리스트는 5 MiB 이하여야 합니다.');
+        if (attachment.size > 5 * 1024 * 1024)
+          throw new Error('넷리스트·회로도는 5 MiB 이하여야 합니다.');
         const body = new FormData();
         // [왜] 이름을 먼저 묻지 않는다. 파일 이름(확장자 뺌)으로 만들고 프로젝트 목록에서 바꿀 수 있다
         body.set(
@@ -378,7 +379,7 @@ export function NewConversation() {
         <div className="start-options">
           <button type="button" onClick={() => attach.input.current?.click()}>
             <FilePlus size={16} />
-            넷리스트 첨부하기 (.net)
+            넷리스트·회로도 첨부하기
           </button>
           <button type="button" onClick={attachSample}>
             <CircuitBoard size={16} />

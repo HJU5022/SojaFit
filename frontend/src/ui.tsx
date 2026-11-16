@@ -17,7 +17,7 @@ import { api, verdicts } from './api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { explainAnswer, markdownUrl, safeLink } from './display';
-import { partsOf, pinsOf } from './circuit';
+import { acceptsFile, isSchematicFile, partsOf, pinsOf } from './circuit';
 import type { Citation, Project, Verdict } from './types';
 export function navigate(url: string, replace = false) {
   history[replace ? 'replaceState' : 'pushState']({}, '', url);
@@ -344,7 +344,10 @@ export function AttachmentCard({ file, onRemove }: { file: File; onRemove: () =>
       <FileText size={22} aria-hidden />
       <div>
         <strong title={file.name}>{file.name}</strong>
-        <small>KiCad 넷리스트 · {file.name.match(/\.[^.]*$/)?.[0].toLowerCase()}</small>
+        <small>
+          {isSchematicFile(file.name) ? 'KiCad 회로도' : 'KiCad 넷리스트'} ·{' '}
+          {file.name.match(/\.[^.]*$/)?.[0].toLowerCase()}
+        </small>
       </div>
       <button type="button" aria-label="첨부 제거" title="첨부 제거" onClick={onRemove}>
         <X size={12} />
@@ -352,15 +355,15 @@ export function AttachmentCard({ file, onRemove }: { file: File; onRemove: () =>
     </div>
   );
 }
-/** 입력창 넷리스트 첨부(#40): + 단추가 위로 여는 메뉴(파일 고르기 · 샘플 넷리스트 받기)와 영역 어디든 끌어 놓기. 새 대화 · 작업대가 같이 쓴다.
- *  accept 밖의 파일은 붙이지 않고 짧게 알린다(서버도 다시 검사한다. 새 대화 업로드는 .net만 받는다). */
+/** 입력창 넷리스트 · 회로도 첨부(#40 #52): + 단추가 위로 여는 메뉴(파일 고르기 · 샘플 넷리스트 받기)와 영역 어디든 끌어 놓기. 새 대화 · 작업대가 같이 쓴다.
+ *  accept 밖의 파일은 붙이지 않고 짧게 알린다(서버도 다시 검사한다). */
 export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
   const input = useRef<HTMLInputElement>(null),
     [over, setOver] = useState(false),
     [rejected, setRejected] = useState(false);
   function pick(file: File | undefined) {
     if (!file) return;
-    const ok = accept.split(',').some((ext) => file.name.toLowerCase().endsWith(ext));
+    const ok = acceptsFile(file.name, accept);
     setRejected(!ok);
     if (ok) onFile(file);
   }
@@ -384,7 +387,7 @@ export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
     // [왜] 덮개가 영역 전체를 덮고 끌기 이벤트를 혼자 받는다. 자식 요소 사이를 지날 때 깜빡이지 않고, 덮개를 벗어날 때만 닫힌다
     overlay: over && (
       <div className="drop-overlay" onDragLeave={() => setOver(false)}>
-        여기에 놓으면 넷리스트를 첨부해요
+        여기에 놓으면 넷리스트·회로도를 첨부해요
       </div>
     ),
     button: (
@@ -407,7 +410,7 @@ export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
           up
           items={[
             {
-              label: '넷리스트 첨부 (.net)',
+              label: '넷리스트·회로도 첨부 (.net, .kicad_sch)',
               icon: <Paperclip size={14} />,
               onSelect: () => input.current?.click(),
             },

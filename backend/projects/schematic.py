@@ -17,6 +17,7 @@ COMMAND_TIMEOUT_SECONDS = 30
 KICAD_CLI = os.getenv("KICAD_CLI", "kicad-cli")
 RENDERER_MAX_SHEETS = 20
 RENDERER_MAX_RESPONSE_BYTES = 20 * 1024 * 1024
+UPLOAD_RENDER_SECONDS = 150
 
 
 class InvalidKicadProject(ValueError):
@@ -176,6 +177,47 @@ def render_remote_kicad(source: Any, *, connections=None, client: Any = None) ->
             client.close()
 
 
+def export_uploaded_kicad(text: str, *, client: Any = None) -> tuple[bytes, tuple[bytes, ...]]:
+    """업로드한 .kicad_sch 원문을 렌더러에 보내 (KiCad 넷리스트 원문, PNG 시트)를 받는다.
+
+    렌더러 422는 InvalidKicadProject, 설정 없음 · 연결 실패 · 시간 초과 · 그 밖의 응답은 KicadServiceUnavailable.
+    """
+    import time
+    import httpx
+    from backend.projects.external_circuit_search import read_bounded_body
+    from backend.projects.netlist import MAX_BYTES
+    url = os.getenv("KICAD_RENDERER_URL", "").rstrip("/")
+    if not url.startswith(("http://", "https://")):
+        raise KicadServiceUnavailable("KiCad 렌더러가 설정되지 않았습니다.")
+    owned = client is None
+    if owned:
+        client = httpx.Client(timeout=90, follow_redirects=False, trust_env=False)
+    try:
+        with client.stream('POST', url + '/render', json={'schematic': text},
+                           headers={**_renderer_headers(url), 'Accept-Encoding': 'identity'}) as response:
+            # [왜] 읽기 timeout은 조각마다라 전체 시간도 막는다(KiCad 변환 4번 · 그림 1번이 각 30초 상한)
+            raw_response = read_bounded_body(response, RENDERER_MAX_RESPONSE_BYTES * 4 // 3 + MAX_BYTES * 2 + 65536,
+                                             deadline=time.monotonic() + UPLOAD_RENDER_SECONDS)
+        if response.status_code == 422:
+            raise InvalidKicadProject("KiCad 회로도를 읽을 수 없습니다.")
+        if response.status_code != 200:
+            raise KicadServiceUnavailable("KiCad 렌더러가 변환에 실패했습니다.")
+        data = json.loads(raw_response)
+        netlist, sheets = data['netlist'].encode('utf-8'), data['sheets']
+        if len(netlist) > MAX_BYTES or not isinstance(sheets, list) or len(sheets) != 1:
+            raise ValueError('invalid renderer response')
+        from backend.projects.schematic_render import _valid_png
+        return netlist, tuple(_valid_png(base64.b64decode(sheet, validate=True)) for sheet in sheets)
+    except InvalidKicadProject:
+        raise
+    except (httpx.HTTPError, OSError, ValueError, KeyError, TypeError, AttributeError, binascii.Error,
+            ExternalSchematicInvalidSource) as exc:
+        raise KicadServiceUnavailable("KiCad 렌더러에 연결할 수 없습니다.") from exc
+    finally:
+        if owned:
+            client.close()
+
+
 def _renderer_source(payload: Any):
     from backend.projects.schematic_source import VerifiedSchematicSource
     if not isinstance(payload, dict):
@@ -209,6 +251,14 @@ try:
     @app.post("/render")
     def renderer_render(body: dict[str, Any]):
         try:
+            if set(body) == {'schematic'}:
+                # 업로드한 회로도 한 장(#52): 넷리스트 원문과 PNG를 함께 돌려준다. GitHub 원본(source)과 섞지 않는다
+                if not isinstance(body['schematic'], str):
+                    raise ValueError('invalid renderer request')
+                from backend.projects.schematic_render import render_uploaded_schematic
+                netlist, sheets = render_uploaded_schematic(body['schematic'])
+                return {'sheets': [base64.b64encode(sheet).decode('ascii') for sheet in sheets],
+                        'netlist': netlist.decode('utf-8')}
             if set(body)-{'source','include_netlist'} or type(body.get('include_netlist',False)) is not bool:
                 raise ValueError('invalid renderer request')
             source = _renderer_source(body.get("source"))

@@ -1,4 +1,4 @@
-"""소유자 조건을 포함한 프로젝트 SQL. 데모 또는 정규화 연결 JSON만 저장한다."""
+"""소유자 조건을 포함한 프로젝트 SQL. 데모 또는 정규화 연결 JSON을 저장하고, 넷리스트 원문은 저장하지 않는다. 올린 회로도(.kicad_sch)만 원문을 그 회로 버전에 둔다(#52)."""
 import hashlib
 import json
 from pathlib import Path
@@ -69,7 +69,7 @@ class ProjectRepository:
                                       (user_id, name)).fetchone()[0]
             return self._get_owned(conn, user_id, project_id)
 
-    def import_netlist(self, user_id: int, project_id: int, *, connections, source_sha256: str, parser_version: str, thread_id=None):
+    def import_netlist(self, user_id: int, project_id: int, *, connections, source_sha256: str, parser_version: str, thread_id=None, schematic=None):
         """회로를 올리고 (프로젝트, 대화 id)를 돌려준다. 대화는 새로 만든다.
 
         회로가 없던 프로젝트에 그 프로젝트의 회로 없는 대화(버전 0) thread_id를 주면 새 대화를 만들지 않고 그 대화를 돌려준다.
@@ -83,16 +83,17 @@ class ProjectRepository:
                 'SELECT 1 FROM threads t WHERE t.id=%s AND t.project_id=%s AND t.circuit_version=0 '
                 'AND NOT EXISTS (SELECT 1 FROM circuits c WHERE c.project_id=t.project_id)', (thread_id, project_id)).fetchone() is not None
             conn.execute("UPDATE projects SET source_kind='upload',demo_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=%s AND user_id=%s", (project_id, user_id))
-            conn.execute('INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,%s,%s,%s) '
+            version = conn.execute('INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,%s,%s,%s) '
                          'ON CONFLICT (project_id) DO UPDATE SET connections=EXCLUDED.connections,source_sha256=EXCLUDED.source_sha256,'
-                         'parser_version=EXCLUDED.parser_version,version=circuits.version+1,created_at=CURRENT_TIMESTAMP',
-                         (project_id, Jsonb(connections, dumps=lambda value: json.dumps(value, default=dict)), source_sha256, parser_version))
+                         'parser_version=EXCLUDED.parser_version,version=circuits.version+1,created_at=CURRENT_TIMESTAMP RETURNING version',
+                         (project_id, Jsonb(connections, dumps=lambda value: json.dumps(value, default=dict)), source_sha256, parser_version)).fetchone()[0]
+            self._save_schematic(conn, project_id, version, schematic)
             if not same:
                 thread_id = uuid4()
                 conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread_id, project_id))
             return self._get_owned(conn, user_id, project_id), str(thread_id)
 
-    def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str, allow_duplicate=False) -> Project:
+    def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str, allow_duplicate=False, schematic=None) -> Project:
         name = project_name(name)
         with auth.connection() as conn:
             self._check_duplicates(conn, user_id, name, source_sha256, allow_duplicate=allow_duplicate)
@@ -104,7 +105,25 @@ class ProjectRepository:
                 "INSERT INTO circuits (project_id, connections, source_sha256, parser_version) VALUES (%s, %s, %s, %s)",
                 (project_id, Jsonb(connections, dumps=lambda value: json.dumps(value, default=dict)), source_sha256, parser_version),
             )
+            self._save_schematic(conn, project_id, 1, schematic)
             return self._get_owned(conn, user_id, project_id)
+
+    @staticmethod
+    def _save_schematic(conn, project_id, version, schematic):
+        """올린 회로도 원문을 방금 만든 회로 버전에 붙인다(#52). schematic은 None이거나 (파일 이름, 원문)."""
+        if schematic is not None:
+            conn.execute('INSERT INTO circuit_schematics(project_id,circuit_version,file_name,source) VALUES (%s,%s,%s,%s)',
+                         (project_id, version, *schematic))
+
+    def uploaded_schematic(self, user_id: int, project_id: int, circuit_version: int) -> str:
+        """그 사용자 프로젝트의 그 회로 버전에 올린 회로도 원문. 없거나 남의 것이면 ProjectNotFound."""
+        with auth.connection() as conn:
+            row = conn.execute('SELECT s.source FROM circuit_schematics s JOIN projects p ON p.id=s.project_id '
+                               'WHERE p.user_id=%s AND s.project_id=%s AND s.circuit_version=%s',
+                               (user_id, project_id, circuit_version)).fetchone()
+        if row is None:
+            raise ProjectNotFound
+        return row[0]
 
     def create_demo(self, user_id: int, demo_id: str, name: str, *, allow_duplicate=False) -> Project:
         name = project_name(name)
@@ -137,7 +156,8 @@ class ProjectRepository:
     def _get_owned(self, conn, user_id: int, project_id: int, thread_id=None) -> Project:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                "SELECT p.id, p.name, v.source_kind, v.demo_id, p.created_at, p.updated_at, v.connections,v.version AS circuit_version "
+                "SELECT p.id, p.name, v.source_kind, v.demo_id, p.created_at, p.updated_at, v.connections,v.version AS circuit_version,"
+                "(SELECT s.file_name FROM circuit_schematics s WHERE s.project_id=v.project_id AND s.circuit_version=v.version) AS schematic_file "
                 "FROM projects p LEFT JOIN circuits c ON c.project_id=p.id "
                 "LEFT JOIN threads t ON t.project_id=p.id AND t.id=%s::uuid "
                 f"JOIN project_circuit_versions v ON v.project_id=p.id AND v.version=CASE WHEN %s::uuid IS NULL THEN COALESCE(c.version,0) ELSE {pinned_version('t')} END "
