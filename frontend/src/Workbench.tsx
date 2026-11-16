@@ -5,7 +5,7 @@ import {
   Check,
   LoaderCircle,
   Paperclip,
-  Plus,
+  Pencil,
   Send,
   Square,
   Trash2,
@@ -20,6 +20,7 @@ import {
   Markdown,
   Modal,
   navigate,
+  RowMenu,
   useResource,
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
@@ -27,17 +28,7 @@ import { partsOf, unsupportedPartReason } from './circuit';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply, TargetChoice } from './Reply';
 import { SchematicSection } from './Schematic';
-import type {
-  Candidate,
-  DemoQuestion,
-  Detail,
-  Project,
-  Quote,
-  Result,
-  Role,
-  Run,
-  Thread,
-} from './types';
+import type { Candidate, DemoQuestion, Detail, Project, Quote, Result, Role, Run } from './types';
 const freshResult = (): Result => ({
   answer: '',
   status: 'running',
@@ -51,7 +42,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   const project = useResource<Project>(
       `/projects/${projectId}${threadId ? '?thread_id=' + threadId : ''}`,
     ),
-    threads = useResource<Thread[]>(`/projects/${projectId}/threads`),
     roles = useResource<Role[]>('/judge/roles'),
     questions = useResource<DemoQuestion[]>('/demo-questions'),
     quotes = useResource<Quote[]>(`/projects/${projectId}/quotes`);
@@ -152,6 +142,15 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     };
   }, [threadId, projectId, reload]);
   useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => {
+    // [왜] 사이드바에서 대화 이름을 바꾸면 제목만 고친다. 다시 읽으면 불러온 이전 메시지와 실행 중 수신이 끊긴다
+    const fn = (e: Event) => {
+      const t = (e as CustomEvent<{ id: string; title: string }>).detail;
+      setDetail((d) => (d && d.id === t.id ? { ...d, title: t.title } : d));
+    };
+    window.addEventListener('thread-renamed', fn);
+    return () => window.removeEventListener('thread-renamed', fn);
+  }, []);
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
       questions.data?.filter(
@@ -168,7 +167,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     const d = await api<Detail>('/threads/' + tid);
     setDetail(d);
     if (d.target_ref) setTarget(d.target_ref); // 서버가 정했거나 사용자가 고른 대상
-    threads.reload();
     refreshNavigation();
     return d;
   }
@@ -331,13 +329,18 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         </div>
         <div className="header-actions">
           <button onClick={() => setShowQuotes(true)}>견적 목록</button>
-          <button
-            className="icon-button"
-            aria-label="프로젝트 이름 변경"
-            onClick={() => setRename(true)}
-          >
-            ···
-          </button>
+          <RowMenu
+            label="프로젝트 메뉴"
+            items={[
+              { label: '이름 변경', icon: <Pencil size={14} />, onSelect: () => setRename(true) },
+              {
+                label: '삭제',
+                icon: <Trash2 size={14} />,
+                danger: true,
+                onSelect: () => setRemove('project'),
+              },
+            ]}
+          />
         </div>
       </div>
       {project.loading ? (
@@ -404,39 +407,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               ))}
               {project.data && <SchematicSection project={project.data} threadId={threadId} />}
             </section>
-            <div className="review-nav">
-              <div>
-                <h2>검토 기록</h2>
-                {/* [왜] 새 검토는 빈 대화를 만들고 옮겨 갈 뿐이다. 실행 중인 검토는 서버에서 계속된다(기록 링크와 같음) */}
-                <button className="icon-button" aria-label="새 검토" onClick={newReview}>
-                  <Plus size={18} />
-                </button>
-              </div>
-              <a className={!threadId ? 'active' : ''} href={'/app?project=' + projectId}>
-                부품 고르기
-              </a>
-              {threads.loading ? (
-                <Loading />
-              ) : threads.error ? (
-                <ErrorBox error={threads.error} retry={threads.reload} />
-              ) : threads.data?.length ? (
-                threads.data.map((t) => (
-                  <a
-                    key={t.id}
-                    className={t.id === threadId ? 'active' : ''}
-                    href={`/app?project=${projectId}&thread=${t.id}`}
-                  >
-                    <span>{t.title || '새 검토'}</span>
-                    <small>{t.status ? statuses[t.status] : '질문 대기'}</small>
-                  </a>
-                ))
-              ) : (
-                <p className="muted">아직 검토 기록이 없습니다.</p>
-              )}
-            </div>
-            <button className="text-button danger-action" onClick={() => setRemove('project')}>
-              프로젝트 삭제
-            </button>
           </aside>
           <section className="conversation">
             <div className="conversation-heading">

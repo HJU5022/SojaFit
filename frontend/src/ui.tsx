@@ -1,6 +1,6 @@
 /** 공통 상태·접근성·회로 표시. 서버 값을 시각화하며 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { AlertCircle, ArrowUpRight, CircuitBoard, LoaderCircle, X } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CircuitBoard, Ellipsis, LoaderCircle, X } from 'lucide-react';
 import { api, verdicts } from './api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -162,6 +162,64 @@ export function Modal({
       </div>
       <div className="dialog-body">{children}</div>
     </dialog>
+  );
+}
+/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화 줄 · 작업대 상단이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. */
+export function RowMenu({
+  label,
+  items,
+}: {
+  label: string;
+  items: { label: string; icon: ReactNode; danger?: boolean; onSelect: () => void }[];
+}) {
+  const [open, setOpen] = useState(false),
+    ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent) {
+        if (e.key !== 'Escape') return;
+        ref.current?.querySelector('button')?.focus(); // [왜] 사라질 메뉴 항목에 있던 초점을 ⋯ 버튼으로 돌린다
+      } else if (ref.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [open]);
+  return (
+    <div className="row-menu" ref={ref}>
+      <button
+        className="icon-button"
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        <Ellipsis size={16} />
+      </button>
+      {open && (
+        <div role="menu" aria-label={label}>
+          {items.map((item) => (
+            <button
+              key={item.label}
+              role="menuitem"
+              className={item.danger ? 'danger' : undefined}
+              onClick={() => {
+                setOpen(false);
+                item.onSelect();
+              }}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 export function Source({ cite }: { cite: Citation }) {

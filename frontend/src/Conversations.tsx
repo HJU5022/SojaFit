@@ -1,8 +1,8 @@
 /** 대화가 먼저인 입구: 사이드바의 대화 목록·프로젝트 폴더와 "새 대화" 빈 화면. 프로젝트 하나는 회로 하나다. 출처: SPEC 2절, 4절, 8.8. */
 import { useEffect, useState } from 'react';
-import { ArrowRight, ChevronRight, Ellipsis, FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronRight, FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { ErrorBox, Loading, Modal, navigate, useResource } from './ui';
+import { ErrorBox, Loading, Modal, navigate, RowMenu, useResource } from './ui';
 import { refreshNavigation } from './Projects';
 import type { Demo, Project, ThreadListItem } from './types';
 /** 사이드바 "대화"(모든 프로젝트, 최근 활동 순)와 "프로젝트"(펼치면 그 대화). 대화 목록은 한 번 받아 프로젝트별로 나눈다. */
@@ -15,8 +15,7 @@ export function ConversationNav({
 }) {
   const threads = useResource<ThreadListItem[]>('/threads'),
     projects = useResource<Project[]>('/projects');
-  const [menu, setMenu] = useState<string | null>(null),
-    [renaming, setRenaming] = useState<string | null>(null),
+  const [renaming, setRenaming] = useState<string | null>(null),
     [remove, setRemove] = useState<ThreadListItem | null>(null),
     [expanded, setExpanded] = useState<number[]>(projectId ? [Number(projectId)] : []),
     [error, setError] = useState<Error | null>(null);
@@ -33,29 +32,14 @@ export function ConversationNav({
     // [왜] 작업대는 첫 질문의 분석이 끝나야 알린다. 새 대화로 옮겨 오면 분석 전에도 목록에 보이게 한 번 다시 읽는다
     if (threadId && threads.data && !threads.data.some((t) => t.id === threadId)) threads.reload();
   }, [threadId]);
-  useEffect(() => {
-    if (!menu) return;
-    const close = (e: Event) => {
-      if (
-        e instanceof KeyboardEvent
-          ? e.key === 'Escape'
-          : !(e.target as Element).closest('.row-menu')
-      )
-        setMenu(null);
-    };
-    document.addEventListener('pointerdown', close);
-    document.addEventListener('keydown', close);
-    return () => {
-      document.removeEventListener('pointerdown', close);
-      document.removeEventListener('keydown', close);
-    };
-  }, [menu]);
   async function rename(t: ThreadListItem, title: string) {
     setRenaming(null);
     if (!title.trim() || title.trim() === t.title) return;
     try {
-      await api('/threads/' + t.id, 'PATCH', { title });
+      const saved = await api<ThreadListItem>('/threads/' + t.id, 'PATCH', { title });
       threads.reload();
+      // [왜] 열린 작업대 제목도 새로고침 없이 바뀌게 서버가 정리한 이름을 알린다(Workbench가 받는다)
+      window.dispatchEvent(new CustomEvent('thread-renamed', { detail: saved }));
     } catch (e) {
       setError(e as Error);
     }
@@ -90,42 +74,21 @@ export function ConversationNav({
         <a href={`/app?project=${t.project_id}&thread=${t.id}`} title={t.project_name}>
           {t.title}
         </a>
-        <div className="row-menu">
-          <button
-            className="icon-button"
-            aria-label="대화 메뉴"
-            aria-haspopup="menu"
-            aria-expanded={menu === t.id}
-            onClick={() => setMenu(menu === t.id ? null : t.id)}
-          >
-            <Ellipsis size={16} />
-          </button>
-          {menu === t.id && (
-            <div role="menu">
-              <button
-                role="menuitem"
-                onClick={() => {
-                  setMenu(null);
-                  setRenaming(t.id);
-                }}
-              >
-                <Pencil size={14} />
-                이름 변경
-              </button>
-              <button
-                role="menuitem"
-                onClick={() => {
-                  setMenu(null);
-                  setError(null);
-                  setRemove(t);
-                }}
-              >
-                <Trash2 size={14} />
-                삭제
-              </button>
-            </div>
-          )}
-        </div>
+        <RowMenu
+          label="대화 메뉴"
+          items={[
+            { label: '이름 변경', icon: <Pencil size={14} />, onSelect: () => setRenaming(t.id) },
+            {
+              label: '삭제',
+              icon: <Trash2 size={14} />,
+              danger: true,
+              onSelect: () => {
+                setError(null);
+                setRemove(t);
+              },
+            },
+          ]}
+        />
       </div>
     );
   return (
