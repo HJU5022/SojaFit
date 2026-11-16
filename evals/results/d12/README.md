@@ -6,7 +6,7 @@
 
 | 수치 | 이전 → 지금 | 원시 | 비용 |
 |---|---|---|---|
-| 동결 v3 게이트 2세트(운영 설정 `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`, 따로 실행한 1세트 × 2) | 마지막 채택 구성 R1(11-14 `b790004`) set1 50/50 · p50 6.8 · p95 10.5초, set2 48/50 · 5.9 · 12.1초 → **A 49/50 · p50 5.5 · p95 16.7초, B 49/50 · 4.8 · 9.1초**(두 세트 모두 실패 v3-16 `wrong_citation`, 무관 거절 25/25, 지어낸 답 0). `gate_report` 기준 미달: A는 p95, B는 없음 | A [gate/set1.json](gate/set1.json) · [gate_report.txt](gate/gate_report.txt), B [gate/set_b/set1.json](gate/set_b/set1.json) · [gate_report.txt](gate/set_b/gate_report.txt) | LLM $0.0361 · $0.0355(실행기 `cost_usd` 합) |
+| 동결 v3 게이트 2세트(`DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`, 따로 실행한 1세트 × 2. 운영과는 미리 출발만 다름) | 마지막 채택 구성 R1(11-14 `b790004`) set1 50/50 · p50 6.8 · p95 10.5초, set2 48/50 · 5.9 · 12.1초 → **A 49/50 · p50 5.5 · p95 16.7초, B 49/50 · 4.8 · 9.1초**(두 세트 모두 실패 v3-16 `wrong_citation`, 무관 거절 25/25, 지어낸 답 0). `gate_report` 기준 미달: A는 p95, B는 없음 | A [gate/set1.json](gate/set1.json) · [gate_report.txt](gate/gate_report.txt), B [gate/set_b/set1.json](gate/set_b/set1.json) · [gate_report.txt](gate/set_b/gate_report.txt) | LLM $0.0361 · $0.0355(실행기 `cost_usd` 합) |
 | 서비스 검색(`run_retrieval_service`, R1 84 + v2 19) | 11-04 #26: 고르기용 46 0.8587 · 확인용 38 0.9079 · v2 19 0.8246 · `retrieve()` p50 1.22 · p95 2.04초 → **0.8152 · 0.9079 · 0.7939 · 0.53 · 0.87초** | [retrieval/service_r1_2026-11-17.json](retrieval/service_r1_2026-11-17.json), [run.log.txt](retrieval/run.log.txt) | OpenRouter $0.0005 + Voyage(미측정) |
 | 새 clone 키 없는 기동(빈 `docker:dind`, `docker compose up --build`) | 11-16 `3ce5abdc` 1회 242.8초 → **6회 중앙값 239.4초(148.9 ~ 296.0)**, 모두 600초 안 | [boot/](boot/) | 0 |
 | 키 없는 데모 스모크(`--demo --refusal`) | 28/28 → **6회 모두 28 통과 · 0 실패 · 0 건너뜀** | `boot/run*/smoke_cold.json` | 0 |
@@ -141,7 +141,8 @@ CI 재생 검사(`.github/workflows/ci.yml` `eval-replay`와 같은 명령, 기�
 
 - 두 세트 모두 v3-16(UF4007 trr)만 `wrong_citation`이다. EVAL_REPORT 11-2절 8행(웹 켬 Docker 9회 모두 실패)과 같은 문항이다.
 - 같은 코드 두 세트의 p95가 7.6초 다르다. A는 같은 호스트의 docker 빌드와 겹쳤다. p95 10초 목표 충족 여부를 한 세트로 말할 수 없다.
-- LLM은 OpenRouter 경유다(`claude_direct` false). 11-14 R1 등 이전 행은 `claude_direct` true(Anthropic 직통)라 시간 비교 조건이 다르다.
+- 운영 리비전과의 차이: 운영 `main-799ae636-1117`은 `DEMO_MODE=0` · `EXA_WEB_SEARCH_ENABLED=1`이고 `WEB_PREFETCH` · `LLM_PROVIDER` · `ANTHROPIC_API_KEY`가 없다([revision_env.txt](prod_unauth/revision_env.txt)). 그래서 이 측정은 운영과 미리 출발(`WEB_PREFETCH=1`) 하나만 다르다(11-14 R1 · A1과 같은 평가 구성).
+- LLM은 OpenRouter 경유다(`claude_direct` false, 운영과 같음). 11-14 R1 · 11-15 B3 등 이전 행은 `claude_direct` true(Anthropic 직통)라 시간 비교 조건이 다르다.
 
 ## 다시 못 잰 것
 
@@ -153,8 +154,8 @@ CI 재생 검사(`.github/workflows/ci.yml` `eval-replay`와 같은 명령, 기�
 | 운영 DB 청크 본문 sha256 재계산(G3) | 51,967/51,967(11-16) | 운영 DB에 접속하지 않았다. 로컬 DB의 저장 해시 목록만 대조했다 |
 | 재시작 뒤 재개 · 계정 격리 52점검(G4, `g4.py`) | 52/52(11-13 로컬) · 배포 25단계(11-13) | 다시 돌리지 않았다. 키 없는 스모크 28단계(6회)가 계정 B의 404 확인을 포함한다 |
 | 온(캐시 있음) 재기동 | 11.7초(11-13) | 다시 재지 않았다 |
-| v3 4세트 50/50 · 무관 거절 25/25(#50, `93a497c`), 동결 병합 뒤 2세트, 단일 그래프 48/50 | 11-10 ~ 11-12 | 지금 코드로는 멀티 그래프 운영 설정만 쟀다 |
-| 웹 끔 v3 게이트 | 11-15 B3 50/50 · p95 9.7초 | 시간 안에 운영 설정(웹 켬)을 먼저 쟀다 |
+| v3 4세트 50/50 · 무관 거절 25/25(#50, `93a497c`), 동결 병합 뒤 2세트, 단일 그래프 48/50 | 11-10 ~ 11-12 | 지금 코드로는 멀티 그래프의 웹 켬 + 미리 출발 구성만 쟀다 |
+| 웹 끔 v3 게이트, 미리 출발 끈 웹 켬(운영과 같은 조합) 게이트 | 11-15 B3 50/50 · p95 9.7초 / 11-14 B1 48 · 50/50 | 시간 안에 11-14 채택 평가 구성(웹 켬 + 미리 출발)을 먼저 쟀다 |
 | v1 검색 기준선(Recall@5 0.737 등), R1 격자(#25), v3 검색 21문항 | 11-03 · 11-13 | 서비스 경로 실행기(#26)만 다시 돌렸다 |
 | 인젝션 · 신뢰 경계(EVAL_REPORT 6장), 변이 28건 | 11-11 ~ 11-16 | 다시 돌리지 않았다 |
 | 대체재 비교(Codex 45/50, Terra 41/50) | 11-12 · 11-16 | 다시 돌리지 않았다 |
