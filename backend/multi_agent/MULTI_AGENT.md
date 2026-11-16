@@ -17,7 +17,7 @@
 | `입력 읽기` | 입력 글 나누기, 대상 부품 주변 넷 읽기(`graph.nodes.read_input`) | 없음 |
 | `기억 읽기` | Store에서 선호 실장 방식만 읽어 `mount_preference`에 둠(`graph.memory.read_profile`) | 없음 |
 | `품번·판 확인` | 질문의 품번·개정판이 코퍼스에 있는지 확인(`facts.py`, MCP `check_corpus`) | 없음 |
-| `Supervisor` | 계획: 범위 판정, 질문 종류, 할 일(최대 `MAX_TASKS`)과 지시서. 일상 대화·가격·범위 밖·코퍼스 밖은 여기서 끝냄 | `supervisor` |
+| `Supervisor` | 계획: 범위 판정, 질문 종류, 할 일(최대 `MAX_TASKS`)과 지시서. 일상 대화·가격·범위 밖·코퍼스 밖은 여기서 끝냄. 서비스가 부품 없는 회로를 넘겼는데(회로 없는 대화) 정격이 아닌 할 일이 있으면 코드가 `circuit_missing` 거절로 끝냄(SPEC 8.9) | `supervisor` |
 | `RAG 에이전트` | 검색 → 다른 품번 줄·다른 판 거르기 → 근거 채점 + 답 쓰기 → 근거가 없거나 일부 답이면 다른 검색어로 재검색 → 인용 검사 → 보고 | `docs_answer` |
 | `Spec 에이전트` | 하위 그래프 `회로 읽기` → `대체 부품 판정`. 읽기 LLM 1번, 빠진 값은 인터럽트로 묻고, 사양 값 비교는 `backend/judge/verdict.py`가 함 | `judge_read` |
 | `답 모으기` | 코드만. 보고 상태와 상한을 보고 길을 정함 | 없음 |

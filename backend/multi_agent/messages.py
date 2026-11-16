@@ -9,6 +9,11 @@
 """
 from backend.multi_agent.contracts import Reason
 
+# 회로 없이 시작한 대화에서 회로가 필요한 질문의 거절(SPEC 8.9). [왜] Reason에 넣지 않는다: Reason은 계획서 구조화 출력 형식에 들어가
+# 데모 기록의 LLM 호출 키가 바뀐다. 코드만 정하는 이유 코드다. [주의] 화면이 이 문구로 회로 고르기 카드를 붙인다(frontend/src/circuit.ts NEEDS_CIRCUIT)
+CIRCUIT_MISSING = 'circuit_missing'
+NEED_NETLIST = '이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요.'
+
 
 def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] = ()) -> str:
     """거절 사유에 맞는 안내 문구. parts · revisions는 질문에서 확인한 값이고 있으면 문구에 넣는다."""

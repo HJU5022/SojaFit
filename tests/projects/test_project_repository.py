@@ -159,6 +159,38 @@ def test_circuit_insert_failure_rolls_back_project(storage):
     assert repo.list_owned(owner) == []
 
 
+def test_netlist_attached_inside_a_circuitless_conversation_keeps_that_thread(storage):
+    from backend.conversations.repository import ConversationRepository
+    from backend.projects.netlist import normalize_netlist, PARSER_VERSION
+    repo, (owner, other), connect = storage
+    conversations = ConversationRepository()
+    normalized = normalize_netlist(Path("tests/fixtures/netlists/minimal.net").read_bytes())
+    attach = lambda user, project_id, thread: repo.import_netlist(user, project_id, connections=normalized.connections,
+                                                                 source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION, thread_id=thread)
+    empty = repo.create_empty(owner, "회로 없는 질문")
+    thread = conversations.create_thread(owner, empty.id)
+    run, circuit = conversations.start(owner, thread, {"question": "1N4148 역전압?"})
+    assert circuit == {"parts": [], "nets": []}
+    conversations.finish(owner, thread, run, "refused", {"answer": "넷리스트를 첨부해 주세요."})
+    project, same = attach(owner, empty.id, thread)
+    assert same == thread and project.circuit_version == 1
+    assert conversations.get_thread(owner, thread)[2] == project.connections
+    assert repo.get_owned(owner, empty.id, thread).connections == project.connections
+    assert conversations.thread_detail(owner, thread)["circuit_version"] == 1
+    assert [m["content"] for m in conversations.thread_detail(owner, thread)["messages"]] == ["1N4148 역전압?", "넷리스트를 첨부해 주세요."]
+    # 회로가 이미 있으면 그 대화를 다시 쓰지 않는다: 지금처럼 새 대화(새 버전)이고 앞 대화는 버전 1을 계속 읽는다
+    project2, fresh = attach(owner, empty.id, thread)
+    assert fresh != thread and project2.circuit_version == 2
+    assert repo.get_owned(owner, empty.id, thread).circuit_version == 1
+    # 다른 프로젝트 · 다른 사용자의 대화 id는 무시하고 새 대화를 만든다
+    mine, theirs = repo.create_empty(owner, "빈 회로 둘"), repo.create_empty(other, "남의 빈 회로")
+    foreign = conversations.create_thread(other, theirs.id)
+    for thread_id in (foreign, conversations.create_thread(owner, empty.id)):
+        _, made = attach(owner, mine.id, thread_id)
+        assert made != thread_id
+    assert repo.get_owned(other, theirs.id, foreign).circuit_version == 0
+
+
 def test_empty_project_imports_versions_and_preserves_old_threads(storage):
     from backend.conversations.repository import ConversationRepository
     from backend.projects.netlist import normalize_netlist, PARSER_VERSION
@@ -181,7 +213,8 @@ def test_empty_project_imports_versions_and_preserves_old_threads(storage):
     project2, thread2 = import_file(second)
     assert project2.id == empty.id and project2.circuit_version == 2 and thread1 != thread2
     assert repo.get_owned(owner, empty.id, thread1).connections == project.connections
-    assert repo.get_owned(owner, empty.id, empty_thread).circuit_version == 0
+    # 회로 없이 시작한 대화(버전 0)는 처음 올린 회로(1)를 읽고, 그 뒤 업로드(2)로는 바뀌지 않는다(SPEC 4절 netlist의 thread_id)
+    assert repo.get_owned(owner, empty.id, empty_thread).circuit_version == 1
     assert conversations.get_thread(owner, thread1)[2] == circuit
     assert conversations.get_thread(owner, thread2)[2] == project2.connections
     conversations.resume(owner, thread1, run)

@@ -189,7 +189,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/projects` | 로그인 | - | 200 `list[ProjectSummary]` | | 내 프로젝트(회로) 목록(2단계) |
     | `POST /api/projects` | 로그인(`demo_id`를 줄 때만 데모 모드) | `CreateProject` `{name, demo_id?}` + 선택 쿼리 `allow_duplicate` | 201 `Project`(`demo_id`를 주면 `connections` 포함, 생략하면 회로 없는 빈 프로젝트) | 404(데모 모드 아닌데 `demo_id`) · 409 `CONFLICT`(같은 사용자의 같은 이름이나 같은 회로) · 422 | 빈 프로젝트나 데모 회로 복제로 프로젝트를 만듭니다(2단계). 빈 프로젝트에는 `POST /api/projects/{id}/netlist`로 넷리스트를 올립니다 |
     | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name`, 선택 쿼리 `allow_duplicate` | 201 `Project` | 400 형식 · 409 `CONFLICT`(같은 이름 또는 같은 파일 내용) · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일). 409의 `details.duplicates`는 최대 5개 `{id, name, matches: [name \| netlist]}`이고, `allow_duplicate=true`면 확인 없이 만듭니다 |
-    | `POST /api/projects/{id}/netlist` | 로그인 | multipart `file`(`.net` 또는 `.txt`, UTF-8, 5 MiB 이하) | 201 `ImportNetlistResponse` `{project, thread_id}` | 400 형식 · 404 · 413 크기 · 422 | 이미 만든 프로젝트에 넷리스트를 올리면 그 프로젝트의 회로를 바꾸고(`circuits.version` +1) 새 대화(thread)를 만듭니다. 작업대의 첨부가 부릅니다. 이 경로는 모델을 부르지 않습니다 |
+    | `POST /api/projects/{id}/netlist` | 로그인 | multipart `file`(`.net` 또는 `.txt`, UTF-8, 5 MiB 이하) + 선택 쿼리 `thread_id` | 201 `ImportNetlistResponse` `{project, thread_id}` | 400 형식 · 404 · 413 크기 · 422 | 이미 만든 프로젝트에 넷리스트를 올리면 그 프로젝트의 회로를 바꾸고(`circuits.version` +1) 새 대화(thread)를 만듭니다. 작업대의 첨부가 부릅니다. 회로가 없던 프로젝트에 그 프로젝트의 회로 없는 대화(`circuit_version` 0) `thread_id`를 주면 새 대화를 만들지 않고 그 대화를 돌려주며, 그 대화는 이 회로(처음 올린 버전)를 읽습니다(8.9). 조건이 맞지 않는 `thread_id`(다른 프로젝트 · 다른 사용자 · 회로가 이미 있음)는 무시하고 새 대화를 만듭니다. 이 경로는 모델을 부르지 않습니다 |
     | `GET /api/projects/{id}` | 로그인 | 쿼리 `thread_id`(선택) | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
     | `PATCH /api/projects/{id}` | 로그인 | `RenameProject` `{name 1~200자}` | 200 `Project` | 404 · 422 | 프로젝트 이름 바꾸기 |
     | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 멈춘 run은 막지 않음, 위 대화 삭제와 같은 기준) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
@@ -510,8 +510,13 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN `target_ref`가 없고 후보(질문에 적힌 지원 다이오드, 없으면 회로의 지원 다이오드 전부)가 둘 이상, WHEN 시작하면, THEN 분석 thread와 그래프 실행 없이 run을 `requires_input`으로 끝내고 `interrupt.target_choices`(ref · 넷리스트 값)와 질문 문장을 보낸다. 처음 질문 · 사용 조건은 run 기록의 `pending_start`에만 두고 브라우저 결과에는 넣지 않는다.
 - GIVEN 부품을 물은 run, WHEN `ResumeRun.target`으로 후보 하나를 보내면, THEN 그 부품으로 분석 thread를 만들고 처음 질문 · 사용 조건을 같은 run에서 분석한다. 후보 밖의 부품 · target 없음 · answers를 함께 보냄 · 부품을 묻지 않은 run에 target은 422이고 run은 그대로다.
 - GIVEN 분석 thread가 이미 대상을 고정함, WHEN `target_ref` 없이 다음 질문을 보내면, THEN 다시 정하거나 묻지 않고 고정한 대상을 쓴다(`target_locked`).
-- GIVEN 지원 다이오드가 없는 회로, WHEN `target_ref` 없이 시작하면, THEN 스트림 전 422다.
-- 화면: "검토할 부품"은 비워 두면 위 규칙을 따르는 선택 항목이고, 대상이 정해지면 그 부품을 보여 줍니다. 부품을 묻는 결과는 조건 카드와 같은 모양의 선택 카드(`TargetChoice`)로 그립니다. 시험: `tests/api/test_conversations.py`(묻기 · 재개 · 422), `tests/api/test_threads.py`(`target_choices` · `ensure_thread` 추론), `tests/conversations/test_dto.py`(후보 검사 · 질문 문장).
+- GIVEN 부품은 있으나 지원 다이오드가 없는 회로, WHEN `target_ref` 없이 시작하면, THEN 스트림 전 422다.
+- 회로 없는 대화(11-16, #8): 부품이 없는 회로(회로 없이 만든 프로젝트, `circuit_version` 0)의 대화다. 대화의 고정 버전 칸은 바꿀 수 없어(db/031 트리거) 읽을 때 정한다: 버전 0인 대화는 그 프로젝트에 처음 올린 회로 버전(1 이상 중 가장 작은 것, 없으면 0)을 읽는다(`backend/conversations/repository.py` `pinned_version`). 그 뒤 업로드는 이 대화를 바꾸지 않는다.
+  - GIVEN 회로 없는 대화, WHEN `target_ref` 없이 시작하면, THEN 대상 없이(분석 thread의 `target`은 빈 글자, 상세 `target_ref`는 null · `target_locked` false) 그래프를 돌린다. `target_ref`를 보내면 회로에 없는 부품이라 422다.
+  - GIVEN 회로 없는 대화, WHEN Supervisor 계획의 할 일 중 정격(`rating`)이 아닌 것(역할 · 대체 판정 · 후보 찾기)이 있으면, THEN 서브에이전트를 부르지 않고 `refused`로 끝나며 답은 "이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요."이고 내부 이유 코드는 `circuit_missing`이다(`backend/multi_agent/supervisor.py` `plan_node`, 문구는 `messages.py` `NEED_NETLIST`). 가르는 기준은 이미 부르는 계획 LLM의 할 일 종류이고 새 LLM 호출은 없다. 인터럽트가 아니라서 다음 질문을 막지 않는다. 정격 · 문서 질문(예: "1N4148 역전압 몇 V야?")과 일상 대화 · 가격은 그대로 답한다. 평가 실행기는 회로 칸 없이 글만 넘겨 이 규칙에 걸리지 않는다.
+  - GIVEN 키 없는 데모(`DEMO_REPLAY=1`), WHEN 회로 없는 대화에 질문하면, THEN 기록이 없으므로 그래프 · 분석 thread 없이 같은 문구의 `refused`로 끝난다(`backend/api/conversations.py` `start_run`). 회로가 있는 기록 질문의 재생은 그대로다.
+  - GIVEN 회로 없는 대화, WHEN 그 대화 id를 `thread_id`로 넷리스트를 올리면(4절), THEN 같은 대화가 그 회로를 읽고, 다음 질문에서 위 규칙대로 대상을 정해 빈 대상을 그 부품으로 바꾼다. 앞의 "회로가 필요해요" 질문은 다시 보내야 한다.
+- 화면: "검토할 부품"은 비워 두면 위 규칙을 따르는 선택 항목이고, 대상이 정해지면 그 부품을 보여 줍니다. 부품을 묻는 결과는 조건 카드와 같은 모양의 선택 카드(`TargetChoice`)로 그립니다. 시험: `tests/api/test_conversations.py`(묻기 · 재개 · 422 · 키 없는 데모의 회로 없는 질문), `tests/api/test_threads.py`(`target_choices` · `ensure_thread` 추론 · 회로 없는 대화와 첨부 뒤 대상), `tests/conversations/test_dto.py`(후보 검사 · 질문 문장), `tests/multi_agent/test_build.py`(회로 없는 대화의 정격 답 · 넷리스트 요청), `tests/projects/test_project_repository.py`(같은 대화에 첨부).
 
 ## 9. 미정 항목
 

@@ -201,10 +201,11 @@ NETLIST_BODY = {"requestBody": {"required": True, "content": {"multipart/form-da
 
 @router.post("/projects/{project_id}/netlist", status_code=201, response_model=ImportNetlistResponse,
              dependencies=[Depends(auth.check_origin)], openapi_extra=NETLIST_BODY)
-async def import_netlist(project_id: int, request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+async def import_netlist(project_id: int, request: Request, thread_id: UUID | None = None, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """thread_id: 회로 없이 시작한 그 대화에 회로를 붙여 같은 대화를 이어 간다(조건이 안 맞으면 지금처럼 새 대화, SPEC 4절)."""
     normalized, _ = await read_upload(request, with_name=False)
     project, thread_id = repo.import_netlist(user_id, project_id, connections=normalized.connections,
-                                           source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+                                           source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION, thread_id=thread_id)
     return {"project": project, "thread_id": thread_id}
 
 

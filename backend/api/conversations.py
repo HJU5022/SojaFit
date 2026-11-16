@@ -29,6 +29,7 @@ from backend.conversations.dto import BrowserResult, public_state, result_dto, s
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
 from backend.conversations.models import RunStatus
 from backend.judge import conditions as judge_conditions
+from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST
 from backend.services import demo
 
 router = APIRouter(prefix='/api', tags=['conversations'])
@@ -285,7 +286,8 @@ def outcome(analysis, thread_id, detail, request_id):
     """분석 서비스가 끝낸 thread를 React 결과 하나(종류, 공개 DTO)로 바꾼다."""
     if detail.get('interrupt'):
         return 'requires_input', result_dto({}, request_id=request_id, status='requires_input', stage=STAGES['judge'], interrupt=detail['interrupt'])
-    state = analysis.graph.get_state(analysis.config(thread_id)).values or {}
+    # [왜] state가 있으면 그래프를 돌리지 않은 결과다(키 없는 데모의 회로 없는 질문, start_run)
+    state = detail.get('state') or analysis.graph.get_state(analysis.config(thread_id)).values or {}
     kind = 'refused' if state.get('refusal') else 'completed'
     # [왜] 웹 검색 장애 표시(#28)는 그래프 상태가 아니라 분석 서비스가 이번 실행에서 본 값이다(memory_service._invoke)
     public = {**public_state(state), 'web_search_unavailable': detail.get('web_search_unavailable') is True}
@@ -379,6 +381,11 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
     #      거절된 요청이 '실행 중' run을 남기지 않고 공통 오류로 끝난다
     await run_in_threadpool(analysis.admission, user_id)
     _, _, connections, name = await run_in_threadpool(repo.get_thread, user_id, thread)
+    if not connections.get('components', connections.get('parts')) and analysis.mode == 'demo':
+        # [왜] 키 없는 데모에는 회로 없는 질문의 기록이 없다. 그래프 · 분석 thread 없이 넷리스트를 달라는 거절로 끝내 화면이 회로를 고르게 한다(SPEC 7절 · 8.9)
+        run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
+        needs = {'answer': NEED_NETLIST, 'refusal': {'code': CIRCUIT_MISSING, 'message': NEED_NETLIST}}
+        return stream(repo, user_id, thread, run_id, request_id, analysis, lambda progress: {'state': needs})
     choices = await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
                                       question=body.question, conditions=body.conditions)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
