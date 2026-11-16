@@ -184,6 +184,29 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
           )}
         </div>
       </section>
+      {/* [주의] 사실만 적는다: SPEC 1절(소형 MCU 회로의 다이오드) · 4절(역할 23개) · 8.9(LED · 표시기 · 다이오드 아닌 부품 제외). 예정 범위는 정하지 않았다(#37) */}
+      <section className="settings-row">
+        <div>
+          <h2>지원 범위</h2>
+          <p>
+            교체 검토를 지원하는 부품입니다. 지원하지 않는 부품은 검토 전에 이유를 알려 드립니다.
+          </p>
+        </div>
+        <dl className="settings-panel facts">
+          <div>
+            <dt>지원</dt>
+            <dd>다이오드(소형 MCU 회로, 회로 역할 23종)</dd>
+          </div>
+          <div>
+            <dt>미지원</dt>
+            <dd>LED · 7세그먼트 등 표시기, 다이오드가 아닌 부품</dd>
+          </div>
+          <div>
+            <dt>지원 예정</dt>
+            <dd>정해지면 알려 드립니다.</dd>
+          </div>
+        </dl>
+      </section>
       <section className="settings-row">
         <div>
           <h2>계정</h2>

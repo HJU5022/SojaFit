@@ -1015,22 +1015,13 @@ form {
   margin-left: var(--sidebar-w, 224px);
   flex: 1;
   min-width: 0;
-  padding: 0 8px 8px 0;
+  padding: 8px 8px 8px 0;
   min-height: 100vh;
-}
-.app-topbar {
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 23px;
-  color: var(--muted);
-  font-size: 13px;
 }
 .app-sheet {
   background: white;
   border: 1px solid #e3e8eb;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 16px);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -1095,7 +1086,7 @@ form {
 .workbench-grid {
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr);
-  min-height: calc(100vh - 150px);
+  min-height: calc(100vh - 110px);
 }
 .context-panel {
   border-right: 1px solid var(--line);
@@ -1244,7 +1235,7 @@ form {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 110px);
   min-height: 650px;
 }
 .conversation-heading {
@@ -1911,6 +1902,10 @@ form {
   padding: 24px;
   border-radius: 7px;
 }
+.settings-panel.facts {
+  margin: 0;
+  padding: 12px 24px;
+}
 .settings-panel label {
   font-size: 13px;
 }
@@ -2273,9 +2268,6 @@ form {
   .app-frame {
     margin: 0;
     padding: 0;
-  }
-  .app-topbar {
-    display: none;
   }
   .app-sheet {
     min-height: calc(100dvh - 54px);

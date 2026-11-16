@@ -121,10 +121,7 @@ function Shell({
         />
       </aside>
       <div className="app-frame">
-        <div className="app-topbar">
-          <span>부품 교체 검토</span>
-          <span>지금 지원: 다이오드</span>
-        </div>
+        {/* [왜] 상단 "지금 지원" 문구는 뺐다. 지원 범위는 내 설정에 따로 둔다(#37) */}
         <main className="app-sheet">{children}</main>
       </div>
     </div>
