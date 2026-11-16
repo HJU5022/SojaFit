@@ -594,7 +594,7 @@ GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 \
 | P1b set1 | 0 | 1 | 11-14 · `4714b2f` | 50/50 | 6.5 | 12.7 | `2026-11-14-grade3-early/P1b/set1.json` | |
 | R1 set1 · set2 | 0 | 1 | 11-14 · `b790004` | 50/50 · 48/50 | 6.8 · 5.9 | 10.5 · 12.1 | `2026-11-14-no-replan/R1/set1.json` · `set2.json` | 마지막 채택 구성. set2 실패 v3-15 · v3-41([v3-15 경로 기록](evals/results/graph/2026-11-14-no-replan/v3-15_cap_path_2026-11-14.md)) |
 | web-parallel B1 set1 · set2 | 0 | 1 | 11-15 · `62610e8e` | 49/50 · 50/50 | 8.3 · 6.3 | 34.4 · 25.3 | `2026-11-15-web-parallel/B1/set1.json` · `set2.json` | 기각, 되돌림(2등급 단계가 R1의 1 ~ 2.5초에서 14 ~ 25초로 늘어남) |
-| d12 지금 코드 | 0 | 1 | 11-17 · `799ae636` | 49/50 | 5.5 | 16.7 | `evals/results/d12/gate/set1.json`(이 행만 `graph/` 밖) | `WEB_PREFETCH=1`, OpenRouter 경유(`claude_direct` false), 같은 호스트에서 docker 빌드가 돌아 부하 1분 평균 12 ~ 16. 실패 v3-16 `wrong_citation`(11-2절 8행과 같은 문항). 가장 느린 문항 v3-15 29.5초 · v3-16 18.3초. LLM $0.036 |
+| d12 지금 코드 A · B | 0 | 1 | 11-17 · `799ae636` | 49/50 · 49/50 | 5.5 · 4.8 | 16.7 · 9.1 | `evals/results/d12/gate/set1.json` · `set_b/set1.json`(이 행만 `graph/` 밖) | `WEB_PREFETCH=1`, OpenRouter 경유(`claude_direct` false). A는 같은 호스트의 docker 빌드와 겹쳐 1분 부하 12 ~ 16. 두 세트 모두 실패 v3-16 `wrong_citation`(11-2절 8행과 같은 문항). 가장 느린 문항 A v3-15 29.5초, B v3-16 12.8초. LLM $0.036 · $0.036 |
 
 이 저장소 브랜치에 결과 파일이 없는 측정(숫자는 저장소 밖 보고서에서 옮김, 이 절에서 링크하지 않는다):
 

@@ -225,7 +225,7 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 
 | 지표 | 값 | 조건 | 원시 결과 |
 |---|---|---|---|
-| 지금 코드 재측정: 통과 · 응답 시간 · LLM 비용 | **49/50**(cited_gold 24 · correct_refusal 25, 실패 v3-16 `wrong_citation`) · p50 5.5초 · p95 16.7초 · $0.036 | 1세트, 커밋 `799ae636`, 11-17, `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`(운영 설정), LLM은 OpenRouter 경유(Anthropic 직통 아님), 호스트 부하가 높은 때(1분 평균 12 ~ 16, 같은 호스트에서 docker 빌드가 돌았다). `gate_report` 기준 미달 항목은 p95 | [evals/results/d12/gate/set1.json](evals/results/d12/gate/set1.json), [gate_report.txt](evals/results/d12/gate/gate_report.txt) |
+| 지금 코드 재측정: 통과 · 응답 시간 · LLM 비용 | 두 세트 모두 **49/50**(cited_gold 24 · correct_refusal 25, 실패 v3-16 `wrong_citation`, 지어낸 답 0). p50 · p95 5.5 · 16.7초 / 4.8 · 9.1초. 세트당 $0.036 | 1세트씩 2번(A · B), 커밋 `799ae636`, 11-17, `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`(운영 설정), LLM은 OpenRouter 경유(Anthropic 직통 아님). A는 같은 호스트의 docker 빌드와 겹쳤다(1분 부하 12 ~ 16). `gate_report` 기준 미달: A p95, B 없음 | [d12/gate/set1.json](evals/results/d12/gate/set1.json) · [set_b/set1.json](evals/results/d12/gate/set_b/set1.json), [d12 README](evals/results/d12/README.md) 「지금 코드의 v3 게이트」 |
 | 통과(정답 근거 인용 + 올바른 거절) | 50/50 (cited_gold 25 · correct_refusal 25) | 1세트, 커밋 `520988c`+작업 트리 변경, 11-12 | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
 | 응답 시간 | p50 4.9초 · p95 10.0초 (`DEMO_MODE` 미기록) | 위와 같음 | 위와 같음. 조건별 값은 아래 "응답 시간(조건별)" |
 | 통과 · 무관 거절 · 지어낸 답 | 4세트 모두 50/50 · 25/25 · 0 | 사전 등록 #50, 커밋 `93a497c` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_4sets_93a497c.json` |
@@ -245,9 +245,9 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 | 웹 켬 · G2 set2 | 0 | 1 | 11-14 · `1df3f93` | 49/50 | 5.3 | 13.3 | `2026-11-14-grade3-early/G2/set2.json` |
 | 웹 켬 · R1 set1(마지막 채택 구성) | 0 | 1 | 11-14 · `b790004` | 50/50 | 6.8 | 10.5 | `2026-11-14-no-replan/R1/set1.json` |
 | 웹 켬 · R1 set2 | 0 | 1 | 11-14 · `b790004` | 48/50 | 5.9 | 12.1 | `2026-11-14-no-replan/R1/set2.json` |
-| 웹 켬 · 지금 코드(d12) | 0 | 1(`WEB_PREFETCH=1`) | 11-17 · `799ae636` | 49/50 | 5.5 | 16.7 | `evals/results/d12/gate/set1.json`(이 행만 `graph/` 밖) |
+| 웹 켬 · 지금 코드(d12) A · B | 0 | 1(`WEB_PREFETCH=1`) | 11-17 · `799ae636` | 49/50 · 49/50 | 5.5 · 4.8 | 16.7 · 9.1 | `evals/results/d12/gate/set1.json` · `set_b/set1.json`(이 행만 `graph/` 밖) |
 
-- **p95 ≤ 10초(SPEC 3절 목표)는 일부 조건에서만 충족된다.** 10초 이내인 값(9.2 · 10.0 · 8.1)은 모두 `DEMO_MODE` 미기록 행이다. `DEMO_MODE=0`이 기록된 이 표의 행은 웹을 끈 쪽(10.9)도 넘었고, 웹 근거를 켠 행은 10.5 ~ 16.7초다(16.7은 11-17 지금 코드, 가장 느린 문항 v3-15 29.5초). 웹을 끈 후속 측정 중 일부는 10초 안이다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절. 그 결과 파일은 이 저장소 브랜치에 없는 것을 포함한다).
+- **p95 ≤ 10초(SPEC 3절 목표)는 일부 조건에서만 충족된다.** 10초 이내인 값(9.2 · 10.0 · 8.1)은 모두 `DEMO_MODE` 미기록 행이다. `DEMO_MODE=0`이 기록된 이 표의 행은 웹을 끈 쪽(10.9)도 넘었고, 웹 근거를 켠 행은 9.1 ~ 16.7초다(11-17 지금 코드 두 세트가 9.1 · 16.7초로 이 표의 양 끝이다. 16.7초 세트는 같은 호스트의 docker 빌드와 겹쳤다). 웹을 끈 후속 측정 중 일부는 10초 안이다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절. 그 결과 파일은 이 저장소 브랜치에 없는 것을 포함한다).
 - 웹을 켜면 느린 쪽은 웹 근거를 찾는 문항이다. 거절해야 하는 문항도 웹 근거를 찾느라 시간이 든다(`2026-11-14-web-prefetch/README.md`). 운영 설정은 웹 켬(`EXA_WEB_SEARCH_ENABLED=1`)이다.
 - 같은 코드의 두 세트끼리도 p95가 0.3 ~ 1.6초 다르다(G2 13.0 · 13.3, R1 10.5 · 12.1). 속도 실험의 같은 코드 4회는 13.0 ~ 16.8초였다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절). 한 번의 값으로 1~2초 차이를 가리기 어렵다.
 
