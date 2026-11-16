@@ -28,7 +28,7 @@ import {
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
 import { NEEDS_CIRCUIT, partsOf, unsupportedPartReason } from './circuit';
-import { isSendKey } from './display';
+import { addStep, isSendKey, seconds, stepMs, type Step } from './display';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply, TargetChoice } from './Reply';
 import { SchematicSection } from './Schematic';
@@ -104,6 +104,90 @@ export function TargetInfo({
       <p className="part-status" role={alert ? 'alert' : undefined}>
         {status}
       </p>
+    </div>
+  );
+}
+type Progress = { start: number; end: number | null; steps: Step[] };
+/**
+ * 검토 진행(#42): 단계마다 한 줄(✓ 끝 · 도는 표시 지금)과 그 단계 시간, 맨 아래 총 시간. status가 오면 끝난 실행의 접힌 요약 한 줄(누르면 펼침).
+ * 시간은 status 프레임이 도착한 시각(performance.now())으로 화면에서 잰다. 단계는 저장하지 않아 새로고침 뒤에는 시간 없이 서버의 지금 단계 한 줄만 보인다.
+ */
+function RunProgress({
+  progress,
+  stage,
+  status,
+  onStop,
+}: {
+  progress: Progress | null;
+  stage: string;
+  status?: string;
+  onStop?: () => void;
+}) {
+  const ticking = !status && progress?.end === null;
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!ticking) return;
+    const timer = setInterval(() => tick((n) => n + 1), 200);
+    return () => clearInterval(timer);
+  }, [ticking]);
+  const steps = progress?.steps ?? [],
+    now = progress?.end ?? performance.now(),
+    // [왜] 수신을 멈췄다가 복구한 실행은 끝난 시각이 없다. 틀린 초를 보이지 않고 단계만 보인다
+    timed = !status || progress?.end != null;
+  const list = (
+    <ol className="progress-steps" aria-label="검토 진행 단계">
+      {steps.length ? (
+        steps.map((s, i) => {
+          const current = ticking && i === steps.length - 1;
+          return (
+            <li key={s.stage} className={current ? 'current' : 'done'}>
+              {current ? <LoaderCircle size={14} className="spin" /> : <Check size={14} />}
+              {s.stage}
+              {timed && <span className="step-time">{seconds(stepMs(steps, i, now))}</span>}
+            </li>
+          );
+        })
+      ) : (
+        <li className="current">
+          <LoaderCircle size={14} className="spin" />
+          {stage || '검토를 시작하는 중'}
+        </li>
+      )}
+    </ol>
+  );
+  const total = progress && timed && (
+    <p className="progress-total">총 {seconds(now - progress.start)}</p>
+  );
+  if (status)
+    return (
+      <details className="progress progress-summary">
+        <summary>
+          <Check size={14} />
+          {[
+            status,
+            steps.length + '단계',
+            ...(timed && progress ? [seconds(now - progress.start)] : []),
+          ].join(' · ')}
+        </summary>
+        {list}
+        {total}
+      </details>
+    );
+  return (
+    <div className="progress">
+      <div className="progress-head">
+        <span>검토 진행</span>
+        {/* [왜] 멈춤은 통용되는 ■ 모양으로 보인다(#14). 이름은 aria-label로 남긴다 */}
+        <button aria-label="수신 중지" title="수신 중지" onClick={onStop}>
+          <Square size={16} fill="currentColor" />
+        </button>
+      </div>
+      {/* [왜] 초는 0.2초마다 바뀌어 읽기 영역에 두지 않는다. 바뀐 단계 이름만 알린다 */}
+      <p className="sr-only" role="status">
+        {steps.at(-1)?.stage ?? (stage || '검토를 시작하는 중')}
+      </p>
+      {list}
+      {total}
     </div>
   );
 }
@@ -232,8 +316,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [error, setError] = useState<Error | null>(null),
     [stopped, setStopped] = useState(false),
     [pendingQuestion, setPendingQuestion] = useState(''),
-    // 이번 실행에서 받은 진행 단계(SSE status의 stage). 마지막이 지금 단계다
-    [steps, setSteps] = useState<string[]>([]),
+    // 이번 실행에서 받은 진행 단계(SSE status의 stage)와 도착 시각(#42). 마지막이 지금 단계다
+    [progress, setProgress] = useState<Progress | null>(null),
     [selected, setSelected] = useState<{ c: Candidate; r: Run } | null>(null),
     [showQuotes, setShowQuotes] = useState(false),
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
@@ -262,7 +346,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     setBusy(false);
     setStopped(false);
     setPendingQuestion('');
-    setSteps([]);
+    setProgress(null);
     setSelected(null);
     setLoading(!!threadId);
     runId.current = null;
@@ -373,6 +457,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     setBusy(true);
     setError(null);
     setStopped(false);
+    setProgress({ start: performance.now(), end: null, steps: [] });
     const abort = new AbortController();
     controller.current = abort;
     let liveRun = runId.current;
@@ -383,13 +468,16 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         if (event === 'run_started') {
           liveRun = data.run_id;
           runId.current = data.run_id;
-          setSteps([]);
           setActive({ id: data.run_id, thread_id: tid, message_id: null, result: freshResult() });
         } else {
-          // [왜] 재계획이면 같은 단계가 다시 온다. 앞의 것을 지우고 끝에 붙여 마지막이 늘 지금 단계가 되게 한다
+          // [왜] 재계획이면 같은 단계가 다시 온다. 앞의 것을 지우고 끝에 붙여 마지막이 늘 지금 단계가 되게 한다(addStep)
+          const now = performance.now();
           if (event === 'status')
-            setSteps((s) => [...s.filter((x) => x !== data.stage), data.stage]);
-          else terminal = data;
+            setProgress((p) => p && { ...p, steps: addStep(p.steps, data.stage, now) });
+          else {
+            terminal = data;
+            setProgress((p) => p && { ...p, end: now });
+          }
           setActive({ id: liveRun ?? '', thread_id: tid, message_id: null, result: data });
         }
       });
@@ -670,34 +758,21 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                       </div>
                     )}
                   {active && running && !stopped && (
-                    <div className="progress" role="status">
-                      {/* 끝난 단계는 체크, 지금 단계는 도는 표시. 단계는 저장하지 않아 새로고침 뒤에는 한 줄만 보인다 */}
-                      <ol className="progress-steps" aria-label="검토 진행 단계">
-                        {(steps.length ? steps : [active.result.stage || '검토를 시작하는 중']).map(
-                          (s, i, all) => (
-                            <li key={s} className={i < all.length - 1 ? 'done' : 'current'}>
-                              {i < all.length - 1 ? (
-                                <Check size={14} />
-                              ) : (
-                                <LoaderCircle size={14} className="spin" />
-                              )}
-                              {s}
-                            </li>
-                          ),
-                        )}
-                      </ol>
-                      {/* [왜] 멈춤은 통용되는 ■ 모양으로 보인다(#14). 이름은 aria-label로 남긴다 */}
-                      <button
-                        aria-label="수신 중지"
-                        title="수신 중지"
-                        onClick={() => {
-                          controller.current?.abort();
-                          setStopped(true);
-                        }}
-                      >
-                        <Square size={16} fill="currentColor" />
-                      </button>
-                    </div>
+                    <RunProgress
+                      progress={progress}
+                      stage={active.result.stage}
+                      onStop={() => {
+                        controller.current?.abort();
+                        setStopped(true);
+                      }}
+                    />
+                  )}
+                  {active && !running && !stopped && !!progress?.steps.length && (
+                    <RunProgress
+                      progress={progress}
+                      stage=""
+                      status={statuses[active.result.status] ?? active.result.status}
+                    />
                   )}
                   {stopped && (
                     <div className="notice">

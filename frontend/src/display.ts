@@ -185,3 +185,27 @@ export function isSendKey(e: {
 }) {
   return e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229;
 }
+
+/** 검토 진행 한 단계(#42). ms는 앞서 끝난 구간 시간의 합, since는 지금 구간이 시작된 시각(performance.now()). */
+export type Step = { stage: string; ms: number; since: number };
+
+/**
+ * status 프레임이 오면 단계 목록에 붙인다(#42). 마지막(지금) 단계는 now까지의 시간을 더해 닫는다.
+ * 재계획으로 같은 단계가 다시 오면 앞의 줄을 빼고 끝에 붙이되 쓴 시간은 이어서 더한다(마지막이 늘 지금 단계).
+ */
+export function addStep(steps: Step[], stage: string, now: number): Step[] {
+  const closed = steps.map((s, i) =>
+    i === steps.length - 1 ? { ...s, ms: s.ms + now - s.since } : s,
+  );
+  const before = closed.find((s) => s.stage === stage);
+  return [...closed.filter((s) => s.stage !== stage), { stage, ms: before?.ms ?? 0, since: now }];
+}
+
+/** 단계에 쓴 시간. 마지막 단계는 now(진행 중이면 지금, 끝났으면 끝난 시각)까지 센다. */
+export function stepMs(steps: Step[], i: number, now: number) {
+  const s = steps[i];
+  return i === steps.length - 1 ? s.ms + now - s.since : s.ms;
+}
+
+/** 밀리초를 "1.4초"로. */
+export const seconds = (ms: number) => `${(Math.max(0, ms) / 1000).toFixed(1)}초`;

@@ -17,6 +17,10 @@ import {
   pricesPath,
   estimateRows,
   isSendKey,
+  addStep,
+  stepMs,
+  seconds,
+  type Step,
 } from '../src/display.ts';
 import { inputPlaceholder } from '../src/inputLabels.ts';
 
@@ -191,4 +195,28 @@ test('Enter는 보내고 Shift+Enter와 한글 조합 중 Enter는 보내지 않
   assert.equal(key({ isComposing: true }), false);
   assert.equal(key({ keyCode: 229 }), false); // 조합 확정 Enter를 isComposing 없이 알리는 브라우저
   assert.equal(key({ key: 'a', keyCode: 65 }), false);
+});
+
+test('진행 단계 시간: 프레임 도착 시각으로 단계마다 재고, 재계획은 같은 줄에 이어 더한다(#42)', () => {
+  let steps: Step[] = [];
+  steps = addStep(steps, '입력 확인', 0);
+  steps = addStep(steps, '품번 확인', 400);
+  steps = addStep(steps, '질문 분석', 1500);
+  assert.deepEqual(
+    steps.map((s) => s.stage),
+    ['입력 확인', '품번 확인', '질문 분석'],
+  );
+  assert.equal(seconds(stepMs(steps, 0, 2000)), '0.4초');
+  assert.equal(seconds(stepMs(steps, 1, 2000)), '1.1초');
+  assert.equal(seconds(stepMs(steps, 2, 2000)), '0.5초'); // 지금 단계는 now까지 늘어난다
+  assert.equal(seconds(stepMs(steps, 2, 3700)), '2.2초');
+  // 재계획: 품번 확인이 다시 오면 끝으로 옮기고 앞서 쓴 1.1초에 이어 센다
+  steps = addStep(steps, '품번 확인', 3000);
+  assert.deepEqual(
+    steps.map((s) => s.stage),
+    ['입력 확인', '질문 분석', '품번 확인'],
+  );
+  assert.equal(seconds(stepMs(steps, 1, 3000)), '1.5초');
+  assert.equal(seconds(stepMs(steps, 2, 3500)), '1.6초');
+  assert.equal(seconds(-5), '0.0초');
 });
