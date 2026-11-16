@@ -56,4 +56,9 @@ test('첨부한 넷리스트는 새 버전·대화를 만들고 기존 대화의
   await page.goto(first);
   await expect(page.getByLabel('검토할 다이오드')).toContainText('D1');
   await expect(page.getByLabel('검토할 다이오드')).not.toContainText('D2');
+  // 프로젝트 목록 줄의 삭제 버튼으로 이 시험의 프로젝트를 지운다(확인 창)
+  await page.goto('/projects');
+  await page.getByRole('button', { name: name + ' 삭제', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click();
+  await expect(page.getByRole('heading', { name, exact: true })).toHaveCount(0);
 });
