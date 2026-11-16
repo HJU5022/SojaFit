@@ -38,6 +38,16 @@ class ExternalSchematicChoice:
     source_url: str
     source_type: str
     revision: str | None
+    manufacturer: str | None = None
+    model: str | None = None
+    source_file: str | None = None
+    evidence_grade: int | None = None
+    source_sha256: str | None = None
+    commit: str | None = None
+    license: str | None = None
+    attribution: str | None = None
+    repository_url: str | None = None
+    license_evidence_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -251,8 +261,19 @@ class ExternalSchematicService:
                 continue
             seen.add(source.source_url)
             title = f"{source.repository or source.attribution} · {source.root_schematic}"
-            choices.append(ExternalSchematicChoice(title, source.source_url, source.source_type,
-                                                   source.revision))
+            choices.append(ExternalSchematicChoice(
+                title, source.source_url, source.source_type, source.revision,
+                manufacturer=source.manufacturer,
+                model=source.model,
+                source_file=source.source_file,
+                evidence_grade=source.evidence_grade,
+                source_sha256=source.source_sha256,
+                commit=source.commit,
+                license=source.license,
+                attribution=source.attribution,
+                repository_url=source.repository_url,
+                license_evidence_url=source.license_evidence_url,
+            ))
         self.verified_choices.replace(query, tuple(choices))
 
     def _choices_for(self, query):
@@ -700,10 +721,26 @@ class ExternalSchematicService:
             source, count = result[0]
         choices = self._choices_for(lookup_key)
         if not choices:
-            choices = tuple(ExternalSchematicChoice(' · '.join(dict.fromkeys(filter(None, (item[0].model, item[0].source_file)))),
-                                                    item[0].source_url, item[0].source_type,
-                                                    item[0].revision)
-                            for item in verified_results if connections is not None or item[0].source_type != "community")
+            choices = tuple(
+                ExternalSchematicChoice(
+                    ' · '.join(dict.fromkeys(filter(None, (item[0].model, item[0].source_file)))),
+                    item[0].source_url,
+                    item[0].source_type,
+                    item[0].revision,
+                    manufacturer=item[0].manufacturer,
+                    model=item[0].model,
+                    source_file=item[0].source_file,
+                    evidence_grade=item[0].evidence_grade,
+                    source_sha256=item[0].source_sha256,
+                    commit=item[0].commit,
+                    license=item[0].license,
+                    attribution=item[0].attribution,
+                    repository_url=item[0].repository_url,
+                    license_evidence_url=item[0].license_evidence_url,
+                )
+                for item in verified_results
+                if connections is not None or item[0].source_type != "community"
+            )
         token = _sign(source, count, int(self.wall()) + TTL)
         return ExternalSchematicManifest(source.repository or None, source.commit or None, source.license,
                                          source.attribution, source.repository_url, source.source_url,

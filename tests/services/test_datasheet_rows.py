@@ -3,6 +3,8 @@ import json
 import re
 import base64
 import subprocess
+import sys
+import types
 import httpx
 import pytest
 
@@ -12,10 +14,94 @@ from backend.multi_agent.agents.docs import PdfAnswer, PdfOnlyAnswer, docs_agent
 from backend.multi_agent.supervisor import check_node
 from backend.judge.pdf_claims import recovery_figure_doc
 from backend.services import exa
-from backend.services.datasheet_rows import _figure_png, grade2_pdf, official_pdf, _row_has_part, verified_rows
+from backend.services.datasheet_rows import (
+    GRADE2_PDF_PATHS, _figure_png, _infineon_reverse_voltage, extract, grade2_pdf, official_pdf,
+    _row_has_part, _strict_part_mention, verified_rows, _language_for_pages, _text_rows, _covered_part,
+)
 
 
 URL = 'https://www.vishay.com/docs/88751/ss32.pdf'
+
+
+def test_grade2_pdf_paths_are_exactly_the_seven_registered_manufacturers():
+    """등급2 공식 PDF 허용 도메인은 등록된 7개 제조사로만 고정한다."""
+    assert set(GRADE2_PDF_PATHS) == {
+        'www.ti.com', 'www.st.com', 'www.analog.com',
+        'www.onsemi.com', 'www.infineon.com', 'www.vishay.com',
+        'services.taiwansemi.com',
+    }
+    assert not official_pdf(
+        'https://assets.nexperia.com/documents/data-sheet/BAS16.pdf', grade=2
+    )
+
+
+def test_grade2_accepts_the_seven_registered_manufacturer_paths():
+    urls = [
+        'https://www.ti.com/lit/ds/symlink/lm385-adj.pdf',
+        'https://www.onsemi.com/pdf/datasheet/bas16lt1-d.pdf',
+        'https://www.st.com/resource/en/datasheet/bat54.pdf',
+        'https://www.analog.com/media/en/technical-documentation/data-sheets/ad1580.pdf',
+        'https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat54series-datasheet-en.pdf',
+        'https://www.vishay.com/docs/86366/bas16.pdf',
+        'https://services.taiwansemi.com/storage/resources/datasheet/SS14.pdf',
+    ]
+    assert all(official_pdf(url, grade=2) == url for url in urls)
+
+
+def test_text_row_extraction_preserves_page_and_bbox_without_hardcoded_part_value():
+    class Page:
+        page_number = 3
+
+        def extract_text(self, **kwargs):
+            return 'LM385-ADJ\nAbsolute Maximum Ratings\nReverseCurrent 30mA\nForwardCurrent 10mA'
+
+        def search(self, pattern, **kwargs):
+            return [{'x0': 10, 'top': 20, 'x1': 80, 'bottom': 30}]
+
+    rows = _text_rows(Page(), ['LM385-ADJ'], {'reverse', 'current'})
+    assert rows and rows[0][1]['page'] == 3
+    assert rows[0][1]['cells'] == [('VALUE', '30')]
+    assert rows[0][1]['unit'] == 'mA'
+    assert rows[0][1]['bbox'] == [10, 20, 80, 30]
+
+
+def test_text_row_extraction_rejects_narrative_without_rating_caption():
+    class Page:
+        page_number = 1
+
+        def extract_text(self, **kwargs):
+            return 'LM385-ADJ\nFEATURES\nOperating Current of 10µA'
+
+    assert _text_rows(Page(), ['LM385-ADJ'], {'operating', 'current'}) == []
+
+
+def test_part_scope_requires_title_or_strong_ordering_evidence():
+    assert _covered_part(['BAS16LT1G'], ['The device BAS16LT1G is suitable for switching.']) == ''
+    assert _covered_part(['BAS16LT1G'], ['ORDERING INFORMATION\nBAS16LT1G SOT-23']) == 'BAS16LT1G'
+    assert _covered_part(['LM385-ADJ'], [
+        'LM185-ADJ, LM285-ADJ, LM385-ADJ\nMicropower Adjustable Voltage References',
+    ]) == 'LM385-ADJ'
+
+
+@pytest.mark.parametrize('text', ['BAS16-G', 'BAS16W', 'BAS16LT1G', 'BAS16/ALT', 'BAS16+X'])
+def test_strict_part_scope_does_not_promote_punctuated_or_suffixed_siblings(text):
+    assert not _strict_part_mention(text, 'BAS16')
+    assert not _strict_part_mention(text, 'BAS16LT1')
+
+
+def test_language_gate_uses_the_trusted_document_language_contract(monkeypatch):
+    import types
+    accepted = {'Electrical characteristics': 'en', '전기적': 'ko', 'Electrical voltage 전압': 'en-ko'}
+    def classify(pages):
+        text = ' '.join(pages)
+        if '电气' in text:
+            return None
+        return next((value for key, value in accepted.items() if key in text), None)
+    monkeypatch.setitem(sys.modules, 'backend.services.document_language', types.SimpleNamespace(language_for_pages=classify))
+    assert _language_for_pages(['Electrical characteristics and reverse voltage.']) == 'en'
+    assert _language_for_pages(['전기적 특성과 역전압입니다.']) == 'ko'
+    assert _language_for_pages(['Electrical voltage 전압 조건입니다.']) == 'en-ko'
+    assert _language_for_pages(['电气特性和反向电压。']) is None
 
 
 def test_row_product_matching_does_not_promote_suffix_siblings():
@@ -77,6 +163,7 @@ def family_pdf(*, cover=False, suffix=''):
     for x in (10, 145, 195, 250, 325):
         commands.append(f'{x} 50 m {x} 90 l S')
     for x, y, value in [(12, 100, 'Table 1. Maximum ratings'), (12, 76, 'PARAMETER'),
+                        (12, 125, 'This datasheet lists electrical characteristics and maximum ratings.'),
                         (147, 76, 'SS33' + suffix), (197, 76, 'SS34' + suffix), (252, 76, 'UNIT'),
                         (12, 57, 'Peak reverse voltage'), (147, 57, '30'), (197, 57, '40'), (252, 57, 'V')]:
         commands.append(f'BT /F1 9 Tf {x} {y} Td ({value}) Tj ET')
@@ -191,6 +278,30 @@ def test_grade3_reference_uses_public_url_and_title_without_fetch(transport, mon
     assert [r['source_url'] for r in rows] == ['https://example.org/SS34-reference']
     assert rows[0]['file'] == 'SS34 reference page'
     assert calls == ['POST']
+
+
+def test_grade3_reference_preserves_explicit_manufacturer(monkeypatch):
+    """제조사를 지정한 참고 검색은 다른 제조사의 같은 품번을 반환하지 않는다."""
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={'results': [
+            {'url': 'https://www.vishay.com/docs/86366/bas16.pdf', 'title': 'BAS16 Vishay'},
+            {'url': 'https://assets.nexperia.com/documents/data-sheet/BAS16.pdf', 'title': 'BAS16 Nexperia'},
+            {'url': 'https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas16series-datasheet-en.pdf', 'title': 'Infineon BAS16'}
+        ]})
+
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+    transport = httpx.MockTransport(handler)
+    with exa.request_scope():
+        rows = exa.search_grade3_reference(['BAS16'], 'Infineon BAS16 VRRM', transport=transport)
+    assert requests[0]['includeDomains'] == ['www.infineon.com']
+    assert [row['source_url'] for row in rows] == [
+        'https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas16series-datasheet-en.pdf'
+    ]
 
 
 def test_grade2_then_grade3_are_separate_request_scope_slots(monkeypatch):
@@ -411,8 +522,6 @@ def test_only_manufacturer_document_paths(url):
 
 
 @pytest.mark.parametrize('url', [
-    'https://services.taiwansemi.com/storage/resources/datasheet/1N4148-SERIES_K2301.pdf',
-    'https://services.taiwansemi.com/storage/resources/datasheet/1N4148%20SERIES_K2301.pdf',
     'https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat54series-datasheet-en.pdf',
     'https://www.infineon.com/assets/row/public/documents/24/49/infineon-bat54series-ds-en.pdf',
     'https://www.infineon.com/assets/row/public/documents/24/49/infineon-bas16series-ds-en.pdf',
@@ -420,6 +529,188 @@ def test_only_manufacturer_document_paths(url):
 def test_grade2_accepts_only_manufacturer_datasheet_paths(url):
     assert grade2_pdf(url).startswith('https://')
     assert official_pdf(url, grade=2)
+
+
+@pytest.mark.parametrize('symbol', ['VRRM / VRWM / VR', 'VRRM VRWM VR', 'VVVRRMRWMR'])
+def test_vishay_symbol_does_not_invent_missing_equality(symbol):
+    from backend.services.datasheet_rows import _is_vishay_vrrm_symbol
+    assert not _is_vishay_vrrm_symbol(symbol)
+
+
+def test_grade2_accepts_vishay_datasheet_path_only():
+    accepted = 'https://www.vishay.com/docs/86366/bas16.pdf'
+    assert grade2_pdf(accepted) == accepted
+    assert not grade2_pdf('https://www.vishay.com/docs/not-a-number/bas16.pdf')
+    assert not grade2_pdf(accepted + '?download=1')
+    assert not grade2_pdf(accepted + '#page=1')
+
+
+def test_vishay_extract_requires_exact_sheet_and_vrrm_symbol(monkeypatch):
+    import backend.services.datasheet_rows as rows_module
+    monkeypatch.setitem(sys.modules, 'backend.services.document_language', types.SimpleNamespace(language_for_pages=lambda pages: 'en'))
+
+    class Page:
+        width = height = 100
+
+        def __init__(self, number):
+            self.page_number = number
+
+        def extract_text(self, **kwargs):
+            return 'BAS16\nVishay Semiconductors\n'
+
+        def crop(self, *args, **kwargs):
+            return self
+
+        def find_tables(self):
+            return [object()]
+
+        def close(self):
+            return None
+
+    class Pdf:
+        pages = [Page(1)]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return None
+
+    fake_pdfplumber = types.SimpleNamespace(open=lambda _: Pdf())
+    monkeypatch.setitem(sys.modules, 'pdfplumber', fake_pdfplumber)
+    calls = []
+
+    def read_table(page, table, parts, single, terms):
+        calls.append(single)
+        return [
+            (2, {'symbol': 'VRM', 'row': 'Non repetitive peak reverse voltage',
+                 'doc_parts': ['BAS16'], 'cells': [('VALUE', '100')], 'unit': 'V', 'page': 1}),
+            (3, {'symbol': 'VRRM = VRWM = VR', 'row': 'Repetitive peak reverse voltage',
+                 'doc_parts': ['BAS16'], 'cells': [('VALUE', '75')], 'unit': 'V', 'page': 1}),
+            (1, {'symbol': 'VRRM or VR', 'row': 'Reverse voltage',
+                 'doc_parts': ['BAS16'], 'cells': [('VALUE', '80')], 'unit': 'V', 'page': 1}),
+        ]
+
+    monkeypatch.setattr(rows_module, '_read_table', read_table)
+    url = 'https://www.vishay.com/docs/86366/bas16.pdf'
+    rows = extract(b'%PDF-1.4', url, ['BAS16'], ['vrrm'], grade=2)
+    assert calls == ['BAS16']
+    assert [(row['symbol'], row['cells']) for row in rows] == [
+        ('VRRM = VRWM = VR', [('VALUE', '75')])]
+
+
+def test_infineon_cms_locator_is_preserved_but_untrusted_query_is_rejected():
+    base = 'https://www.infineon.com/assets/row/public/documents/24/49/infineon-bas16series-ds-en.pdf'
+    accepted = base + '?folderId=db3a30431400ef6801141b5844e103ea'
+    assert official_pdf(accepted, grade=2) == accepted
+    assert not official_pdf(accepted + '&fileId=extra', grade=2)
+    assert not official_pdf(accepted + '&unknown=', grade=2)
+    assert not official_pdf(base + '?redirect=https%3A%2F%2Fevil.example', grade=2)
+    assert not official_pdf(base + '?folderId=short', grade=2)
+    assert not official_pdf(base + '#page=2', grade=2)
+
+
+def test_infineon_vrrm_request_marks_vr_row_as_distinct():
+    class Row:
+        bbox = (0, 0, 100, 20)
+        cells = [(0, 0, 20, 20), (20, 0, 40, 20)]
+
+    class Table:
+        rows = [None, Row()]
+
+        def extract(self, **kwargs):
+            return [['SYMBOL', 'VALUE'], ['VR', '80']]
+
+    class Page:
+        page_number = 2
+
+        def extract_text(self, **kwargs):
+            return ('Maximum Ratings at TA = 25°C\n'
+                    'Diode reverse voltage V 80 V\nR\n')
+
+        def find_tables(self):
+            return [Table()]
+
+        def crop(self, bbox):
+            class Crop:
+                def extract_text(self, **kwargs):
+                    return '80'
+            return Crop()
+
+    rows = _infineon_reverse_voltage(Page(), ['BAS16'], {'vrrm'}, {'BAS16'})
+    assert rows and rows[0]['symbol'] == 'V_R'
+    assert rows[0]['requested_symbol'] == 'VRRM'
+
+    full_terms_rows = _infineon_reverse_voltage(
+        Page(), ['BAS16'], {'repetitive', 'peak', 'reverse', 'voltage', 'vrrm'}, {'BAS16'})
+    assert full_terms_rows and full_terms_rows[0]['requested_symbol'] == 'VRRM'
+
+
+def test_infineon_exact_vrrm_row_wins_over_earlier_vr_fallback(monkeypatch):
+    import backend.services.datasheet_rows as rows_module
+    monkeypatch.setitem(sys.modules, 'backend.services.document_language', types.SimpleNamespace(language_for_pages=lambda pages: 'en'))
+
+    class Page:
+        width = height = 100
+
+        def __init__(self, number):
+            self.page_number = number
+
+        def extract_text(self, **kwargs):
+            return 'BAS16\nType Package Configuration\nBAS16 SOT23 single\n'
+
+        def find_tables(self):
+            return [object()]
+
+        def close(self):
+            return None
+
+        def crop(self, *args, **kwargs):
+            return self
+
+    pages = [Page(1), Page(2)]
+
+    class Pdf:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return None
+
+        @property
+        def pages(self):
+            return pages
+
+    fake_pdfplumber = types.SimpleNamespace(open=lambda _: Pdf())
+    monkeypatch.setitem(sys.modules, 'pdfplumber', fake_pdfplumber)
+    monkeypatch.setattr(rows_module, '_read_table',
+                        lambda page, table, parts, single, terms: (
+                            [] if page.page_number == 1 else [(2, {
+                                'symbol': 'VRRM', 'row': 'Peak reverse voltage', 'doc_parts': ['BAS16'],
+                                'cells': [('MAX', '85')], 'unit': 'V', 'page': 2,
+                            })]))
+    monkeypatch.setattr(rows_module, '_infineon_reverse_voltage',
+                        lambda *args: [{'symbol': 'V_R', 'requested_symbol': 'VRRM',
+                                        'row': 'Diode reverse voltage', 'doc_parts': ['BAS16'],
+                                        'cells': [('BAS16', '80')], 'unit': 'V', 'page': 1}])
+    url = 'https://www.infineon.com/assets/row/public/documents/24/49/infineon-bas16series-ds-en.pdf'
+    rows = extract(b'%PDF-1.4', url, ['BAS16'], ['vrrm'], grade=2)
+    assert [row['symbol'] for row in rows] == ['VRRM']
+
+
+def test_infineon_vr_fallback_does_not_apply_to_peak_without_vrrm():
+    class Page:
+        page_number = 2
+
+        def extract_text(self, **kwargs):
+            return 'Maximum Ratings\nDiode reverse voltage V 80 V\nR\n'
+
+        def find_tables(self):
+            return []
+
+    assert not _infineon_reverse_voltage(
+        Page(), ['BAS16'], {'peak', 'reverse', 'voltage'}, {'BAS16'})
+
 
 
 @pytest.mark.parametrize('url', [
@@ -448,8 +739,9 @@ def test_unreadable_pdf_never_substitutes_search_summary(transport, pdf_status):
     assert visited == ['https://api.exa.ai/search', URL]
 
 
-def test_grade2_search_returns_only_verified_tsc_rows_and_sha256(transport, monkeypatch):
-    target = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34%20SERIES.pdf'
+def test_grade2_search_returns_only_verified_ti_rows_and_sha256(transport, monkeypatch):
+    monkeypatch.setitem(sys.modules, 'backend.services.document_language', types.SimpleNamespace(language_for_pages=lambda pages: 'en'))
+    target = 'https://www.ti.com/lit/ds/symlink/SS34%20SERIES.pdf'
     calls = []
 
     def handle(req):
@@ -459,6 +751,9 @@ def test_grade2_search_returns_only_verified_tsc_rows_and_sha256(transport, monk
             assert payload['includeDomains'] == [
                 'services.taiwansemi.com/storage/resources/datasheet/',
                 'www.infineon.com/assets/row/public/documents/',
+                'www.vishay.com/docs/', 'www.ti.com/lit/ds/symlink/',
+                'www.onsemi.com/pdf/datasheet/', 'www.st.com/resource/en/datasheet/',
+                'www.analog.com/media/en/technical-documentation/data-sheets/',
             ]
             return httpx.Response(200, json={'results': [{'url': target}]})
         assert str(req.url) == target
@@ -467,13 +762,13 @@ def test_grade2_search_returns_only_verified_tsc_rows_and_sha256(transport, monk
     import json
     rows = exa.search_grade2_evidence(['SS34'], 'reverse voltage', transport=httpx.MockTransport(handle))
     assert rows and rows[0]['evidence_grade'] == 2
-    assert rows[0]['source_url'] == 'https://services.taiwansemi.com/storage/resources/datasheet/SS34%20SERIES.pdf'
+    assert rows[0]['source_url'] == target
     assert re.fullmatch(r'[0-9a-f]{64}', rows[0]['source_sha256'])
     assert calls[0][0] == 'POST'
 
 
 def test_grade2_cites_redirect_destination_and_exact_family_members(transport):
-    url = 'https://services.taiwansemi.com/storage/resources/datasheet/family.pdf'
+    url = 'https://www.ti.com/lit/ds/symlink/family.pdf'
     final = url.replace('family.pdf', 'SS34LW_SERIES.pdf')
     def respond(request):
         if request.method == 'POST':
@@ -483,18 +778,16 @@ def test_grade2_cites_redirect_destination_and_exact_family_members(transport):
         assert str(request.url) == final
         return httpx.Response(200, content=family_pdf(suffix='LW'))
 
-    rows = exa.search_grade2_evidence(['SS34', 'SS33LW', 'SS34LW'], 'TSC reverse voltage',
+    rows = exa.search_grade2_evidence(['SS34', 'SS33LW', 'SS34LW'], 'TI reverse voltage',
                                       transport=httpx.MockTransport(respond))
     assert [(r['doc_parts'][0], r['cells'][0][1], r['source_url']) for r in rows] == [
         ('SS33LW', '30', final), ('SS34LW', '40', final)]
 
 
 @pytest.mark.parametrize('manufacturer, expected', [
-    ('TSC', ['services.taiwansemi.com/storage/resources/datasheet/']),
-    ('Taiwan Semiconductor', ['services.taiwansemi.com/storage/resources/datasheet/']),
-    ('\uB300\uB9CC\uBC18\uB3C4\uCCB4', ['services.taiwansemi.com/storage/resources/datasheet/']),
     ('Infineon', ['www.infineon.com/assets/row/public/documents/']),
     ('\uC778\uD53C\uB2C8\uC5B8', ['www.infineon.com/assets/row/public/documents/']),
+    ('TI', ['www.ti.com/lit/ds/symlink/']),
 ])
 def test_grade2_search_honors_manufacturer_alias(manufacturer, expected, monkeypatch):
     monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
@@ -515,7 +808,7 @@ def test_grade2_search_honors_manufacturer_alias(manufacturer, expected, monkeyp
 
 # --- 외부 호출 실패는 [] 그대로지만 운영 로그(WARNING)에 종류 · 상태 코드만 남는다(점검 A #2 a) ---
 SECRET_KEY = 'key-must-not-leak'
-TSC_PDF = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34_SERIES_B2305.pdf'
+TSC_PDF = 'https://www.ti.com/lit/ds/symlink/SS34_SERIES_B2305.pdf'
 
 
 @pytest.fixture
@@ -530,7 +823,7 @@ def web_env(monkeypatch, caplog):
 
 def grade2(handler):
     with exa.request_scope():
-        return exa.search_grade2_evidence(['SS34'], 'TSC reverse voltage', transport=httpx.MockTransport(handler))
+        return exa.search_grade2_evidence(['SS34'], 'TI reverse voltage', transport=httpx.MockTransport(handler))
 
 
 def assert_clean(log, *needles):

@@ -6,10 +6,10 @@ resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
     "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
-    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version < '3.13' and sys_platform == 'emscripten'",
     "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'emscripten'",
     "python_full_version < '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
@@ -1744,6 +1744,15 @@ wheels = [
 ]
 
 [[package]]
+name = "langid"
+version = "1.1.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ea/4c/0fb7d900d3b0b9c8703be316fbddffecdab23c64e1b46c7a83561d78bd43/langid-1.1.6.tar.gz", hash = "sha256:044bcae1912dab85c33d8e98f2811b8f4ff1213e5e9a9e9510137b84da2cb293", size = 1925978, upload-time = "2016-04-05T22:34:15.786Z" }
+
+[[package]]
 name = "langsmith"
 version = "0.14.14"
 source = { registry = "https://pypi.org/simple" }
@@ -2990,6 +2999,7 @@ dependencies = [
     { name = "langfuse" },
     { name = "langgraph" },
     { name = "langgraph-checkpoint-postgres" },
+    { name = "langid" },
     { name = "mcp" },
     { name = "openai" },
     { name = "pdfplumber" },
@@ -3035,6 +3045,7 @@ requires-dist = [
     { name = "langfuse", specifier = ">=2.50" },
     { name = "langgraph", specifier = ">=1.0" },
     { name = "langgraph-checkpoint-postgres", specifier = ">=3.0" },
+    { name = "langid", specifier = ">=1.1.6" },
     { name = "mcp", specifier = ">=1.28,<2" },
     { name = "openai", specifier = ">=1.60" },
     { name = "pdfplumber", specifier = ">=0.11.10,<0.12" },

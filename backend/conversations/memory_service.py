@@ -389,6 +389,16 @@ class Conversations:
         budget.on_reserve = charge
         return budget
 
+    def schematic_dialogue_budget(self, user):
+        """회로도 소개도 기존 사용자·서비스 일일 예약을 공유한다."""
+        budget = self._budget(user)
+        budget.max_calls = min(budget.max_calls, 3)
+        budget.max_usd = min(budget.max_usd, .10)
+        budget.max_seconds = min(budget.max_seconds, 45)
+        budget.max_tokens = min(budget.max_tokens, 2048)
+        budget.validate()
+        return budget
+
     def _graph(self):
         from functools import update_wrapper
         from backend.graph.mcp_retriever import StdioMcpRetriever

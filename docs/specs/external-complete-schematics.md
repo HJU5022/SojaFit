@@ -97,6 +97,18 @@ AC: Given 위 6개 제조사의 실제 공개 회로 문서, When 참고 API로 
 - 적용 범위는 백엔드 API와 작업대 원본 회로도 창이다.
 - 범위 밖: 데이터시트의 부분 응용 회로, 블록도, 제품 사진, PCB 렌더링 반환. 검증된 완성 회로도가 없을 때 회로 생성·대체 이미지. LLM·Mouser·DigiKey·Nexar 호출과 검색 결과의 DB 저장.
 
+### 다중 후보 대화 (2026-11-16, 백엔드)
+
+같은 이름의 회로도가 여러 제조사·판본·출처에서 검색되면 차이를 설명하고 선택을 묻는다. 여러 회로를 요청한 경우에는 검색된 후보를 모두 소개한다.
+
+POST `/api/external-circuits/schematics/dialogue`는 원래 `question`과 검색어 `queries` 1~3개를 받는다. 검증된 후보 N개의 번호·제조사·모델·판본·파일·출처를 반환한다. 복수 검색어 또는 전체 소개·비교 요청은 `all`, 그 외 여러 후보는 `select`, 한 후보는 `single`로 처리한다. 검색 실패는 검색어별로 구분한다.
+
+백엔드가 모드와 확인할 차이 항목을 정하고 Haiku 5.5가 설명과 질문을 작성한다. 후보 ID 전체와 각 설명의 사실값을 검사하며, 추가·누락·중복 또는 근거 불일치가 있으면 생성문을 채택하지 않는다. 생성 실패는 `unavailable`로 표시하고 후보 상세는 유지한다. 기존 GET의 원본 선택·PNG·프로젝트 소유권 검사와 일일 분석 예산을 재사용한다. 출처의 글은 지시로 실행하지 않으며 업로드한 연결 정보는 LLM에 보내지 않는다.
+
+수용 기준은 동명 후보의 차이 설명·선택 질문, 복수 요청의 전체 소개, 단일 후보와 부분 검색 실패 처리, 잘못된 후보·사실값 거절, 기존 GET·PNG·소유권 계약 유지다. 프런트·DB 저장·배포·기존 데이터시트 인용·일반 대체 판정은 변경하지 않는다.
+
+기존 검색·원본 제공 경로에는 LLM 호출을 추가하지 않는다. 위 POST 대화 경로에 한해 LLM 소개를 허용한다. 검색어 추출·프런트 표시 연결은 호출 측이 맡으며, 대화 API는 받은 검색어를 임의로 바꾸거나 생략하지 않는다.
+
 ## What
 
 로그인한 사용자가 회로도 이름을 입력하면 서버가 공개 웹에서 PDF·PNG·SVG와 게시 페이지를 찾는다. 제조사와 비공식 출처를 검색 단계에서 배제하지 않는다. 파일을 안전하게 내려받아 실제 회로도인지 확인한 뒤 PNG로 제공한다. 여러 후보가 있으면 사용자가 원본 URL로 특정해 다시 선택한다. 확인되지 않은 출처는 `public_web`, `evidence_grade=null`로 표시한다.
@@ -216,9 +228,10 @@ gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAcco
 | 경로 | 동작 | 근거 |
 |---|---|---|
 | `GET /api/external-circuits/schematics?q=&source_url=&component_type=diode` | 이름으로 찾은 회로도와 순서가 있는 `images`(`sheet`, `url`), 다른 검색 후보 `choices`를 반환한다. `source_url`은 선택 사항이며 같은 검색의 검증된 후보 URL일 때만 허용한다. `component_type=diode`도 선택 사항이며 지정하면 검색어는 trim 후 2~194자다. 일반 검색어는 2~200자다 | `backend/api/external_circuits.py` |
+| `POST /api/external-circuits/schematics/dialogue` | 원래 질문과 검색어 1~3개로 검증된 모든 후보 상세를 반환한다. 단일 대상의 여러 후보는 차이 설명과 선택 질문, 복수·비교 요청은 전체 소개. 후보·생성 상태·검색별 실패를 분리하며 인증·Origin·기존 일일 예산을 적용한다 | `backend/api/external_circuits.py`, `backend/projects/schematic_dialogue.py` |
 | `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}` | 같은 로그인 세션에서 PNG 반환. 임의 외부 URL은 받지 않는다 | `backend/api/external_circuits.py:75-86` |
 
-두 경로 모두 로그인이 필요하다. 응답 헤더는 `Cache-Control: private, no-store`다. PNG는 `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`을 더한다.
+세 경로 모두 로그인이 필요하다. 응답 헤더는 `Cache-Control: private, no-store`다. PNG는 `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`을 더한다. POST의 상세 요청·응답·실패 계약은 [API.md](../../backend/api/API.md)의 회로도 후보 대화 절을 따른다. LLM 소개는 한 번에 24후보까지이며 이를 초과하면 생성 상태만 `unavailable`로 두고 후보 상세는 전부 유지한다.
 
 ### 검색과 검증
 

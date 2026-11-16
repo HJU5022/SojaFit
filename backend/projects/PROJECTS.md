@@ -42,6 +42,7 @@ GitHub 라이선스 metadata의 deprecated GPL 식별자는 canonical SPDX 표�
 | `visuals.py` | `load_demo_visuals()`가 데모 catalog의 회로도 출처 정본(HTTPS, commit, 원본·배포 hash, PNG 경로)을 검증. 누락·추가 ID나 손상 자산은 예외. 외부 다운로드 없음 |
 | `external_circuit_search.py` | Exa 공개 웹 결과에서 회로도 이름과 파일을 확인하고 제조사·비공식 출처 후보를 정제. GitHub 저장소 후보 검색과 단일 버튼의 TSC/다이오드/공개 보드/원본 문맥 구분도 담당 |
 | `external_schematic.py` | 공개 원본 후보를 검증·변환·메모리 캐시하고 서명 token으로 시트 조회. 같은 검색의 다른 후보 선택을 검증 |
+| `schematic_dialogue.py` | 검증된 후보의 공개 정보로 LLM 소개를 조립. 후보 ID·사실값·질문 모드를 검사하며 검색·원본 선택은 하지 않음 |
 | `schematic.py` | 제한된 KiCad CLI PDF·netlist export와 별도 renderer HTTP 경계. 프로젝트 원본은 반환된 실제 후보 연결을 API에서 전체 대조 |
 | `schematic_discovery.py` | GitHub tree에서 EDA 원본과 연결된 전체 회로도 자산 찾기 |
 | `schematic_render.py` | 공개 PDF/SVG/PNG의 해시·회로도 페이지를 확인하고 제한된 크기와 해상도의 PNG로 렌더링 |

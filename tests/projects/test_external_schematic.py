@@ -167,6 +167,50 @@ def test_default_community_prefers_a_compact_complete_circuit_without_hiding_oth
     assert {choice.source_url for choice in result.choices} == {source.source_url for source in sources}
 
 
+def test_choices_preserve_verified_identity_and_provenance_for_llm_dialogue(service):
+    worker, _, _, source = service
+    sources = tuple(replace(
+        source,
+        repository=f"maker/board-{index}",
+        repository_url=f"https://github.com/maker/board-{index}",
+        source_url=f"https://github.com/maker/board-{index}/tree/{'a' * 40}",
+        source_file=f"board-{index}.kicad_sch",
+        root_schematic=f"board-{index}.kicad_sch",
+        manufacturer=manufacturer,
+        model="Same Board",
+        revision=revision,
+        source_type="manufacturer_official",
+        source_sha256=str(index) * 64,
+        license="MIT",
+        attribution=f"{manufacturer} contributors",
+    ) for index, (manufacturer, revision) in enumerate(
+        (("Maker A", "Rev A"), ("Maker B", "Rev B")), start=1
+    ))
+    refs = tuple(WebSchematicRef(
+        f"https://maker.example/board-{index}.pdf",
+        f"https://maker.example/board-{index}",
+        f"board-{index}.pdf", "pdf", "Same Board", "Maker"
+    ) for index in (1, 2))
+    worker.search = lambda query, limit: refs
+    worker.inspect = lambda ref, **kwargs: (sources[refs.index(ref)],)
+    worker.render = lambda candidate: (b"sheet", b"sheet")
+
+    result = worker.find("same board")
+
+    actual = {(choice.title, choice.manufacturer, choice.model, choice.revision,
+               choice.source_file, choice.source_sha256, choice.commit,
+               choice.license, choice.attribution, choice.repository_url)
+              for choice in result.choices}
+    assert actual == {
+        ("Same Board · board-1.kicad_sch", "Maker A", "Same Board", "Rev A",
+         "board-1.kicad_sch", "1" * 64, "c" * 40, "MIT", "Maker A contributors",
+         "https://github.com/maker/board-1"),
+        ("Same Board · board-2.kicad_sch", "Maker B", "Same Board", "Rev B",
+         "board-2.kicad_sch", "2" * 64, "c" * 40, "MIT", "Maker B contributors",
+         "https://github.com/maker/board-2"),
+    }
+
+
 @pytest.mark.parametrize("query", [
     "https://github.com/group/board",
     "http://github.com/group/board",

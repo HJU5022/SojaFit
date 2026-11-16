@@ -259,7 +259,7 @@ def test_verified_grade2_row_survives_storage_and_reopen_with_exact_pdf_hash():
 def test_judge_grade2_citation_and_evidence_keep_provenance_on_reload():
     from backend.conversations.dto import result_dto, safe_judgement, stored_evidence
     from backend.conversations.models import SafeResult
-    url = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34_K2301.pdf'
+    url = 'https://www.ti.com/lit/ds/symlink/SS34_K2301.pdf'
     cite = {'document': 'SS34_K2301.pdf', 'page': 1, 'table': 'Maximum ratings',
             'row': 'Reverse voltage', 'source_url': url, 'source_sha256': 'b' * 64, 'evidence_grade': 2}
     state = {'judgement': {'kind': 'judge', 'results': [{'part': 'SS34', 'verdict': 'NOT_VERIFIED',
@@ -273,6 +273,27 @@ def test_judge_grade2_citation_and_evidence_keep_provenance_on_reload():
         assert item['source_url'] == url + '#page=1'
         assert item['source_sha256'] == 'b' * 64
         assert item['evidence_grade'] == 2
+
+
+@pytest.mark.parametrize('url', [
+    'https://assets.nexperia.com/documents/data-sheet/BAS16.pdf',
+])
+def test_excluded_grade2_source_is_not_exposed_or_stored_as_verified_evidence(url):
+    from backend.conversations.dto import public_state, result_dto, stored_evidence
+    from backend.conversations.models import SafeResult
+    row = {'page': 2, 'row': 'Reverse voltage', 'table': 'Maximum ratings',
+           'file': 'part.pdf', 'chunk_id': 'W1', 'source_type': 'external_web',
+           'evidence_grade': 2, 'source_sha256': 'a' * 64, 'source_url': url}
+    live = result_dto(public_state({'docs': [row], 'final_reports': [{'evidence_ids': ['W1']}]}),
+                      request_id='excluded').evidence
+    assert live == []
+    saved = SafeResult(evidence=stored_evidence(live)).model_dump()
+    assert result_dto(saved, request_id='reload').evidence == []
+    # Saved grade-2 provenance from before the policy change is checked too.
+    old = {'document': url + '#sha256=' + 'a' * 64, 'page': 2,
+           'table': 'Maximum ratings', 'row': 'Reverse voltage', 'citation_number': 'W1'}
+    reopened = result_dto({'evidence': [old]}, request_id='old-policy').evidence
+    assert not any(item.get('evidence_grade') == 2 for item in reopened)
 
 
 def test_web_references_survive_refusal_and_reload_without_becoming_rating_evidence():

@@ -5,7 +5,30 @@ import pytest
 
 from backend.services import exa
 
-URL = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34_F16.pdf'
+URL = 'https://www.vishay.com/docs/88751/ss34.pdf'
+
+
+@pytest.mark.parametrize('excluded_url', [
+    'https://assets.nexperia.com/documents/data-sheet/BAS16.pdf',
+])
+def test_prefetch_searches_only_seven_makers_and_skips_excluded_pdf(fake, monkeypatch, excluded_url):
+    searches, gets = [], []
+
+    def body(client, method, url, limit, **kwargs):
+        if method == 'POST':
+            searches.append(kwargs['json'])
+            return json.dumps({'results': [{'url': excluded_url}]}).encode(), url
+        gets.append(url)
+        return b'%PDF-1.7 fake', url
+
+    monkeypatch.setattr(exa, '_body', body)
+    assert exa._prefetch_pdfs(['BAS16']) == {}
+    assert gets == []
+    assert {domain.split('/')[0] for domain in searches[0]['includeDomains']} == {
+        'www.ti.com', 'www.st.com', 'www.analog.com',
+        'www.onsemi.com', 'www.infineon.com', 'www.vishay.com',
+        'services.taiwansemi.com',
+    }
 
 
 @pytest.fixture
