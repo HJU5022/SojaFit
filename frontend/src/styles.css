@@ -1274,13 +1274,6 @@ form {
   font-size: 14px;
   margin-bottom: 16px;
 }
-.part-selector label {
-  font-size: 13px;
-  gap: 8px;
-}
-.part-selector select {
-  font-size: 13px;
-}
 .part-status {
   font-size: 13px;
   color: var(--muted);
@@ -2588,14 +2581,6 @@ form {
   }
   .part-selector h2 {
     display: none;
-  }
-  .part-selector label {
-    margin-bottom: 4px;
-    font-size: 13px;
-  }
-  .part-selector select {
-    min-height: 39px;
-    font-size: 13px;
   }
   .part-status {
     font-size: 13px;

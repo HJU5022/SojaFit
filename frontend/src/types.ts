@@ -80,14 +80,6 @@ type Component = {
   pins?: Record<string, any>;
   [key: string]: any;
 };
-export type Thread = {
-  id: string;
-  title: string;
-  project_id: number;
-  status: string | null;
-  latest_run_id: string | null;
-  circuit_version: number;
-};
 /** GET /api/threads 한 줄: 모든 프로젝트의 대화(사이드바 "대화"). title은 고친 이름, 없으면 첫 질문으로 만든 이름. */
 export type ThreadListItem = {
   id: string;

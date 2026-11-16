@@ -18,8 +18,7 @@ EVALS = Path(__file__).resolve().parents[2] / "evals"
 def test_frozen_files_unchanged():
     """FROZEN.json에 적힌 모든 파일의 현재 sha256이 동결 당시 값과 같은지 확인한다."""
     frozen = EVALS / "FROZEN.json"
-    if not frozen.exists():
-        return  # FROZEN.json이 없으면 검사할 대상이 없다 (v1은 2026-11-02에 동결)
+    assert frozen.exists(), "evals/FROZEN.json이 없습니다(v1은 2026-11-02에 동결)"
     for name, meta in json.loads(frozen.read_text(encoding="utf-8")).items():
         actual = hashlib.sha256((EVALS / name).read_bytes()).hexdigest()
         assert actual == meta["sha256"], f"{name}: 동결 후 바뀌었습니다"

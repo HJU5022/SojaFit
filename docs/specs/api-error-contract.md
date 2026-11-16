@@ -101,5 +101,5 @@
 
 ## 한계
 
-- `tests/api/test_errors.py`의 `test_table_has_fifteen_codes_and_defaults` 이름은 15개를 말하지만 단언은 16이다. `backend/errors.py` 머리 주석(`ADR 0019의 15개`, `상황 코드 4개`)도 코드 표(기본 11 + 상황 5)와 다르다. 코드는 이 구역 밖이다.
+- `backend/errors.py` 머리 주석(`ADR 0019의 15개`, `상황 코드 4개`)은 코드 표(기본 11 + 상황 5)와 다르다. 코드는 이 구역 밖이다.
 - 화면 쪽 오류 정규화(HTML·빈 본문·잘못된 JSON 처리)와 failed 안내 단일화는 `frontend/**`를 읽어 대조하지 않았다.

@@ -16,7 +16,7 @@ import {
 } from './ui';
 import { NewProject, refreshNavigation } from './Projects';
 import { openWithQuestion } from './Workbench';
-import type { Demo, Project, ThreadListItem } from './types';
+import type { Project, ThreadListItem } from './types';
 /** 펼친 프로젝트 번호를 이 브라우저에 남기는 키(사이드바 나무, #31). */
 const EXPANDED = 'sojafit.sidebar.expanded';
 /**
@@ -313,7 +313,7 @@ export function NewConversation() {
         if (attachment.size > 5 * 1024 * 1024)
           throw new Error('넷리스트·회로도는 5 MiB 이하여야 합니다.');
         const body = new FormData();
-        // [왜] 이름을 먼저 묻지 않는다. 파일 이름(확장자 뺌)으로 만들고 프로젝트 목록에서 바꿀 수 있다
+        // [왜] 이름을 먼저 묻지 않는다. 파일 이름(확장자 뺌)으로 만들고 사이드바 ⋯ 메뉴에서 바꿀 수 있다
         body.set(
           'name',
           attachment.name

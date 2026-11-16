@@ -83,9 +83,9 @@ SojaFit (proj3-b)
 │   │       └── sojafit-icon.svg <- 다이오드 기호 아이콘(파비콘, 앱 로고와 같은 기호)
 │   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)과 브라우저 시험(Playwright)
 │   │   ├── TESTS.md        <- 폴더 설명
-│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄 시험
+│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄·보내기 키(#38)·진행 단계 시간(#42)·판정 후보 모으기(#55) 시험
 │   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
-│   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기, LED·표시기·비다이오드 판정 대상 제외 시험
+│   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기, LED·표시기·비다이오드 판정 대상 제외, 409 중복 처리(#48)·패널 한 줄(#50)·첨부 파일 종류(#52)·부품 점검표 거르기(#68) 시험
 │   │   ├── schematicSearch.test.ts <- 원본 회로도 검색 재사용(14분·실패는 다시 시도할 때만·직접 찾기 실패에도 찾은 결과 유지) 시험
 │   │   ├── approval.test.ts <- 승인 목록에서 후보의 승인 상태(own·other)와 사례 삭제 뒤 재승인 시험
 │   │   ├── report.test.ts  <- 대체 검토 보고서 ECO 칸 값(변경 내용 문장·변경 영향 통과 수·영향받는 품목 줄·값 없으면 빈칸) 시험(#56)
@@ -95,30 +95,30 @@ SojaFit (proj3-b)
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- React 진입점·글꼴·스타일
-│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·새 대화·작업대·설정·승인 사례·관리자)
+│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·고지 문서·새 대화·작업대·설정·승인 사례·인쇄용 보고서·서재·관리자)
 │       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·판정 5종과 실행 상태의 화면 표기
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
-│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유, 부품 점검표 거르기·검토 질문
+│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유, 질문으로 지은 프로젝트 이름, 업로드 409 중복 처리(#48), 첨부 파일 종류(#52), 부품 점검표 거르기·검토 질문
 │       ├── approval.ts     <- 승인 목록에서 후보의 승인 상태(이 후보 승인·다른 후보 승인) 가르기
 │       ├── report.ts       <- 대체 검토 보고서 ECO 칸 값을 저장한 사례에서만 만든다(#56)
-│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄)
+│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄), 보내기 키(#38)·진행 단계 시간(#42)·판정 후보 모으기(#55)
 │       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내
-│       ├── ui.tsx          <- 경로 이동·자원 훅·공통 조각(로고·상태·판정 배지·창·근거 출처)·회로 도식·마크다운
+│       ├── ui.tsx          <- 경로 이동·자원 훅·공통 조각(로고·상태·판정 배지·창·⋯ 메뉴·근거 출처)·입력창 첨부와 첨부 카드·경계선 너비 조절·회로 도식·마크다운
 │       ├── Landing.tsx     <- 공개 랜딩
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
 │       ├── Account.tsx     <- 내 설정·개인정보처리방침 본문
-│       ├── Approved.tsx    <- 승인 사례 목록과 사례 하나의 기록(원래 대화·질문·조건별 판정·근거·견적, 다시 판정하지 않음)
+│       ├── Approved.tsx    <- 승인 사례 목록과 사례 하나의 기록(원래 대화·질문·조건별 판정·근거·견적, 다시 판정하지 않음)·인쇄용 부품 대체 검토 보고서(#44 #56)
 │       ├── Library.tsx     <- 데이터시트 서재(/library): 품번·시리즈·제조사 검색·분류·원문 PDF 링크 표와 쪽 이동, 읽기만(#67)
 │       ├── libraryQuery.ts <- 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번(#67)
 │       ├── Admin.tsx       <- 관리자 영역: 계정 목록(이메일 가림)·사유를 적은 가림 해제·정지·재활성화·탈퇴 처리·작업 이력
 │       ├── Legal.tsx       <- 화면 맨 아래 고지 한 줄(이용약관·개인정보처리방침·AI 이용 안내·출처·라이선스·문의·©)과 문서 창·페이지
-│       ├── Conversations.tsx <- 사이드바 프로젝트·대화 나무(이름 변경·삭제)와 새 대화 화면(넷리스트 첨부·기존 회로 고르기)
+│       ├── Conversations.tsx <- 사이드바 프로젝트·대화 나무(이름 변경·삭제)와 새 대화 화면(질문 입력창·넷리스트·회로도 첨부)
 │       ├── Projects.tsx    <- 새 프로젝트 창(데모 회로·넷리스트 업로드·나중에 첨부)
-│       ├── Workbench.tsx   <- 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전
-│       ├── Reply.tsx       <- 검토 결과 답과 조건 입력 카드
+│       ├── Workbench.tsx   <- 검토 대화·실시간 진행·조건 재개·첨부 버전·회로 없는 대화의 회로 요청 카드(첨부·기존 회로로 계속)·오른쪽 회로 패널(검토 부품은 읽기 전용)
+│       ├── Reply.tsx       <- 검토 결과 답과 조건 입력 카드·대상 부품 고르기 카드
 │       ├── Parts.tsx       <- 부품 점검표 창: 종류별 개수 칩·판정 지원·데이터시트 유무 표(#68)
-│       ├── Schematic.tsx   <- 원본 회로도 구역: 예제 프로젝트의 저장된 도면, 그 밖의 프로젝트는 열 때 한 번 하는 공개 웹 검색(external-circuits), 눌러 큰 창
+│       ├── Schematic.tsx   <- 원본 회로도 구역: 올린 회로도(.kicad_sch) 그림을 먼저(#52), 예제 프로젝트의 저장된 도면, 그 밖의 프로젝트는 열 때 한 번 하는 공개 웹 검색(external-circuits), 눌러 큰 창
 │       ├── schematicSearch.ts <- 원본 회로도 검색을 (프로젝트, 회로 버전)마다 한 번만 보내는 탭 메모리
 │       ├── Candidate.tsx   <- 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회
 │       ├── styles.css      <- 전체 스타일
@@ -532,7 +532,7 @@ SojaFit (proj3-b)
 │   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   │   ├── test_errors.py  <- 오류 코드 16개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
 │   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
-│   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API, Google OAuth(state · PKCE · ID 토큰)(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_admin.py   <- 관리자 가림 해제 사유 422 · 이력 · 정지 세션 폐기 · 관리자와 자기 자신 탈퇴 처리 거절(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_email_auth.py <- 가짜 SMTP·격리 DB의 인증 가입·암호 재설정·토큰 경합·한도 시험
 │   │   ├── test_google_users.py <- 일반 Google 가입·비밀번호 재확인 연결·관리자 승인·충돌·한도·마이그레이션 시험
@@ -540,7 +540,6 @@ SojaFit (proj3-b)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
 │   │   ├── test_http_restart.py <- 격리 DB·합성 그래프의 HTTP 서버 재시작 후 재개·두 계정 차단 재현 시험
-│   │   ├── test_public_grants.py <- 026 SQL 시험(공개 권한 0 · RLS ON · 두 번 실행 · 역할 없는 DB · 소유자 동작 · LangGraph 표)
 │   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409, 보관 기간 청소(60일 · 30일 · 묶음) 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
@@ -549,9 +548,9 @@ SojaFit (proj3-b)
 │   │   ├── test_datasheets.py <- 데이터시트 서재 API: 로그인 필요, 표지 품번·제목·제조사 검색, 분류, 쪽 나눔, 폐기 문서 숨김(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   │   └── test_external_circuits.py <- 완성 회로도 manifest·PNG API
-│   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
+│   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약, KiCad 정규화, 데모 · 외부 회로도 검색 · 렌더 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
-│   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
+│   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화, 회로 지문(번호 바꿈 대조) 시험
 │   │   ├── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
 │   │   ├── test_service_schema.py  <- 서비스 표 재설계 규칙 시험: 삭제 연쇄 · 승인 칸 · 단순 CHECK · 견적 제약(일회용 DB, 기준선 적용)
 │   │   ├── test_catalog.py <- 회로 catalog 15종·안전한 ID·연결 경로 검증
@@ -562,8 +561,9 @@ SojaFit (proj3-b)
 │   │   ├── test_official_schematic.py <- 등록 제조사 원본 URL·출처 등급·SHA-256 렌더 검증
 │   │   ├── test_schematic_discovery.py <- 완성 회로도 자산 판정
 │   │   └── test_schematic_render.py <- PDF/SVG/PNG 렌더링·픽셀 제한
-│   ├── db/                 <- DB 문서 · 스키마 도구 시험(일회용 PostgreSQL)
+│   ├── db/                 <- DB SQL · 문서 · 스키마 도구 시험(일회용 PostgreSQL)
 │   │   ├── DB.md           <- 폴더 설명
+│   │   ├── test_public_grants.py <- 026 SQL 시험(공개 권한 0 · RLS ON · 두 번 실행 · 역할 없는 DB · 소유자 동작 · LangGraph 표)
 │   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
@@ -576,7 +576,7 @@ SojaFit (proj3-b)
 │   │   ├── test_graph_supervisor.py  <- Supervisor V0 입력·출력·상태별 의미 계약
 │   │   ├── test_graph_state.py  <- 상태 칸의 덮어쓰기·쌓기
 │   │   ├── test_agent_netlist.py  <- 에이전트용 KiCad 업로드의 형식·참조·자원 제한 시험
-│   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기, 저장소 밖 경로 차단
+│   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기(주변 핀 기능 · 부스트 · 플라이백 기구), 저장소 밖 경로 차단
 │   │   ├── test_graph_route.py  <- 라우팅 노드
 │   │   ├── test_graph_search.py  <- 검색 노드의 품번 고르기
 │   │   ├── test_graph_grade.py  <- 채점 노드의 품번·개정판 거르기
@@ -593,10 +593,10 @@ SojaFit (proj3-b)
 │   │   ├── test_facts_lookup.py  <- 사실 확인이 MCP 도구 응답으로 Facts를 만드는 길(가짜 도구)
 │   │   ├── test_readme_graph.py  <- README 3절 mermaid 블록 = 코드가 조립한 그래프인지 비교
 │   │   ├── test_agents.py  <- RAG 에이전트(검색 · 근거 채점+답 쓰기 · 다시 찾기 · 인용 검사), 사실 확인, 거절 문구, 판정 답 틀
-│   │   ├── test_docs_agent.py  <- RAG 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
+│   │   ├── test_docs_agent.py  <- RAG 에이전트: 인용 처리(허용 번호 · 교정 상한 · 미인용 문장 제거), 2등급 공식 PDF의 제조사 도메인 제한, 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
 │   │   ├── test_judge.py   <- Spec 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
 │   │   ├── test_part_names.py  <- 읽기 뒤 품번 바로잡기: 글의 품번으로 맞추기 · 지금 달린 부품 · 지어내지 않는 음성 사례
-│   │   ├── test_judge_read.py  <- 판정 읽기: 역할별 값 이름·다른 이름 버리기, 코퍼스 밖 요구 거절과 멀티 그래프 거절 끝(가짜 LLM·사양 표)
+│   │   ├── test_judge_read.py  <- 판정 읽기: 역할별 값 이름·다른 이름 버리기, 이전 대화 값 불러오기 범위, 코퍼스 밖 요구 거절과 멀티 그래프 거절 끝(가짜 LLM·사양 표)
 │   │   └── test_build.py   <- 조립 길 시험: 바로 끝내는 길·할 일 1개와 2개(동시 실행 → 종합)·답 검사 거절·재계획·판정 길(인터럽트 1번), 그림의 한국어 노드 이름과 재계획 라벨
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
@@ -623,7 +623,7 @@ SojaFit (proj3-b)
 │   │   ├── test_exa_prefetch.py <- 웹 근거 미리 출발: 기본 꺼짐, 받아 둔 같은 PDF 재사용, 실패 시 원래 경로
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
-│   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
+│   │   ├── test_llm.py     <- LLM 호출 입구: 형식 검증 · 재시도 상한, 노드별 모델, Voyage 임베딩 · 재시도, 평가 예산 · provider 정책
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   ├── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
 │   │   └── test_service_trace.py  <- 서비스 분석 추적: 본문 미전송, 토큰·모델·공급자 비용 유지, 같은 trace_id
@@ -669,9 +669,9 @@ SojaFit (proj3-b)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
-│   │   ├── test_judge_pricing.py <- 가상 가격의 구간·정확한 곱셈·모호한 값 거절 시험
 │   │   ├── JUDGE.md        <- 폴더 설명
-│   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산
+│   │   ├── test_judge_pricing.py <- 가상 가격의 구간·정확한 곱셈·모호한 값 거절 시험
+│   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산·요구 사양 글의 조건 읽기
 │   │   ├── test_judge_rules_file.py  <- 실제 규칙 파일 23개 검사
 │   │   ├── test_judge_sheet_conditions.py  <- 시험 조건 읽기·비교
 │   │   └── test_judge_verdict.py  <- 판정 5종 순서·찾기·정렬
