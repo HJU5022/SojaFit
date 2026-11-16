@@ -186,10 +186,10 @@
 
 | 항목 | 상태 |
 |---|---|
-| 시연 영상 파일 | 없음 |
-| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다. 11-17 `799ae636`에서 로컬로 다시 돌렸다(위 표 「비밀값 검사(재검사)」) |
+| 시연 영상 파일 | 11-17 녹화: `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`(1:48, 동결 커밋 `9c87ba36`). 상세는 [DELIVERABLES.md](deliverables/DELIVERABLES.md) 남은 일 |
+| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다. 동결 직전에 로컬 `gitleaks`를 다시 돌려야 한다 |
 | 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
-| 다른 조원 포트폴리오(오세창 · 심태현) | 없음 |
+| 다른 조원 포트폴리오(오세창 · 심태현) | 11-17 초안 있음(조장 위임 AI 작성): [portfolio-osc.md](deliverables/portfolio-osc.md), [portfolio-sth.md](deliverables/portfolio-sth.md). 본인 확인 전 |
 
 ## 변이 확인
 
