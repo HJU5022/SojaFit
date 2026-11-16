@@ -5,9 +5,9 @@ import os
 import re
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
-from contextvars import ContextVar
+from contextvars import ContextVar, copy_context
 from datetime import datetime, timezone
-from threading import Lock
+from threading import Event, Lock
 from time import monotonic
 from urllib.parse import urljoin, urlsplit
 from ipaddress import ip_address
@@ -179,10 +179,18 @@ def prefetch(parts: list[str]) -> None:
     if store is None or not clean or not prefetch_enabled() or 'job' in store:
         return
     # [주의] 요청 범위 칸(store)은 dict라 다른 스레드에서 같은 객체를 채운다. 예산 슬롯은 쓰지 않는다(근거 호출이 아니라 받기만 함)
-    store['job'] = _POOL.submit(_prefetch_pdfs, clean)
+    store['ready'] = Event()  # [왜] Exa 검색이 끝나 받을 URL 목록이 정해지면 켠다. 본 경로는 목록 밖 URL을 기다리지 않는다
+    store['job'] = _POOL.submit(_run_prefetch, store, clean)
 
 
-def _prefetch_pdfs(parts: list[str]) -> dict:
+def _run_prefetch(store: dict, parts: list[str]) -> dict:
+    try:
+        return _prefetch_pdfs(parts, store)
+    finally:
+        store['ready'].set()  # 검색이 실패해도 목록은 비어 있는 채로 '정해진' 것이 되어 본 경로가 바로 직접 받는다
+
+
+def _prefetch_pdfs(parts: list[str], store: dict | None = None) -> dict:
     """공식 PDF 후보를 Exa로 찾아 최대 MAX_DOWNLOADS개를 받는다. {요청 URL: (바이트, 최종 URL)}."""
     query = _query(parts, 'datasheet')
     filters = [host + GRADE2_PDF_PATHS[host] for host in GRADE2_PDF_PATHS]
@@ -196,11 +204,21 @@ def _prefetch_pdfs(parts: list[str]) -> dict:
             hits = sorted((h for h in results[:MAX_RESULTS] if isinstance(h, dict)),
                           key=lambda h: _candidate_score(h, parts), reverse=True)
             urls = list(dict.fromkeys(u for u in (official_pdf(h.get('url') or '', grade=2) for h in hits) if u))
-            for url in urls[:MAX_DOWNLOADS]:
+            urls = urls[:MAX_DOWNLOADS]
+
+            def get(url):
                 try:
-                    found[url] = _body(client, 'GET', url, MAX_BYTES, redirect_validator=grade2_pdf)
+                    return _body(client, 'GET', url, MAX_BYTES, redirect_validator=grade2_pdf)
                 except (ValueError, httpx.HTTPError):
-                    continue
+                    return None
+
+            # [왜] 두 PDF를 동시에 받는다(파싱이 아니라 받기만). URL마다 future를 내어 본 경로가 자기 URL만 기다리게 한다
+            with ThreadPoolExecutor(max(len(urls), 1)) as pool:
+                futures = {url: pool.submit(get, url) for url in urls}
+                if store is not None:
+                    store['urls'], store['files'] = urls, futures
+                    store['ready'].set()
+                found = {url: got for url, future in futures.items() if (got := future.result()) is not None}
     except (httpx.HTTPError, ValueError, TypeError, KeyError, AttributeError, RecursionError) as error:
         _failure('prefetch', error)
     return found
@@ -209,11 +227,14 @@ def _prefetch_pdfs(parts: list[str]) -> dict:
 def _from_prefetch(url: str):
     """미리 받은 같은 URL의 (바이트, 최종 URL). 없거나 아직 못 받았으면 None(원래대로 받는다)."""
     store = _prefetched.get()
-    job = store.get('job') if isinstance(store, dict) else None
-    if job is None:
+    if not isinstance(store, dict) or store.get('job') is None:
         return None
     try:
-        return job.result(timeout=PREFETCH_WAIT_SECONDS).get(url)
+        # [왜] 대기 상한 12초는 요청 전체에서 한 번만 센다(후보마다 12초씩 기다리지 않는다)
+        deadline = store.setdefault('deadline', monotonic() + PREFETCH_WAIT_SECONDS)
+        if not store['ready'].wait(max(deadline - monotonic(), 0)) or url not in (store.get('urls') or ()):
+            return None  # 목록이 아직 없거나, 미리 받기가 고르지 않은 URL이면 기다리지 않는다
+        return store['files'][url].result(timeout=max(deadline - monotonic(), 0))
     except Exception:  # [왜] 미리 받기 실패 · 시간 초과는 본 경로를 막지 않는다
         return None
 
@@ -241,6 +262,15 @@ def _body(client, method, url, limit, *, redirect_validator=None, **kwargs):
                 data.extend(block)
             return bytes(data), url
     raise ValueError('too many redirects')
+
+
+def _stale_revision(url: str, terms: str) -> bool:
+    """요청 판본 코드가 있는데 파일명 판본이 그중 어느 것도 아니면 True(docs_agent가 이 파일의 행을 모두 버린다)."""
+    # [왜] revision_matches는 (요청 판본이 비어 있지 않을 때) 문서 판본이 요청 판본 집합에 들어 있어야만 True다. 요청 판본의 문자형 코드는 모두 terms에 붙어 온다(docs.py가 덧붙임).
+    #      문서 판본은 document_revision의 첫 규칙(`_F16.pdf` 꼴)만 본다. 다른 꼴은 판단하지 않고 받는다
+    requested = {c.upper() for c in re.findall(r'(?<!\S)([A-Za-z][0-9]{2,4})(?!\S)', terms or '')}
+    match = re.search(r'(?:_|\b)([A-Za-z]\d{2,4})(?=\.pdf$)', urlsplit(url).path.rsplit('/', 1)[-1], re.I)
+    return bool(requested and match and match.group(1).upper() not in requested)
 
 
 def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None) -> list[dict]:
@@ -281,6 +311,7 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
             return []
         candidates = [hit for hit in results[:MAX_RESULTS] if isinstance(hit, dict)]
         candidates.sort(key=lambda hit: _candidate_score(hit, parts), reverse=True)
+        chosen = []
         for hit in candidates:
             raw_url = hit.get('url') if isinstance(hit, dict) else ''
             url = official_pdf(raw_url, grade=grade)
@@ -294,24 +325,38 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
                 LOGGER.debug('datasheet_candidate_rejected stage=maker_filter reason=host_mismatch url=%s', urlsplit(url).path[:160])
                 continue
             seen.add(url)
-            try:
-                cached = _from_prefetch(url) if grade == 2 else None
-                raw, url = cached or _body(client, 'GET', url, MAX_BYTES,
-                                           redirect_validator=(grade2_pdf if grade == 2 else None))
-                rows = verified_rows(raw, url, parts, words, grade=grade) if raw.startswith(b'%PDF-') else []
-            except (ValueError, httpx.HTTPError) as error:
-                _failure('pdf_fetch', error)
-                LOGGER.debug('datasheet_candidate_rejected stage=fetch reason=unreadable_pdf url=%s', urlsplit(url).path[:160])
-                rows = []
-            if not rows:
-                LOGGER.debug('datasheet_candidate_rejected stage=row_parser reason=no_exact_verified_row url=%s', urlsplit(url).path[:160])
-            title = urlsplit(url).path.rsplit('/', 1)[-1]
-            for row in rows[:MAX_RESULTS - len(docs)]:
-                docs.append({**row, 'chunk_id': f'W{len(docs)+1}', 'file': title,
-                             'title': title, 'source_type': 'external_web', 'source_url': url,
-                             'retrieved_at': datetime.now(timezone.utc).isoformat()})
-            if len(docs) == MAX_RESULTS or len(seen) >= MAX_DOWNLOADS:
+            chosen.append(url)
+            if len(seen) >= MAX_DOWNLOADS:
                 break
+        # [왜] 한 PDF가 돌려주는 행은 최대 3개라 처리되는 PDF는 필터를 통과한 앞의 MAX_DOWNLOADS개로 정해진다. 받기만 동시에 하고(RLIMIT 때문에 파싱은 한 번에 하나) 결과는 원래 순서로 합친다
+        def fetch(url):
+            cached = _from_prefetch(url) if grade == 2 else None
+            return cached or _body(client, 'GET', url, MAX_BYTES, redirect_validator=(grade2_pdf if grade == 2 else None))
+
+        with ThreadPoolExecutor(max(len(chosen), 1)) as pool:
+            jobs = {url: None if _stale_revision(url, raw_terms) else pool.submit(copy_context().run, fetch, url)
+                    for url in chosen}
+            for url, job in jobs.items():
+                rows = []
+                if job is None:
+                    LOGGER.debug('datasheet_candidate_rejected stage=revision reason=requested_revision_mismatch url=%s', urlsplit(url).path[:160])
+                else:
+                    try:
+                        raw, url = job.result()
+                        rows = verified_rows(raw, url, parts, words, grade=grade) if raw.startswith(b'%PDF-') else []
+                    except (ValueError, httpx.HTTPError) as error:
+                        _failure('pdf_fetch', error)
+                        LOGGER.debug('datasheet_candidate_rejected stage=fetch reason=unreadable_pdf url=%s', urlsplit(url).path[:160])
+                        rows = []
+                    if not rows:
+                        LOGGER.debug('datasheet_candidate_rejected stage=row_parser reason=no_exact_verified_row url=%s', urlsplit(url).path[:160])
+                title = urlsplit(url).path.rsplit('/', 1)[-1]
+                for row in rows[:MAX_RESULTS - len(docs)]:
+                    docs.append({**row, 'chunk_id': f'W{len(docs)+1}', 'file': title,
+                                 'title': title, 'source_type': 'external_web', 'source_url': url,
+                                 'retrieved_at': datetime.now(timezone.utc).isoformat()})
+                if len(docs) == MAX_RESULTS:
+                    break
     return docs
 
 
