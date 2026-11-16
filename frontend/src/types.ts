@@ -152,6 +152,7 @@ export type ApprovedCaseDetail = {
   question: string;
   target_ref: string | null;
   target_value: string | null;
+  circuit_version: number | null;
   answer: string;
   candidate: Candidate | null;
   evidence: Citation[];

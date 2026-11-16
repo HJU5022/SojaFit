@@ -2106,7 +2106,8 @@ form {
   color: var(--muted);
   margin-top: 10px;
 }
-.case-list button {
+.case-list button,
+.case-list .button {
   font-size: 13px;
 }
 .case-actions {
@@ -2705,7 +2706,8 @@ form {
   .case-list h2 {
     font-size: 17px;
   }
-  .case-list button {
+  .case-list button,
+  .case-list .button {
     font-size: 13px;
     padding: 8px 10px;
   }
@@ -2799,5 +2801,190 @@ form {
   }
   .landing footer {
     padding: 30px 22px;
+  }
+}
+
+/* 승인 사례 인쇄용 보고서(#44). 화면에서는 A4 폭 종이처럼, 인쇄에서는 단추를 숨기고 검은 글자 · 표 테두리만 남긴다. */
+.candidate-heading > .button {
+  margin-top: 14px;
+}
+.report-page {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.report-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.report {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 32px 36px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.report header {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 12px;
+}
+.report h1 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.report section {
+  margin-top: 16px;
+}
+.report h2 {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.report p,
+.report ul,
+.report ol {
+  margin: 4px 0 0;
+  line-height: 1.6;
+}
+.report ul,
+.report ol {
+  padding-left: 20px;
+}
+.report-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 4px 16px;
+  margin: 0;
+}
+.report-facts div {
+  display: flex;
+  gap: 8px;
+}
+.report-facts dt {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.report-facts dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.report-sources a {
+  display: block;
+  font-size: 12px;
+  color: #0b6670;
+  word-break: break-all;
+}
+.report-quote {
+  border-left: 3px solid var(--line);
+  padding-left: 10px;
+}
+.report-table {
+  overflow-x: auto;
+}
+.report table {
+  width: 100%;
+  border-collapse: collapse;
+  break-inside: avoid;
+}
+.report th,
+.report td {
+  border: 1px solid #9aa5aa;
+  padding: 5px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.report thead th {
+  background: var(--surface);
+}
+.report-sign {
+  margin-top: 20px;
+}
+.report-sign caption {
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.report-sign thead th {
+  text-align: center;
+  width: 30%;
+}
+.report-sign tbody th {
+  width: 10%;
+  white-space: nowrap;
+}
+.report-sign tbody tr:nth-child(2) td {
+  height: 48px; /* 서명 칸 */
+}
+@media (max-width: 760px) {
+  .report {
+    padding: 20px 16px;
+  }
+}
+@page {
+  size: A4 portrait;
+  margin: 15mm 15mm 15mm;
+}
+@media print {
+  body,
+  :root {
+    background: #fff;
+    color: #000;
+  }
+  .report-actions {
+    display: none;
+  }
+  .report-page {
+    max-width: none;
+    padding: 0;
+  }
+  .report {
+    border: 0;
+    padding: 0;
+    color: #000;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  /* A4 한 장에 들도록 화면보다 간격을 줄인다 */
+  .report section {
+    margin-top: 10px;
+  }
+  .report p,
+  .report ul,
+  .report ol {
+    line-height: 1.45;
+  }
+  .report th,
+  .report td {
+    padding: 3px 6px;
+  }
+  .report-sign tbody tr:nth-child(2) td {
+    height: 40px;
+  }
+  .report .muted,
+  .report-facts dt,
+  .report-sources a {
+    color: #000;
+  }
+  .report .badge {
+    color: #000;
+    background: none;
+    border: 1px solid #000;
+  }
+  .report th,
+  .report td {
+    border-color: #000;
+  }
+  .report thead th {
+    background: none;
+  }
+  .report tr,
+  .report-sign,
+  .report section {
+    break-inside: avoid;
+  }
+  .report h2 {
+    break-after: avoid;
   }
 }

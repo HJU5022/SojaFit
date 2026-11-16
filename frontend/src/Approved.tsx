@@ -1,8 +1,8 @@
-/** 승인 사례 목록과 사례 하나의 기록(원래 대화·판정·근거·견적). 저장한 값을 보이기만 하고 다시 판정하지 않는다. 출처: SPEC 4절·8.4절. */
-import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+/** 승인 사례 목록과 사례 하나의 기록(원래 대화·판정·근거·견적)·인쇄용 보고서. 저장한 값을 보이기만 하고 다시 판정하지 않는다. 출처: SPEC 4절·8.4절. */
+import { useEffect, useState } from 'react';
+import { ArrowLeft, FileText, Printer, Trash2 } from 'lucide-react';
 import { api } from './api';
-import { formatAmount, opLabel } from './display';
+import { formatAmount, opLabel, safeLink } from './display';
 import {
   Badge,
   Disclaimer,
@@ -14,8 +14,14 @@ import {
   Source,
   useResource,
 } from './ui';
-import type { ApprovedCaseDetail } from './types';
+import type { ApprovedCaseDetail, Role, Verdict } from './types';
 const RESULTS: Record<string, string> = { pass: '통과', fail: '불충족' };
+const reportLink = (id: number) => (
+  <a className="button" href={`/approved/${id}/report`}>
+    <FileText size={16} />
+    보고서
+  </a>
+);
 function CaseDetail({ id, close }: { id: number; close: () => void }) {
   const detail = useResource<ApprovedCaseDetail>(`/approved-cases/${id}`),
     d = detail.data;
@@ -33,6 +39,7 @@ function CaseDetail({ id, close }: { id: number; close: () => void }) {
               <Badge verdict={d.verdict} />
               <p>{new Date(d.created_at).toLocaleString('ko-KR')} 승인</p>
               <Disclaimer />
+              {reportLink(d.id)}
             </div>
             <section>
               <h2>원래 대화</h2>
@@ -170,6 +177,7 @@ export function ApprovedCases() {
                 <button className="primary" onClick={() => setOpen(c.id)}>
                   기록 보기
                 </button>
+                {reportLink(c.id)}
                 <button
                   className="icon-button"
                   aria-label="사례 삭제"
@@ -216,6 +224,225 @@ export function ApprovedCases() {
             </button>
           </div>
         </Modal>
+      )}
+    </div>
+  );
+}
+// 승인할 수 있는 판정 3종의 뜻(SPEC 3절 표). 역할상 충분은 원래 부품 데이터시트가 없어도 나오므로 "못 미침"으로 단정하지 않는다
+const MEANINGS: Partial<Record<Verdict, string>> = {
+  IDENTICAL:
+    '같은 품번이거나 주문 코드만 다른 품번, 또는 제조사가 같은 제품이라고 밝힌 품번입니다.',
+  SPEC_EQUIVALENT: '품번은 다르지만 원래 부품의 주요 정격을 모두 같거나 넘습니다.',
+  ROLE_SUFFICIENT:
+    '회로 역할의 필수 조건은 모두 만족하지만, 원래 부품의 주요 정격을 모두 같거나 넘는다고는 확인하지 못했습니다.',
+};
+/** 승인 사례 하나의 인쇄용 부품 대체 검토 보고서(`/approved/{id}/report`, 사이드바 없이 A4 한 장). 저장한 값만 옮긴다(#44). */
+export function CaseReport({ id, email }: { id: number; email: string }) {
+  const detail = useResource<ApprovedCaseDetail>(`/approved-cases/${id}`),
+    roles = useResource<Role[]>('/judge/roles'),
+    d = detail.data,
+    c = d?.candidate;
+  useEffect(() => {
+    // [왜] 브라우저의 "PDF로 저장"은 문서 제목을 기본 파일 이름으로 쓴다
+    const before = document.title;
+    document.title = `부품 대체 검토 보고서 SF-${id}`;
+    return () => {
+      document.title = before;
+    };
+  }, [id]);
+  const facts = (rows: [string, React.ReactNode][]) => (
+    <dl className="report-facts">
+      {rows.map(([k, v]) => (
+        <div key={k}>
+          <dt>{k}</dt>
+          <dd>{v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+  return (
+    <div className="report-page">
+      <div className="report-actions">
+        <a className="button" href="/approved">
+          <ArrowLeft size={16} />
+          돌아가기
+        </a>
+        <button className="primary" onClick={() => window.print()} disabled={!d}>
+          <Printer size={16} />
+          인쇄 / PDF로 저장
+        </button>
+      </div>
+      {detail.loading ? (
+        <Loading />
+      ) : detail.error ? (
+        <ErrorBox error={detail.error} retry={detail.reload} />
+      ) : (
+        d && (
+          <article className="report">
+            <header>
+              <h1>부품 대체 검토 보고서</h1>
+              {facts([
+                ['문서 번호', `SF-${d.id}`],
+                ['작성일', new Date().toLocaleDateString('ko-KR')],
+                ['서비스', 'SojaFit'],
+              ])}
+            </header>
+            <section>
+              <h2>1. 검토 대상</h2>
+              {facts([
+                ['프로젝트(회로)', d.project_name],
+                [
+                  '회로 버전',
+                  d.circuit_version
+                    ? `v${d.circuit_version}`
+                    : d.circuit_version === 0
+                      ? '회로 없음'
+                      : '기록 없음',
+                ],
+                [
+                  '바꿀 부품',
+                  d.target_ref
+                    ? d.target_ref + (d.target_value ? ` · 원래 품번 ${d.target_value}` : '')
+                    : '기록 없음',
+                ],
+                [
+                  '회로 역할',
+                  c?.role
+                    ? `${c.role} ${roles.data?.find((r) => r.code === c.role)?.name ?? ''}`.trim()
+                    : '기록 없음',
+                ],
+              ])}
+            </section>
+            <section>
+              <h2>2. 대체 후보와 판정</h2>
+              {facts([
+                ['후보 품번', d.candidate_part],
+                ['판정', <Badge verdict={d.verdict} />],
+              ])}
+              <p>{MEANINGS[d.verdict]}</p>
+            </section>
+            <section>
+              <h2>3. 조건별 비교</h2>
+              {c?.checks.length ? (
+                <div className="report-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">조건</th>
+                        <th scope="col">필요 값</th>
+                        <th scope="col">후보 값</th>
+                        <th scope="col">결과</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {c.checks.map((check, i) => (
+                        <tr key={i}>
+                          <th scope="row">{check.code}</th>
+                          <td>
+                            {check.op && opLabel(check.op) + ' '}
+                            {formatAmount(check.threshold, check.unit)}
+                          </td>
+                          <td>{formatAmount(check.value, check.unit)}</td>
+                          <td>{RESULTS[check.result.toLowerCase()] ?? '확인 안 됨'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="muted">저장된 조건별 판정이 없습니다.</p>
+              )}
+            </section>
+            <section>
+              <h2>4. 근거 (데이터시트 인용)</h2>
+              {d.evidence.length ? (
+                <ol className="report-sources">
+                  {d.evidence.map((cite, i) => (
+                    <li key={i}>
+                      {[
+                        cite.document || '문서명 미제공',
+                        cite.page != null ? `${cite.page}쪽` : null,
+                        cite.table,
+                        cite.row,
+                        cite.section,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                      {safeLink(cite.source_url) && (
+                        <a href={safeLink(cite.source_url)} target="_blank" rel="noreferrer">
+                          {safeLink(cite.source_url)}
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="muted">저장된 근거 위치가 없습니다.</p>
+              )}
+            </section>
+            <section>
+              <h2>5. 검토 질문</h2>
+              <p className="report-quote">{d.question || '기록 없음'}</p>
+              <p className="muted">
+                질문과 따로 적은 사용 조건·조건 답변은 이 기록에 저장되지 않습니다. 원래 대화에서
+                확인하세요.
+              </p>
+            </section>
+            <section>
+              <h2>6. 승인</h2>
+              {facts([
+                ['승인 일시', new Date(d.created_at).toLocaleString('ko-KR')],
+                // [왜] 사례는 주인만 열 수 있어(서버 404) 보고 있는 계정이 곧 승인한 계정이다
+                ['승인 계정', email],
+                [
+                  '견적',
+                  d.quotes.length
+                    ? d.quotes
+                        .map(
+                          (q) =>
+                            `${q.part_number} · ${q.quantity}개 · ${new Date(q.created_at).toLocaleString('ko-KR')}`,
+                        )
+                        .join(' / ')
+                    : '저장한 견적 없음',
+                ],
+              ])}
+            </section>
+            <section>
+              <h2>7. 한계와 확인 사항</h2>
+              <ul>
+                <li>판정은 데이터시트 값과 회로 조건의 비교이며 같은 동작은 보장하지 않습니다.</li>
+                <li>실제 적용 전 사용 조건과 패키지·기판 변경을 확인해야 합니다.</li>
+                <li>
+                  검토 답변은 생성형 AI를 이용해 작성되었으며 수치 비교와 판정은 코드가
+                  수행했습니다.
+                </li>
+              </ul>
+            </section>
+            <div className="report-table report-sign">
+              <table>
+                <caption>확인 서명</caption>
+                <thead>
+                  <tr>
+                    <td />
+                    <th scope="col">작성</th>
+                    <th scope="col">검토</th>
+                    <th scope="col">승인</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {['이름', '서명', '날짜'].map((k) => (
+                    <tr key={k}>
+                      <th scope="row">{k}</th>
+                      <td />
+                      <td />
+                      <td />
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+        )
       )}
     </div>
   );

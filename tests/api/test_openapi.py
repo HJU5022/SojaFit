@@ -137,7 +137,7 @@ ACCOUNT = {'id', 'email', 'role', 'is_active'}
 APPROVAL = {'id', 'message_id', 'candidate_part', 'part_number', 'verdict', 'case_id', 'created_at'}
 QUOTE = {'id', 'approval_id', 'part_number', 'quantity', 'created_at'}
 CASE = {'id', 'approval_id', 'candidate_part', 'verdict', 'created_at'}
-CASE_DETAIL = CASE | {'message_id', 'project_id', 'project_name', 'thread_id', 'thread_title', 'question', 'target_ref', 'target_value',
+CASE_DETAIL = CASE | {'message_id', 'project_id', 'project_name', 'thread_id', 'thread_title', 'question', 'target_ref', 'target_value', 'circuit_version',
                       'answer', 'candidate', 'evidence', 'quotes'}
 AUDIT = {'id', 'actor_id', 'actor_email', 'target_id', 'target_email', 'action', 'fields', 'reason', 'created_at'}
 SNAPSHOT = {'answer': '대체할 수 있습니다.', 'question_type': 'candidate_judge', 'evidence': [],
@@ -165,7 +165,7 @@ CASES = [
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW, THREAD)]], QUOTE | {'thread_id'}),
     ('get', '/api/approved-cases', None, {}, [[(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW)]], CASE),
     ('get', '/api/approved-cases/4', None, {}, [(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW, SNAPSHOT, 9, THREAD, None, 1, '전원부',
-                                                 {'parts': [{'ref': 'D1', 'value': 'SS34'}]}, '바꿔도 되나요?', '바꿔도 되나요?', True),
+                                                 {'parts': [{'ref': 'D1', 'value': 'SS34'}]}, '바꿔도 되나요?', '바꿔도 되나요?', True, 1),
                                                 [(5, 3, '1N5819', 100, NOW)], ('D1',)], CASE_DETAIL),
     ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW, 1, None)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status', 'circuit_version'}),
     ('get', '/api/threads', None, {}, [[(THREAD, 1, '전원부', None, '저장 질문', NOW, NOW)]], THREAD_ITEM),
