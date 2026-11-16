@@ -880,10 +880,16 @@ SojaFit (proj3-b)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
     │   ├── portfolio-<이름>.md  <- 다른 조원 포트폴리오(예정)
-    │   └── langfuse/       <- Langfuse 스크린샷 3장(11-13 배포본). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
+    │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 운영 프로젝트). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
     │       ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
     │       ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
-    │       └── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
+    │       ├── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
+    │       ├── 04-trace-detail-scores-header.jpg  <- 평가 trace 상세 머리의 점수 칩(passed_cards · latency_s · question_type 등, 11-17)
+    │       ├── 05-trace-scores-tab.jpg  <- 같은 trace의 점수 탭(점수 13개가 trace에 붙음)
+    │       ├── 06-scores-list.jpg  <- 운영 프로젝트 점수 목록(점수마다 trace 연결)
+    │       └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 1.68K · 점수 22.25K · 비용 $1.17, 최근 1일)
+    │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "남은 일"
+    │       └── sojafit-demo-2026-11-17.mp4  <- 1분 48초, 정상 경로(v3-01 판정·승인·견적·보고서) + 실패 경로 3개, 화면마다 자막
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
         ├── WORKLOG.md      <- 폴더 설명과 기록 형식
         ├── jeongun.md      <- 하정운(조장·오케스트레이터)
