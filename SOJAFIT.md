@@ -1,7 +1,7 @@
 # SojaFit
 
 - 상태: 현행
-- 기준일: 2026-11-16 (트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사한다. 이름 규칙 · 안내 글은 11-12 이후 줄마다 대조하지 않았다)
+- 기준일: 2026-11-16 (트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사한다. 이름 규칙 · 안내 글은 11-12 이후 줄마다 대조하지 않았다. 11-17에 `docs/` 트리와 이름 규칙의 조사 기록 줄을 고쳤다)
 - 기준 커밋: `76fadcb4`
 - 정본 여부: 정본(폴더와 파일 위치)
 - 관련 문서: [README.md](README.md), [AGENTS.md](AGENTS.md), [SPEC.md](SPEC.md)
@@ -978,7 +978,7 @@ SojaFit (proj3-b)
 - 폴더 설명은 두 단계 폴더까지만 둡니다. 더 깊은 폴더(`backend/mcp_skill/skills/` 등)는 위 폴더 설명 파일에 적습니다. 원시 결과·시험 데이터만 담는 폴더(`evals/results/`, `scripts/results/`, `tests/fixtures/`), `.github/`, `data/circuits/collected/`에는 설명 파일을 두지 않습니다.
 - **한 폴더 바로 아래에는 한 종류 파일만** 둡니다(코드·데이터·문서·SQL·설정 중 하나, 설명 파일과 `.gitkeep`은 빼고 셈). 종류가 섞이면 성격별 하위 폴더로 나눕니다(예: `evals/runners/`, `evals/guides/`). 저장소 루트는 도구가 루트에서 찾는 파일이라 예외입니다.
 - 아직 없는 파일은 트리에 `(예정)`을 붙여 적고, 비어 있는 폴더는 `.gitkeep`으로 자리를 둡니다. 실제로 만들면 같은 PR에서 `(예정)`을 지웁니다.
-- 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`, 실험 작업서는 `docs/experiments/<english-kebab>.md`, 조사 기록은 `docs/research/<english-kebab>.md`입니다. 원시 결과 파일은 `<무엇>_<YYYY-MM-DD>.json`입니다.
+- 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`, 실험 작업서는 `docs/experiments/<english-kebab>.md`, 조사 기록은 `docs/research/<english-kebab>.md`(같은 주제가 셋 이상이면 `docs/research/<주제>/<english-kebab>.md`, 설명 파일 없이 `RESEARCH.md`가 대신)입니다. 원시 결과 파일은 `<무엇>_<YYYY-MM-DD>.json`입니다.
 - 강사 스캐폴드와 과제 가이드의 고정 경로(트리의 `(고정)`)는 옮기지 않습니다.
 
 ## 파일을 만들거나 옮길 때
