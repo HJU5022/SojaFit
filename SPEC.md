@@ -480,7 +480,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - GIVEN `target_ref`를 보낸 run, WHEN 시작하면, THEN 지금과 같다(그 부품을 확인하고 분석 thread에 고정, 다르면 409, 지원하지 않으면 422).
 - GIVEN `target_ref`가 없고 질문에 회로의 지원 다이오드 ref가 하나 적혀 있음(`D1을 1N5819로 바꿔도 돼?`, 대소문자 무시, 앞뒤가 영문 · 숫자가 아닐 때만. `D10` · `D1N4148` 안의 D1은 아님), WHEN 시작하면, THEN 그 부품으로 분석 thread를 만들고 분석한다.
-- GIVEN `target_ref`가 없고 질문에 지원 다이오드 ref가 없으며 회로의 지원 다이오드가 하나뿐, WHEN 시작하면, THEN 그 부품으로 분석한다.
+- GIVEN `target_ref`가 없고 질문에 회로의 부품 ref가 하나도 없으며 회로의 지원 다이오드가 하나뿐, WHEN 시작하면, THEN 그 부품으로 분석한다.
+- GIVEN `target_ref`가 없고 질문에 적힌 회로 부품 ref가 모두 지원 대상이 아님(LED · 표시기 · 다이오드가 아닌 부품, 예: LED D2에 `D2를 바꿔도 돼?`), WHEN 시작하면, THEN 유일한 지원 다이오드로 넘어가지 않고 그 부품을 `target_ref`로 보낸 것과 같은 422 · 같은 문구로 스트림 전에 끝나며 분석 thread · run을 만들지 않는다(11-16).
 - GIVEN `target_ref`가 없고 후보(질문에 적힌 지원 다이오드, 없으면 회로의 지원 다이오드 전부)가 둘 이상, WHEN 시작하면, THEN 분석 thread와 그래프 실행 없이 run을 `requires_input`으로 끝내고 `interrupt.target_choices`(ref · 넷리스트 값)와 질문 문장을 보낸다. 처음 질문 · 사용 조건은 run 기록의 `pending_start`에만 두고 브라우저 결과에는 넣지 않는다.
 - GIVEN 부품을 물은 run, WHEN `ResumeRun.target`으로 후보 하나를 보내면, THEN 그 부품으로 분석 thread를 만들고 처음 질문 · 사용 조건을 같은 run에서 분석한다. 후보 밖의 부품 · target 없음 · answers를 함께 보냄 · 부품을 묻지 않은 run에 target은 422이고 run은 그대로다.
 - GIVEN 분석 thread가 이미 대상을 고정함, WHEN `target_ref` 없이 다음 질문을 보내면, THEN 다시 정하거나 묻지 않고 고정한 대상을 쓴다(`target_locked`).

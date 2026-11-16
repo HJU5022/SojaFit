@@ -343,6 +343,64 @@ def test_start_without_target_asks_which_part_then_resume_runs_the_first_questio
     assert ('claim', thread, run) in repo.calls
 
 
+def real_target_service(parts):
+    """ensure_thread만 진짜(고정 회로 · 분석 thread는 가짜 연결)인 분석 서비스. 만든 분석 thread의 대상과 분석한 질문을 남긴다."""
+    from contextlib import contextmanager
+    from backend.conversations.memory_service import Conversations
+    inserted, questions = [], []
+
+    class Connection:
+        def execute(self, query, params):
+            if query.startswith('INSERT'):
+                inserted.append(params[0])
+                return None
+            if query.startswith('SELECT t.*'):  # _owned
+                row = {'target': inserted[0], 'connections': {'parts': parts}}
+            elif 'project_circuit_versions' in query:  # 고정 회로 버전
+                row = {'connections': {'parts': parts, 'nets': []}}
+            else:  # 아직 분석 thread가 없다
+                row = None
+            return SimpleNamespace(fetchone=lambda: row)
+
+    @contextmanager
+    def connection():
+        yield Connection()
+
+    service = object.__new__(Conversations)
+    service.mode, service.connection, service._hold_account, service.admission = 'live', connection, lambda *a: None, lambda user: None
+    service.message = lambda user, thread, text, conditions='', request_id='', progress=None: questions.append(text) or {'interrupt': None}
+    service.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values={'answer': 'ok'}))
+    return service, inserted, questions
+
+
+ONE_DIODE = [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'RED', 'description': 'Light emitting diode'}, {'ref': 'R1', 'value': '10k'}]
+
+
+@pytest.mark.parametrize('question, ref', [('D2를 바꿔도 돼?', 'D2'), ('R1을 바꿔도 돼?', 'R1')])
+def test_start_naming_an_unsupported_part_is_the_same_422_before_any_thread_or_run(web, question, ref):
+    """질문이 회로의 미지원 부품만 가리키면 유일한 다이오드 D1로 넘어가지 않는다. 그 부품을 target_ref로 보낸 것과 같은 422 · 문구다(SPEC 8.9)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, inserted, questions = real_target_service(ONE_DIODE)
+    repo = FakeRepo(thread, run)
+    with web(analysis, repo) as client:
+        named = client.post(f'/api/threads/{thread}/runs', json={'question': question}, headers=ORIGIN)
+        explicit = client.post(f'/api/threads/{thread}/runs', json={'question': question, 'target_ref': ref}, headers=ORIGIN)
+    assert named.status_code == explicit.status_code == 422
+    assert named.json()['error']['message'] == explicit.json()['error']['message'] and ref in named.json()['error']['message']
+    assert inserted == [] and repo.calls == [] and questions == []  # 분석 thread · run · 분석 모두 없음
+
+
+def test_start_without_any_ref_falls_back_to_the_only_supported_diode(web):
+    """질문에 회로 ref가 하나도 없으면 회로의 유일한 지원 다이오드로 분석한다(LED D2 · 저항 R1은 후보가 아니다)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, inserted, questions = real_target_service(ONE_DIODE)
+    repo = FakeRepo(thread, run)
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': '1N5819로 바꿔도 돼?'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'completed'
+    assert inserted == ['D1'] and questions == ['1N5819로 바꿔도 돼?'] and repo.calls == ['start', ('commit', 'completed')]
+
+
 @pytest.mark.parametrize('saved, body', [
     ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {}, 'target': 'D2'}),  # 후보 밖
     ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {}}),  # 고르지 않음
