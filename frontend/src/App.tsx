@@ -1,14 +1,33 @@
 /** 페이지·세션 경계. 로그아웃 때 업무 상태를 폐기한다. 사이드바는 대화가 먼저다(SPEC 2절). 출처: SPEC 8.6절. */
 import { useEffect, useState } from 'react';
-import { CheckCheck, LogOut, Menu, Plus, Settings as SettingsIcon, Shield, X } from 'lucide-react';
+import {
+  CheckCheck,
+  ChevronsUpDown,
+  LogOut,
+  Mail,
+  Menu,
+  Plus,
+  Settings as SettingsIcon,
+  Shield,
+  X,
+} from 'lucide-react';
 import { api, ApiError } from './api';
-import { Brand, ErrorBox, followLink, Loading, navigate, ResizeHandle, useLocation } from './ui';
+import {
+  Brand,
+  ErrorBox,
+  followLink,
+  Loading,
+  navigate,
+  ResizeHandle,
+  RowMenu,
+  useLocation,
+} from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
-import { Settings } from './Account';
+import { contactEmail, Settings } from './Account';
 import { ApprovedCases } from './Approved';
 import { Admin } from './Admin';
-import { Footer, isLegalPath, LegalPage } from './Legal';
+import { isLegalPath, LegalModal, LegalPage, legalDocs } from './Legal';
 import { ConversationNav, NewConversation } from './Conversations';
 import { Workbench } from './Workbench';
 import type { User } from './types';
@@ -24,7 +43,11 @@ function Shell({
   onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false),
+    [legal, setLegal] = useState<string | null>(null),
     [error, setError] = useState<Error | null>(null);
+  const demo = user.email.startsWith('demo-'),
+    initial = (demo ? user.email[5] : user.email[0]).toUpperCase(),
+    name = demo ? '데모 사용자 ' + initial : user.email;
   const params = new URLSearchParams(path.split('?')[1]),
     pathname = path.split('?')[0];
   useEffect(() => setOpen(false), [path]);
@@ -72,45 +95,63 @@ function Shell({
         {pathname !== '/settings' && !pathname.startsWith('/admin') && (
           <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
         )}
+        {/* [왜] Claude 앱처럼 맨 아래는 계정 줄 하나만 두고, 설정 · 관리 · 고지 · 문의 · 로그아웃은 위로 여는 계정 메뉴에 모은다(#43) */}
         <div className="sidebar-bottom">
-          <a href="/settings">
-            <SettingsIcon size={17} />내 설정
-          </a>
-          {user.role === 'admin' && (
-            <a href="/admin">
-              <Shield size={17} />
-              사용자 관리
-            </a>
-          )}
-          <div className="account-info">
-            <span className="avatar">
-              {user.email.startsWith('demo-')
-                ? user.email[5].toUpperCase()
-                : user.email[0].toUpperCase()}
-            </span>
-            <span>
-              {user.email.startsWith('demo-')
-                ? '데모 사용자 ' + user.email[5].toUpperCase()
-                : user.email}
-            </span>
-            <button
-              className="icon-button"
-              aria-label="로그아웃"
-              title="로그아웃"
-              onClick={async () => {
-                try {
-                  await api('/auth/logout', 'POST');
-                  onLogout();
-                } catch (e) {
-                  setError(e as Error);
-                }
-              }}
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+          <RowMenu
+            label={name + ' 계정 메뉴'}
+            className="account-menu"
+            up
+            icon={
+              <>
+                <span className="avatar">{initial}</span>
+                <span className="account-name">{name}</span>
+                <ChevronsUpDown size={15} />
+              </>
+            }
+            items={[
+              {
+                label: '내 설정',
+                icon: <SettingsIcon size={15} />,
+                onSelect: () => navigate('/settings'),
+              },
+              ...(user.role === 'admin'
+                ? [
+                    {
+                      label: '사용자 관리',
+                      icon: <Shield size={15} />,
+                      sep: true,
+                      onSelect: () => navigate('/admin'),
+                    },
+                  ]
+                : []),
+              ...legalDocs.map(([doc, title], i) => ({
+                label: title,
+                strong: doc === '/privacy', // 개인정보처리방침은 국내 관행대로 굵게
+                sep: i === 0,
+                onSelect: () => setLegal(doc),
+              })),
+              {
+                label: '문의',
+                icon: <Mail size={15} />,
+                sep: true,
+                onSelect: () => (location.href = 'mailto:' + contactEmail),
+              },
+              {
+                label: '로그아웃',
+                icon: <LogOut size={15} />,
+                sep: true,
+                onSelect: async () => {
+                  try {
+                    await api('/auth/logout', 'POST');
+                    onLogout();
+                  } catch (e) {
+                    setError(e as Error);
+                  }
+                },
+              },
+            ]}
+          />
           <ErrorBox error={error} />
-          <Footer compact />
         </div>
         <ResizeHandle
           name="sidebar-w"
@@ -120,6 +161,7 @@ function Shell({
           edge="right"
         />
       </aside>
+      {legal && <LegalModal path={legal} close={() => setLegal(null)} />}
       <div className="app-frame">
         {/* [왜] 상단 "지금 지원" 문구는 뺐다. 지원 범위는 내 설정에 따로 둔다(#37) */}
         <main className="app-sheet">{children}</main>

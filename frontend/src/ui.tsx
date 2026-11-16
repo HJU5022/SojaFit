@@ -1,5 +1,5 @@
 /** 공통 상태·접근성·회로 표시. 서버 값을 시각화하며 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
-import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import {
   AlertCircle,
   ArrowUpRight,
@@ -259,17 +259,26 @@ export function ResizeHandle({
     />
   );
 }
-/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화·프로젝트 줄 · 작업대 상단 · 입력창 + 단추가 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. up이면 단추 위로 편다. */
+/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화·프로젝트 줄 · 작업대 상단 · 입력창 + 단추 · 사이드바 계정 줄이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자, strong은 굵게, sep은 항목 위에 구분선. up이면 단추 위로 편다. */
 export function RowMenu({
   label,
   items,
   icon = <Ellipsis size={16} />,
   up = false,
+  className = '',
 }: {
   label: string;
-  items: { label: string; icon: ReactNode; danger?: boolean; onSelect: () => void }[];
+  items: {
+    label: string;
+    icon?: ReactNode;
+    danger?: boolean;
+    strong?: boolean;
+    sep?: boolean;
+    onSelect: () => void;
+  }[];
   icon?: ReactNode;
   up?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false),
     ref = useRef<HTMLDivElement>(null);
@@ -290,7 +299,7 @@ export function RowMenu({
     };
   }, [open]);
   return (
-    <div className={'row-menu' + (up ? ' up' : '')} ref={ref}>
+    <div className={['row-menu', up && 'up', className].filter(Boolean).join(' ')} ref={ref}>
       {/* [왜] type="button": 입력창 form 안에서 눌러도 보내기(submit)가 되지 않게 한다 */}
       <button
         type="button"
@@ -306,19 +315,21 @@ export function RowMenu({
       {open && (
         <div role="menu" aria-label={label}>
           {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              className={item.danger ? 'danger' : undefined}
-              onClick={() => {
-                setOpen(false);
-                item.onSelect();
-              }}
-            >
-              {item.icon}
-              {item.label}
-            </button>
+            <Fragment key={item.label}>
+              {item.sep && <div role="separator" />}
+              <button
+                type="button"
+                role="menuitem"
+                className={item.danger ? 'danger' : undefined}
+                onClick={() => {
+                  setOpen(false);
+                  item.onSelect();
+                }}
+              >
+                {item.icon}
+                {item.strong ? <strong>{item.label}</strong> : item.label}
+              </button>
+            </Fragment>
           ))}
         </div>
       )}

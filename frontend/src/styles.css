@@ -728,20 +728,6 @@ form {
   font-size: inherit;
   margin-left: 16px;
 }
-.site-footer.compact {
-  justify-content: flex-start;
-  column-gap: 10px;
-  padding: 8px 3px;
-  font-size: 11.5px;
-}
-/* [왜] 좁은 사이드바에서는 줄이 접혀 구분선이 줄 맨 앞에 남으므로 구분선 대신 간격만 둔다 */
-.site-footer.compact > a:not(:first-of-type)::before {
-  display: none;
-}
-.site-footer.compact > small {
-  margin-left: 0;
-  width: 100%;
-}
 .auth-page > .site-footer {
   margin-top: auto;
   padding: 40px 20px 24px;
@@ -847,8 +833,7 @@ form {
   display: grid;
   gap: 3px;
 }
-.sidebar nav a,
-.sidebar-bottom > a {
+.sidebar nav a {
   display: flex;
   align-items: center;
   gap: 11px;
@@ -997,20 +982,40 @@ form {
   /* [왜] 목록(.sidebar-projects)을 숨긴 화면에서도 계정 영역을 사이드바 맨 아래에 둔다(#21) */
   margin-top: auto;
 }
-.account-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 12px 3px;
+/* 사이드바 계정 줄(#43): 줄 전체가 계정 메뉴 단추이고 메뉴는 줄 너비로 위에 열린다. */
+.account-menu {
   border-top: 1px solid #d6e0e5;
-  font-size: 13px;
+  padding-top: 10px;
 }
-.account-info > span:nth-child(2) {
+.row-menu.account-menu > button {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+}
+.account-name {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
+  text-align: left;
+}
+.account-menu.up [role='menu'] {
+  right: 0;
+}
+/* 아이콘 없는 항목(고지 문서)은 아이콘 있는 항목과 글 시작을 맞춘다(왼쪽 여백 14 + 아이콘 15 + 간격 9) */
+.account-menu [role='menuitem']:not(:has(svg)) {
+  padding-left: 38px;
+}
+.row-menu [role='separator'] {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--line);
 }
 .avatar {
   width: 28px;
@@ -2405,9 +2410,6 @@ form {
     align-items: center;
     justify-content: space-between;
   }
-  .sidebar-bottom > a {
-    font-size: 14px;
-  }
   .nav-scrim {
     display: block;
     position: fixed;
@@ -2794,10 +2796,5 @@ form {
   }
   .landing footer {
     padding: 30px 22px;
-  }
-}
-@media (min-width: 761px) and (max-width: 1100px) {
-  .sidebar-bottom .site-footer {
-    padding-left: 5px;
   }
 }

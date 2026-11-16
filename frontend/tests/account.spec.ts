@@ -4,7 +4,9 @@ test('설정 저장·복원과 A/B 계정 격리', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: '데모 사용자 A' }).click();
   await expect(page).toHaveURL(/\/app/);
-  await page.getByRole('link', { name: '내 설정', exact: true }).click();
+  // 내 설정 · 로그아웃은 사이드바 계정 메뉴 안에 있다(#43)
+  await page.getByRole('button', { name: /계정 메뉴$/ }).click();
+  await page.getByRole('menuitem', { name: '내 설정' }).click();
   await page.getByLabel('소속', { exact: true }).fill('데모 회로설계팀');
   await page.getByLabel('직무', { exact: true }).fill('하드웨어 회로 설계');
   await page.getByLabel('선호 실장 방식', { exact: true }).selectOption('smd');
@@ -20,10 +22,12 @@ test('설정 저장·복원과 A/B 계정 격리', async ({ page }) => {
   await page.reload();
   await expect(page.getByLabel('소속', { exact: true })).toHaveValue('');
   await expect(page.getByLabel('직무', { exact: true })).toHaveValue('');
-  await page.getByRole('button', { name: '로그아웃' }).click();
+  await page.getByRole('button', { name: /계정 메뉴$/ }).click();
+  await page.getByRole('menuitem', { name: '로그아웃' }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.getByRole('button', { name: '데모 사용자 B' }).click();
-  await page.getByRole('link', { name: '내 설정', exact: true }).click();
+  await page.getByRole('button', { name: /계정 메뉴$/ }).click();
+  await page.getByRole('menuitem', { name: '내 설정' }).click();
   await expect(page.getByLabel('소속', { exact: true })).toHaveValue('');
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: '관리자만 접근할 수 있습니다.' })).toBeVisible();

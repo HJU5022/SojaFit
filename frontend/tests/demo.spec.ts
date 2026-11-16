@@ -93,7 +93,9 @@ test('데모 로그인 → 검토 → 조건 재개 → 승인·견적 → 기�
   await expect(page.locator('.thread-row.selected')).toContainText('전원 입력 D1 검토');
   await page.getByRole('link', { name: '승인 사례', exact: true }).click();
   await expect(page.locator('.case-list article').first()).toBeVisible();
-  await page.getByRole('link', { name: '내 설정', exact: true }).click();
+  // 내 설정 · 로그아웃은 사이드바 계정 메뉴 안에 있다(#43)
+  await page.getByRole('button', { name: /계정 메뉴$/ }).click();
+  await page.getByRole('menuitem', { name: '내 설정' }).click();
   await page.getByLabel('소속', { exact: true }).fill('데모 회로설계팀');
   await page.getByLabel('직무', { exact: true }).fill('하드웨어 회로 설계');
   await page.getByLabel('선호 실장 방식', { exact: true }).selectOption('smd');
