@@ -102,7 +102,6 @@ export function MissingInput({
     </div>
   );
 }
-/** 서버가 대상 부품을 정하지 못했을 때 넷리스트의 후보 중 하나를 고르는 카드(조건 카드와 같은 모양). */
 /** 닫힌 회로 패널을 열고 회로 구역으로 내리는 작은 글자 단추(#47). 회로에 관한 답 머리에 둔다 */
 function CircuitLink({ onClick }: { onClick: () => void }) {
   return (
@@ -112,6 +111,7 @@ function CircuitLink({ onClick }: { onClick: () => void }) {
     </button>
   );
 }
+/** 서버가 대상 부품을 정하지 못했을 때 넷리스트의 후보 중 하나를 고르는 카드(조건 카드와 같은 모양). */
 export function TargetChoice({
   result,
   busy,
@@ -154,7 +154,7 @@ export function Reply({
 }: {
   run: Run;
   onCandidate: (c: Candidate, r: Run) => void;
-  /** 회로에 관한 답일 때만 준다(#47) */
+  /** 회로가 있고 바꿀 부품이 정해진 대화의 답에만 준다(#47) */
   onCircuit?: () => void;
 }) {
   const r = run.result,

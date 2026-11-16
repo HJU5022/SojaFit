@@ -1,4 +1,4 @@
-/** 공개 프로젝트의 components·nets를 빠짐없이 표시하는지 검사한다. */
+/** 회로 화면 순수 함수 시험: 부품·핀·넷 뽑기, 판정 대상 제외 이유와 회로 패널 한 줄, 질문으로 지은 프로젝트 이름, 업로드 409 중복 처리, 첨부 파일 종류, 부품 점검표 거르기·검토 질문. 네트워크·DOM 없음. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {

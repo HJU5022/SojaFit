@@ -314,7 +314,7 @@ function CircuitRequest({
     </div>
   );
 }
-/** 사용자가 회로 패널을 닫았으면 이 브라우저에 남겨 다시 저절로 열지 않는다(#47). 다시 열면 지운다 */
+/** 사용자가 회로 패널을 닫았으면 이 브라우저에 남겨 프로젝트를 열 때 다시 저절로 열지 않는다(#47, 첫 회로 첨부 때는 연다). 다시 열면 지운다 */
 const PANEL_CLOSED = 'sojafit.panel.closed';
 export function Workbench({ projectId, threadId }: { projectId: string; threadId: string | null }) {
   const project = useResource<Project>(
@@ -614,7 +614,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   async function resume(body: any) {
-    if (body.target) setTarget(body.target); // 고른 부품을 왼쪽 연결도 · 후보 상세에 바로 보인다
+    if (body.target) setTarget(body.target); // 고른 부품을 오른쪽 회로 패널의 연결 개념도 · 후보 상세에 바로 보인다
     if (active) await execute(active.thread_id, `/runs/${active.id}/resume`, body);
   }
   async function older() {
