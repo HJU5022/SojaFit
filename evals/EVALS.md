@@ -63,6 +63,7 @@
 |---|---|---|---|
 | `results/d10/` | Checkpoint D10 제출물 점검 증거: 인젝션 기준 검사 통과·실패 출력, 코드 변이 결과와 재현 스크립트(`mutation/`), 비밀값 검사 결과와 원시 증거(`secrets/`), v4h 지문, 재현 명령(`README.md`) | `check_injection_result.py`, `d10/mutation/reproduce.sh` 외 | `results/d10/README.md` |
 | `results/retrieval/` | 검색 지표: `retrieval_{baseline,dense,bm25}_*`(v1), `d3_*`(#24), `r1_*`(#25·#28), `retrieval_layer*`·`retrieval_layers_*`(층별 재측정), `service_r1_*`·`service_stages_*`(서비스 경로) | `run_retrieval*.py`, `report_retrieval_layers.py` | [retrieval-layered-rerun-2026-11-03.md](../docs/research/retrieval-layered-rerun-2026-11-03.md), 사전 등록 #24~#28 |
+| `results/retrieval/2026-11-16-cand-pool/` | 리랭크 전 후보 수 50 → 200 검색 전후(R1 84문항, S4 설정에서 이것만 바꿈): 두 팔 문항별 지표 · 실패 유형 · 후보 회수 · 리랭크 토큰(`cands_2026-11-16.json`), 새 rerank-3 응답 25건(`rerank_new_2026-11-16.jsonl`), `SHA256.txt`. Page Recall@5 0.8810 → 0.8929(2승 1패, 차이 입증 못 함) | `run_retrieval_r1.py cands` | `results/retrieval/2026-11-16-cand-pool/README.md`, 사전 등록 2026-11-16 jeongun · 리랭크 전 후보 수 |
 | `results/embedding/` | 임베딩 격자 본평가(`grid_*`, 모델별 카드 임베딩 기록, 리랭크 캐시)와 프록시 측정(`embedding_<모델>_proxy_*`) | `run_embedding_grid.py`, `benchmark_embeddings.py` | [embedding-grid-eval-2026-11-02.md](../docs/research/embedding-grid-eval-2026-11-02.md) |
 | `results/search_compare/` | 청킹 개선 전후, dense·BM25·하이브리드 비교(11-01) | — | 사전 등록 #4~#8 |
 | `results/drafts/` | 초안 50건·52건의 보조 검증 원시 기록 | — | `drafts/reviews/second_pass_50_review.md` |
