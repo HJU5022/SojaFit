@@ -269,7 +269,7 @@ curl http://localhost:8000/health   # {"status":"ok"}
 
 키 없는 모드의 화면은 React 작업대 하나다. 키 없이 되는 것과 안 되는 것:
 
-1. `http://localhost:8000`을 열고 "데모 사용자 A로 들어가기"를 누른다(작업대 `/app`이 열린다).
+1. `http://localhost:8000`을 열고 "데모 사용자 A로 들어가기"를 누른다(새 대화 화면 `/app`이 열린다).
 2. 사이드바 "프로젝트" 머리글의 +(새 프로젝트 창)에서 데모 회로로 프로젝트를 만든다. 기록한 데모 질문이 있는 회로 · 부품은 "ATtiny85 Time Switch" D1, "ATtiny2313A Thermostat" D5, "SparkFun Breadboard Power Supply 5V/3.3V" D1, "Franzininho DIY" D3, "Adafruit MOSFET Driver STEMMA" D3, "SparkFun Pro Micro v13" D2이다. 작업대 입력창 위 "기록된 데모 질문"에 그 회로의 질문 버튼이 보인다(새 화면에는 부품을 고르는 칸이 없고, 버튼이 기록의 대상 부품을 함께 보낸다. 대화의 대상이 이미 정해져 있으면 그 부품의 질문만 보인다. `frontend/src/Workbench.tsx`의 `availableQuestions` · `send`).
 3. 버튼을 누르면 새 대화로 그 질문과 사용 조건을 기록 그대로 보내고 결과(판정 · 근거 · 거절)가 나온다. ATtiny85 Time Switch D1의 교체 질문(`v3-01`)은 조건 질문에서 멈추고, "기록한 답으로 계속하기"를 누르면 같은 대화에서 판정까지 이어진다.
 4. 내 설정(`/settings`)에서 소속 · 직무 · 선호 실장 방식을 저장하고 지운다.
