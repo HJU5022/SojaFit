@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, FileText, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
 import { Brand, Badge, Disclaimer } from './ui';
-import { PrivacyLink } from './Account';
+import { Footer } from './Legal';
 export function Landing() {
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -377,10 +377,7 @@ export function Landing() {
           </div>
         </section>
       </main>
-      <footer>
-        <Brand />
-        <PrivacyLink />
-      </footer>
+      <Footer />
     </div>
   );
 }

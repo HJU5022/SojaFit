@@ -151,7 +151,12 @@ export function Reply({
   return (
     <div className="assistant-reply">
       <div className="reply-label">
-        <span className="mini-mark">↳</span> SojaFit <span>{statuses[r.status] ?? r.stage}</span>
+        <span className="mini-mark">↳</span> SojaFit{' '}
+        {/* [왜] AI 기본법 제31조 생성물 표시(#27). 판정 답 틀·가격 안내도 AI가 길을 정한 결과라 답마다 붙인다. 상태 칸(span:last-child)보다 앞에 둔다 */}
+        <small className="ai-label">
+          AI 생성<span className="sr-only">: 생성형 AI를 이용해 만든 답변입니다</span>
+        </small>{' '}
+        <span>{statuses[r.status] ?? r.stage}</span>
       </div>
       {candidates.length ? (
         <>
