@@ -58,8 +58,9 @@ test('첨부한 넷리스트는 새 버전·대화를 만들고 기존 대화의
   await page.getByRole('button', { name: '넷리스트 보내기' }).click();
   await expect(page.getByLabel('회로의 다이오드')).toContainText('D2');
   await expect(page).not.toHaveURL(first);
+  // 회로가 있는 프로젝트를 열면 패널이 한 번 저절로 열린다(#47). 머리 단추를 누르면 오히려 닫힌다
   await page.goto(first);
-  await page.getByRole('button', { name: '회로 보기' }).click();
+  await expect(page.getByLabel('회로의 다이오드')).toBeVisible();
   await expect(page.getByLabel('회로의 다이오드')).toContainText('D1');
   await expect(page.getByLabel('회로의 다이오드')).not.toContainText('D2');
   // 사이드바 프로젝트 줄 ⋯ 메뉴로 이 시험의 프로젝트를 지운다(확인 창). 옛 /projects는 /app으로 바뀐다(#34)

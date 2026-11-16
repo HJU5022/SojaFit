@@ -211,7 +211,7 @@ export function CircuitSection({
 }) {
   const usable = partsOf(project).filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p));
   return (
-    <section className="circuit-section">
+    <section className="circuit-section" id="circuit-section">
       <h2>회로</h2>
       {/* [왜] 대상을 아직 안 정했으면(#16 서버가 정하거나 묻는다) 판정 가능한 다이오드마다 개념도를 보인다(#11) */}
       {(target ? [target] : usable.length ? usable.slice(0, 6).map((p) => p.ref) : ['']).map(
@@ -304,6 +304,8 @@ function CircuitRequest({
     </div>
   );
 }
+/** 사용자가 회로 패널을 닫았으면 이 브라우저에 남겨 다시 저절로 열지 않는다(#47). 다시 열면 지운다 */
+const PANEL_CLOSED = 'sojafit.panel.closed';
 export function Workbench({ projectId, threadId }: { projectId: string; threadId: string | null }) {
   const project = useResource<Project>(
       `/projects/${projectId}${threadId ? '?thread_id=' + threadId : ''}`,
@@ -419,15 +421,39 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     window.addEventListener('project-renamed', fn);
     return () => window.removeEventListener('project-renamed', fn);
   }, []);
-  // 오른쪽 회로 패널(#39): 평소엔 닫혀 있고 "회로 보기"로 열거나, 회로가 처음 생기면(첨부 v0 → v1) 저절로 연다
+  // 오른쪽 회로 패널(#39 #47): "회로 보기"로 열고 닫는다. 회로가 처음 생기면(첨부 v0 → v1) 열고,
+  // 회로가 있는 프로젝트를 열 때도 한 번 연다. 단 사용자가 닫아 둔 브라우저면 프로젝트를 열 때는 열지 않는다
   const [panel, setPanel] = useState(false),
     hadCircuit = useRef<boolean | null>(null),
     version = project.data?.circuit_version;
   useEffect(() => {
     if (version === undefined) return; // [왜] 첨부 뒤 다시 읽는 동안은 값이 없다. 이전 값을 지우지 않는다
-    if (hadCircuit.current === false && version > 0) setPanel(true);
+    let closed = false;
+    try {
+      closed = localStorage.getItem(PANEL_CLOSED) === '1';
+    } catch {
+      // 저장소를 못 쓰면 처음 보는 사람처럼 연다
+    }
+    if (version > 0 && (hadCircuit.current === false || (hadCircuit.current === null && !closed)))
+      setPanel(true);
     hadCircuit.current = version > 0;
   }, [version]);
+  function choosePanel(open: boolean) {
+    setPanel(open);
+    try {
+      if (open) localStorage.removeItem(PANEL_CLOSED);
+      else localStorage.setItem(PANEL_CLOSED, '1');
+    } catch {
+      // 저장소를 못 쓰면 이번 화면에서만 따른다
+    }
+  }
+  // 답 머리의 "회로 보기"(#47): 패널을 열고, 패널이 그려진 뒤 회로 구역으로 내린다
+  function showCircuit() {
+    choosePanel(true);
+    requestAnimationFrame(() =>
+      document.getElementById('circuit-section')?.scrollIntoView({ block: 'start' }),
+    );
+  }
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
       questions.data?.filter(
@@ -610,6 +636,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       active?.result.status === 'refused' &&
       active.result.answer === NEEDS_CIRCUIT &&
       !project.data?.circuit_version,
+    // 회로가 있고 바꿀 부품이 정해진 대화의 답에만 "회로 보기"를 붙인다(#47). 판정 · 역할 답은 대상이 정해진 뒤에 나온다
+    circuitLink = project.data?.circuit_version && target ? showCircuit : undefined,
     lastQuestion =
       detail?.messages.filter((m) => m.role === 'user').slice(-1)[0]?.content ?? pendingQuestion;
   const previous =
@@ -626,7 +654,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             aria-label="회로 보기"
             title="회로 보기"
             aria-expanded={panel}
-            onClick={() => setPanel(!panel)}
+            onClick={() => choosePanel(!panel)}
           >
             <PanelRight size={16} />
             <span className="desktop-only">회로 보기</span>
@@ -666,7 +694,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 className="icon-button"
                 aria-label="회로 패널 닫기"
                 title="회로 패널 닫기"
-                onClick={() => setPanel(false)}
+                onClick={() => choosePanel(false)}
               >
                 <X size={18} />
               </button>
@@ -749,6 +777,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                                 key={a.id}
                                 run={runs[a.run_id]}
                                 onCandidate={(c, r) => setSelected({ c, r })}
+                                onCircuit={circuitLink}
                               />
                             ) : (
                               // 실행 기록을 받지 못했을 때 보이는 저장된 답. 면책 문구는 답마다 한 번(#46)
@@ -794,7 +823,12 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   )}
                   {waiting && roles.error && <ErrorBox error={roles.error} retry={roles.reload} />}
                   {choosing && active && (
-                    <TargetChoice result={active.result} busy={busy} onResume={resume} />
+                    <TargetChoice
+                      result={active.result}
+                      busy={busy}
+                      onResume={resume}
+                      onCircuit={showCircuit}
+                    />
                   )}
                   {waiting && !choosing && active && (
                     <MissingInput
@@ -807,7 +841,11 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     />
                   )}
                   {active && !waiting && !running && (
-                    <Reply run={active} onCandidate={(c, r) => setSelected({ c, r })} />
+                    <Reply
+                      run={active}
+                      onCandidate={(c, r) => setSelected({ c, r })}
+                      onCircuit={circuitLink}
+                    />
                   )}
                   {needsCircuit && (
                     <CircuitRequest
