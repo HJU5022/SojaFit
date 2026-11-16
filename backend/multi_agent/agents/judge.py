@@ -1013,7 +1013,14 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         asked = list(dict.fromkeys(_required_missing(rules[roles[0]], set(values) | set(conds))))
     else:
         asked = list(dict.fromkeys(n for r in roles for n in C.needed(rules[r], set(values) | set(conds))))
-    if asked or len(roles) > 1:
+    read = read.model_copy(update={'original_part': _original_from_text(read, text)})
+    # [왜] 후보가 모두 원래 부품과 같은 품번이면 회로 값 · 역할과 상관없이 동일품이다(SPEC 3절). 6개 값을 물은 뒤 동일품을 냈다(#65).
+    #      주문 코드만 다른 품번은 문서 행을 찾아야 동일품이라 묻고, 원래 부품의 제조사가 다르거나 모르면 근거가 없어 묻는다(EC-05)
+    same_part = (state.get('question_type') != 'candidate_find' and bool(read.candidates) and not original_not_tsc(read.original_part, text)
+                 and all(_identical(None, read.original_part, c)[0] for c in read.candidates))
+    if same_part:
+        asked = []
+    elif asked or len(roles) > 1:
         # [주의] 인터럽트는 문항당 한 번이다(AC-08). 재개하면 이 노드가 처음부터 다시 돌지만, 읽기는 앞 노드에 남아 있어 LLM을 다시 부르지 않는다
         # [주의] 재개 값은 {'answers': {...}, 'role': ...} 모양이다. 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다(11-06 실측)
         reply = interrupt({'missing': asked, 'role_choices': roles if len(roles) > 1 else [], 'question': _ask_text(asked, roles, rules)}) or {}
@@ -1057,7 +1064,6 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         return not (any(C.orig_codes(b) for b in bases) or any(values.get(n) is None for b in bases for n in C.names(b)))
     rules = {r: ({**rules[r], 'conditions': [c for c in rules[r]['conditions'] if 'any' in c or keep(c)] + extra} if extra else rules[r])
              for r in roles}
-    read = read.model_copy(update={'original_part': _original_from_text(read, text)})
     # [왜] 카드에서 판정 값을 읽는 specs(backend/rag/card_specs.py)는 읽을 코드를 알면 덜 읽는다. prefetch가 없는 specs(데모 · 시험 가짜)는 건너뛴다
     prefetch = getattr(specs, 'prefetch', None)
     need = sorted(_rule_codes([rules[r] for r in roles]) | {x.code for x in read.required_specs})
@@ -1209,6 +1215,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
     except RetrievalUnavailableError as error:
         return {'judgement': {**base, 'kind': 'judge'}, 'path': ['판정'],
                 'reports': (state.get('reports') or []) + [_report('fail', f'spec table tool failed: {error.kind}', reason=Reason.SEARCH_ERROR)]}
+    if same_part:
+        # [왜] 묻지 않은 값을 빠진 값으로 남기면 동일품 답 아래에 '알려 주시면 판정할 수 있어요'가 붙고 재계획에도 missing으로 간다(#65)
+        results = [j.model_copy(update={'missing': []}) for j in results]
     if state.get('question_type') == 'candidate_find':
         # 후보 찾기 질문은 상위 몇 개를 고르는 판정 질문과 달리, 사용자가
         # 명시한 구매 규격을 만족하는 전체 목록을 요구한다. 불충족 후보는

@@ -707,3 +707,47 @@ def test_identical_error_surfaces_at_the_failing_candidates_turn(monkeypatch):
         raise RetrievalUnavailableError('down')
     out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=boom)
     assert out['path'] == ['판정'] and 'spec table tool failed' in out['reports'][-1]['message' if 'message' in out['reports'][-1] else 'summary']
+
+
+# #65: 원래 부품과 같은 품번을 물으면 회로 값 · 역할을 묻지 않고 동일품이다
+SAME_SPECS = {**SPECS, 'SS34': [r('SS34', 'VRRM', 40.0), r('SS34', 'IF_AV', 3.0, 'A'), r('SS34', 'PACKAGE', None, None, text='SMA')]}
+SAME = {**STATE, 'question': 'D1을 SS34로 그대로 둬도 돼?', 'conditions': '', 'target_part': {**STATE['target_part'], 'value': 'SS34'}}
+SAME_READ = J.JudgeRead(role='R01', role_alt='R02', original_part='SS34', candidates=['SS34']).model_dump(mode='json')
+
+
+@pytest.mark.parametrize('original,candidate', [('SS34', 'SS34'), ('TSC SS34', 'SS34'), ('SS34', 'tsc ss34')])
+def test_same_part_is_identical_without_asking_values_or_role(monkeypatch, original, candidate):
+    """같은 품번(제조사 이름 · 대소문자만 다름)이면 인터럽트 없이 동일품이고, 빠진 값을 남기지 않으며 사양 표 행 인용은 그대로다."""
+    from backend.multi_agent.messages import render_judgement
+    monkeypatch.setattr(J, 'interrupt', no_interrupt)
+    out = J.judge_agent({**SAME, 'judge_read': dict(SAME_READ, original_part=original, candidates=[candidate])},
+                        specs=specs_of(SAME_SPECS), find=None, retriever=None)
+    j = out['judgement']
+    res = j['results'][0]
+    assert res['verdict'] == 'IDENTICAL' and res['missing'] == [] and out['reports'][-1]['missing'] == []
+    assert j['asked'] == [] and j['roles'] == ['R01', 'R02']  # 역할을 고르지 않으면 두 역할로 판정한다(EC-02)
+    assert any(c.get('citation') for c in res['checks'])
+    assert '알려 주시면' not in render_judgement(j)
+
+
+@pytest.mark.parametrize('original,candidates,conditions', [
+    ('SS34', ['SS14'], ''),               # 다른 품번
+    ('SS34', ['SS34 R0G'], ''),           # 주문 코드만 다름: 주문 정보 표 행을 찾아야 동일품이라 지금처럼 묻는다
+    ('', ['SS34'], ''),                   # 원래 품번을 모름(EC-05)
+    ('SS34', ['SS34'], '현재 SS34의 제조사는 모르고 기판은 그대로다.'),  # 원래 부품의 제조사를 모름(EC-05)
+])
+def test_not_same_part_still_asks_values_and_role(monkeypatch, original, candidates, conditions):
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
+    J.judge_agent({**SAME, 'conditions': conditions, 'judge_read': dict(SAME_READ, original_part=original, candidates=candidates)},
+                  specs=specs_of(SAME_SPECS), find=None, retriever=None)
+    assert len(asked) == 1 and asked[0]['missing'] and asked[0]['role_choices'] == ['R01', 'R02']
+
+
+def test_mixed_same_and_other_part_asks_once_and_keeps_identical(monkeypatch):
+    """같은 품번과 다른 품번을 함께 물으면 지금처럼 한 번 묻는다(묻는 값은 역할마다 같다). 같은 품번은 그대로 동일품이다."""
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
+    out = J.judge_agent({**SAME, 'judge_read': dict(SAME_READ, candidates=['SS34', 'SS14'])}, specs=specs_of(SAME_SPECS), find=None, retriever=None)
+    verdicts = {x['part']: x['verdict'] for x in out['judgement']['results']}
+    assert len(asked) == 1 and verdicts['SS34'] == 'IDENTICAL' and verdicts['SS14'] != 'IDENTICAL'
