@@ -41,6 +41,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | `startup_restart_isolation_2026-11-13.md` | - | 한 줄 기동 시간(냉 · 온), 키 없는 데모 응답, 재시작 뒤 재개, 계정 분리 52개 점검의 결과와 재현법 |
 | `boot/` | - | 위 측정의 원시 출력: 시각표, 스모크 28단계, 52개 점검, 체크포인트 행 수, 합성 시험 출력, 측정 스크립트(`.log` 파일은 `.txt`를 덧붙여 둠) |
 | `boot_2026-11-16/` | - | 새 clone 키 없는 기동 재측정: GitHub `main` `3ce5abdc`, 빈 dind, `.env` 없음. clone → `/health` 200 242.8초, 스모크 28/28(G2) |
+| `freeze_check_2026-11-16/` | - | 동결 직전 검사: Linux 컨테이너 전체 pytest 2,495 통과 · 0 실패, `freeze.py --check` 바뀐 파일 없음, 비밀값 검사 |
 | `corpus_v4h_fingerprint_2026-11-12.md` | 5 | v4h 카드·distinct_text·파일 sha256 |
 | `index_row_count_2026-11-13.md` | - | 운영 DB `SojaFit_2` 코퍼스 표 행 수 읽기 전용 조회(문서 1,360 · 청크 51,967), 다시 보는 쿼리, 52,244 → 51,967 날짜와 이유 |
 | `db_content_hash_check_2026-11-16.md` | - | 운영 DB 청크 본문 51,967개를 읽기 전용으로 열어 sha256을 다시 계산: 저장 해시와 51,967/51,967 같음, 정렬 해시 목록 sha256이 저장소 `chunk_sha256.tsv`와 같음(G3). 다시 보는 쿼리 |
