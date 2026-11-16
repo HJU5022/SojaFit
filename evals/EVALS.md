@@ -121,9 +121,23 @@
 | `injection_t3_smoke_live_2026-11-11_07.jsonl`, 동명 `.meta.json`·`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json` | T3 스모크07의 원시·메타·예산·승인 |
 | `injection_remaining_review_queue_2026-11-11.json` | 실측03·스모크08의 원시 SHA·행·정상 짝·검토 대기 목록 |
 | `injection_baseline_review_2026-11-10.json`, `injection_baseline_checks_2026-11-10.json`, `injection_exposure_simulated_v3_2026-11-10.jsonl`, `injection_baseline_artifact_index_2026-11-10.json` | 준비 산출물 통합본: 계획·모의 실행 메타, 무료 검사 기록, 모의 실행 원시, 경로·해시 인덱스 |
+| `injection_exposure_code_freeze_2026-11-10.json` | T1 · T3 노출 실행의 승인 범위 · 상한과 옛 코드 동결 커밋 · 보관 참조 기록. 실행 승인 문서가 아님(파일의 `note`). 해석 문서 없음 |
 | `supervisor_guard_injection_2026-11-16.json` | Supervisor 답 가드 켬/끔 짝 실측 22작업 원시(호출별 카나리 노출, 계획 · reply, 보고, 켬/끔 답, 공급자 사용량). 해석은 [supervisor-guard-injection-recheck.md](../docs/experiments/supervisor-guard-injection-recheck.md) |
 
 - 실행별 파일은 서로 덮어쓰지 않고 합산하지 않는다.
 - 실측01·02와 스모크01~06의 원시는 저장소 밖 백업에 있다. 크기·SHA256·복원 방법은 `injection_baseline_artifact_index_2026-11-10.json`의 `measured_runs_archive`.
 - 통합 전 준비 산출물 33개의 원본은 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`(커밋 107aaa3)에 있다. 이 참조는 저장소를 공유해도 함께 공유되지 않는다. 경로·해시는 `injection_baseline_artifact_index_2026-11-10.json`.
 - 사람 검토 건수와 판정 결과: [injection-results.md](../docs/research/injection-results.md).
+
+### 그 밖의 thread 파일 (`results/threads/`)
+
+| 파일 | 만든 것 | 해석 |
+|---|---|---|
+| `claim_consistency_*.json` 6개 | `run_claim_consistency.py` | [injection-results.md](../docs/research/injection-results.md), [c2-defense-recheck.md](../docs/experiments/c2-defense-recheck.md) |
+| `input_surface_*.json` 6개 | `run_input_surfaces.py` | [injection-results.md](../docs/research/injection-results.md) |
+| `judgement_bundle_*.json` 6개 | `run_judgement_bundle.py` | [preregister.md](guides/preregister.md), [c2-defense-recheck.md](../docs/experiments/c2-defense-recheck.md) |
+| `trust_boundary_plan_2026-11-09.json`, `trust_boundary_live_2026-11-09.json` | `run_trust_boundary.py` | [injection-results.md](../docs/research/injection-results.md) |
+| `live_smoke_2026-11-09.json` | 저장소 밖 `thread_live_eval.py`(동결 v2 4문항 실제 모델) | 사전 등록 "2026-11-09 사용자 업로드·영속 thread 실제 모델 연결 smoke" |
+| `input_regression_2026-11-09.json` | 저장소 밖 `thread_input_eval.py`(v1 · v2 문항의 연결 경로와 업로드 파서 결과 대조) | 해석 문서 없음 |
+| `local_g4_isolation_2026-11-09.json` | 키 없는 로컬 compose에서 HTTP로 한 G4 · D7 점검 기록 | `EVAL_REPORT.md`, [GATES.md](../docs/GATES.md), `d10/startup_restart_isolation_2026-11-13.md` |
+| `saved_defense_replay_after_2026-11-10.json` | 저장한 응답 두 건의 오프라인 재생(실제 모델 호출 0, 파일의 `mode`) | 해석 문서 없음 |
