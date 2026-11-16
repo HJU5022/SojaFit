@@ -1,7 +1,7 @@
 """DB 용량 점검(inspect)과 vector→halfvec 정확 검색 비교(compare)를 하는 오프라인 도구. 운영 DB를 변경하지 않는다.
 
-- 역할: 오프라인 CLI(`python -m backend.rag.storage`)와, `vector_type`만 서버·다른 도구가 import한다.
-  - vector_type: 환경변수 RAG_VECTOR_TYPE(vector|halfvec)을 읽어 돌려준다. ingest.py·retrieve.py가 server와 도구에서 import한다.
+- 역할: 오프라인 CLI(`python -m backend.rag.storage`)와, `vector_type`만 적재 도구가 import한다.
+  - vector_type: 환경변수 RAG_VECTOR_TYPE(vector|halfvec)을 읽어 돌려준다. pipeline/ingest.py만 import한다.
   - snapshot(inspect): DB 전체 크기, pgvector 버전, 임베딩 열 형식, RAG 표 세 개의 크기(250MB 목표 대비).
   - compare: 원본 vector(1536)와 halfvec으로 줄인 값의 가까운 청크 상위 5개이 얼마나 겹치는지 시료 1000개까지 잰다.
     읽기 전용 트랜잭션을 롤백하고, 시간 예산(max_seconds)을 넘으면 중간 결과에 timed_out을 달아 돌려준다.
