@@ -351,12 +351,14 @@
 | `project_id` | bigint | NOT NULL |  | 소속 프로젝트 |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 만든 시각 |
 | `circuit_version` | integer | NOT NULL |  | 대화가 고정한 회로 버전(생성 뒤 변경 불가) |
+| `title` | text | NULL |  | 사용자가 고친 대화 이름(공백 제거 1~200자). NULL이면 첫 질문으로 만든 이름을 보인다 |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
 | `threads_pkey` | PK | `PRIMARY KEY (id)` |
 | `fk_threads_circuit_version` | FK | `FOREIGN KEY (project_id, circuit_version) REFERENCES project_circuit_versions(project_id, version) ON DELETE CASCADE` |
 | `threads_project_id_fkey` | FK | `FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE` |
+| `ck_threads_title` | CHECK | `CHECK (((title = btrim(title)) AND ((char_length(title) >= 1) AND (char_length(title) <= 200))))` |
 
 | 인덱스 | 정의 |
 |---|---|

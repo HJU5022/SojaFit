@@ -326,6 +326,7 @@ SojaFit (proj3-b)
 │   ├── 030_google_onboarding.sql <- 새 기준선의 명시적 Google 가입·재확인 연결과 관리자 승인 대기 표
 │   ├── 031_circuit_versions.sql <- 프로젝트 회로 버전 보존·기존 대화 backfill·대화별 버전 고정
 │   ├── 032_approval_reselection.sql <- 승인·견적 이력을 보존한 사례 삭제 후 재승인용 제약 변경
+│   ├── 033_thread_titles.sql <- 사용자가 고친 대화 이름 칸(threads.title, NULL이면 첫 질문 이름)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
