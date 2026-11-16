@@ -11,6 +11,28 @@ export function navigate(url: string, replace = false) {
   history[replace ? 'replaceState' : 'pushState']({}, '', url);
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
+/** 새 탭·창으로 열려는 클릭(가운데 단추·Ctrl·Cmd·Shift·Alt)이나 이미 처리된 클릭이 아닌 보통 왼쪽 클릭. */
+export const plainClick = (e: MouseEvent | React.MouseEvent) =>
+  !e.defaultPrevented && e.button === 0 && !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
+/**
+ * 문서 전체 클릭 위임(App이 한 번 단다): 같은 출처 링크를 페이지를 새로 받지 않고 화면 안에서 옮긴다(#19).
+ * [왜] 사이드바 등 내부 링크가 보통 `<a href>`라 누를 때마다 전체 새로고침·흰 화면이 났다. href는 그대로 둬 새 탭 열기가 된다.
+ * 새 탭·다운로드·다른 출처·서버가 직접 주는 경로(/api·/assets·/circuit-schematics)·같은 화면의 #앵커는 브라우저에 맡긴다.
+ */
+export function followLink(e: MouseEvent) {
+  const a = (e.target as Element).closest?.<HTMLAnchorElement>('a[href]');
+  if (!a || !plainClick(e) || a.target || a.hasAttribute('download')) return;
+  const url = new URL(a.href),
+    here = location.pathname + location.search,
+    next = url.pathname + url.search;
+  if (url.origin !== location.origin || /^\/(api|assets|circuit-schematics)\//.test(url.pathname))
+    return;
+  if (next === here && url.hash) return;
+  e.preventDefault();
+  // [왜] 브라우저처럼 같은 주소를 다시 누르면 방문 기록을 늘리지 않고, 새 화면은 맨 위에서 시작한다
+  navigate(next + url.hash, next === here);
+  scrollTo(0, 0);
+}
 export function useLocation() {
   const [url, set] = useState(location.pathname + location.search);
   useEffect(() => {

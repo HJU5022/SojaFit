@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { Brand, ErrorBox, Loading, navigate, useLocation } from './ui';
+import { Brand, ErrorBox, followLink, Loading, navigate, useLocation } from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
 import { Admin, ApprovedCases, Privacy, Settings } from './Account';
@@ -154,7 +154,11 @@ export default function App() {
   useEffect(() => {
     void check();
     window.addEventListener('session-expired', logout);
-    return () => window.removeEventListener('session-expired', logout);
+    document.addEventListener('click', followLink);
+    return () => {
+      window.removeEventListener('session-expired', logout);
+      document.removeEventListener('click', followLink);
+    };
   }, []);
   const publicPage =
     pathname === '/' ||
