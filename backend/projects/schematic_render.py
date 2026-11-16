@@ -251,10 +251,6 @@ def _pdf_creator_is_pcbnew(document) -> bool:
 
 def _rasterize(kind: str, path: Path, output: Path, page_indices: str | None = None):
     """별도 프로세스에서 실행한다. 전체 변환 성공 후 부모가 결과를 읽는다."""
-    if sys.platform == "linux":  # [왜] RLIMIT_AS는 Linux 전용. macOS는 ValueError로 하위 프로세스가 죽는다
-        import resource
-        resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30))
-        resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_IMAGE_BYTES, MAX_IMAGE_BYTES))
     if kind != "pdf":
         data = path.read_bytes()
         (output / "01.png").write_bytes(_valid_png(_svg(data) if kind == "svg" else data))
@@ -1661,4 +1657,9 @@ if __name__ == "__main__":
         except (ExternalSchematicInvalidSource, OSError, ValueError, RuntimeError):
             raise SystemExit(1)
     else:
+        # [왜] 메모리 · 파일 크기 제한은 이 하위 프로세스에만 건다. _rasterize 안에서 걸면 같은 프로세스에서 부른 쪽(pytest 등)까지 2GiB로 묶여 뒤 시험의 스레드가 멈춘다
+        if sys.platform == "linux":  # [왜] RLIMIT_AS는 Linux 전용. macOS는 ValueError로 하위 프로세스가 죽는다
+            import resource
+            resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30))
+            resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_IMAGE_BYTES, MAX_IMAGE_BYTES))
         _rasterize(sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4] if len(sys.argv) > 4 else None)
