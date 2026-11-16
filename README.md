@@ -46,7 +46,7 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 ## 2. 핵심 기능
 
 - **회로에서 부품의 역할을 읽는다**: KiCad 넷리스트에서 대상 부품과 연결된 넷·부품을 뽑아 근거로 넘긴다.
-- **데이터시트 근거로만 답한다**: Taiwan Semiconductor 다이오드 데이터시트 1,360건(7,725쪽)을 표 한 행이 청크 하나가 되게 자른다. 청크 수와 버전별 차이(v1 · v4h)는 [`data/DATA.md`](data/DATA.md#코퍼스-수치)와 [`docs/GATES.md`](docs/GATES.md) G3를 본다. BM25와 벡터 검색을 RRF로 합치고 품번으로 거른다.
+- **데이터시트 근거로만 답한다**: Taiwan Semiconductor 다이오드 데이터시트 1,360건(7,725쪽)을 표 한 행이 청크 하나가 되게 자른다. 청크 수와 버전별 차이(v1 · v4h)는 [`data/DATA.md`](data/DATA.md#코퍼스-수치)와 [`docs/GATES.md`](docs/GATES.md) G3를 본다. BM25와 벡터 검색을 RRF로 합치고 품번으로 거른다. 내부 근거가 부족하면 공식 제조사 PDF의 쪽 · 표 행(2등급)과 공개 웹 참고 링크(3등급)를 따로 표시해 붙인다(SPEC 2절, [`docs/specs/official-datasheet-evidence.md`](docs/specs/official-datasheet-evidence.md)).
 - **근거가 없으면 지어내지 않는다**: 채점을 통과한 청크만 근거로 쓰고, 근거가 없으면 이유와 필요한 단서를 묻는다. 답의 인용이 실제 청크인지 검사한다.
 - **후보마다 판정 5종 중 하나를 낸다**: 기준의 정본은 [`SPEC.md`](SPEC.md) 3절이다.
 
@@ -176,7 +176,8 @@ KiCad 넷리스트 + 질문
 | LLM `anthropic/claude-haiku-5.5` (계획 1번, 재계획 최대 1번) | 질문 종류, 거절할지, 할 일 나누기와 지시서(첫 검색어 포함) | MULTI_AGENT.md "구조", ADR 0017 |
 | 코드, 계획 전 | 품번 · 개정판이 코퍼스에 있는지 확인해 사실로 넘긴다. LLM은 짐작하지 않고 이 값을 받는다 | SPEC 2절, `supervisor.py`의 `Facts` |
 | 코드, 계획 뒤 | 첫 계획이 후보 찾기인데 판정 찾기 할 일이 없으면 Spec 에이전트 할 일로 바꾼다 | ADR 0017, 사전 등록 #47 |
-| 코드, Spec 에이전트 | 숫자 · 단위 비교와 판정 5종(`backend/judge/`). 사실 확인이 코퍼스에 없다고 한 후보는 판정하지 않고 `part_missing`으로 거절 | AGENTS.md 지킬 것 7, ADR 0017 |
+| 코드, Spec 에이전트 | 숫자 · 단위 비교와 판정 5종(`backend/judge/`). 사실 확인이 코퍼스에 없다고 한 후보는 판정하지 않고 `part_missing`, TSC(와 공식 웹 조회 제조사)가 아닌 제조사를 요구하면 `maker_missing`으로 거절 | AGENTS.md 지킬 것 7, ADR 0017, SPEC 8.3 |
+| 코드, 거절 | 사유마다 대신 물을 말을 담은 고정 문구. 사용자가 잰 값(`measurement`) · 효율 같은 회로 전체 값(`circuit_value`) · 품번 없이 제조사만 준 교체(`maker_missing`)는 Supervisor가 그 사유로 거절하고 문구는 코드가 낸다(#63) | SPEC 2절 "거절 사유별 문구" |
 | 코드, 답 정리 · 종합 | 후보 판정 보고가 하나라도 있으면 코드 판정 답 틀만 내고 문서 · 종합 글을 붙이지 않는다(찾기 · 규칙 밖 역할은 예전대로) | SPEC 2절 "출력 경계", EVAL_REPORT 6절 5행(C2, 고친 뒤 실제 모델 재측정은 사례당 1회) |
 | 코드, 답 모으기 · 답 검사 | 상한과 재계획 여부, 인용 번호와 숫자의 출처 | MULTI_AGENT.md "구조" |
 
@@ -397,7 +398,7 @@ SojaFit/
 
 - **데이터시트**: Taiwan Semiconductor 사이트 약관은 정보·비상업 목적에 한해, 고치지 않고 저작권 고지를 유지하고 출처를 밝히는 조건으로 복제·배포를 허용한다. PDF는 고치지 않고 고지·출처와 함께 쓴다([`data/corpus/CORPUS.md`](data/corpus/CORPUS.md)).
 - **데모 코퍼스 스냅샷**: 키 없는 compose가 로컬 DB에 넣는 TSC 42문서 · 청크 1,556개의 출처 · 이용 조건 · 고른 규칙은 [`data/demo/snapshot/SNAPSHOT.md`](data/demo/snapshot/SNAPSHOT.md)에 있다.
-- **넣지 않는 데이터시트**: 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트는 받지 않는다. 이 회사 부품은 링크만 보여 준다.
+- **넣지 않는 데이터시트**: 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트는 코퍼스로 모으거나 저장하지 않는다. 다만 PR #146부터 내부 근거가 부족한 질문에서는 공식 제조사 일곱 곳(TSC · TI · ST · ADI · onsemi · Infineon · Vishay)의 PDF를 답할 때 받아 메모리에서 쪽 · 표 행을 읽고 2등급 근거로 인용한다(Nexperia 제외, [`docs/specs/official-datasheet-evidence.md`](docs/specs/official-datasheet-evidence.md)). 이렇게 실행 중에 받아 읽는 것이 각 제조사 약관에 맞는지 검토한 기록은 저장소에서 찾지 못했다(확인 못 함). 그 밖의 제조사 부품은 링크만 보여 준다.
 - **회로**: 평가·시연용 회로 5종은 라이선스를 확인한 공개 KiCad 프로젝트(MIT, CC BY-SA 3.0·4.0)다. 원 저장소와 커밋은 [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md)에 있다.
 
 ### 제3자 소프트웨어 · 라이선스
