@@ -827,6 +827,7 @@ SojaFit (proj3-b)
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
     │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
     │   ├── market-user-journey.md  <- 문제와 시장 근거
+    │   ├── demand-evidence-pricing-2026-11-16.md  <- 수요 근거와 유사 서비스 공개 가격(심태현 조사)
     │   ├── db-redesign/    <- 서비스 DB 재설계(11-11) 설계 문서(현재·목표 구조, 영향 지도). 검증 스크립트는 scripts/db/verify_redesign/
     │   │   ├── summary.md      <- 검토용 요약 · 결정 항목(옛 REdesign.md)
     │   │   ├── as-is-erd.md    <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)

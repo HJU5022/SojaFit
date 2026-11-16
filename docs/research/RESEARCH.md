@@ -40,6 +40,7 @@
 - [bit-search-measurement-2026-11-03.md](bit-search-measurement-2026-11-03.md) — 비트 후보 + pgvector 재정렬의 시간·recall@50·최종 점수 확인
 - [retrieval-baseline-analysis.md](retrieval-baseline-analysis.md) — 동결 v1(`dataset_v1.jsonl`) 검색 베이스라인 3방식(`dense`·`bm25`·`hybrid`) 19문항 대조, 회귀 문항 및 실패 유형 4가지 분석, 채점 산식·한계 기록
 - [evidence/](evidence/EVIDENCE.md) — 시장 근거 원자료 복사본(`docs/TOPIC.md` 각주 [1]·[2]·[4]). 목록과 해시는 `evidence/EVIDENCE.md`
+- [demand-evidence-pricing-2026-11-16.md](demand-evidence-pricing-2026-11-16.md) — 수요 근거(채용공고·공시·도입 금액·단종정보 도구 구매계약)와 유사 서비스 공개 가격(심태현 조사, 2026-11-16). 간접 근거이며 SojaFit 구매 수요의 직접 입증은 아님
 - [market-user-journey.md](market-user-journey.md) — 문제와 시장 근거: 관련 채용 역할 50건의 원문 링크와 반복 업무·역량, 사용자·지불 주체 사실/가설 구분, 페르소나 2종, 6단계 고객 여정 맵, 범용 챗봇 비교 항목, 외부 검토 계획(미수행)
 - [grade-evidence-validation.md](grade-evidence-validation.md) — 1등급 2등급 3등급 근거 흐름과 검증 범위: 동작, 상한, 코드 위치, 원시 없는 측정
 
