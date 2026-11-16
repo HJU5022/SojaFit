@@ -1,0 +1,114 @@
+{
+ "phase": "cold",
+ "T0_epoch": 1794860913.9306612,
+ "events": [
+  {
+   "event": "host_load_before_cold",
+   "iso_kst": "2026-11-17T05:28:33.736+09:00",
+   "epoch": 1794860913.736,
+   "t_sec": null,
+   "load1_5_15": [
+    10.92,
+    11.82,
+    11.88
+   ]
+  },
+  {
+   "event": "host_load_no_wait",
+   "iso_kst": "2026-11-17T05:28:33.738+09:00",
+   "epoch": 1794860913.739,
+   "t_sec": null,
+   "note": "d12: record only, no wait (other agents share the host)"
+  },
+  {
+   "event": "t0_git_clone_start",
+   "iso_kst": "2026-11-17T05:28:33.930+09:00",
+   "epoch": 1794860913.931,
+   "t_sec": 0.0,
+   "rx_bytes_total": 0,
+   "branch": "main"
+  },
+  {
+   "event": "git_clone_end",
+   "iso_kst": "2026-11-17T05:28:47.271+09:00",
+   "epoch": 1794860927.271,
+   "t_sec": 13.341,
+   "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "tree": "3c77569e5273bca2940bf07819f9027611490cce",
+   "branch": "HEAD",
+   "origin_url_after": "https://github.com/aihuman-7th/proj3-b.git",
+   "git_dir_kb": 45744,
+   "total_kb": 127652,
+   "has_env_file": false,
+   "rx_bytes": 46575618
+  },
+  {
+   "event": "host_load_at_up",
+   "iso_kst": "2026-11-17T05:28:47.272+09:00",
+   "epoch": 1794860927.272,
+   "t_sec": 13.341,
+   "load1_5_15": [
+    12.26,
+    12.07,
+    11.97
+   ]
+  },
+  {
+   "event": "compose_up_issued",
+   "iso_kst": "2026-11-17T05:28:47.278+09:00",
+   "epoch": 1794860927.279,
+   "t_sec": 13.348,
+   "command": "docker compose up --build",
+   "cwd": "/work/proj3-b",
+   "env_set": "COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)"
+  },
+  {
+   "event": "health_200",
+   "iso_kst": "2026-11-17T05:32:01.579+09:00",
+   "epoch": 1794861121.58,
+   "t_sec": 207.649,
+   "rx_bytes": 593039222
+  },
+  {
+   "event": "demo_login_A_done",
+   "iso_kst": "2026-11-17T05:32:02.048+09:00",
+   "epoch": 1794861122.048,
+   "t_sec": 208.117,
+   "status": "200",
+   "seconds": 0.468
+  },
+  {
+   "event": "smoke_start",
+   "iso_kst": "2026-11-17T05:32:02.048+09:00",
+   "epoch": 1794861122.048,
+   "t_sec": 208.118,
+   "flags": "--base-url http://localhost:8000 --demo --refusal",
+   "python": "alpine python3 + py3-httpx inside dind (host network of dind)"
+  },
+  {
+   "event": "smoke_end",
+   "iso_kst": "2026-11-17T05:32:11.371+09:00",
+   "epoch": 1794861131.371,
+   "t_sec": 217.441,
+   "exit_code": 0,
+   "rx_bytes": 593039222
+  },
+  {
+   "event": "host_load_end",
+   "iso_kst": "2026-11-17T05:32:13.566+09:00",
+   "epoch": 1794861133.567,
+   "t_sec": 219.636,
+   "load1_5_15": [
+    14.2,
+    13.38,
+    12.58
+   ]
+  }
+ ],
+ "rx_total_bytes": 593039222,
+ "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+ "tree": "3c77569e5273bca2940bf07819f9027611490cce",
+ "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+ "checkout": "GitHub main clone, then git checkout 799ae636"
+}
