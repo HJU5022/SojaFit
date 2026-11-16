@@ -1,0 +1,2186 @@
+{
+  "requested_model": "openai/gpt-6.1-terra",
+  "interface": "OpenRouter Chat Completions API (not Codex CLI)",
+  "os": "Windows-11-10.0.26300-SP0",
+  "python": "3.13.15",
+  "started_at": "2026-11-16T10:45:50+09:00",
+  "ended_at": "2026-11-16T10:51:01+09:00",
+  "web_search": true,
+  "repository_context": false,
+  "memory": false,
+  "prior_conversations": false,
+  "cross_question_history": false,
+  "provided_inputs": "generic output rules + one question body (netlist path replaced) + full netlist; model may retrieve public web sources",
+  "reasoning_effort": "medium",
+  "max_tokens_per_request": 8192,
+  "jobs": 3,
+  "automatic_retries": 0,
+  "questions": 50,
+  "attempted": 50,
+  "answered": 50,
+  "format_ok": 0,
+  "complete_untruncated": 50,
+  "returned_models": [
+    "openai/gpt-6.1-terra"
+  ],
+  "cost_usd_reported": 5.5393678,
+  "cost_missing": 0,
+  "prompt_tokens": 3092663,
+  "completion_tokens": 36649,
+  "runs": [
+    {
+      "id": "v3-01",
+      "state": "answered",
+      "started_at": "2026-11-16T10:45:50+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793551-hz77TkJ81CGe6pByEAOr",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 68044,
+        "completion_tokens": 1326,
+        "total_tokens": 69370,
+        "cost": 0.16180375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 28519,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.16180375,
+          "upstream_inference_prompt_cost": 0.07517375,
+          "upstream_inference_completions_cost": 0.00663
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1089,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 8
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:46:16+09:00",
+      "seconds": 26.01
+    },
+    {
+      "id": "v3-02",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:16+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793577-xqd6ExaUkiib8ukidGS5",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 110368,
+        "completion_tokens": 701,
+        "total_tokens": 111069,
+        "cost": 0.1712832,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 86319,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.1712832,
+          "upstream_inference_prompt_cost": 0.1277782,
+          "upstream_inference_completions_cost": 0.003505
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 405,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:46:42+09:00",
+      "seconds": 26.15
+    },
+    {
+      "id": "v3-03",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:16+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793577-7bxkDQl2zgNH8I9iBd7h",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 48310,
+        "completion_tokens": 453,
+        "total_tokens": 48763,
+        "cost": 0.0748352,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 33719,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0748352,
+          "upstream_inference_prompt_cost": 0.0525702,
+          "upstream_inference_completions_cost": 0.002265
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 252,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 2
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:46:26+09:00",
+      "seconds": 10.41
+    },
+    {
+      "id": "v3-04",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:16+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793576-uKShfaTerOTBI618bD46",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 31825,
+        "completion_tokens": 576,
+        "total_tokens": 32401,
+        "cost": 0.06294145,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 9624,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.06294145,
+          "upstream_inference_prompt_cost": 0.03006145,
+          "upstream_inference_completions_cost": 0.00288
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 309,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:46:30+09:00",
+      "seconds": 14.44
+    },
+    {
+      "id": "v3-05",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:26+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793587-rIqExyW2cU6C1Ih3DRoF",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 38675,
+        "completion_tokens": 750,
+        "total_tokens": 39425,
+        "cost": 0.0918427,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 14349,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0918427,
+          "upstream_inference_prompt_cost": 0.0380927,
+          "upstream_inference_completions_cost": 0.00375
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 536,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 5
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:46:43+09:00",
+      "seconds": 16.7
+    },
+    {
+      "id": "v3-06",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:30+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793591-1mMjb0mJtN1y8P2D2SUK",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 50522,
+        "completion_tokens": 1222,
+        "total_tokens": 51744,
+        "cost": 0.1254697,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 12029,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.1254697,
+          "upstream_inference_prompt_cost": 0.0493597,
+          "upstream_inference_completions_cost": 0.00611
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 984,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 7
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:46:58+09:00",
+      "seconds": 27.34
+    },
+    {
+      "id": "v3-07",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:42+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793603-BLrGqbdRRFeTeGipWKHh",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 59625,
+        "completion_tokens": 821,
+        "total_tokens": 60446,
+        "cost": 0.1084387,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 35513,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.1084387,
+          "upstream_inference_prompt_cost": 0.0643337,
+          "upstream_inference_completions_cost": 0.004105
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 582,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:46:59+09:00",
+      "seconds": 17.54
+    },
+    {
+      "id": "v3-08",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:43+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793604-YNYwJ6rNUNv0yg88lDQw",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 57647,
+        "completion_tokens": 1145,
+        "total_tokens": 58792,
+        "cost": 0.15458095,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 21514,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.15458095,
+          "upstream_inference_prompt_cost": 0.05885595,
+          "upstream_inference_completions_cost": 0.005725
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 916,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 9
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:47:06+09:00",
+      "seconds": 23.32
+    },
+    {
+      "id": "v3-09",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:58+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793618-sAq8Z6Mc3qMZVrwHTxZQ",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 168323,
+        "completion_tokens": 1162,
+        "total_tokens": 169485,
+        "cost": 0.2732487,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 133141,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.2732487,
+          "upstream_inference_prompt_cost": 0.1974387,
+          "upstream_inference_completions_cost": 0.00581
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 876,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 7
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:47:27+09:00",
+      "seconds": 29.73
+    },
+    {
+      "id": "v3-10",
+      "state": "answered",
+      "started_at": "2026-11-16T10:46:59+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793620-O4nbVnHH8gC8kTPtK6lJ",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 148326,
+        "completion_tokens": 677,
+        "total_tokens": 149003,
+        "cost": 0.2008327,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 133165,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.2008327,
+          "upstream_inference_prompt_cost": 0.1774477,
+          "upstream_inference_completions_cost": 0.003385
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 497,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 2
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:47:13+09:00",
+      "seconds": 13.54
+    },
+    {
+      "id": "v3-11",
+      "state": "answered",
+      "started_at": "2026-11-16T10:47:06+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793627-ZtzFw9SDx6b0FZhAIbm3",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 75890,
+        "completion_tokens": 1985,
+        "total_tokens": 77875,
+        "cost": 0.1839912,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 9383,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.1839912,
+          "upstream_inference_prompt_cost": 0.0740662,
+          "upstream_inference_completions_cost": 0.009925
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1604,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 10
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 4,
+      "ended_at": "2026-11-16T10:47:49+09:00",
+      "seconds": 42.53
+    },
+    {
+      "id": "v3-12",
+      "state": "answered",
+      "started_at": "2026-11-16T10:47:13+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793634-y18eOHg828zEmEHkGb18",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 63584,
+        "completion_tokens": 1125,
+        "total_tokens": 64709,
+        "cost": 0.13882145,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 15128,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.13882145,
+          "upstream_inference_prompt_cost": 0.06319645,
+          "upstream_inference_completions_cost": 0.005625
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 920,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 7
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:47:44+09:00",
+      "seconds": 30.72
+    },
+    {
+      "id": "v3-13",
+      "state": "answered",
+      "started_at": "2026-11-16T10:47:27+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793649-gklghE5kgSgSSbIskiqr",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 39757,
+        "completion_tokens": 873,
+        "total_tokens": 40630,
+        "cost": 0.08296645,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 12056,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.08296645,
+          "upstream_inference_prompt_cost": 0.03860145,
+          "upstream_inference_completions_cost": 0.004365
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 611,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:47:43+09:00",
+      "seconds": 15.62
+    },
+    {
+      "id": "v3-14",
+      "state": "answered",
+      "started_at": "2026-11-16T10:47:43+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793665-XKb30BrhWp989oY7KB3K",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 44624,
+        "completion_tokens": 1069,
+        "total_tokens": 45693,
+        "cost": 0.11782295,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 8094,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.11782295,
+          "upstream_inference_prompt_cost": 0.04247795,
+          "upstream_inference_completions_cost": 0.005345
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 841,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 7
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:48:08+09:00",
+      "seconds": 24.67
+    },
+    {
+      "id": "v3-15",
+      "state": "answered",
+      "started_at": "2026-11-16T10:47:44+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793667-FS7ObnulOLSBDKi2dFH3",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 162150,
+        "completion_tokens": 902,
+        "total_tokens": 163052,
+        "cost": 0.22579095,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 133202,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.22579095,
+          "upstream_inference_prompt_cost": 0.19128095,
+          "upstream_inference_completions_cost": 0.00451
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 669,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:48:05+09:00",
+      "seconds": 20.81
+    },
+    {
+      "id": "v3-16",
+      "state": "answered",
+      "started_at": "2026-11-16T10:47:49+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793671-GDA3iddbfevUDZecJP5o",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 27747,
+        "completion_tokens": 306,
+        "total_tokens": 28053,
+        "cost": 0.03885595,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 14994,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03885595,
+          "upstream_inference_prompt_cost": 0.02732595,
+          "upstream_inference_completions_cost": 0.00153
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 150,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 1
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:47:57+09:00",
+      "seconds": 8.58
+    },
+    {
+      "id": "v3-17",
+      "state": "answered",
+      "started_at": "2026-11-16T10:47:57+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793679-brIoagX8oIofbu6ik8BL",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 43952,
+        "completion_tokens": 957,
+        "total_tokens": 44909,
+        "cost": 0.12639995,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 7330,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.12639995,
+          "upstream_inference_prompt_cost": 0.04161495,
+          "upstream_inference_completions_cost": 0.004785
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 768,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 8
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:48:24+09:00",
+      "seconds": 26.32
+    },
+    {
+      "id": "v3-18",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:05+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793685-ws51DluwM6OfrJ3uNcSH",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 43491,
+        "completion_tokens": 875,
+        "total_tokens": 44366,
+        "cost": 0.11489745,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 4804,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.11489745,
+          "upstream_inference_prompt_cost": 0.04052245,
+          "upstream_inference_completions_cost": 0.004375
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 658,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 7
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:48:22+09:00",
+      "seconds": 17.86
+    },
+    {
+      "id": "v3-19",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:08+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793688-UlMmc59u4OzR0SNIqnTN",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 59780,
+        "completion_tokens": 1065,
+        "total_tokens": 60845,
+        "cost": 0.14277745,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 7368,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.14277745,
+          "upstream_inference_prompt_cost": 0.05745245,
+          "upstream_inference_completions_cost": 0.005325
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 851,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 8
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:48:32+09:00",
+      "seconds": 24.66
+    },
+    {
+      "id": "v3-20",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:22+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793703-JCjEMg8JR0thXUR6hBBn",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 41460,
+        "completion_tokens": 541,
+        "total_tokens": 42001,
+        "cost": 0.0840587,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 16253,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0840587,
+          "upstream_inference_prompt_cost": 0.0413537,
+          "upstream_inference_completions_cost": 0.002705
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 333,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:48:37+09:00",
+      "seconds": 14.38
+    },
+    {
+      "id": "v3-21",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:24+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793704-KUFBMBjj9Ai3oGsOVlvi",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 32676,
+        "completion_tokens": 619,
+        "total_tokens": 33295,
+        "cost": 0.08391645,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 9260,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.08391645,
+          "upstream_inference_prompt_cost": 0.03082145,
+          "upstream_inference_completions_cost": 0.003095
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 369,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 5
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:48:38+09:00",
+      "seconds": 14.72
+    },
+    {
+      "id": "v3-22",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:32+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793713-ZeRjUMRYWz6xEexhzKow",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 90681,
+        "completion_tokens": 285,
+        "total_tokens": 90966,
+        "cost": 0.10949245,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 86224,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.10949245,
+          "upstream_inference_prompt_cost": 0.10806745,
+          "upstream_inference_completions_cost": 0.001425
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 86,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 0,
+      "ended_at": "2026-11-16T10:48:37+09:00",
+      "seconds": 4.39
+    },
+    {
+      "id": "v3-23",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:37+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793717-fHd7Eenb4HHkCKXc7Sw8",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 38085,
+        "completion_tokens": 306,
+        "total_tokens": 38391,
+        "cost": 0.04385245,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 33628,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.04385245,
+          "upstream_inference_prompt_cost": 0.04232245,
+          "upstream_inference_completions_cost": 0.00153
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 127,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 0,
+      "ended_at": "2026-11-16T10:48:42+09:00",
+      "seconds": 5.13
+    },
+    {
+      "id": "v3-24",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:37+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793718-Fda1PxjfyjGKfXhJTnND",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 46289,
+        "completion_tokens": 587,
+        "total_tokens": 46876,
+        "cost": 0.0839027,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 35393,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0839027,
+          "upstream_inference_prompt_cost": 0.0509677,
+          "upstream_inference_completions_cost": 0.002935
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 306,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:48:55+09:00",
+      "seconds": 18.57
+    },
+    {
+      "id": "v3-25",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:38+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793719-xeGU9FrYZK4BBVPc8ZzW",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 25275,
+        "completion_tokens": 640,
+        "total_tokens": 25915,
+        "cost": 0.05628645,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 7924,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.05628645,
+          "upstream_inference_prompt_cost": 0.02308645,
+          "upstream_inference_completions_cost": 0.0032
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 401,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:48:52+09:00",
+      "seconds": 13.59
+    },
+    {
+      "id": "v3-26",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:42+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793722-rsxD9sjKR4lJEaX5bz2m",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 52435,
+        "completion_tokens": 767,
+        "total_tokens": 53202,
+        "cost": 0.0905187,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 33673,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0905187,
+          "upstream_inference_prompt_cost": 0.0566837,
+          "upstream_inference_completions_cost": 0.003835
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 540,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:49:02+09:00",
+      "seconds": 20.58
+    },
+    {
+      "id": "v3-27",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:52+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793733-MoIviuAEiTxWXEIxNIwX",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 35468,
+        "completion_tokens": 923,
+        "total_tokens": 36391,
+        "cost": 0.07831095,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 9590,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.07831095,
+          "upstream_inference_prompt_cost": 0.03369595,
+          "upstream_inference_completions_cost": 0.004615
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 597,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:49:07+09:00",
+      "seconds": 15.38
+    },
+    {
+      "id": "v3-28",
+      "state": "answered",
+      "started_at": "2026-11-16T10:48:55+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793736-tr0E68NP9ny9GFz7gSet",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 49863,
+        "completion_tokens": 620,
+        "total_tokens": 50483,
+        "cost": 0.07765245,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 35436,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.07765245,
+          "upstream_inference_prompt_cost": 0.05455245,
+          "upstream_inference_completions_cost": 0.0031
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 342,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 2
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:49:07+09:00",
+      "seconds": 11.99
+    },
+    {
+      "id": "v3-29",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:02+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793743-cKukQ3apiHqq0WPB9VFc",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 51162,
+        "completion_tokens": 864,
+        "total_tokens": 52026,
+        "cost": 0.09667145,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 21436,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.09667145,
+          "upstream_inference_prompt_cost": 0.05235145,
+          "upstream_inference_completions_cost": 0.00432
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 553,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:49:24+09:00",
+      "seconds": 22.17
+    },
+    {
+      "id": "v3-30",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:07+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793748-P07prg75U5ISTb2VmyQb",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 20433,
+        "completion_tokens": 783,
+        "total_tokens": 21216,
+        "cost": 0.0413812,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 4811,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0413812,
+          "upstream_inference_prompt_cost": 0.0174662,
+          "upstream_inference_completions_cost": 0.003915
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 483,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 2
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:49:18+09:00",
+      "seconds": 10.21
+    },
+    {
+      "id": "v3-31",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:07+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793748-JepzPtw32QocsFUekMaG",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 33038,
+        "completion_tokens": 722,
+        "total_tokens": 33760,
+        "cost": 0.05655195,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 16294,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.05655195,
+          "upstream_inference_prompt_cost": 0.03294195,
+          "upstream_inference_completions_cost": 0.00361
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 369,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 2
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:49:21+09:00",
+      "seconds": 14.17
+    },
+    {
+      "id": "v3-32",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:18+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793758-J3u4zhhwVDRKDUbOhzIV",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 47076,
+        "completion_tokens": 536,
+        "total_tokens": 47612,
+        "cost": 0.08159845,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 24048,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.08159845,
+          "upstream_inference_prompt_cost": 0.04891845,
+          "upstream_inference_completions_cost": 0.00268
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 349,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:49:28+09:00",
+      "seconds": 10.72
+    },
+    {
+      "id": "v3-33",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:21+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793762-3lNJreNVeto4MTQXy36T",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 115762,
+        "completion_tokens": 641,
+        "total_tokens": 116403,
+        "cost": 0.16635895,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 86246,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.16635895,
+          "upstream_inference_prompt_cost": 0.13315395,
+          "upstream_inference_completions_cost": 0.003205
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 401,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 2,
+      "ended_at": "2026-11-16T10:49:39+09:00",
+      "seconds": 17.54
+    },
+    {
+      "id": "v3-34",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:24+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793765-6UgDLqbzvireqWAZQJ69",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 40748,
+        "completion_tokens": 686,
+        "total_tokens": 41434,
+        "cost": 0.0824002,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 9567,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0824002,
+          "upstream_inference_prompt_cost": 0.0389702,
+          "upstream_inference_completions_cost": 0.00343
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 453,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:49:39+09:00",
+      "seconds": 14.24
+    },
+    {
+      "id": "v3-35",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:28+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793769-JPXvU6rUeWnjUFxsSZmm",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 33252,
+        "completion_tokens": 520,
+        "total_tokens": 33772,
+        "cost": 0.0546667,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 11937,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0546667,
+          "upstream_inference_prompt_cost": 0.0320667,
+          "upstream_inference_completions_cost": 0.0026
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 320,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 2
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:49:38+09:00",
+      "seconds": 10.0
+    },
+    {
+      "id": "v3-36",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:38+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793779-cpgvvTnTk4WOlty8ecOM",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 27987,
+        "completion_tokens": 479,
+        "total_tokens": 28466,
+        "cost": 0.0574187,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 4825,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0574187,
+          "upstream_inference_prompt_cost": 0.0250237,
+          "upstream_inference_completions_cost": 0.002395
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 330,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:49:48+09:00",
+      "seconds": 10.12
+    },
+    {
+      "id": "v3-37",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:39+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793779-0SOnraeeVp6NPf43iJas",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 31762,
+        "completion_tokens": 780,
+        "total_tokens": 32542,
+        "cost": 0.06348845,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 7984,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.06348845,
+          "upstream_inference_prompt_cost": 0.02958845,
+          "upstream_inference_completions_cost": 0.0039
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 585,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:49:53+09:00",
+      "seconds": 13.81
+    },
+    {
+      "id": "v3-38",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:39+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793780-bQhj1S3GbbpdGgEEohcX",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 176368,
+        "completion_tokens": 1095,
+        "total_tokens": 177463,
+        "cost": 0.30094295,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 133078,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.30094295,
+          "upstream_inference_prompt_cost": 0.20546795,
+          "upstream_inference_completions_cost": 0.005475
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 937,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 9
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:16+09:00",
+      "seconds": 36.98
+    },
+    {
+      "id": "v3-39",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:48+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793789-rvsfO2za4UwEhIlVR1yI",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 28552,
+        "completion_tokens": 253,
+        "total_tokens": 28805,
+        "cost": 0.0316712,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 24095,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0316712,
+          "upstream_inference_prompt_cost": 0.0304062,
+          "upstream_inference_completions_cost": 0.001265
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 114,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 0,
+      "ended_at": "2026-11-16T10:49:53+09:00",
+      "seconds": 4.45
+    },
+    {
+      "id": "v3-40",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:53+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793793-awI7HWiIj2dhXbhUQnjn",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 98025,
+        "completion_tokens": 494,
+        "total_tokens": 98519,
+        "cost": 0.14789195,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 86266,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.14789195,
+          "upstream_inference_prompt_cost": 0.11542195,
+          "upstream_inference_completions_cost": 0.00247
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 380,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 0,
+      "ended_at": "2026-11-16T10:50:06+09:00",
+      "seconds": 13.19
+    },
+    {
+      "id": "v3-41",
+      "state": "answered",
+      "started_at": "2026-11-16T10:49:53+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793794-38BsjbWppasIqPfl0DkJ",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 50615,
+        "completion_tokens": 383,
+        "total_tokens": 50998,
+        "cost": 0.0767827,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 33689,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0767827,
+          "upstream_inference_prompt_cost": 0.0548677,
+          "upstream_inference_completions_cost": 0.001915
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 182,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 2
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:01+09:00",
+      "seconds": 8.17
+    },
+    {
+      "id": "v3-42",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:01+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793802-PotKrLADPFD3YQGGklaB",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 43951,
+        "completion_tokens": 221,
+        "total_tokens": 44172,
+        "cost": 0.0597537,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 35469,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0597537,
+          "upstream_inference_prompt_cost": 0.0486487,
+          "upstream_inference_completions_cost": 0.001105
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 107,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 1
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 0,
+      "ended_at": "2026-11-16T10:50:06+09:00",
+      "seconds": 4.73
+    },
+    {
+      "id": "v3-43",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:06+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793806-lWrEGrIGmkhysVX1zu3w",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 21783,
+        "completion_tokens": 567,
+        "total_tokens": 22350,
+        "cost": 0.0624477,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 7997,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0624477,
+          "upstream_inference_prompt_cost": 0.0196127,
+          "upstream_inference_completions_cost": 0.002835
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 450,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:18+09:00",
+      "seconds": 12.17
+    },
+    {
+      "id": "v3-44",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:06+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793807-2MoDw3Stc0Vo1AGvwxGK",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 137557,
+        "completion_tokens": 206,
+        "total_tokens": 137763,
+        "cost": 0.16769245,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 133100,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.16769245,
+          "upstream_inference_prompt_cost": 0.16666245,
+          "upstream_inference_completions_cost": 0.00103
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 103,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 0,
+      "ended_at": "2026-11-16T10:50:10+09:00",
+      "seconds": 4.27
+    },
+    {
+      "id": "v3-45",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:10+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793811-FYDLBHRcwoyh6dzdxe2B",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 34972,
+        "completion_tokens": 701,
+        "total_tokens": 35673,
+        "cost": 0.0766352,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 9311,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0766352,
+          "upstream_inference_prompt_cost": 0.0331302,
+          "upstream_inference_completions_cost": 0.003505
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 535,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:29+09:00",
+      "seconds": 19.42
+    },
+    {
+      "id": "v3-46",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:16+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793817-UD9O2Byo9NQDBGXXJXnG",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 57457,
+        "completion_tokens": 913,
+        "total_tokens": 58370,
+        "cost": 0.1316097,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 15029,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.1316097,
+          "upstream_inference_prompt_cost": 0.0570447,
+          "upstream_inference_completions_cost": 0.004565
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 793,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 7
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:42+09:00",
+      "seconds": 26.28
+    },
+    {
+      "id": "v3-47",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:18+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793819-bVJ4ky6pFablLmb0sPPs",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 33913,
+        "completion_tokens": 735,
+        "total_tokens": 34648,
+        "cost": 0.08526795,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 7398,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.08526795,
+          "upstream_inference_prompt_cost": 0.03159295,
+          "upstream_inference_completions_cost": 0.003675
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 620,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 5
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:32+09:00",
+      "seconds": 14.26
+    },
+    {
+      "id": "v3-48",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:29+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793830-HzAzWnnMd7tOgiIh3JfH",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 46025,
+        "completion_tokens": 631,
+        "total_tokens": 46656,
+        "cost": 0.0790892,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 16315,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0790892,
+          "upstream_inference_prompt_cost": 0.0459342,
+          "upstream_inference_completions_cost": 0.003155
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 431,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:43+09:00",
+      "seconds": 13.87
+    },
+    {
+      "id": "v3-49",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:32+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793833-oDRZkoqolcqjEeHZ0syl",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 46439,
+        "completion_tokens": 589,
+        "total_tokens": 47028,
+        "cost": 0.08057845,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 21456,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.08057845,
+          "upstream_inference_prompt_cost": 0.04763345,
+          "upstream_inference_completions_cost": 0.002945
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 492,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 3
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:50:45+09:00",
+      "seconds": 12.87
+    },
+    {
+      "id": "v3-50",
+      "state": "answered",
+      "started_at": "2026-11-16T10:50:42+09:00",
+      "model": "openai/gpt-6.1-terra",
+      "provider": "Azure",
+      "generation_id": "gen-1794793843-hiipQwWddySHmboBgcN4",
+      "finish_reason": "stop",
+      "format_ok": false,
+      "rendered_format_ok": true,
+      "formatting_only_adjusted": true,
+      "usage": {
+        "prompt_tokens": 160914,
+        "completion_tokens": 572,
+        "total_tokens": 161486,
+        "cost": 0.23287645,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 4389,
+          "cache_write_tokens": 133088,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.23287645,
+          "upstream_inference_prompt_cost": 0.19001645,
+          "upstream_inference_completions_cost": 0.00286
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 445,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "server_tool_use_details": {
+          "web_search_requests": 4
+        }
+      },
+      "model_matches": true,
+      "web_annotations": 1,
+      "ended_at": "2026-11-16T10:51:01+09:00",
+      "seconds": 18.22
+    }
+  ],
+  "web_search_engine": "native",
+  "rendered_format_ok": 50,
+  "formatting_only_adjusted": [
+    "v3-01",
+    "v3-02",
+    "v3-03",
+    "v3-04",
+    "v3-05",
+    "v3-06",
+    "v3-07",
+    "v3-08",
+    "v3-09",
+    "v3-10",
+    "v3-11",
+    "v3-12",
+    "v3-13",
+    "v3-14",
+    "v3-15",
+    "v3-16",
+    "v3-17",
+    "v3-18",
+    "v3-19",
+    "v3-20",
+    "v3-21",
+    "v3-22",
+    "v3-23",
+    "v3-24",
+    "v3-25",
+    "v3-26",
+    "v3-27",
+    "v3-28",
+    "v3-29",
+    "v3-30",
+    "v3-31",
+    "v3-32",
+    "v3-33",
+    "v3-34",
+    "v3-35",
+    "v3-36",
+    "v3-37",
+    "v3-38",
+    "v3-39",
+    "v3-40",
+    "v3-41",
+    "v3-42",
+    "v3-43",
+    "v3-44",
+    "v3-45",
+    "v3-46",
+    "v3-47",
+    "v3-48",
+    "v3-49",
+    "v3-50"
+  ],
+  "questions_with_citation_annotations": 44,
+  "web_search_requests": 201,
+  "questions_with_reported_search": 46,
+  "previous_aborted_run": {
+    "web_search": false,
+    "state": "interrupted_by_user_condition_change",
+    "answered": 16,
+    "requests_without_received_response": 3,
+    "reported_cost_usd": 0.9106029999999999,
+    "unreceived_requests_cost": "unknown; may be billed",
+    "included_in_final_answers": false
+  }
+}

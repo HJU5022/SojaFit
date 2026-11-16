@@ -1,0 +1,381 @@
+# pytest full run log (Linux container)
+date: 2026-11-16 10:09 KST
+commit: 4c5afc1e676ba5986cb2f9cac54653d82e5f87c4 (jeongun, git archive 사본)
+image: sojafit-freeze-1116-api, 저장소 Dockerfile로 로컬 빌드(--no-cache), 이미지 id sha256:d769631a6ae863b583fa144e6df472ecae566a6f2c3d5c00264020e9185f704d
+command: docker run --rm --user root -e UV_PROJECT_ENVIRONMENT=/tmp/venv -e UV_LINK_MODE=copy -e PYTHONDONTWRITEBYTECODE=1 -v <사본>:/work -w /work sojafit-freeze-1116-api sh -c 'apt-get install git; git init + commit; uv run --locked pytest -p no:cacheprovider -rs'
+------------------------------------------------------------
+aarch64
+Python 3.12.16
+git version 2.47.3
+Using CPython 3.12.16 interpreter at: /usr/local/bin/python3.12
+Creating virtual environment at: /tmp/venv
+Downloading cryptography (4.5MiB)
+Downloading numpy (15.0MiB)
+Downloading pillow (6.2MiB)
+Downloading pygments (1.2MiB)
+Downloading hf-xet (3.9MiB)
+Downloading psycopg-binary (6.5MiB)
+Downloading aiohttp (1.8MiB)
+Downloading tiktoken (1.1MiB)
+Downloading pandas (10.9MiB)
+Downloading openai (1.6MiB)
+Downloading pypdfium2 (3.5MiB)
+Downloading zstandard (4.8MiB)
+Downloading sqlalchemy (4.5MiB)
+Downloading pdfminer-six (6.3MiB)
+Downloading networkx (2.0MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading langchain-community (2.3MiB)
+Downloading scipy (32.4MiB)
+Downloading uvloop (4.2MiB)
+Downloading scikit-network (7.6MiB)
+Downloading pyarrow (49.4MiB)
+ Downloaded tiktoken
+ Downloaded pygments
+ Downloaded aiohttp
+ Downloaded pydantic-core
+ Downloaded openai
+ Downloaded networkx
+ Downloaded langchain-community
+ Downloaded pypdfium2
+ Downloaded hf-xet
+ Downloaded uvloop
+ Downloaded cryptography
+ Downloaded sqlalchemy
+ Downloaded zstandard
+ Downloaded pillow
+ Downloaded pdfminer-six
+ Downloaded psycopg-binary
+ Downloaded scikit-network
+ Downloaded pandas
+ Downloaded numpy
+ Downloaded scipy
+ Downloaded pyarrow
+Installed 142 packages in 7.23s
+Bytecode compiled 13274 files in 13.26s
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: /work
+configfile: pytest.ini
+testpaths: tests
+plugins: langsmith-0.14.14, anyio-4.15.1
+collected 2685 items
+
+tests/api/test_auth.py ..sss.s....ss.................ssss..ssss.ssss.s.. [  1%]
+.ss.................ssss...............                                  [  3%]
+tests/api/test_conversations.py ........................................ [  4%]
+................                                                         [  5%]
+tests/api/test_deletion.py sssssssssssssss                               [  5%]
+tests/api/test_email_auth.py ..ssssssssssss......                        [  6%]
+tests/api/test_errors.py ...........................                     [  7%]
+tests/api/test_external_circuits.py .................................... [  9%]
+..........                                                               [  9%]
+tests/api/test_frontend.py ....................................          [ 10%]
+tests/api/test_full_service_flow.py ssssssss                             [ 11%]
+tests/api/test_google_users.py .......sssssssssss                        [ 11%]
+tests/api/test_health.py ........                                        [ 11%]
+tests/api/test_http_restart.py s                                         [ 12%]
+tests/api/test_http_smoke.py .........                                   [ 12%]
+tests/api/test_injection_http.py ..........                              [ 12%]
+tests/api/test_local_live_config.py ss                                   [ 12%]
+tests/api/test_logs.py .......                                           [ 13%]
+tests/api/test_openapi.py ........................                       [ 13%]
+tests/api/test_prices.py ..........                                      [ 14%]
+tests/api/test_projects.py ............................................. [ 16%]
+.....................s                                                   [ 16%]
+tests/api/test_public_grants.py sss                                      [ 16%]
+tests/api/test_quotes.py ........                                        [ 17%]
+tests/api/test_threads.py .........sss...sssssssssssssssssss...ss        [ 18%]
+tests/conversations/test_dto.py ........................................ [ 20%]
+...........                                                              [ 20%]
+tests/conversations/test_profile.py .........ss                          [ 21%]
+tests/conversations/test_repository.py ssssssssssssssssssssssssss        [ 21%]
+tests/db/test_schema_docs.py ssssssssss                                  [ 22%]
+tests/evals/test_approval_wait_report.py ..s                             [ 22%]
+tests/evals/test_bit_search.py ....                                      [ 22%]
+tests/evals/test_check_injection_result.py ....                          [ 22%]
+tests/evals/test_chunk_source_check.py .................                 [ 23%]
+tests/evals/test_claim_consistency.py .....                              [ 23%]
+tests/evals/test_compare_supervisor_prompt_v0.py ....                    [ 23%]
+tests/evals/test_embedding_grid.py ......                                [ 23%]
+tests/evals/test_eval_grader.py .........                                [ 24%]
+tests/evals/test_frozen_evals.py ...                                     [ 24%]
+tests/evals/test_gate_report.py ...                                      [ 24%]
+tests/evals/test_import_human_review.py ......                           [ 24%]
+tests/evals/test_import_supervisor_prompt_v0_langfuse.py .......         [ 24%]
+tests/evals/test_injection_baseline.py ................................. [ 26%]
+..................                                                       [ 26%]
+tests/evals/test_injection_baseline_plan.py .....................        [ 27%]
+tests/evals/test_injection_preflight.py ..............................   [ 28%]
+tests/evals/test_input_surfaces.py .........                             [ 29%]
+tests/evals/test_judgement_bundle.py .................s                  [ 29%]
+tests/evals/test_retrieval_d3.py ....                                    [ 29%]
+tests/evals/test_retrieval_layers.py ............                        [ 30%]
+tests/evals/test_retrieval_service.py .....                              [ 30%]
+tests/evals/test_run_graph.py .....................                      [ 31%]
+tests/evals/test_run_judge_dev.py ....                                   [ 31%]
+tests/evals/test_saved_defense_replay.py ....                            [ 31%]
+tests/evals/test_score_answer.py ...............                         [ 32%]
+tests/evals/test_score_compound.py ..                                    [ 32%]
+tests/evals/test_score_ragas.py .....                                    [ 32%]
+tests/evals/test_skill_pair.py ..................                        [ 33%]
+tests/evals/test_stage_timing.py .......                                 [ 33%]
+tests/evals/test_supervisor_guard_injection.py ....                      [ 33%]
+tests/evals/test_supervisor_jev.py ..................................... [ 34%]
+...                                                                      [ 35%]
+tests/evals/test_supervisor_models.py .....................              [ 35%]
+tests/evals/test_supervisor_prompt_v0.py ......                          [ 36%]
+tests/evals/test_supervisor_prompt_v0_common.py ....                     [ 36%]
+tests/evals/test_supervisor_prompt_v0_jev.py .......                     [ 36%]
+tests/evals/test_supervisor_stage3_report.py ..........                  [ 36%]
+tests/evals/test_trust_boundary.py .........                             [ 37%]
+tests/graph/test_agent_netlist.py .............                          [ 37%]
+tests/graph/test_graph_build.py .............................            [ 38%]
+tests/graph/test_graph_generate.py ............                          [ 39%]
+tests/graph/test_graph_grade.py ....                                     [ 39%]
+tests/graph/test_graph_mcp_retriever.py ..................               [ 40%]
+tests/graph/test_graph_mcp_stdio.py s                                    [ 40%]
+tests/graph/test_graph_read_input.py .............                       [ 40%]
+tests/graph/test_graph_refuse.py ........                                [ 40%]
+tests/graph/test_graph_rewrite.py ....                                   [ 40%]
+tests/graph/test_graph_route.py ......                                   [ 41%]
+tests/graph/test_graph_search.py .....                                   [ 41%]
+tests/graph/test_graph_state.py .                                        [ 41%]
+tests/graph/test_graph_supervisor.py .....                               [ 41%]
+tests/judge/test_judge_conditions.py ........................            [ 42%]
+tests/judge/test_judge_pricing.py ............                           [ 42%]
+tests/judge/test_judge_rules_file.py .......                             [ 43%]
+tests/judge/test_judge_sheet_conditions.py .................             [ 43%]
+tests/judge/test_judge_verdict.py ...................................... [ 45%]
+.....                                                                    [ 45%]
+tests/mcp_skill/test_mcp_server.py ..................................... [ 46%]
+...................                                                      [ 47%]
+tests/multi_agent/test_agents.py .....................                   [ 48%]
+tests/multi_agent/test_build.py ........................................ [ 49%]
+                                                                         [ 49%]
+tests/multi_agent/test_contracts.py .............                        [ 50%]
+tests/multi_agent/test_docs_agent.py ................................... [ 51%]
+........................................................................ [ 54%]
+.....                                                                    [ 54%]
+tests/multi_agent/test_facts_lookup.py ............                      [ 54%]
+tests/multi_agent/test_judge.py ........................................ [ 56%]
+......................                                                   [ 57%]
+tests/multi_agent/test_judge_read.py ................................... [ 58%]
+..........................................                               [ 60%]
+tests/multi_agent/test_part_names.py ..............................      [ 61%]
+tests/multi_agent/test_readme_graph.py .                                 [ 61%]
+tests/multi_agent/test_supervisor.py ................................... [ 62%]
+................                                                         [ 63%]
+tests/projects/test_catalog.py .....                                     [ 63%]
+tests/projects/test_external_circuit_search.py ...............           [ 63%]
+tests/projects/test_external_schematic.py .............................. [ 64%]
+..................................................                       [ 66%]
+tests/projects/test_netlist.py ......................................... [ 68%]
+......................                                                   [ 69%]
+tests/projects/test_official_schematic.py .............................. [ 70%]
+.........................                                                [ 71%]
+tests/projects/test_project_repository.py .s.sssssssssss                 [ 71%]
+tests/projects/test_schematic_discovery.py ............................. [ 72%]
+........................................................................ [ 75%]
+................                                                         [ 76%]
+tests/projects/test_schematic_render.py ................................ [ 77%]
+........................................................................ [ 80%]
+.....................................................................    [ 82%]
+tests/projects/test_service_schema.py sssssssss                          [ 82%]
+tests/projects/test_visuals.py .....................                     [ 83%]
+tests/rag/test_card_find.py .....................                        [ 84%]
+tests/rag/test_card_read.py ..........................................   [ 86%]
+tests/rag/test_card_specs.py ...                                         [ 86%]
+tests/rag/test_demo_snapshot.py ..s                                      [ 86%]
+tests/rag/test_package_outlines.py .............................         [ 87%]
+tests/rag/test_rag_chunk.py ......s........ssssssssssssss                [ 88%]
+tests/rag/test_rag_collect.py ......                                     [ 88%]
+tests/rag/test_rag_ingest.py ....s...                                    [ 88%]
+tests/rag/test_rag_parse.py ...                                          [ 89%]
+tests/rag/test_rag_retrieve.py ...........s......                        [ 89%]
+tests/rag/test_rag_specs.py ...                                          [ 89%]
+tests/rag/test_rag_storage.py .ssssssss                                  [ 90%]
+tests/rag/test_rag_subset.py ........................                    [ 91%]
+tests/rag/test_rag_units.py .....................                        [ 91%]
+tests/rag/test_voyage_rollout.py ....                                    [ 91%]
+tests/repo/test_repo_layout.py .....                                     [ 92%]
+tests/services/test_datasheet_rows.py .................................. [ 93%]
+....................                                                     [ 94%]
+tests/services/test_demo_replay.py ...................                   [ 94%]
+tests/services/test_exa_prefetch.py ....                                 [ 95%]
+tests/services/test_langfuse_prompts.py ...........................      [ 96%]
+tests/services/test_llm.py ...........................................   [ 97%]
+tests/services/test_mouser.py ...............                            [ 98%]
+tests/services/test_quote_service.py ................................    [ 99%]
+tests/services/test_service_trace.py ................                    [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/api/test_auth.py:89: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:113: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:132: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:168: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:281: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:318: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:477: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:511: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:532: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:571: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:616: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:637: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:669: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:692: requires an isolated authentication test database
+SKIPPED [3] tests/api/test_auth.py:747: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:776: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:832: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:918: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:952: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1133: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1150: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1176: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1217: requires an isolated authentication test database
+SKIPPED [2] tests/api/test_deletion.py:151: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:178: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:191: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:207: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:228: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:251: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:293: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:324: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:351: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:399: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:416: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:434: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:441: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:456: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_email_auth.py:56: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:85: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:93: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:111: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:131: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:141: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:161: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:169: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:179: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:195: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:205: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:216: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_full_service_flow.py:34: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:121: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:132: requires isolated PostgreSQL
+SKIPPED [3] tests/api/test_full_service_flow.py:170: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:197: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:223: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_google_users.py:104: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:117: requires new isolated local OAuth test database
+SKIPPED [2] tests/api/test_google_users.py:131: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:143: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:157: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:166: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:177: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:193: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:210: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:220: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_http_restart.py:85: explicit Docker repro only
+SKIPPED [1] tests/api/test_local_live_config.py:12: Docker Compose CLI required (daemon not used)
+SKIPPED [1] tests/api/test_local_live_config.py:50: Docker Compose CLI required (daemon not used)
+SKIPPED [1] tests/api/test_projects.py:426: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_public_grants.py:124: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:151: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:160: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_threads.py:150: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:173: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:208: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:288: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:305: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:317: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:355: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:364: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:390: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:426: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:437: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:458: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:473: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:493: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:578: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:589: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:624: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:669: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:694: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:730: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:749: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:762: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:859: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:879: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [2] tests/conversations/test_profile.py:185: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/conversations/test_repository.py:11: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:22: requires isolated PostgreSQL
+SKIPPED [4] tests/conversations/test_repository.py:46: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:60: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:87: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:108: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:161: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:183: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:216: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:230: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:245: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:263: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:271: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:284: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:294: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:306: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:320: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:338: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:349: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:368: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:392: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:407: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:432: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:52: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:64: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:79: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:86: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:102: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:108: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:120: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:128: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:141: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:151: requires isolated PostgreSQL
+SKIPPED [1] tests/evals/test_approval_wait_report.py:47: 일회용 DB 없음
+SKIPPED [1] tests/evals/test_judgement_bundle.py:147: requires disposable TEST_INJECTION_DATABASE_URL
+SKIPPED [1] tests/graph/test_graph_mcp_stdio.py:22: TEST_DATABASE_URL에 격리 코퍼스가 있을 때만 돈다
+SKIPPED [1] tests/projects/test_project_repository.py:47: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:86: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:93: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:121: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:140: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:153: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:162: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:207: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:232: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:250: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:263: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:282: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:75: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:84: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:91: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:98: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:104: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:116: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:133: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:145: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:174: requires an isolated authentication test database
+SKIPPED [1] tests/rag/test_demo_snapshot.py:65: DEMO_SNAPSHOT_SOURCE(저장소 밖 chunks-v4h 폴더)가 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_chunk.py:61: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [3] tests/rag/test_rag_chunk.py:181: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [11] tests/rag/test_rag_chunk.py:219: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [1] tests/rag/test_rag_ingest.py:70: TEST_DATABASE_URL을 줄 때만 돈다
+SKIPPED [1] tests/rag/test_rag_retrieve.py:117: TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_storage.py:66: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:78: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:110: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:125: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:133: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:141: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:155: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:163: dedicated TEST_DATABASE_URL required
+================= 2495 passed, 190 skipped in 67.15s (0:01:07) =================

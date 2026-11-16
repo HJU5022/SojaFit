@@ -382,6 +382,7 @@ SojaFit (proj3-b)
 │   │   ├── injection_baseline_runtime.py <- 승인 후 전용 코퍼스 준비·공유 예산·실제 카드/서비스 이력 어댑터
 │   │   ├── plan_injection_baseline.py <- 유료 실행 없는 110개 job 고정과 준비 턴·검색·재시도·예약 예산 계산
 │   │   ├── run_input_surfaces.py <- 입력 위치별 무료 호환성·합산 예산 내 컴포넌트 실측
+│   │   ├── run_supervisor_guard_injection.py <- Supervisor 답 가드(끝내기) 켬/끔을 같은 계획에 적용한 인젝션 · 정상 대화 짝 실측
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
 │   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
 │   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
@@ -640,11 +641,12 @@ SojaFit (proj3-b)
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
 │   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
 │   │   ├── test_import_human_review.py <- 사람 채점 시트 변환의 파싱 · 채움 · 일치율 · 원본 보존(합성 시트)
-│   │   ├── test_chunk_source_check.py <- 청크-원본 대조의 같은 쪽 다른 행 값 변이 시험(합성 표 382건: 쪽 검사 0 · 행 검사 전부 탐지, 깨끗한 12건 통과)
+│   │   ├── test_chunk_source_check.py <- 청크-원본 대조 변이 시험(합성 표: 다른 행·열 값과 부품 행 변이는 쪽 검사 0 · 새 검사 전부 탐지, 각주 지움 16건 missing, 깨끗한 청크 오탐 0)
 │   │   ├── test_check_injection_result.py <- 저장한 실측03의 기준 통과와 변이(작업 수 · 상태 · 판정 · 노출) 실패
 │   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
 │   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사
 │   │   ├── test_input_surfaces.py <- 입력 위치별 파서·모델 노출·위험 출력 기록 무료 검사
+│   │   ├── test_supervisor_guard_injection.py <- 가드 실측 실행기의 코퍼스 도달 경로 · 켬/끔 짝 · 무호출 계획 무료 검사
 │   │   └── test_saved_defense_replay.py <- 저장된 C2·정상군 응답의 무료 재생·수정 후 차단 회귀 기준
 │   ├── mcp_skill/          <- MCP 서버 도구 6종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
@@ -681,8 +683,9 @@ SojaFit (proj3-b)
 │   │   ├── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
 │   │   ├── stage_report.py  <- run_gate 결과의 단계별 p50 · p95 · 호출당 · 문항당 비용 집계(진짜 중앙값 · 가장 가까운 순위 p95)
 │   │   ├── approval_wait_report.py  <- 사람 대기(재개 · 승인)를 서버 처리 시간과 떼어 DB 시각에서 읽는 읽기 전용 보고
-│   │   ├── chunk_source_check.py  <- 표·수치 청크 표본을 원본 PDF 같은 쪽과 대조(D10 증거). `--rows`는 같은 행·열 칸 값까지 대조
-│   │   └── tally_codex_v3.py  <- Codex v3 50건 답을 정답과 규칙으로 대조한 집계
+│   │   ├── chunk_source_check.py  <- 표·수치 청크 표본을 원본 PDF 같은 쪽과 대조(D10 증거). `--rows`는 같은 행·열 칸 값까지, `--notes`는 부품 행 표와 표 각주까지 대조
+│   │   ├── run_codex_v3_isolated.py  <- v3 50문항을 격리한 Codex CLI(저장소 · 메모리 없음, 웹 검색, 문항 넷리스트만)에 문항마다 묻고 원본 로그를 남김
+│   │   └── tally_codex_v3.py  <- Codex v3 50건 답을 정답과 규칙으로 대조한 집계(결과 폴더 인자)
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
 │   │   ├── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
@@ -773,6 +776,7 @@ SojaFit (proj3-b)
     │   ├── speed-p95-levers-2026-11-11.md <- 속도 p95 레버 A/B
     │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
     │   ├── c2-defense-recheck.md <- C2 방어 수정 후 정상군·C1·C2 재검증
+    │   ├── supervisor-guard-injection-recheck.md <- Supervisor 답 가드(끝내기) 켬/끔을 코퍼스 · 질문 인젝션과 정상 대화로 짝 재측정
     │   ├── injection-baseline-preflight.md <- 인젝션 기준선 준비 관문과 무료 검증
     │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 11-11 실측 결과 연결
     │   ├── injection-baseline-plan.md <- 인젝션 기준선: T1~T7 짝 측정 계약과 실행 현황

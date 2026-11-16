@@ -1,0 +1,42 @@
+{
+  "id": "v3-14",
+  "state": "answered",
+  "started_at": "2026-11-16T10:47:43+09:00",
+  "model": "openai/gpt-6.1-terra",
+  "provider": "Azure",
+  "generation_id": "gen-1794793665-XKb30BrhWp989oY7KB3K",
+  "finish_reason": "stop",
+  "format_ok": false,
+  "rendered_format_ok": true,
+  "formatting_only_adjusted": true,
+  "usage": {
+    "prompt_tokens": 44624,
+    "completion_tokens": 1069,
+    "total_tokens": 45693,
+    "cost": 0.11782295,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 4389,
+      "cache_write_tokens": 8094,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.11782295,
+      "upstream_inference_prompt_cost": 0.04247795,
+      "upstream_inference_completions_cost": 0.005345
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 841,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    },
+    "server_tool_use_details": {
+      "web_search_requests": 7
+    }
+  },
+  "model_matches": true,
+  "web_annotations": 1,
+  "ended_at": "2026-11-16T10:48:08+09:00",
+  "seconds": 24.67
+}

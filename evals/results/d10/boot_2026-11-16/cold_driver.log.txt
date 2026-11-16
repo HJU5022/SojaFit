@@ -1,0 +1,11 @@
+host_load_before_cold None {'load1_5_15': [22.34, 14.04, 11.85]}
+host_load_after_wait None {'waited_s': 300, 'load1_5_15': [9.97, 13.15, 12.32]}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'main'}
+git_clone_end 12.692 {'commit': '3ce5abdcc83f578a7ac7b29e58e894c13313a1ed', 'tree': '72aed5920ddaa88c1eec1cfc73e786c4a7e3a40d', 'branch': 'main', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 43284, 'total_kb': 111720, 'has_env_file': False, 'rx_bytes': 44832723}
+host_load_at_up 12.692 {'load1_5_15': [11.74, 13.43, 12.43]}
+compose_up_issued 12.692 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 242.823 {'rx_bytes': 584965056}
+demo_login_A_done 242.917 {'status': "python3: can't open file '/tools/login.py': [Errno 2] No such file or directory\n", 'seconds': 0.091}
+smoke_start 242.917 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 251.354 {'exit_code': 0, 'rx_bytes': 584965056}
+host_load_end 253.508 {'load1_5_15': [10.88, 14.2, 13.17]}
