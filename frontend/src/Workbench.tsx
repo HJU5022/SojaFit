@@ -437,7 +437,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     return () => window.removeEventListener('project-renamed', fn);
   }, []);
   // 오른쪽 회로 패널(#39 #47): "회로 보기"로 열고 닫는다. 회로가 처음 생기면(첨부 v0 → v1) 열고,
-  // 회로가 있는 프로젝트를 열 때도 한 번 연다. 단 사용자가 닫아 둔 브라우저면 프로젝트를 열 때는 열지 않는다
+  // 회로가 있는 프로젝트를 열 때도 한 번 연다. 단 사용자가 닫아 둔 브라우저면 프로젝트를 열 때는 열지 않고, 좁은 화면은 둘 다 열지 않는다
   const [panel, setPanel] = useState(false),
     hadCircuit = useRef<boolean | null>(null),
     version = project.data?.circuit_version;
@@ -449,7 +449,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     } catch {
       // 저장소를 못 쓰면 처음 보는 사람처럼 연다
     }
-    if (version > 0 && (hadCircuit.current === false || (hadCircuit.current === null && !closed)))
+    // [왜] 760px 이하에서는 패널이 화면 전체를 덮는 시트라 저절로 열면 대화가 가려진다(#51). "회로 보기"로만 연다
+    const narrow = matchMedia('(max-width: 760px)').matches;
+    if (
+      !narrow &&
+      version > 0 &&
+      (hadCircuit.current === false || (hadCircuit.current === null && !closed))
+    )
       setPanel(true);
     hadCircuit.current = version > 0;
   }, [version]);
