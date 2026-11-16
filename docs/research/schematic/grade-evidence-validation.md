@@ -3,8 +3,8 @@
 - 상태: 현행
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002 (코드 위치 대조 시점)
-- 정본 여부: 비정본(검증 범위 기록). 계약의 정본은 [제조사 원문 인용 스펙](../specs/official-datasheet-evidence.md)
-- 관련 문서: [OSC 작업 기록](../worklog/osc.md)
+- 정본 여부: 비정본(검증 범위 기록). 계약의 정본은 [제조사 원문 인용 스펙](../../specs/official-datasheet-evidence.md)
+- 관련 문서: [OSC 작업 기록](../../worklog/osc.md)
 
 ## 1. 질문과 결론
 

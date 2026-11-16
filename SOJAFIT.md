@@ -1,7 +1,7 @@
 # SojaFit
 
 - 상태: 현행
-- 기준일: 2026-11-16 (트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사한다. 이름 규칙 · 안내 글은 11-12 이후 줄마다 대조하지 않았다)
+- 기준일: 2026-11-16 (트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사한다. 이름 규칙 · 안내 글은 11-12 이후 줄마다 대조하지 않았다. 11-17에 `docs/` 트리와 이름 규칙의 조사 기록 줄을 고쳤다)
 - 기준 커밋: `76fadcb4`
 - 정본 여부: 정본(폴더와 파일 위치)
 - 관련 문서: [README.md](README.md), [AGENTS.md](AGENTS.md), [SPEC.md](SPEC.md)
@@ -264,7 +264,7 @@ SojaFit (proj3-b)
 │
 ├── data/                   <- 서비스·평가가 읽는 고정 데이터. Dockerfile이 이미지에 복사 (고정)
 │   ├── DATA.md             <- 폴더 설명과 manifest 형식
-│   ├── manifest.jsonl      <- 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256)
+│   ├── manifest.jsonl      <- 이전 버전(v1) 청킹 당시의 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256). 현재 코퍼스는 v4h(data/DATA.md "코퍼스 수치")
 │   ├── package-outline-pages.json <- 공식 PDF basename별 패키지 외형 페이지 색인 1,360건
 │   ├── corpus/             <- 코퍼스 원본 문서. 출처별 하위 폴더, 원본은 고치지 않음
 │   │   ├── CORPUS.md       <- 폴더 설명, 출처별 폴더와 재배포 조건
@@ -383,7 +383,7 @@ SojaFit (proj3-b)
 │   │   └── supervisor-prompt-v0.md  <- Supervisor Prompt V0의 API 없는 plan·smoke·본 실행·집계 절차
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
-│   │   ├── score_ragas.py <- 저장 응답의 Ragas 채점 실행기
+│   │   ├── score_ragas.py <- 저장 응답의 Ragas 채점 모듈. run_gate가 불러 같은 trace에 점수로 붙인다(단독 실행 없음)
 │   │   ├── run_thread_validation.py <- 호출 없는 준비 확인과 상한 있는 품질·보고 비용 평가
 │   │   ├── run_trust_boundary.py <- 합성 코퍼스 공격 3건의 호출 없는 계획과 명시적 유료 문서 에이전트 검사
 │   │   ├── run_judgement_bundle.py <- 로컬 합성 적재·BM25/MCP·가짜모델 판정과 묶음 예산 검사(DB 단계는 ADR 0016 뒤 현재 코드와 안 맞음)
@@ -480,14 +480,14 @@ SojaFit (proj3-b)
 │           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
 │           ├── 2026-11-04-routing-fix-smoke-v1/  <- Haiku·Luna 수정 후 smoke 증거
 │           ├── 2026-11-04-stage1-v1/  <- 후보 5종 70문항 1회 비교
-│               ├── manifest.json  <- 동결 입력·prompt·code hash와 작업 계획
-│               ├── rows_anthropic__claude-haiku-5.5.json  <- Haiku 문항별 판정·오류·usage·latency
-│               ├── rows_openai__gpt-6-luna.json  <- Luna 문항별 판정·오류·usage·latency
-│               ├── rows_deepseek__deepseek-v4.1-flash.json  <- DeepSeek 중단 전 문항별 기록
-│               ├── rows_meta__muse-glimmer-30b.json  <- Muse 문항별 판정·오류·usage·latency
-│               ├── rows_cohere__command-a-plus.json  <- Cohere 문항별 판정·오류·usage·latency
-│               ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
-│               └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
+│           │   ├── manifest.json  <- 동결 입력·prompt·code hash와 작업 계획
+│           │   ├── rows_anthropic__claude-haiku-5.5.json  <- Haiku 문항별 판정·오류·usage·latency
+│           │   ├── rows_openai__gpt-6-luna.json  <- Luna 문항별 판정·오류·usage·latency
+│           │   ├── rows_deepseek__deepseek-v4.1-flash.json  <- DeepSeek 중단 전 문항별 기록
+│           │   ├── rows_meta__muse-glimmer-30b.json  <- Muse 문항별 판정·오류·usage·latency
+│           │   ├── rows_cohere__command-a-plus.json  <- Cohere 문항별 판정·오류·usage·latency
+│           │   ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
+│           │   └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
 │           ├── 2026-11-04-jev-stage1-ready-v1/  <- Jev 1차 70문항 원시 행·집계
 │           ├── 2026-11-05-stage2-five-v1/  <- 기존 5종 2차 manifest·smoke·원시 행
 │           ├── 2026-11-05-jev-stage2-v1/  <- Jev 2차 manifest·smoke·원시 행·집계
@@ -696,7 +696,7 @@ SojaFit (proj3-b)
 │   ├── demo/               <- 키 없는 데모가 재생할 LLM 응답 기록과 키 없는 재생 대조
 │   │   ├── DEMO.md         <- 폴더 설명
 │   │   └── record_demo.py  <- 서비스와 같은 멀티 그래프로 데모 질문 10개를 돌려 LLM 응답을 기록(record), 키 없이 재생해 대조(replay)
-│   ├── eval/               <- 사람 채점 시트를 평가 JSONL로 되돌리는 변환과, 평가 결과 파일 · 서비스 DB 시각에서 단계별 시간 · 비용 · 승인 대기를 모으는 집계 스크립트(D8)
+│   ├── eval/               <- 사람 채점 시트를 평가 JSONL로 되돌리는 변환, 평가 결과 파일 · 서비스 DB 시각에서 단계별 시간 · 비용 · 승인 대기를 모으는 집계(D8), 청크와 원본 PDF 대조(D10), 격리한 Codex v3 기준선 실행 · 집계 스크립트
 │   │   ├── EVAL.md         <- 폴더 설명
 │   │   ├── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
 │   │   ├── stage_report.py  <- run_gate 결과의 단계별 p50 · p95 · 호출당 · 문항당 비용 집계(진짜 중앙값 · 가장 가까운 순위 p95)
@@ -784,13 +784,12 @@ SojaFit (proj3-b)
     │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
     │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
     │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
-    │   ├── dummy-full-flow.md  <- (폐기·이력) 옛 화면의 개발 전용 더미 모드 흐름
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
     │   ├── frontend-screen-redesign.md <- (이력) 11-16 교체 전 프런트엔드 화면 구성
     │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
     │   └── external-complete-schematics.md <- 공개 프로젝트 완성 회로도
-    ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
+    ├── experiments/        <- 사전 등록한 실험의 계약(무엇을 어떤 조건으로 잴지)과 그 문서에 함께 적은 결과
     │   ├── EXPERIMENTS.md  <- 폴더 설명
     │   ├── speed-p95-levers-2026-11-11.md <- 속도 p95 레버 A/B
     │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
@@ -808,43 +807,45 @@ SojaFit (proj3-b)
     │   ├── supervisor-model-comparison-postregistration.md  <- 수퍼바이저 5종 비교의 실제 조건·변경·한계 사후등록
     │   ├── supervisor-stage2-six-models.md  <- 6종 2차 공동 평가 계약
     │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
-    ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
+    ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님. 주제가 셋 이상 모이면 하위 폴더
     │   ├── RESEARCH.md     <- 폴더 설명
-    │   ├── frontend-schematic-work-summary-2026-11-15.md <- 프런트 오류·회로도 검색 개선 17개 작업과 검증 범위 공유 보고서
-    │   ├── schematic-search-verification-2026-11-15.md <- CDFER·다이오드 검색 실검증과 한도 소진 시점의 미검증 항목
-    │   ├── official-schematic-search-verification-2026-11-16.md <- 공식 회로도 검색 확대·자료 검증·PDF 중복 제거·병렬 처리 실측 보고서
-    │   ├── resolved-issues-summary-2026-11-15.md <- 회로도 검색·입력·판정·대화 기억의 해결·검증 완료 항목 공유 보고서
     │   ├── docker-cold-start-measurements.md  <- G2 빌드·첫 기능·첫 회로도·운영 응답 실측 비교
     │   ├── d9-outside-evidence-2026-11-11.md <- D9 근거 자료: 저장소 안으로 옮긴 원시 목록
-    │   ├── grade-evidence-validation.md <- 1등급 2등급 3등급 근거 흐름과 검증 범위
     │   ├── injection-results.md <- 인젝션 실측 결과(정본): 검토 필드·해시 표, 스모크·본실측, 신뢰 경계·C1/C2·P4 별도 측정
     │   ├── injection-case-review-packet.md <- 검토 큐 우선 32건(본실측03 31건, 스모크08 1건)의 질문·응답·측정 코퍼스·원본 PDF 대조 자료
     │   ├── thread-memory-operations-review.md <- Thread·승인 기억 운영 검증 결과
     │   ├── injection-preregistration-proposal.md <- 인젝션 실험의 SPEC 반영·사전등록 제안(SPEC 반영 5건 미반영, 사전등록 3건 반영)
     │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
     │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위
-    │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
     │   ├── auth-login-verification.md  <- 로그인·세션·scrypt·AUTH_SECRET 로컬 실측
     │   ├── email-encryption-options.md  <- 로그인 이메일 암호화 정책 선택지(팀 결정 전)
     │   ├── supabase-auth-test-runbook.md  <- Supabase 인증 테스트 프로젝트 점검 결과
     │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
     │   ├── supervisor-stage2-results.md  <- 수퍼바이저 6종 2차 실측·비교·집계 한계
     │   ├── supervisor-stage3-results.md  <- 6종 3차 전체 수치·1~3차 안정성·PR 근거
-    │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
-    │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
-    │   ├── mcp-tool-candidates-draft.md  <- MCP 도구 후보와 웹 검색 공급자 후보 조사
-    │   ├── mcp-tool-contract-review.md  <- MCP 검색 도구와 LangGraph 검색기의 연결 계약
-    │   ├── mcp-tool-implementation-plan.md  <- MCP 서버 도구 6종: 계약, 사용처, 구현 상태
-    │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
-    │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
-    │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
     │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 기준선 3방식 문항별 대조·실패 유형 분석
     │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 x 검색 방식 격자 본평가
     │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
-    │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
-    │   ├── market-user-journey.md  <- 문제와 시장 근거
-    │   ├── demand-evidence-pricing-2026-11-16.md  <- 수요 근거와 유사 서비스 공개 가격(심태현 조사)
+    │   ├── market/         <- 문제와 시장 근거: 고객 여정 · 채용 공고 · 수요 근거와 유사 서비스 가격
+    │   │   ├── market-user-journey.md  <- 문제와 시장 근거
+    │   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
+    │   │   └── demand-evidence-pricing-2026-11-16.md  <- 수요 근거와 유사 서비스 공개 가격(심태현 조사)
+    │   ├── mcp/            <- MCP 검색 도구 · 웹 검색 공급자 · 도메인 Skill 조사
+    │   │   ├── mcp-tool-implementation-plan.md  <- MCP 서버 도구 6종: 계약, 사용처, 구현 상태
+    │   │   ├── mcp-tool-contract-review.md  <- MCP 검색 도구와 LangGraph 검색기의 연결 계약
+    │   │   ├── mcp-tool-candidates-draft.md  <- MCP 도구 후보와 웹 검색 공급자 후보 조사
+    │   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
+    │   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
+    │   │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
+    │   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
+    │   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
+    │   │   └── skill-feasibility.md  <- 도메인 Skill 후보 조사
+    │   ├── schematic/      <- 원본 회로도 검색 · 공식 근거 등급 실검증(11-12~11-16)
+    │   │   ├── official-schematic-search-verification-2026-11-16.md  <- 공식 회로도 검색 확대·자료 검증·PDF 중복 제거·병렬 처리 실측 보고서
+    │   │   ├── schematic-search-verification-2026-11-15.md  <- CDFER·다이오드 검색 실검증과 한도 소진 시점의 미검증 항목
+    │   │   ├── frontend-schematic-work-summary-2026-11-15.md  <- 프런트 오류·회로도 검색 개선 17개 작업과 검증 범위 공유 보고서
+    │   │   └── grade-evidence-validation.md  <- 1등급 2등급 3등급 근거 흐름과 검증 범위
     │   ├── db-redesign/    <- 서비스 DB 재설계(11-11) 설계 문서(현재·목표 구조, 영향 지도). 검증 스크립트는 scripts/db/verify_redesign/
     │   │   ├── summary.md      <- 검토용 요약 · 결정 항목(옛 REdesign.md)
     │   │   ├── as-is-erd.md    <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
@@ -977,7 +978,7 @@ SojaFit (proj3-b)
 - 폴더 설명은 두 단계 폴더까지만 둡니다. 더 깊은 폴더(`backend/mcp_skill/skills/` 등)는 위 폴더 설명 파일에 적습니다. 원시 결과·시험 데이터만 담는 폴더(`evals/results/`, `scripts/results/`, `tests/fixtures/`), `.github/`, `data/circuits/collected/`에는 설명 파일을 두지 않습니다.
 - **한 폴더 바로 아래에는 한 종류 파일만** 둡니다(코드·데이터·문서·SQL·설정 중 하나, 설명 파일과 `.gitkeep`은 빼고 셈). 종류가 섞이면 성격별 하위 폴더로 나눕니다(예: `evals/runners/`, `evals/guides/`). 저장소 루트는 도구가 루트에서 찾는 파일이라 예외입니다.
 - 아직 없는 파일은 트리에 `(예정)`을 붙여 적고, 비어 있는 폴더는 `.gitkeep`으로 자리를 둡니다. 실제로 만들면 같은 PR에서 `(예정)`을 지웁니다.
-- 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`, 실험 작업서는 `docs/experiments/<english-kebab>.md`, 조사 기록은 `docs/research/<english-kebab>.md`입니다. 원시 결과 파일은 `<무엇>_<YYYY-MM-DD>.json`입니다.
+- 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`, 실험 작업서는 `docs/experiments/<english-kebab>.md`, 조사 기록은 `docs/research/<english-kebab>.md`(같은 주제가 셋 이상이면 `docs/research/<주제>/<english-kebab>.md`, 설명 파일 없이 `RESEARCH.md`가 대신)입니다. 원시 결과 파일은 `<무엇>_<YYYY-MM-DD>.json`입니다.
 - 강사 스캐폴드와 과제 가이드의 고정 경로(트리의 `(고정)`)는 옮기지 않습니다.
 
 ## 파일을 만들거나 옮길 때

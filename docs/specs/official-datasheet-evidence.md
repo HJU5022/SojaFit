@@ -2,6 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-16
+- #146 병합 뒤 바뀐 점(2026-11-17, `799ae636` 코드 대조): ① TSC(`services.taiwansemi.com`) · Infineon(`www.infineon.com`) PDF는 본문 언어 검사와 문서 품번 · 글 행 읽기를 건너뛰고 #146 전(`9c87ba36`)과 같은 표 행만 낸다. 새로 더한 다섯 곳(TI · ST · ADI · onsemi · Vishay)에만 건다(`109f76ce`, `f9cc977b`, `backend/services/datasheet_rows.py`). ② 언어 검사도 행을 읽는 앞 32쪽만 본다. ③ 판정(Spec 에이전트)은 TSC · Infineon이 아닌 제조사 요구를 `maker_missing`으로 거절한다(`96fb0f23`, [SPEC.md](../../SPEC.md) 8.3). 아래 본문의 "언어 검사는 전체 PDF" · "기존 세 제조사에도 동일하게 적용"은 이 바뀐 점이 우선한다
 - 정본 여부: 정본(공식 데이터시트 행 인용과 참고 링크의 동작). 근거 등급 정의는 [SPEC.md](../../SPEC.md)
 - 관련 문서: [rag-pipeline.md](rag-pipeline.md), [judge-agent.md](judge-agent.md), [verified-circuit-and-datasheet-visuals.md](verified-circuit-and-datasheet-visuals.md)
 

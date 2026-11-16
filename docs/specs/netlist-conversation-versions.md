@@ -30,7 +30,7 @@
 - 기존 POST /api/projects 및 /api/projects/upload에 allow_duplicate(bool, 기본false) 쿼리를 추가한다. 사용자별 생성 트랜잭션을 직렬화해 동시 생성도 확인한다. true는 경고 후 명시적인 새로 만들기 선택에만 사용하며 원래 프로젝트를 수정하지 않는다. 새 DB 구조/경로/유료 호출은 없다.
 - 화면은 경고와 기존 프로젝트 열기/중복을 확인하고 새로 만들기를 제공한다. 이름·선택 파일을 유지하고 입력 변경/닫기/재열기에는 확인 상태를 해제한다. 파일 전송 API와 같은 프로젝트의 새 회로 버전 생성은 이번 중복 검사 범위가 아니다.
 - POST /api/projects JSON {name, demo_id?:string}: demo_id 생략 시 빈 upload 프로젝트, 지정 시 기존 데모 모드 제약 유지. 빈 프로젝트는 circuits 행 없이 v0 스냅샷(parts/nets=[])을 만들며 원본 파일을 저장하지 않는다.
-- POST /api/projects/{id}/netlist multipart file 한 개(.net·.txt, UTF-8 KiCad export, 비어 있지 않은 5MiB 이하): 인증·Origin·기존 메모리 수신 상한 재사용. 정규화 연결/해시/파서 버전만 저장하고 {project, thread_id} 반환. 새 버전과 새 대화 생성은 같은 트랜잭션이며 기존 대화는 변경하지 않는다.
+- POST /api/projects/{id}/netlist multipart file 한 개(.net·.txt, UTF-8 KiCad export, #52 뒤로는 `.kicad_sch`도 받는다([SPEC.md](../../SPEC.md) 8.10), 비어 있지 않은 5MiB 이하): 인증·Origin·기존 메모리 수신 상한 재사용. 정규화 연결/해시/파서 버전만 저장하고 {project, thread_id} 반환. 새 버전과 새 대화 생성은 같은 트랜잭션이며 기존 대화는 변경하지 않는다.
 - DB: project_circuit_versions에 프로젝트별 불변 버전 저장, circuits는 최신 버전, threads.circuit_version으로 버전 고정. 기존 회로/대화는 v1으로 backfill. 실행 시작·재개·회로 상세의 모든 읽기 경로가 버전 고정을 따른다. FK cascade·RLS/권한 회수 유지.
 - GET /api/projects/{id}?thread_id=UUID로 소유 대화의 회로 상세 조회. 다른 프로젝트/사용자 대화는404. Project DTO에 circuit_version(없음0)을 포함한다.
 - 프런트(11-14 옛 화면 기준)는 기존 api/projects·Workbench·Review·ChatPane·useConversation을 재사용했다. 새 화면은 `frontend/src/Workbench.tsx`의 첨부가 이 API를 부른다. 파일은 run 요청에 넣지 않고 위 파싱 API를 먼저 사용한다. 요청 중 중복 전송/분석 방지, 실패 시 원문 유지. 전송 성공 후 새 문맥으로 이동하며 원래 ref를 새 파일의 대상으로 추정하지 않는다.
@@ -43,7 +43,7 @@
 - Given 빈 프로젝트, When 유효 파일만 전송, Then v1과 새 대화/부품 목록; 유료 실행0.
 - Given v1 대화, When 다른 파일 첨부, Then v2 새 대화; v1 상세/재개는 v1 회로 유지.
 - Given 파일과 D1 질문, When 처리 성공하고 D1이 새 회로의 다이오드, Then 새 대화에 기존 run 경로 한 번만 사용.
-- Given 대상 불명/범위 밖, When 처리 성공, Then 부품 선택 안내와 질문 유지; run0.
+- Given 대상 불명/범위 밖, When 처리 성공, Then 부품 선택 안내와 질문 유지; run0. (2026-11-17 주: #62 뒤로 지원 다이오드가 둘 이상이고 대상이 비면 run을 만들어 그래프를 돌리고, 할 일이 대상을 써야 할 때만 `대상 확인`이 묻는다. 정본은 [SPEC.md](../../SPEC.md) 8.9)
 - Given 실패/빈 파일/초과/중복 전송/소유권 위반, When 전송, Then 안전 오류·초안/파일 보존·기존 버전 변경0.
 - Given 과거 대화 주소로 이동/새로고침, When 복원, Then 당시 버전의 대상·연결·판정 표시.
 

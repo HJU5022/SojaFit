@@ -3,7 +3,7 @@
 - 상태: 이력 (2026-11-03 후보 조사와 7질의 탐색. 공급자 선정 결정은 ADR에 없다. 현재 코드는 Exa를 쓴다: `backend/services/exa.py`, `backend/mcp_skill/mcp_server/server.py`의 `search_tsc_web`)
 - 기준일: 2026-11-03 (후보·가격 조사, 7질의 탐색). 현재 코드 확인 2026-11-12
 - 정본 여부: 정본(후보 목록, 가격 비교, 7질의 탐색 수치). 30문항 탐색은 [web-search-results-interpretation.md](web-search-results-interpretation.md), 필터 유무는 [web-search-filter-comparison.md](web-search-filter-comparison.md), MCP 도구 표는 [mcp-tool-implementation-plan.md](mcp-tool-implementation-plan.md)
-- 관련 문서: [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md), [RAG 안내](../../backend/rag/RAG.md), [SPEC](../../SPEC.md), [사전 등록](../../evals/guides/preregister.md)
+- 관련 문서: [MCP 서버 안내](../../../backend/mcp_skill/MCP_SKILL.md), [RAG 안내](../../../backend/rag/RAG.md), [SPEC](../../../SPEC.md), [사전 등록](../../../evals/guides/preregister.md)
 
 ## 1. 미결 항목
 
@@ -18,10 +18,10 @@
 
 | 제약 | 근거 |
 |---|---|
-| 검색 `retrieve(question, k, parts)`는 기존 코퍼스의 BM25·벡터 검색과 품번 필터를 쓴다. 데모 모드는 임베딩 API 없이 BM25 | [RAG 안내](../../backend/rag/RAG.md) |
-| 공식 자료 출처·페이지·표·행을 보존한다. 수치·단위 비교와 판정은 `backend/judge/` | [SPEC](../../SPEC.md) |
+| 검색 `retrieve(question, k, parts)`는 기존 코퍼스의 BM25·벡터 검색과 품번 필터를 쓴다. 데모 모드는 임베딩 API 없이 BM25 | [RAG 안내](../../../backend/rag/RAG.md) |
+| 공식 자료 출처·페이지·표·행을 보존한다. 수치·단위 비교와 판정은 `backend/judge/` | [SPEC](../../../SPEC.md) |
 | 평가자는 키 없이 Compose를 시작한다. 키 없는 데모의 대체 응답이 웹 검색 필수 조건을 충족하는지는 미확인 | 조사 당시 확인 |
-| Mouser는 확장 단계. 응답을 DB·데모 응답·대화·체크포인트·트레이스에 저장하지 않는다 | [ADR 0009](../adr/0009-mouser-응답은-저장하지-않는다.md) |
+| Mouser는 확장 단계. 응답을 DB·데모 응답·대화·체크포인트·트레이스에 저장하지 않는다 | [ADR 0009](../../adr/0009-mouser-응답은-저장하지-않는다.md) |
 | 웹 검색 도구 호출에 기존 그래프 검색 2회 제한을 어떻게 적용할지 | 미결 |
 
 ## 3. 외부 MCP 후보 (2026-11-03 조사)

@@ -15,7 +15,7 @@
 | 서비스의 사용 | 서비스 분석은 사실 확인(`check_corpus`)만 MCP로 하고, 문서 검색은 `retrieve()`, 찾기·판정 값은 카드 도구(`backend/rag/card_*.py`)를 직접 부름 | `conversations/memory_service.py:297-309` |
 | Skill 읽는 곳 | `backend/graph/nodes.py:31`(단일 그래프 생성 노드), `backend/services/langfuse_prompts.py:170`(Langfuse 등록), `evals/runners/run_skill_pair.py`(Skill 유무 쌍 평가). 경로가 고정이므로 옮기거나 이름을 바꾸지 않는다 | 각 파일 |
 
-MCP 서버 계약과 한계는 [mcp-search-tools.md](../../docs/specs/mcp-search-tools.md)와 [mcp-tool-contract-review.md](../../docs/research/mcp-tool-contract-review.md), Skill 적용 계약은 [SPEC.md](../../SPEC.md), 선정 근거는 [skill-feasibility.md](../../docs/research/skill-feasibility.md), 검증 상태는 [EVAL_REPORT.md](../../EVAL_REPORT.md)를 따른다. 서버 실행: `uv run --env-file .env python -m backend.mcp_skill.mcp_server.server`. 의존성은 `pyproject.toml`과 `uv.lock`에서 관리한다. import와 stdio 연결 계약은 `tests/mcp_skill/test_mcp_server.py`, `tests/graph/test_graph_mcp_retriever.py`, `tests/graph/test_graph_mcp_stdio.py`가 확인한다.
+MCP 서버 계약과 한계는 [mcp-search-tools.md](../../docs/specs/mcp-search-tools.md)와 [mcp-tool-contract-review.md](../../docs/research/mcp/mcp-tool-contract-review.md), Skill 적용 계약은 [SPEC.md](../../SPEC.md), 선정 근거는 [skill-feasibility.md](../../docs/research/mcp/skill-feasibility.md), 검증 상태는 [EVAL_REPORT.md](../../EVAL_REPORT.md)를 따른다. 서버 실행: `uv run --env-file .env python -m backend.mcp_skill.mcp_server.server`. 의존성은 `pyproject.toml`과 `uv.lock`에서 관리한다. import와 stdio 연결 계약은 `tests/mcp_skill/test_mcp_server.py`, `tests/graph/test_graph_mcp_retriever.py`, `tests/graph/test_graph_mcp_stdio.py`가 확인한다.
 
 ## 파일
 | 파일 | 하는 일 |

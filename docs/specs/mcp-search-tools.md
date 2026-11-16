@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 8.7 MCP 검색 도구 1차)
-- 관련 문서: [mcp-graph-integration.md](mcp-graph-integration.md), `backend/mcp_skill/MCP_SKILL.md`, [mcp-tool-implementation-plan.md](../research/mcp-tool-implementation-plan.md)
+- 관련 문서: [mcp-graph-integration.md](mcp-graph-integration.md), `backend/mcp_skill/MCP_SKILL.md`, [mcp-tool-implementation-plan.md](../research/mcp/mcp-tool-implementation-plan.md)
 
 
 ## Why

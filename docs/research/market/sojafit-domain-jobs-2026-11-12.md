@@ -3,7 +3,7 @@
 - 상태: 현행
 - 기준일: 2026-11-12 (확인 기준 KST. 모집 상태를 새로 조회한 결과가 아니다)
 - 정본 여부: 정본(도메인 유사 분야 채용 공고 72건의 항목별 필드)
-- 관련 문서: [market-user-journey.md](market-user-journey.md)(이 자료의 `job-NNN` 앵커를 링크하는 역할 표), [evidence/EVIDENCE.md](evidence/EVIDENCE.md)
+- 관련 문서: [market-user-journey.md](market-user-journey.md)(이 자료의 `job-NNN` 앵커를 링크하는 역할 표), [evidence/EVIDENCE.md](../evidence/EVIDENCE.md)
 
 ## 범위
 

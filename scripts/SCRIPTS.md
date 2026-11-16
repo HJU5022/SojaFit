@@ -50,7 +50,7 @@
 | `results/docker_performance/` | `kicad_uv_sequential_vs_parallel_stages_2026-11-14.csv`, `kicad_uv_sequential_vs_parallel_outcomes_2026-11-14.csv`, `kicad_uv_sequential_vs_parallel_run_records_2026-11-14.json` | 저장소 밖 OSC 로컬 측정 스크립트 | KiCad·Python 순차/병렬 설치의 단계 시간, 응답·PNG 결과, 6회차 원본 객체. 이미지·Compose 로그 미포함 |
 | `results/docker_performance/` | `kicad_in_api_vs_renderer_split_rounds_2026-11-14.csv`, `kicad_in_api_vs_renderer_split_medians_2026-11-14.csv`, `kicad_in_api_vs_renderer_split_run_records_2026-11-14.json` | 저장소 밖 OSC 로컬 측정 스크립트 | KiCad 내장 API와 분리 렌더러의 이미지 크기·첫 응답·첫 PNG 비교, 6회차 원본 객체. 이미지·Compose 로그 미포함 |
 | `results/smoke/` | `smoke_*.json` 15개, `injection_http_*.json` 7개 | `smoke/http_smoke.py`, `smoke/injection_http.py` | HTTP 점검 단계 기록. 아래 표 |
-| `results/smoke/` | `schematic_search_observations_2026-11-15.json` | 브라우저 직접 검증 기록 복사 | 로컬 8011의 회로도 후보·공개 원본 링크·이미지 로드 상태. 새 실측이나 평가 점수가 아님. 해석: [공유 보고서](../docs/research/frontend-schematic-work-summary-2026-11-15.md) |
+| `results/smoke/` | `schematic_search_observations_2026-11-15.json` | 브라우저 직접 검증 기록 복사 | 로컬 8011의 회로도 후보·공개 원본 링크·이미지 로드 상태. 새 실측이나 평가 점수가 아님. 해석: [공유 보고서](../docs/research/schematic/frontend-schematic-work-summary-2026-11-15.md) |
 
 ### `results/smoke/` 파일
 

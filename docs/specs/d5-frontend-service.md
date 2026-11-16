@@ -1,6 +1,6 @@
 # D5 프론트엔드 서비스 기능 계약
 
-- 상태: 현행(기능 계약). 화면 구현 설명은 2026-11-16 새 화면 교체에 맞춰 고침
+- 상태: 현행(기능 계약). 화면 구현 설명은 2026-11-16 새 화면 교체에 맞춰 고침. 2026-11-17에 업로드 형식 · 빈 프로젝트 생성 · 진행 단계 행을 `799ae636` 코드에 맞춤
 - 기준일: 2026-11-12(기능 계약), 화면 부분 2026-11-16
 - 기준 커밋: 6707002(기능 계약), `76fadcb4`(화면 부분)
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 2절 흐름, 4절 API 표, 8.4절 견적 승인). 화면이 쓰는 기능 계약의 상세
@@ -17,14 +17,14 @@
 
 - React + Vite + TypeScript 화면을 FastAPI와 같은 출처로 제공하고, D5의 실행·판정 규칙을 바꾸지 않은 채 인증부터 프로젝트 생성, 질문·재개, 결과 확인, 승인 견적까지 연결한다.
 - 업로드 원본·가격/재고 응답은 영속 저장소에 0건이다. 로그인한 사용자의 프로젝트·대화는 새로고침과 재로그인 뒤에도 복구된다.
-- 범위 밖: D4 실행 UI, D5 판단 규칙 변경, 외부 웹 조회 에이전트, 주문·결제, 원본 회로도/PCB 업로드, 프로젝트 공유, 실시간 공동 편집, 모바일 전용 앱.
+- 범위 밖: D4 실행 UI, D5 판단 규칙 변경, 외부 웹 조회 에이전트, 주문·결제, PCB 업로드(KiCad 회로도 `.kicad_sch` 업로드는 #52로 들어왔다. [SPEC.md](../../SPEC.md) 8.10), 프로젝트 공유, 실시간 공동 편집, 모바일 전용 앱.
 
 ## What
 
 ### Happy Path
 
 1. 같은 출처에서 로그인하고 새로고침해도 서버 세션으로 인증 상태가 복원된다.
-2. 프로젝트를 만든다. 업로드(UTF-8 KiCad `.net`, 최대 5 MiB)가 기본이다. 공개 데모 회로 5종 중 하나로 만드는 길은 서버가 데모 모드(`DEMO_MODE=1`)일 때만 열린다.
+2. 프로젝트를 만든다. 업로드(UTF-8 KiCad `.net` 또는 회로도 `.kicad_sch`, 최대 5 MiB)가 기본이다. 회로 없이 질문하면 빈 프로젝트가 생긴다(SPEC 2절). 공개 데모 회로 5종 중 하나로 만드는 길은 서버가 데모 모드(`DEMO_MODE=1`)일 때만 열린다.
 3. 업로드는 구조와 부품·넷 존재를 확인해 정규화한다. 처리가 끝나면 성공·실패와 관계없이 원본 참조를 버리고, 원본 바이트는 D5 입력·실행 상태·checkpoint로 전달하지 않는다. 저장하는 것은 정규화 JSON, 원본 SHA-256, 파서 버전(`kicad-export-v2`), 생성 시각이다.
 4. 프로젝트를 고르고 질문하면 서버가 같은 thread에서 D5를 실행하고 허용된 진행 상태(그래프 단계)를 SSE로 보낸다. 대상 부품은 직접 지정하지 않아도 되고, 서버가 질문 · 회로로 정하지 못하면 고를 부품을 묻는다(SPEC 8.9).
 5. 판정에 회로 값이 더 필요하면 thread/checkpoint에 interrupt를 두고 `requires_input`으로 끝낸다. 사용자의 입력은 같은 run을 재개한다.
@@ -51,10 +51,10 @@
 | 개발 서버 | Vite가 `/api`를 `http://localhost:8000`으로 프록시 | `frontend/vite.config.ts` |
 | 배포 | `Dockerfile` 다단계: `frontend-build`(Node)에서 빌드한 `dist`를 FastAPI 이미지에 복사. FastAPI는 `/api/*`, `/health`, Google 콜백을 먼저 처리하고 나머지 화면 경로는 React 진입 파일로 보낸다 | `Dockerfile`, `backend/web/app.py` |
 | 인증 | HttpOnly 서버 세션 쿠키와 같은 출처 정책. 상세 [login-auth.md](login-auth.md) | `backend/auth.py` |
-| 프로젝트 API | 목록·생성(데모 모드만)·업로드·상세·이름 변경·삭제, `GET /api/demo-circuits`(데모 모드만). 업로드는 multipart `.net`이며 사용자 파일명·경로를 서버 경로로 쓰지 않는다 | `backend/api/projects.py` |
+| 프로젝트 API | 목록·생성(빈 프로젝트는 누구나, 데모 회로 복제 `demo_id`는 데모 모드만)·업로드·상세·이름 변경·삭제·부품 점검표(`GET /api/projects/{id}/parts`), `GET /api/demo-circuits`(데모 모드만). 업로드는 multipart `.net` · `.kicad_sch`이며 사용자 파일명·경로를 서버 경로로 쓰지 않는다 | `backend/api/projects.py` |
 | 대화 API | thread 생성·목록·상세·삭제, `POST /api/threads/{id}/runs`, `GET /api/runs/{id}`, `POST /api/runs/{id}/recover`, `POST /api/runs/{id}/resume`, `GET /api/judge/roles`(역할 이름), `GET /api/demo-questions`(키 없는 데모 재생 모드만). 한 thread에 동시 run 하나. run·재개는 `THREADS_ENABLED=1`의 분석 서비스(`backend/conversations/memory_service.py`)를 같은 UUID thread로 거치고, 대상 부품은 고정되며 서비스가 없으면 503. 표·요청 모델·오류는 SPEC 4절이 정본 | `backend/api/conversations.py` |
 | SSE 이벤트 | `run_started`, `status`, `requires_input`, `completed`, `refused`, `failed`. 토큰 단위 출력은 보내지 않는다. 이벤트별 칸은 SPEC 4절 표 | `backend/api/conversations.py` |
-| 진행 단계 | 서버가 보내는 값은 `입력 확인`(시작), `판정`(추가 정보 대기), `완료`(완료·거절, 거절은 상태 `refused`), `오류`(상태 `failed`) | `backend/api/conversations.py` `STAGES` |
+| 진행 단계 | 상태 값은 `입력 확인`(시작), `판정`(추가 정보 대기), `완료`(완료·거절, 거절은 상태 `refused`), `오류`(상태 `failed`). 실행 중에는 노드마다 `품번 확인` · `질문 분석` · `문서 검색` · `회로 역할 읽기` · `후보 판정` · `답 작성`도 보낸다 | `backend/api/conversations.py` `STAGES` · `NODE_STAGES` |
 | 브라우저 결과 DTO | 허용 칸 `answer, status, stage, question_type, evidence, judgement, price_parts, refusal, interrupt, request_id, profile_hints, web_search_unavailable`(#28). Plan·TaskReport 전문, 내부 추론, 서버 경로, 내부 예외, prompt·업로드 본문·모델 원문은 반환하지 않는다 | `backend/conversations/dto.py` `BrowserResult` |
 | 승인·견적·사례 API | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}`. 승인·견적은 판정 메시지의 immutable snapshot을 참조 | `backend/api/quotes.py` |
 | 승인 차단·안내 | 후보의 필수 입력이 `missing`이거나 required check가 `unverified`면 승인 API와 화면 모두 막는다. 승인 버튼 바로 아래에 입력할 회로 조건(한글 항목명·형식 예시)과 확인할 필수 사양(이름/코드·미확인 이유·요구값/기록된 시험 조건·필요한 문서 근거)을 구분한다. 회로값/원래 부품/후보 문서의 확인 대상을 서버 이유에 맞춰 안내하고 보완 후 새 검토를 요청한다. 기본 접힘인 native details의 제목에는 입력/사양 항목 수를 표시하고 펼치면 상세 안내를 확인한다. 접기/펼치기는 질문 초안·승인 상태를 유지하며 API 쓰기를 하지 않는다. 중복 missing을 제거하고 모르는 코드의 값·단위를 추정하지 않는다. 안내 영역을 버튼의 aria-describedby에 연결하며 정상·조건부 미확인 후보의 기존 동작은 유지한다 | `backend/services/quote.py`(서버 차단). 화면의 승인 버튼 아래 안내 · 접기는 새 화면에 아직 없다(`frontend/src/Candidate.tsx`는 문서에 없는 값을 보이기만 하고, 「필수 조건 미확인 승인 안내」는 11-16 통합에서 미뤘다) |

@@ -213,5 +213,5 @@
 
 | 항목 | 상태 | 증거 |
 |---|---|---|
-| 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원 · 재개. 승인 전 부작용 없음, 같은 승인 요청 반복 시 실행 중복 없음 | 로컬 compose에서 확인(2026-11-13, `jeongun-2` `ad8612e` = `main` `ea5797c`과 같은 트리; 2026-11-09, `jeongun-8` `f6b6d7e`). 배포 주소에서는 확인하지 않음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json) |
+| 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원 · 재개. 승인 전 부작용 없음, 같은 승인 요청 반복 시 실행 중복 없음 | 로컬 compose에서 확인(2026-11-13, `jeongun-2` `ad8612e` = `main` `ea5797c`과 같은 트리; 2026-11-09, `jeongun-8` `f6b6d7e`). 배포 주소에서는 2026-11-13 리비전 `sojafit-api-574de79-rs`에서 재시작 뒤 재개 · 승인 · 같은 승인 409를 확인했다(위 G4 표 "배포 서버 재시작 뒤 재개 · 계정 분리" 행). 그 뒤 리비전에서는 다시 확인하지 않음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json) |
 | 사용자별 DB Store에 기억 저장, 의미 검색 · 활용 · 잘못된 기억 수정. thread 체크포인트나 코퍼스 벡터만으로 사용자 장기 기억을 대신하지 않음 | 일부 확인. 저장 · 격리 · 수정 · 삭제는 가짜 임베딩 DB 시험과 로컬 compose에서 확인. 실제 Voyage 임베딩과 배포 DB에서의 의미 검색은 확인하지 않음 | [test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py) |

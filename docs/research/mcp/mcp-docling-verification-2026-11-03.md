@@ -3,7 +3,7 @@
 - 상태: 이력 (2026-11-03 측정 기록. 재실행하지 않았다)
 - 기준일: 2026-11-03
 - 정본 여부: 정본(저장소 TSC 표본 3건의 표 파싱 점검 결과). 원시 결과는 저장소에 없다(한계 1)
-- 관련 문서: [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [DB 없는 저장소 표본 점검](mcp-offline-verification-2026-11-03.md), [RAG 안내](../../backend/rag/RAG.md), [RAG 작업서](../specs/rag-pipeline.md), [사전 등록](../../evals/guides/preregister.md)
+- 관련 문서: [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [DB 없는 저장소 표본 점검](mcp-offline-verification-2026-11-03.md), [RAG 안내](../../../backend/rag/RAG.md), [RAG 작업서](../../specs/rag-pipeline.md), [사전 등록](../../../evals/guides/preregister.md)
 
 ## 1. 질문과 결론
 
@@ -71,4 +71,4 @@
 1. 입력 사본, Docling JSON, witness, recall, 로그, 결과 요약 JSON은 저장소 밖 작업 폴더에 있었고 저장소에 없다. 표의 숫자는 재현하지 않았다.
 2. 요청 품번·개정판이 표지와 해당 표 행에 연결되는지 검증하지 않았다.
 3. 표 병합 셀, 단위, 최솟값·최댓값, 온도·전류 등 시험 조건과 행의 연결을 검증하지 않았다.
-4. 재실행 조건: `backend/rag/pipeline/parse.py` 사용법과 uv `ingest` 그룹은 [RAG 안내](../../backend/rag/RAG.md)와 [RAG 작업서](../specs/rag-pipeline.md)를 따른다. 모델·패키지가 캐시에 없으면 내려받기가 필요하다. Windows에서는 파일별 시간 제한을 상위 프로세스로 걸어야 한다.
+4. 재실행 조건: `backend/rag/pipeline/parse.py` 사용법과 uv `ingest` 그룹은 [RAG 안내](../../../backend/rag/RAG.md)와 [RAG 작업서](../../specs/rag-pipeline.md)를 따른다. 모델·패키지가 캐시에 없으면 내려받기가 필요하다. Windows에서는 파일별 시간 제한을 상위 프로세스로 걸어야 한다.

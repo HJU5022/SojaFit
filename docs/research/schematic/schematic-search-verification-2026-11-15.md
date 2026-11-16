@@ -51,8 +51,8 @@
 
 **화면과 관찰 자료**
 
-![CDFER 실제 선택 화면](../assets/schematic-cdfer-2026-11-15.jpg)
+![CDFER 실제 선택 화면](../../assets/schematic-cdfer-2026-11-15.jpg)
 
-![1N4148 OPBoard 실제 선택 화면](../assets/schematic-1n4148-2026-11-15.jpg)
+![1N4148 OPBoard 실제 선택 화면](../../assets/schematic-1n4148-2026-11-15.jpg)
 
-원본 링크·후보 목록·이미지 로드 상태와 크기는 [관찰 기록](../../scripts/results/smoke/schematic_search_observations_2026-11-15.json)에 보관했다. 상세 작업 기록은 `docs/worklog/osc.md`에 남겼다.
+원본 링크·후보 목록·이미지 로드 상태와 크기는 [관찰 기록](../../../scripts/results/smoke/schematic_search_observations_2026-11-15.json)에 보관했다. 상세 작업 기록은 `docs/worklog/osc.md`에 남겼다.

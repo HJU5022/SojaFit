@@ -3,7 +3,7 @@
 - 상태: 이력 (2026-11-03 탐색. 공급자 최종 선정 전 기록이며 선정 결정은 ADR에 없다. 현재 코드는 Exa를 쓴다: `backend/services/exa.py`, `backend/mcp_skill/mcp_server/server.py`의 `search_tsc_web`)
 - 기준일: 2026-11-03
 - 정본 여부: 정본(30문항 3공급자 탐색 수치). 도메인 필터 유무 비교는 [web-search-filter-comparison.md](web-search-filter-comparison.md), 후보 조사와 7질의 탐색은 [mcp-tool-candidates-draft.md](mcp-tool-candidates-draft.md)
-- 관련 문서: [웹 검색 TSC 필터 유무 비교](web-search-filter-comparison.md), [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [사전 등록](../../evals/guides/preregister.md)
+- 관련 문서: [웹 검색 TSC 필터 유무 비교](web-search-filter-comparison.md), [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [사전 등록](../../../evals/guides/preregister.md)
 
 ## 1. 질문과 결론
 

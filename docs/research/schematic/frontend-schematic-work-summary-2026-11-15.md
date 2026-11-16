@@ -1,6 +1,7 @@
 # SojaFit 프런트 오류 수정·회로도 검색 개선 공유 보고서
 
 작성일: 2026-11-15 KST<br>
+상태: 이력(11-15 작업 보고). 본문의 화면 파일(`frontend/src/pages/` · `components/` · `hooks/` · `styles/`)은 11-16 새 화면 교체로 없어졌다. 지금 화면 구조는 [frontend/src/SRC.md](../../../frontend/src/SRC.md)<br>
 대상: OSC 브랜치, 로컬 서비스 `http://localhost:8011`<br>
 코드 기준: 마지막 검증 당시 HEAD `45740ce`와 미커밋 변경 사항<br>
 실제 검색 검증 중단 시점: 2026-11-15 04:17:11 KST
@@ -307,9 +308,9 @@ SojaFit은 회로의 부품과 사용 조건을 바탕으로 대체 부품을 �
 | 이미지 변환·회로도 API | `backend/projects/schematic_render.py`, `backend/projects/schematic.py`, `backend/api/external_circuits.py`, `Dockerfile` |
 
 - [기존 최종 검색 검증 보고서](schematic-search-verification-2026-11-15.md)
-- [후보·원본 링크·이미지 로드 관찰 기록](../../scripts/results/smoke/schematic_search_observations_2026-11-15.json)
-- 코드 저장소 내 작업 로그: `docs/worklog/osc.md`. [작업 로그 열기](../worklog/osc.md)
+- [후보·원본 링크·이미지 로드 관찰 기록](../../../scripts/results/smoke/schematic_search_observations_2026-11-15.json)
+- 코드 저장소 내 작업 로그: `docs/worklog/osc.md`. [작업 로그 열기](../../worklog/osc.md)
 
-![CDFER 실제 서비스 표시](../assets/schematic-cdfer-2026-11-15.jpg)
+![CDFER 실제 서비스 표시](../../assets/schematic-cdfer-2026-11-15.jpg)
 
-![1N4148 OPBoard 실제 선택 표시](../assets/schematic-1n4148-2026-11-15.jpg)
+![1N4148 OPBoard 실제 선택 표시](../../assets/schematic-1n4148-2026-11-15.jpg)
