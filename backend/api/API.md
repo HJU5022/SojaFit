@@ -1,5 +1,11 @@
 # api
 
+## 공식 참고 회로 검색의 추가 계약
+
+| 파일 | 추가 계약 |
+|---|---|
+| `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest, `auto_search=true`는 소유권·버전 확인 뒤 품번 포함 원본/참고 자동 구분), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트). 제조사 없는 품번에서 복수 공식 제조사가 검증되면 기존404/SCHEMATIC_NOT_FOUND와 X-Schematic-Failure=ambiguous_manufacturer로 제조사 명시 필요를 알림 |
+
 ## 역할
 - 이 폴더: 서비스 HTTP 경로 전부. 라우터마다 `APIRouter`를 하나 갖고 `backend/main.py`가 등록한다. 라우터 태그는 파일 이름과 같아 `/docs`가 묶음별로 보인다.
 - 넣는 것: 경로 함수, 요청·응답 모델(`extra="forbid"`와 `/docs` 예시를 단 pydantic 모델), 세션·Origin 확인 의존성 연결.

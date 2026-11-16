@@ -23,6 +23,7 @@ from backend.projects.external_circuit_search import (
     ExternalCircuitSearchConfigurationError,
     ExternalCircuitSearchDisabled,
     ExternalCircuitSearchError,
+    automatic_schematic_context,
 )
 
 router = APIRouter(prefix="/api/external-circuits", tags=["external-circuits"])
@@ -84,6 +85,7 @@ def _schematic_call(function, *args, **kwargs):
             "no_candidates": "조건에 맞는 원본 회로도 검색 결과가 없습니다. 검색어를 바꿔 보세요.",
             "validation_failed": "회로도 후보를 찾았지만 제품 식별 또는 원본 파일 검증을 통과하지 못했습니다. 제조사와 정확한 모델명을 확인해 주세요.",
             'circuit_mismatch': '업로드한 회로와 부품·핀 연결이 일치하는 회로도를 확인하지 못했습니다. 다른 회로도는 원본으로 연결하지 않습니다.',
+            'ambiguous_manufacturer': '여러 제조사의 정상 공식 자료가 확인됐습니다. 검색어에 제조사 이름을 함께 입력해 주세요.',
         }
         raise ApiError(404, messages.get(error.reason, "검증된 완성 회로도를 찾지 못했습니다."),
                        code="SCHEMATIC_NOT_FOUND", headers={"X-Schematic-Failure": error.reason}) from None
@@ -98,7 +100,7 @@ def _schematic_call(function, *args, **kwargs):
         raise HTTPException(502, "지금은 외부 회로도를 불러올 수 없습니다.") from None
 
 
-def _project_circuit(user_id, project_id, circuit_version, thread_id, reference_only=False):
+def _project_circuit(user_id, project_id, circuit_version, thread_id, reference_only=False, *, require_connections=True):
     if project_id is None:
         if not reference_only or circuit_version is not None or thread_id is not None:
             raise HTTPException(422, '프로젝트와 회로 버전을 함께 지정해 주세요.')
@@ -113,10 +115,11 @@ def _project_circuit(user_id, project_id, circuit_version, thread_id, reference_
         raise HTTPException(404, '프로젝트 회로를 찾을 수 없습니다.') from None
     if project.circuit_version != circuit_version:
         raise HTTPException(409, '회로 버전이 변경됐습니다. 회로도 창을 다시 열어 주세요.')
-    try:
-        circuit_fingerprint(project.connections)
-    except InvalidNetlist:
-        raise ApiError(404, '대조할 회로 연결 정보가 없습니다.', code='SCHEMATIC_NOT_FOUND') from None
+    if require_connections:
+        try:
+            circuit_fingerprint(project.connections)
+        except InvalidNetlist:
+            raise ApiError(404, '대조할 회로 연결 정보가 없습니다.', code='SCHEMATIC_NOT_FOUND') from None
     return project
 
 
@@ -131,9 +134,18 @@ def external_schematic_manifest(
     thread_id: UUID | None = None,
     reference_only: bool = False,
     component_type: Literal['diode'] | None = None,
+    auto_search: bool = False,
 ):
     response.headers["Cache-Control"] = "private, no-store"
-    project = _project_circuit(user_id, project_id, circuit_version, thread_id, reference_only)
+    context = automatic_schematic_context(q) if auto_search else 'original'
+    project = _project_circuit(user_id, project_id, circuit_version, thread_id, reference_only,
+                               require_connections=context == 'original')
+    if auto_search:
+        if project is None or component_type is not None:
+            raise HTTPException(422, '자동 검색에는 프로젝트와 회로 버전만 지정해 주세요.')
+        if context != 'original':
+            project = None
+            component_type = 'diode' if context == 'diode' else None
     if component_type is not None and (project is not None or len(q) > 194):
         raise HTTPException(422, '다이오드 검색은 194자 이하 참고 자료 조회로만 사용할 수 있습니다.')
     manifest = (_schematic_call(find_external_schematic, q, source_url, connections=project.connections) if project else

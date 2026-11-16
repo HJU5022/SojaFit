@@ -8,6 +8,14 @@
 
 실행: `uv run pytest -q tests/projects`. DB 시험은 `TEST_AUTH_DATABASE_URL`로 지정한 격리 시험 DB에서만 실행하고 각 시험은 임의 이름 schema에 SQL을 적용한 뒤 그 schema만 정리한다. URL이 없으면 건너뛴다. 운영·공유 DB URL을 설정하지 않는다.
 
+## 공식 참고 회로 검색 회귀 범위
+
+| 테스트 | 추가 회귀 범위 |
+|---|---|
+| `test_external_schematic.py` | 라이선스·원본·전체 시트·캐시·서명 token 경계, 공식 전용 검색·GitHub 대체 차단, bare 품번의 다중 제조사·6번째 후보·선택 URL·캐시 모호성 경계, 공식 PDF 검사 동시성2·완료 순서와 선택 순서·원문 격리·공유 재시도 예산 |
+| `test_official_schematic.py` | 제조사 공식 원본 URL·등급·SHA-256 렌더 검증, 공식 반도체 제조사 6곳과 RF 다이오드 검색 경계, 영어 원문 선택·번역 경로 제외·제조사 없는 품번의 공식 발견과 제조사별 후보 유지 |
+| `test_schematic_render.py` | PDF/SVG/PNG 렌더링, 긴 원문과 반환 시트 수 분리, 공식 응용 회로·무관 문서 판별과 출력 크기 제한, 요청 내 PDF 재사용의 모델/해시/쪽수 대조·최대2개 준비 원문·오류 정리 |
+
 ## 파일
 | 파일 | 확인하는 것 |
 |---|---|

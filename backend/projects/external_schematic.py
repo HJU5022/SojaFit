@@ -8,7 +8,8 @@ import os
 import re
 import time
 from collections import OrderedDict
-from concurrent.futures import Future
+from concurrent.futures import Future, ThreadPoolExecutor
+from contextvars import copy_context
 from dataclasses import dataclass, replace
 from math import ceil
 from threading import Lock
@@ -213,9 +214,8 @@ class _Cache:
 
 
 def _is_board_query(query):
-    from backend.projects.external_circuit_search import _MANUFACTURER_ALIASES, canonical_product_query
-    board = re.sub(r'^(?:(?:original|schematics?|원본|회로도)\s+)+', '', canonical_product_query(query).casefold())
-    return any(board.startswith(alias) for aliases in _MANUFACTURER_ALIASES.values() for alias in aliases) or bool(re.match(r'pico\b', board))
+    from backend.projects.external_circuit_search import is_board_query
+    return is_board_query(query)
 
 
 def _community_candidate_limit() -> int:
@@ -225,11 +225,12 @@ def _community_candidate_limit() -> int:
 
 class ExternalSchematicService:
     def __init__(self, search, inspect, render, *, clock=time.monotonic, wall=time.time,
-                 fallback_search=None, public_pdf_inspect=None, match_render=None,
+                 fallback_search=None, public_pdf_inspect=None, match_render=None, official_search=None,
                  query_capacity=128, image_capacity=64, image_byte_capacity=128*1024*1024,
                  ttl_seconds=TTL):
         self.search, self.inspect, self.render = search, inspect, render
         self.fallback_search = fallback_search
+        self.official_search = official_search
         self.public_pdf_inspect = public_pdf_inspect
         self.match_render = match_render
         self.inspections = _Cache(query_capacity*5,0,lambda _:0,ttl_seconds,clock)
@@ -263,6 +264,7 @@ class ExternalSchematicService:
         self.validated.delete(query)
         self.verified_choices.delete(query)
         public_query = query[0] if isinstance(query, tuple) else query
+        self.candidates.delete(('official-datasheet', public_query))
         self.inspections.delete_matching(lambda key: key[1] == public_query)
         with self.retry_lock:
             self.retry_until.pop(query, None)
@@ -306,7 +308,12 @@ class ExternalSchematicService:
         return self.images.get(source, produce)
 
     def _find(self, query, connections=None, selected_url=None):
-        from backend.projects.external_circuit_search import WebSchematicRef, GitHubRepositoryRef, component_context
+        from backend.projects.external_circuit_search import (
+            WebSchematicRef, GitHubRepositoryRef, component_context, is_tsc_query,
+            semiconductor_manufacturer, semiconductor_part_query, semiconductor_source_manufacturer,
+            _SEMICONDUCTOR_MANUFACTURERS,
+        )
+        bare_part = semiconductor_part_query(query) if connections is None and not is_tsc_query(query) else None
         known_board = _is_board_query(query) and connections is None and component_context(query) is None
         if connections is not None:
             from backend.projects.netlist import circuit_fingerprint
@@ -322,6 +329,11 @@ class ExternalSchematicService:
         retry_budget = 1
         counts = {"candidate_count": 0, "inspect_rejected": 0, "render_rejected": 0}
 
+        def official_pdf(candidate):
+            return (connections is None and isinstance(candidate, WebSchematicRef)
+                    and candidate.source_type == 'manufacturer_official' and candidate.asset_kind == 'pdf'
+                    and semiconductor_source_manufacturer(candidate.source_url) is not None)
+
         def inspect_candidate(candidate):
             hosts = ('api.github.com', 'raw.githubusercontent.com', 'codeload.github.com') if isinstance(candidate, GitHubRepositoryRef) else (
                 (urlsplit(candidate.source_url).hostname, urlsplit(candidate.page_url).hostname)
@@ -330,6 +342,10 @@ class ExternalSchematicService:
                 if limited := provider_rate_limit(host):
                     raise limited
             try:
+                if official_pdf(candidate):
+                    from backend.projects.schematic_render import official_pdf_inspection_slot
+                    with official_pdf_inspection_slot(candidate.source_url):
+                        return tuple(self.inspect(candidate, query=query))
                 return tuple(self.inspect(candidate, query=query))
             except ExternalSchematicRateLimited as error:
                 remember_provider_limit(error)
@@ -345,6 +361,28 @@ class ExternalSchematicService:
                     raise
                 retry_budget -= 1
                 return operation()
+
+        def cached_inspection(candidate):
+            return self.inspections.get((candidate, query), lambda: inspect_candidate(candidate))
+
+        def candidate_inspections(candidates):
+            index = 0
+            while index < len(candidates):
+                candidate = candidates[index]
+                if (official_pdf(candidate) and index + 1 < len(candidates)
+                        and official_pdf(candidates[index + 1])):
+                    from backend.projects.schematic_render import clear_checked_pdfs
+                    batch = candidates[index:index + 2]
+                    with ThreadPoolExecutor(max_workers=2) as pool:
+                        futures = [pool.submit(copy_context().run, cached_inspection, item) for item in batch]
+                    try:
+                        yield from zip(batch, futures)
+                    finally:
+                        clear_checked_pdfs()
+                    index += 2
+                else:
+                    yield candidate, None
+                    index += 1
 
         def try_candidates(candidates):
             nonlocal saw_upstream_failure, rate_error
@@ -367,16 +405,20 @@ class ExternalSchematicService:
                     saw_upstream_failure = True
                 return None
 
-            counts["candidate_count"] += len(candidates[:5])
-            for candidate in candidates[:5]:
+            web_limit = len(_SEMICONDUCTOR_MANUFACTURERS) if bare_part else 5
+            counts["candidate_count"] += len(candidates[:web_limit])
+            for candidate, prefetched in candidate_inspections(candidates[:web_limit]):
                 if connections is not None and isinstance(candidate, WebSchematicRef):
                     counts['inspect_rejected'] += 1
                     continue
                 if known_board and not isinstance(candidate, WebSchematicRef):
                     counts['inspect_rejected'] += 1
                     continue
+                pending = [prefetched] if prefetched is not None else []
+                def inspect_current():
+                    return pending.pop().result() if pending else cached_inspection(candidate)
                 try:
-                    sources = retry_once(lambda: self.inspections.get((candidate, query), lambda: inspect_candidate(candidate)))
+                    sources = retry_once(inspect_current)
                 except ExternalSchematicInvalidSource:
                     counts["inspect_rejected"] += 1
                     continue
@@ -556,12 +598,32 @@ class ExternalSchematicService:
                 raise ExternalSchematicUpstreamError()
             LOGGER.info("schematic_lookup_failed", extra={"reason": "validation_failed", **counts})
             return _SearchFailure('circuit_mismatch' if connections is not None else 'validation_failed')
+        official_part_candidates = bare_part and any(isinstance(candidate, WebSchematicRef)
+            and semiconductor_source_manufacturer(candidate.source_url) for candidate in candidates)
         result = try_candidates(candidates)
+        if (not result and official_part_candidates and self.official_search
+                and not rate_error and not saw_upstream_failure
+                and not re.search(r'\bdatasheet\b|데이터시트', query, re.I)):
+            # Application-note discovery can miss the manufacturer's product
+            # datasheet. Spend at most one separate official-only query.
+            datasheets = self.candidates.get(('official-datasheet', query),
+                lambda: self.official_search(query, len(_SEMICONDUCTOR_MANUFACTURERS)))
+            result = try_candidates(datasheets)
         if result:
+            if bare_part:
+                manufacturers = {semiconductor_source_manufacturer(source.source_url)
+                                 for source, _ in result if source.source_type == 'manufacturer_official'} - {None}
+                if len(manufacturers) > 1:
+                    return _SearchFailure('ambiguous_manufacturer')
+                if manufacturers and rate_error is not None:
+                    raise rate_error
+                if manufacturers and saw_upstream_failure:
+                    raise ExternalSchematicUpstreamError()
+                return result[:5]
             return result
         # Official candidates are authoritative only after rendering and hash
         # validation. If that validation fails, lazily spend the grade-3 slot.
-        if not known_board and self.fallback_search and any(isinstance(candidate, WebSchematicRef) for candidate in candidates):
+        if not is_tsc_query(query) and semiconductor_manufacturer(query) is None and not official_part_candidates and not known_board and self.fallback_search and any(isinstance(candidate, WebSchematicRef) for candidate in candidates):
             repositories = self.candidates.get(('community', query), lambda: self.fallback_search(query, _community_candidate_limit()))
             if repositories and all(isinstance(candidate,GitHubRepositoryRef) for candidate in repositories):
                 self.candidates.replace(query,repositories)
@@ -578,7 +640,8 @@ class ExternalSchematicService:
         return _SearchFailure(reason)
 
     def find(self, query, selected_url=None, *, connections=None):
-        normalized = " ".join(query.split()).casefold()
+        from backend.projects.external_circuit_search import canonical_tsc_query
+        normalized = canonical_tsc_query(" ".join(query.split()).casefold())
         if not 2 <= len(query.strip()) <= 200:
             raise ValueError("검색어는 2~200자여야 합니다.")
         if '://' in query:
@@ -594,7 +657,9 @@ class ExternalSchematicService:
             if limited := self._retry_error(lookup_key):
                 raise limited
             try:
-                return self._find(normalized, connections)
+                from backend.projects.schematic_render import official_pdf_request
+                with official_pdf_request():
+                    return self._find(normalized, connections)
             except ExternalSchematicRateLimited as error:
                 self._set_retry_deadline(lookup_key, self.wall() + error.retry_after, error)
                 raise
@@ -670,8 +735,24 @@ def _search(query, limit):
         ExternalCircuitSearchError, search_github_repositories, search_manufacturer_schematics,
         search_public_schematics, _search_public_schematics, WebSchematicRef,
         component_context, component_evidence_matches, search_component_repositories,
+        is_tsc_query, search_tsc_schematics, semiconductor_manufacturer, search_semiconductor_schematics, semiconductor_part_query,
     )
     try:
+        # TSC is an official datasheet-only path. Never mix its results with
+        # community/GitHub fallback candidates.
+        if is_tsc_query(query):
+            candidates = search_tsc_schematics(query, min(3, limit))
+            LOGGER.info('schematic_search_route', extra={'phase': 'tsc_official', 'candidate_count': len(candidates)})
+            return candidates
+        if semiconductor_manufacturer(query) is not None:
+            candidates = search_semiconductor_schematics(query, min(5, limit))
+            LOGGER.info('schematic_search_route', extra={'phase': 'semiconductor_official', 'candidate_count': len(candidates)})
+            return candidates
+        if semiconductor_part_query(query):
+            candidates = search_semiconductor_schematics(query, min(5, limit))
+            LOGGER.info('schematic_search_route', extra={'phase': 'semiconductor_part_official', 'candidate_count': len(candidates)})
+            if candidates:
+                return candidates
         failed = False
         try:
             public = search_public_schematics(query, min(5,limit))
@@ -716,11 +797,30 @@ def _search(query, limit):
         raise ExternalSchematicUpstreamError() from None
 
 
+def _search_official_datasheets(query, limit):
+    from backend.projects.external_circuit_search import (
+        semiconductor_part_query, search_semiconductor_schematics,
+        ExternalCircuitSearchDisabled, ExternalCircuitSearchConfigurationError, ExternalCircuitSearchError,
+    )
+    part = semiconductor_part_query(query)
+    if not part:
+        return ()
+    try:
+        return search_semiconductor_schematics(f'{part} datasheet', min(5, limit))
+    except (ExternalCircuitSearchDisabled, ExternalCircuitSearchConfigurationError):
+        raise ExternalSchematicConfigurationError() from None
+    except ExternalCircuitSearchError:
+        raise ExternalSchematicUpstreamError() from None
+
+
 def _search_community(query, limit):
     from backend.projects.external_circuit_search import (
         ExternalCircuitSearchConfigurationError, ExternalCircuitSearchDisabled,
         ExternalCircuitSearchError, search_github_repositories, search_component_repositories, component_context,
+        is_tsc_query, semiconductor_manufacturer,
     )
+    if is_tsc_query(query) or semiconductor_manufacturer(query) is not None:
+        return ()
     try:
         return search_component_repositories(query,limit) if component_context(query)=='diode' else search_github_repositories(query,limit)
     except (ExternalCircuitSearchConfigurationError, ExternalCircuitSearchDisabled):
@@ -730,13 +830,13 @@ def _search_community(query, limit):
 
 
 def _inspect(repo, *, query):
-    from backend.projects.external_circuit_search import WebSchematicRef
+    from backend.projects.external_circuit_search import WebSchematicRef, is_tsc_query
     if isinstance(repo, WebSchematicRef):
         from backend.projects.schematic_render import inspect_public_schematic, fingerprint_public_schematic
 
         if repo.source_type == 'manufacturer_official':
             source_hash, sheets = inspect_public_schematic(
-                repo.source_url, repo.asset_kind, query, title=repo.title,
+                repo.source_url, repo.asset_kind, repo.model if is_tsc_query(query) else query, title=repo.title,
                 page_url=repo.page_url, source_file=repo.source_file,
             )
         else:
@@ -745,7 +845,7 @@ def _inspect(repo, *, query):
             "", "", repo.license, repo.attribution, repo.page_url,
             repo.source_url, repo.source_file, repo.asset_kind, (), repo.source_file,
             sheets, repo.source_type, repo.evidence_grade, repo.manufacturer,
-            query if repo.source_type == 'manufacturer_official' else repo.model,
+            (repo.model if is_tsc_query(query) else query) if repo.source_type == 'manufacturer_official' else repo.model,
             repo.revision, source_hash, repo.license_evidence_url),)
     from backend.projects.schematic_discovery import inspect_github_candidates
     return inspect_github_candidates(repo, query=query)
@@ -781,7 +881,8 @@ def _render_matching(source, connections):
 
 
 _SERVICE = ExternalSchematicService(_search, _inspect, _render, fallback_search=_search_community,
-                                   public_pdf_inspect=_inspect_published_pdf, match_render=_render_matching)
+                                   public_pdf_inspect=_inspect_published_pdf, match_render=_render_matching,
+                                   official_search=_search_official_datasheets)
 
 
 def _enabled():
