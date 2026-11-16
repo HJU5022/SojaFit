@@ -24,4 +24,4 @@
 ## 한계
 
 - 위 절차는 다시 돌려 확인하지 않았다.
-- `sojafit-emb` 이미지를 `Dockerfile.gpu_embed`로 만든다는 연결은 확인하지 못했다.
+- `sojafit-emb`가 `Dockerfile.gpu_embed`로 만든 이미지라는 것은 `Dockerfile.embedding_grid` 머리 주석에만 있다. 태그는 빌드 명령이 정하므로 당시 빌드 기록으로는 확인하지 못했다.

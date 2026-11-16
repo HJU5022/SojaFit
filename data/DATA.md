@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: 서비스·평가가 읽는 고정 데이터를 둔다. 코퍼스 문서 목록(`manifest.jsonl`), 패키지 외형 페이지 색인, 코퍼스 원본 표본, 평가·시연용 공개 회로, 키 없는 데모의 코퍼스 스냅샷과 LLM 응답 기록(`demo/`)이 있다. Dockerfile이 이 폴더를 이미지에 복사한다.
-- 넣는 것: `manifest.jsonl`(문서 단위 목록), 데이터시트 원본 표본(`corpus/tsc/` 3건), 공개 KiCad 회로(`circuits/`), 키 없는 데모 자료(`demo/`: compose가 로컬 DB에 넣는 코퍼스 스냅샷 `demo/snapshot/`, 재생할 LLM 응답 기록 `demo/recordings/`).
+- 넣는 것: `manifest.jsonl`(문서 단위 목록), 패키지 외형 페이지 색인(`package-outline-pages.json`, `backend/rag/source_metadata.py`가 읽음), 데이터시트 원본 표본(`corpus/tsc/` 3건), 신뢰 경계 시험용 합성 자료(`corpus/injection_tests/`), 공개 KiCad 회로(`circuits/`), 키 없는 데모 자료(`demo/`: compose가 로컬 DB에 넣는 코퍼스 스냅샷 `demo/snapshot/`, 재생할 LLM 응답 기록 `demo/recordings/`).
 - 넣지 않는 것: 데이터시트 PDF 전체 1,360건·파싱 결과(`docling` 산출물)·전체 청크(`chunks.jsonl`, 데모 스냅샷 `demo/snapshot/`만 예외)·임베딩 캐시(저장소 밖 작업 자료), 데이터를 만드는 코드(`backend/rag/`), 평가셋(`evals/`), 단위 테스트용 가공 회로(`tests/` 아래), 실제 API 응답 원본.
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
 - 정본: 코퍼스 문서·쪽·청크 수는 이 문서의 "코퍼스 수치" 표.

@@ -20,6 +20,8 @@
 
 `run_retrieval_layers.py`는 `$LAYERS_WORK/inputs/`에서 읽으므로 `layers/`의 파일을 그곳에 복사해 쓴다.
 
+`rewrite_q3_v3.json`을 직접 읽는 실행기는 없다. 평가셋 각 줄에 `queries[id].Q3`를 `query`로 더한 파일을 만들어 `run_retrieval_v3.py`에 주면 재작성 없이 그 질의로 검색한다(절차는 `evals/results/chunking/v1-vs-v4h-2026-11-13/README.md`의 "재현").
+
 ## 한계
 
 - `rewrite_q3_v2.json`은 생성 직후 자동 확인에서 m04(없던 숫자 123)와 n01(품번 1N5819 빠짐)이 표시됐다.
