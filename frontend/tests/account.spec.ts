@@ -6,14 +6,15 @@ test('설정 저장·복원과 A/B 계정 격리', async ({ page }) => {
   await expect(page).toHaveURL(/\/app/);
   await page.getByRole('link', { name: '내 설정', exact: true }).click();
   await page.getByLabel('소속', { exact: true }).fill('데모 회로설계팀');
-  await page.getByLabel('직무', { exact: true }).selectOption('design');
+  await page.getByLabel('직무', { exact: true }).fill('하드웨어 회로 설계');
   await page.getByLabel('선호 실장 방식', { exact: true }).selectOption('smd');
   await page.getByRole('button', { name: '설정 저장' }).click();
   await expect(page.getByText('내 설정을 저장했습니다.')).toBeVisible();
   await page.reload();
   await expect(page.getByLabel('소속', { exact: true })).toHaveValue('데모 회로설계팀');
+  await expect(page.getByLabel('직무', { exact: true })).toHaveValue('하드웨어 회로 설계');
   await page.getByLabel('소속', { exact: true }).fill('');
-  await page.getByLabel('직무', { exact: true }).selectOption('');
+  await page.getByLabel('직무', { exact: true }).fill('');
   await page.getByRole('button', { name: '설정 저장' }).click();
   await expect(page.getByText('내 설정을 저장했습니다.')).toBeVisible();
   await page.reload();

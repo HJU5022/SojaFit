@@ -13,6 +13,13 @@ import {
   useResource,
 } from './ui';
 import type { Fact, User } from './types';
+// [왜] 직무는 #24 전까지 이 코드 중에서 골랐다. 그때 저장한 값은 글 칸에 화면 이름으로 보인다(서버도 같은 코드를 이 이름으로 받음)
+const oldJobRoles: Record<string, string> = {
+  design: '설계',
+  purchasing: '구매',
+  student: '학생',
+  other: '기타',
+};
 export function Settings({ user, onLogout }: { user: User; onLogout: () => void }) {
   const memory = useResource<Fact[]>('/me/memory');
   const [values, setValues] = useState<Record<string, string>>({}),
@@ -21,7 +28,15 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
     [notice, setNotice] = useState(''),
     [deleting, setDeleting] = useState(false);
   useEffect(() => {
-    if (memory.data) setValues(Object.fromEntries(memory.data.map((f) => [f.kind, f.value])));
+    if (memory.data)
+      setValues(
+        Object.fromEntries(
+          memory.data.map((f) => [
+            f.kind,
+            f.kind === 'job_role' ? (oldJobRoles[f.value] ?? f.value) : f.value,
+          ]),
+        ),
+      );
   }, [memory.data]);
   async function save() {
     setBusy(true);
@@ -100,17 +115,12 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
               )}
               <label>
                 직무
-                <select
-                  aria-label="직무"
+                <input
+                  maxLength={100}
                   value={values.job_role ?? ''}
                   onChange={(e) => setValues({ ...values, job_role: e.target.value })}
-                >
-                  <option value="">선택 안 함</option>
-                  <option value="design">설계</option>
-                  <option value="purchasing">구매</option>
-                  <option value="student">학생</option>
-                  <option value="other">기타</option>
-                </select>
+                  placeholder="예: 하드웨어 회로 설계, 부품 구매, 생산 기술"
+                />
               </label>
               {memory.data?.some((f) => f.kind === 'job_role') && (
                 <button type="button" className="text-button" onClick={() => remove('job_role')}>
