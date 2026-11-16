@@ -1,0 +1,163 @@
+{
+ "runs": [
+  {
+   "run": "run1",
+   "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "clone_s": 12.249,
+   "clone_to_health_s": 266.284,
+   "up_to_health_s": 254.034,
+   "clone_to_smoke_end_s": 278.176,
+   "smoke_counts": {
+    "pass": 28
+   },
+   "rx_bytes_at_health": 591000749,
+   "load_at_up": [
+    4.95,
+    4.54,
+    4.23
+   ],
+   "load_end": [
+    15.8,
+    12.33,
+    7.95
+   ],
+   "started_kst": "2026-11-17T04:54:09.585+09:00"
+  },
+  {
+   "run": "run2",
+   "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "clone_s": 7.539,
+   "clone_to_health_s": 295.984,
+   "up_to_health_s": 288.445,
+   "clone_to_smoke_end_s": 309.755,
+   "smoke_counts": {
+    "pass": 28
+   },
+   "rx_bytes_at_health": 593637196,
+   "load_at_up": [
+    9.81,
+    9.39,
+    9.24
+   ],
+   "load_end": [
+    14.93,
+    13.56,
+    11.23
+   ],
+   "started_kst": "2026-11-17T05:09:55.684+09:00"
+  },
+  {
+   "run": "run3",
+   "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "clone_s": 8.692,
+   "clone_to_health_s": 244.522,
+   "up_to_health_s": 235.83,
+   "clone_to_smoke_end_s": 254.398,
+   "smoke_counts": {
+    "pass": 28
+   },
+   "rx_bytes_at_health": 590601073,
+   "load_at_up": [
+    14.7,
+    13.54,
+    11.32
+   ],
+   "load_end": [
+    11.05,
+    13.63,
+    12.07
+   ],
+   "started_kst": "2026-11-17T05:15:48.130+09:00"
+  },
+  {
+   "run": "run4",
+   "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "clone_s": 7.311,
+   "clone_to_health_s": 234.346,
+   "up_to_health_s": 227.034,
+   "clone_to_smoke_end_s": 244.609,
+   "smoke_counts": {
+    "pass": 28
+   },
+   "rx_bytes_at_health": 592715493,
+   "load_at_up": [
+    9.63,
+    12.98,
+    11.9
+   ],
+   "load_end": [
+    9.46,
+    12.48,
+    12.07
+   ],
+   "started_kst": "2026-11-17T05:20:33.450+09:00"
+  },
+  {
+   "run": "run5",
+   "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "clone_s": 7.727,
+   "clone_to_health_s": 148.938,
+   "up_to_health_s": 141.211,
+   "clone_to_smoke_end_s": 158.515,
+   "smoke_counts": {
+    "pass": 28
+   },
+   "rx_bytes_at_health": 592448858,
+   "load_at_up": [
+    8.94,
+    11.98,
+    11.91
+   ],
+   "load_end": [
+    10.8,
+    12.1,
+    11.99
+   ],
+   "started_kst": "2026-11-17T05:25:12.192+09:00"
+  },
+  {
+   "run": "run6",
+   "commit": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "main_at_clone": "799ae63613a83105d3fd6e49d0abf3561b2f888c",
+   "clone_s": 13.341,
+   "clone_to_health_s": 207.649,
+   "up_to_health_s": 194.301,
+   "clone_to_smoke_end_s": 217.441,
+   "smoke_counts": {
+    "pass": 28
+   },
+   "rx_bytes_at_health": 593039222,
+   "load_at_up": [
+    12.26,
+    12.07,
+    11.97
+   ],
+   "load_end": [
+    14.2,
+    13.38,
+    12.58
+   ],
+   "started_kst": "2026-11-17T05:28:33.930+09:00"
+  }
+ ],
+ "n_ok": 6,
+ "median": {
+  "clone_to_health_s": 239.434,
+  "up_to_health_s": 231.43200000000002
+ },
+ "range": {
+  "clone_to_health_s": [
+   148.938,
+   295.984
+  ],
+  "up_to_health_s": [
+   141.211,
+   288.445
+  ]
+ }
+}

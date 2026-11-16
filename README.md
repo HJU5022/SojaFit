@@ -11,9 +11,9 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | API(배포) 주소 | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상. Cloud Run이라 첫 요청은 몇 초 걸린다. 같은 주소의 `/login`이 React 화면이다 |
-| 배포 리비전 | `sojafit-api-main-a0abece5-1116`(소스 `main` `a0abece5`, 2026-11-16 04:36 KST 100% 전환). 0% 태그 주소에서 `/health` · `/login` · `/` · `/app` 200과 새 화면 코드(새 프로젝트 창 수정)를 확인한 뒤 전환했고, 전환 뒤 운영 주소도 같은 4개가 200이다. 환경변수 33개는 이전 리비전과 같다(`DEMO_MODE=0`).<br>이전 리비전: `sojafit-api-main76fadcb4-1116`(소스 `76fadcb4`, 11-16 04:07 ~ 04:36 KST, 되돌릴 곳), 그 전 `sojafit-api-main7ba86325-1115`(소스 `7ba86325`, 11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정) | 리비전 · 트래픽 100% · 환경변수는 `gcloud run services describe` · `gcloud run revisions describe`로 확인했다(11-16 04:37 KST). 평가용 계정 A · B 25단계(로그인, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작, 같은 run 재개, 승인, 같은 승인 다시(409), 견적, 계정 B의 접근 404)는 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`, 11-13)에서 통과(실패 0 · 건너뜀 0)했고, 지금 리비전에서 같은 점검을 했다는 기록은 없다(확인 못 함). 하지 않은 것: Google 로그인 왕복, 이메일 가입 왕복. 11-14 22:43 ~ 11-15 21:26 KST에는 고정해 둔 `EXA_API_KEY` 비밀 버전이 파기돼 새 인스턴스가 시작하지 못했다([GATES](docs/GATES.md) G1). 증거: [evals/results/d10/deploy_574de79/](evals/results/d10/deploy_574de79/README.md), [docs/GATES.md](docs/GATES.md) G1 · G4 |
+| 배포 리비전 | `sojafit-api-main-799ae636-1117`(소스 `main` `799ae636`, PR #147 병합. 리비전 생성 2026-11-17 04:49 KST, 05:03 KST 조회 때 트래픽 100%). 로그인 없는 GET `/health` · `/login` · `/` · `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 53 · 경로 42(11-17 05:03 KST).<br>그 앞: `sojafit-api-main-a0abece5-1116`(소스 `a0abece5`, 11-16 04:36 KST 100% 전환, 환경변수 33개 `DEMO_MODE=0`), `sojafit-api-main76fadcb4-1116`(11-16 04:07 ~ 04:36 KST), `sojafit-api-main7ba86325-1115`(11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 그 사이 리비전(`main-3ce5abdc-1116` · `main-9c87ba36-1116`)의 전환 시각은 확인하지 않았다 | 지금 리비전 · 트래픽은 `gcloud run services describe` · `gcloud run revisions list`(읽기만, 11-17 05:03 KST), GET 결과는 [d12/prod_unauth](evals/results/d12/prod_unauth/unauth_checks.txt). 지금 리비전 환경변수는 34개이고 `DEMO_MODE=0` · `DEMO_REPLAY=0` · `EXA_WEB_SEARCH_ENABLED=1` · `THREADS_ENABLED=1`, `WEB_PREFETCH` · `LLM_PROVIDER` · `ANTHROPIC_API_KEY`는 없다(이름과 이 값만 읽음, [revision_env.txt](evals/results/d12/prod_unauth/revision_env.txt)). a0abece5 리비전의 값은 11-16 04:37 KST `gcloud run revisions describe`로 확인했다. 평가용 계정 A · B 25단계(로그인, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작, 같은 run 재개, 승인, 같은 승인 다시(409), 견적, 계정 B의 접근 404)는 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`, 11-13)에서 통과(실패 0 · 건너뜀 0)했고, 그 뒤 리비전과 지금 리비전에서 같은 점검을 했다는 기록은 없다(확인 못 함. 평가용 계정 비밀번호가 필요해 조장이 돌린다. 명령: [evals/results/d12/README.md](evals/results/d12/README.md) 「25단계 다시 하기」). 하지 않은 것: Google 로그인 왕복, 이메일 가입 왕복. 11-14 22:43 ~ 11-15 21:26 KST에는 고정해 둔 `EXA_API_KEY` 비밀 버전이 파기돼 새 인스턴스가 시작하지 못했다([GATES](docs/GATES.md) G1). 증거: [evals/results/d10/deploy_574de79/](evals/results/d10/deploy_574de79/README.md), [docs/GATES.md](docs/GATES.md) G1 · G4 |
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
-| 기준 커밋 | `a0abece5`(`main`) | 이 문서가 기술하는 코드의 기준이고 운영 배포 소스와 같다(`git diff --stat a0abece5 origin/main -- backend frontend db Dockerfile` 차이 0, 11-16 04:37 KST). 동결 커밋(11-16 24:00)의 코드가 이 커밋과 다르면 이 줄을 그 커밋으로 고친다 |
+| 기준 커밋 | `799ae636`(`main`, PR #147 병합, 11-17 04:45 KST) | 11-17 재측정([evals/results/d12/](evals/results/d12/README.md))의 대상 커밋이고, 지금 운영 리비전 이름의 소스 커밋과 같다(이미지 내용과 커밋을 따로 대조하지는 않았다). 이 문서의 수치 중 측정 커밋이 따로 적힌 행은 그 커밋의 값이다. 이전 기준 `a0abece5`(11-16)와 `backend frontend db Dockerfile docker-compose.yml` 차이는 96개 파일이다 |
 | 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 새 대화(`/app`: 회로 없이 바로 질문하거나 넷리스트 · 회로도를 첨부), 회로 작업대(`/app?project=`: 프로젝트 · KiCad 넷리스트(`.net`) · 회로도(`.kicad_sch`) 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 부품 점검표 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`, 사례마다 대체 검토 보고서), 데이터시트 서재(`/library`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
 | 시연 영상 | 영상 파일 없음. 초안 스크립트 [`docs/deliverables/demo_script.md`](docs/deliverables/demo_script.md) | 정상 1 + 실패(거절) 1, 3분 이내 |
 
@@ -222,10 +222,11 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 
 ## 4. 지표
 
-기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 값이다. 이 절 첫 표(통과 50/50 · p95 10.0 · 8.6 ~ 8.9 등)의 측정은 결과 파일에 `DEMO_MODE`가 없는 11-14 이전 값이다(코드 기본값 1 = 검색이 BM25만). `DEMO_MODE=0`이 기록된 v3 50문항 측정의 통과 수는 47 ~ 50/50이다(아래 "통과 수와 응답 시간(조건별)" 표의 통과 열). 수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 3-D · 8장이다.
+기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 값이다. 이 절 첫 표(통과 50/50 · p95 10.0 · 8.6 ~ 8.9 등)의 측정은 결과 파일에 `DEMO_MODE`가 없는 11-14 이전 값이다(코드 기본값 1 = 검색이 BM25만). `DEMO_MODE=0`이 기록된 v3 50문항 측정의 통과 수는 47 ~ 50/50이다(아래 "통과 수와 응답 시간(조건별)" 표의 통과 열). 지금 코드(`799ae636`)를 웹 켬 + 미리 출발(11-14 채택 평가 구성)로 2026-11-17에 다시 잰 값은 표 첫 행이다. 수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 3-D · 8장이다.
 
 | 지표 | 값 | 조건 | 원시 결과 |
 |---|---|---|---|
+| 지금 코드 재측정: 통과 · 응답 시간 · LLM 비용 | 두 세트 모두 **49/50**(cited_gold 24 · correct_refusal 25, 실패 v3-16 `wrong_citation`, 지어낸 답 0). p50 · p95 5.5 · 16.7초 / 4.8 · 9.1초. 세트당 $0.036 | 1세트씩 2번(A · B), 커밋 `799ae636`, 11-17, `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`, LLM은 OpenRouter 경유. 운영 리비전과 다른 점은 미리 출발(`WEB_PREFETCH=1`) 하나다: 운영 `main-799ae636-1117`에는 `WEB_PREFETCH`가 없어 꺼져 있다(`DEMO_MODE=0` · `EXA_WEB_SEARCH_ENABLED=1` · `ANTHROPIC_API_KEY` 없음은 같다)([revision_env.txt](evals/results/d12/prod_unauth/revision_env.txt)). A는 같은 호스트의 docker 빌드와 겹쳤다(1분 부하 12 ~ 16). `gate_report` 기준 미달: A p95, B 없음 | [d12/gate/set1.json](evals/results/d12/gate/set1.json) · [set_b/set1.json](evals/results/d12/gate/set_b/set1.json), [d12 README](evals/results/d12/README.md) 「지금 코드의 v3 게이트」 |
 | 통과(정답 근거 인용 + 올바른 거절) | 50/50 (cited_gold 25 · correct_refusal 25) | 1세트, 커밋 `520988c`+작업 트리 변경, 11-12 | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
 | 응답 시간 | p50 4.9초 · p95 10.0초 (`DEMO_MODE` 미기록) | 위와 같음 | 위와 같음. 조건별 값은 아래 "응답 시간(조건별)" |
 | 통과 · 무관 거절 · 지어낸 답 | 4세트 모두 50/50 · 25/25 · 0 | 사전 등록 #50, 커밋 `93a497c` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_4sets_93a497c.json` |
@@ -245,12 +246,13 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 | 웹 켬 · G2 set2 | 0 | 1 | 11-14 · `1df3f93` | 49/50 | 5.3 | 13.3 | `2026-11-14-grade3-early/G2/set2.json` |
 | 웹 켬 · R1 set1(마지막 채택 구성) | 0 | 1 | 11-14 · `b790004` | 50/50 | 6.8 | 10.5 | `2026-11-14-no-replan/R1/set1.json` |
 | 웹 켬 · R1 set2 | 0 | 1 | 11-14 · `b790004` | 48/50 | 5.9 | 12.1 | `2026-11-14-no-replan/R1/set2.json` |
+| 웹 켬 · 지금 코드(d12) A · B | 0 | 1(`WEB_PREFETCH=1`) | 11-17 · `799ae636` | 49/50 · 49/50 | 5.5 · 4.8 | 16.7 · 9.1 | `evals/results/d12/gate/set1.json` · `set_b/set1.json`(이 행만 `graph/` 밖) |
 
-- **p95 ≤ 10초(SPEC 3절 목표)는 일부 조건에서만 충족된다.** 10초 이내인 값(9.2 · 10.0 · 8.1)은 모두 `DEMO_MODE` 미기록 행이다. `DEMO_MODE=0`이 기록된 이 표의 행은 웹을 끈 쪽(10.9)도 넘었고, 웹 근거를 켠 행은 10.5 ~ 13.3초다. 웹을 끈 후속 측정 중 일부는 10초 안이다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절. 그 결과 파일은 이 저장소 브랜치에 없는 것을 포함한다).
+- **p95 ≤ 10초(SPEC 3절 목표)는 일부 조건에서만 충족된다.** 이 표에서 10초 이내인 값은 `DEMO_MODE` 미기록 행(9.2 · 10.0 · 8.1)과 11-17 지금 코드 B 세트(9.1, `DEMO_MODE=0` 웹 켬)뿐이고, 같은 코드 A 세트는 16.7초였다. `DEMO_MODE=0`이 기록된 이 표의 행은 웹을 끈 쪽(10.9)도 넘었고, 웹 근거를 켠 행은 9.1 ~ 16.7초다(11-17 지금 코드 두 세트가 9.1 · 16.7초로 이 표의 양 끝이다. 16.7초 세트는 같은 호스트의 docker 빌드와 겹쳤다). 웹을 끈 후속 측정 중 일부는 10초 안이다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절. 그 결과 파일은 이 저장소 브랜치에 없는 것을 포함한다).
 - 웹을 켜면 느린 쪽은 웹 근거를 찾는 문항이다. 거절해야 하는 문항도 웹 근거를 찾느라 시간이 든다(`2026-11-14-web-prefetch/README.md`). 운영 설정은 웹 켬(`EXA_WEB_SEARCH_ENABLED=1`)이다.
 - 같은 코드의 두 세트끼리도 p95가 0.3 ~ 1.6초 다르다(G2 13.0 · 13.3, R1 10.5 · 12.1). 속도 실험의 같은 코드 4회는 13.0 ~ 16.8초였다([EVAL_REPORT.md](EVAL_REPORT.md) 8.2절). 한 번의 값으로 1~2초 차이를 가리기 어렵다.
 
-검색 기준선(v1, 폐기한 설정): 관련 19문항, `text-embedding-3-small` 하이브리드(RRF) 문서 Recall@5 0.737 · MRR 0.649 · Page Hit@5 0.368, 벡터만 0.684 · 0.589 · 0.263, BM25만 0.263 · 0.195 · 0.211(`evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`). 현재 설정(`voyage-4-large` + `rerank-3`)의 R1 test 38문항 Page Recall@5는 0.579 → 0.908이다(EVAL_REPORT 1-4절). 개선 전후 비교와 실패 분석은 [EVAL_REPORT.md](EVAL_REPORT.md)에 있다.
+검색 기준선(v1, 폐기한 설정): 관련 19문항, `text-embedding-3-small` 하이브리드(RRF) 문서 Recall@5 0.737 · MRR 0.649 · Page Hit@5 0.368, 벡터만 0.684 · 0.589 · 0.263, BM25만 0.263 · 0.195 · 0.211(`evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`). 현재 설정(`voyage-4-large` + `rerank-3`)의 R1 test 38문항 Page Recall@5는 0.579 → 0.908이다(EVAL_REPORT 1-4절). 같은 서비스 `retrieve()` 실행기(`run_retrieval_service`)로 11-17 지금 코드(`799ae636`, v4h 코퍼스)를 다시 재면 11-04(#26) 대비 R1 고르기용 46 0.8587 → 0.8152, 확인용 38 0.9079 → 0.9079, v2 19 0.8246 → 0.7939, `retrieve()` p50 · p95 1.22 · 2.04 → 0.53 · 0.87초다. 사이에 코퍼스(v1 → v4h)와 검색 코드가 함께 바뀌어 원인을 나누지 않았다([evals/results/d12/retrieval/](evals/results/d12/retrieval/service_r1_2026-11-17.json)). 개선 전후 비교와 실패 분석은 [EVAL_REPORT.md](EVAL_REPORT.md)에 있다.
 
 ---
 
@@ -304,7 +306,7 @@ KiCad 원본 회로도를 그림(PNG)으로 바꾸는 일만 하는 별도 서�
 | 회로도 업로드(#52) | `.kicad_sch`를 올리면 API가 원문을 `POST /render` `{schematic}`로 보내 넷리스트와 그림을 받는다(`backend/api/projects.py` `read_schematic`, SPEC 8.10). 이 경로는 API 안 `kicad-cli`로 대신하지 않아 렌더러가 없으면 503이다 | `backend/projects/schematic.py` `export_uploaded_kicad` |
 | 렌더러 없이 | `INCLUDE_KICAD=1`로 API 이미지를 빌드해 `kicad-cli`를 넣고 `KICAD_RENDERER_URL`을 비워 두면 API 프로세스가 직접 부른다(실행 파일은 `KICAD_CLI`로 지정). compose의 api는 위 기본 주소가 있어 이 방식은 compose 밖에서 쓴다 | [`Dockerfile`](Dockerfile), `backend/projects/external_schematic.py` |
 
-렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)와 회로도 업로드(아래 표 줄)뿐이다. 분석 그래프 · `.net` 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 다만 분리(`renderer` target 추가) 뒤의 코드로 키 없는 새 clone 기동과 스모크를 다시 재지는 않았다([GATES](docs/GATES.md) G2).
+렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)와 회로도 업로드(아래 표 줄)뿐이다. 분석 그래프 · `.net` 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 분리(`renderer` target 추가) 뒤의 코드(`799ae636`)로 키 없는 새 clone 기동과 스모크를 11-17에 6회 다시 쟀다: `/health` 200 중앙값 239.4초, 스모크 6회 모두 28/28(profile 없이 기본 `docker compose up --build`, [GATES](docs/GATES.md) G2).
 
 ### 화면 개발 서버
 
@@ -324,7 +326,7 @@ uv run python evals/runners/freeze.py --check                                 # 
 uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json> 5 hybrid  # 검색 지표(코퍼스 DB와 임베딩 키 필요)
 ```
 
-- `freeze.py --check`는 2026-11-16에 실행했고 "동결 이후 바뀐 파일: 없음"(종료 코드 0)이었다. 동결 해시 v1 · v2 · v3의 기록은 [`evals/FROZEN.json`](evals/FROZEN.json), v3의 재동결 이력은 [EVAL_REPORT.md](EVAL_REPORT.md) 2절 표와 [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md)에 있다.
+- `freeze.py --check`는 2026-11-17 `799ae636`에서 다시 실행했고 "동결 이후 바뀐 파일: 없음"(종료 코드 0)이었다([d12/checks/freeze_check.txt](evals/results/d12/checks/freeze_check.txt)). 동결 해시 v1 · v2 · v3의 기록은 [`evals/FROZEN.json`](evals/FROZEN.json), v3의 재동결 이력은 [EVAL_REPORT.md](EVAL_REPORT.md) 2절 표와 [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md)에 있다.
 - **v3 기준 게이트(유료, 키 필요).** 평가자가 다시 돌리려면 `.env`에 `OPENROUTER_API_KEY`, `VOYAGE_API_KEY`, 코퍼스를 적재한 `DATABASE_URL`, `LANGFUSE_*` 키가 있어야 하고, 서비스와 같은 검색 설정으로 재려면 `DEMO_MODE=0`을 **명시**한다(안 쓰면 코드 기본값 1 = BM25만이라 위 응답 시간 표의 "미기록" 행처럼 조건이 달라진다). 명령 앞에 붙인 `DEMO_MODE=0`이 `.env`의 값보다 우선한다(`.env`에 `DEMO_MODE=1`을 넣고 uv 0.13.7에서 `0`이 나오는 것을 확인했다). 웹 근거까지 재려면 `EVAL_WEB=1`과 `EXA_WEB_SEARCH_ENABLED=1` · `EXA_API_KEY`가 더 필요하고 Exa 검색 요금이 따로 든다.
 
   ```bash
@@ -333,8 +335,8 @@ uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json
   uv run python -m evals.runners.gate_report evals/dataset_v3.jsonl eval-out   # 무료. 기준 미달이면 종료 코드 1
   ```
 
-  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 이 명령 자체는 이번에 다시 실행하지 않았다(유료). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
-- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡을 당시 순서 `npm ci && npm run test:run && npm run build`로, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md). 지금 `frontend` 잡은 `npm ci` → `npm test` → `npm run format:check` → `npm run build`이고, 새 화면으로 바꾸며 `test:run`은 없어졌다). 동결 직전에 `pytest` · `freeze.py --check` · `gitleaks`를 다시 돌려야 한다. Actions에서의 실제 실행 결과는 확인하지 못했다.
+  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 11-17에 `799ae636`을 `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 EXA_WEB_SEARCH_ENABLED=1`(운영과 미리 출발만 다름)로 이 실행기에 다시 넣었다: 1세트 LLM $0.036, 결과는 4절 첫 행([evals/results/d12/](evals/results/d12/README.md)). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
+- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡을 당시 순서 `npm ci && npm run test:run && npm run build`로, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md). 지금 `frontend` 잡은 `npm ci` → `npm test` → `npm run format:check` → `npm run build`이고, 새 화면으로 바꾸며 `test:run`은 없어졌다). 11-17 `799ae636`에서 셋을 로컬로 다시 돌렸다: Linux 컨테이너 pytest는 한 프로세스 전체 실행이 3회 모두 `tests/rag/test_card_find.py` · `test_card_read.py`의 새 스레드 시작에서 멈췄고(11-16 `4c5afc1e`은 67초에 2,495 통과), `tests/` 폴더마다 따로 돌리면 2,997 통과 · 0 실패 · 205 건너뜀이다. macOS 호스트에서 한 프로세스로 돌리면 멈추지 않고 2,982 통과 · 15 실패(cairo 없는 SVG 11개 등) · 205 건너뜀이다. `freeze.py --check` 바뀐 파일 없음, gitleaks 이력 1,250 커밋 발견 0([d12 README](evals/results/d12/README.md) 「동결 직전 pytest · freeze · gitleaks」). Actions에서의 실제 실행 결과는 확인하지 못했다.
 
 ---
 

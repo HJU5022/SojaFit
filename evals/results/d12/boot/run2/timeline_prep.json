@@ -1,0 +1,21 @@
+{
+ "phase": "prep",
+ "T0_epoch": null,
+ "events": [
+  {
+   "event": "prep_start",
+   "iso_kst": "2026-11-17T05:09:50.570+09:00",
+   "epoch": 1794859790.571,
+   "t_sec": null
+  },
+  {
+   "event": "prep_apk_done",
+   "iso_kst": "2026-11-17T05:09:54.075+09:00",
+   "epoch": 1794859794.075,
+   "t_sec": null,
+   "seconds": 3.2,
+   "rx_bytes": 19967055,
+   "packages": "git python3 py3-httpx tzdata"
+  }
+ ]
+}

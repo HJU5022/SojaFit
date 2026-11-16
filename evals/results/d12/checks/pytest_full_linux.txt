@@ -1,0 +1,253 @@
+# pytest full run log (Linux container, d12 run 2)
+date: 2026-11-17 05:10 KST
+commit: 799ae63613a83105d3fd6e49d0abf3561b2f888c (clean local clone)
+image: sojafit-d12-api:799ae636, 저장소 Dockerfile로 호스트 Docker에서 빌드(층 캐시 적중), id sha256:85f5222c5802f3883043cc04c3b8f934c3b0b7e5602b0ae0c6975109c041ebbf, arm64
+command: docker run --rm --user root -e UV_PROJECT_ENVIRONMENT=/tmp/venv -e UV_LINK_MODE=copy -e PYTHONDONTWRITEBYTECODE=1 -v <clone>:/work -w /work sojafit-d12-api:799ae636 sh -c 'apt-get install git; uv run --locked pytest -p no:cacheprovider -rs -o faulthandler_timeout=240'
+------------------------------------------------------------
+aarch64
+Python 3.12.16
+git version 2.47.3
+Using CPython 3.12.16 interpreter at: /usr/local/bin/python3.12
+Creating virtual environment at: /tmp/venv
+Downloading openai (1.6MiB)
+Downloading pypdfium2 (3.5MiB)
+Downloading networkx (2.0MiB)
+Downloading tiktoken (1.1MiB)
+Downloading pyarrow (49.4MiB)
+Downloading scipy (32.4MiB)
+Downloading numpy (15.0MiB)
+Downloading scikit-network (7.6MiB)
+Downloading pandas (10.9MiB)
+Downloading pdfminer-six (6.3MiB)
+Downloading psycopg-binary (6.5MiB)
+Downloading zstandard (4.8MiB)
+Downloading cryptography (4.5MiB)
+Downloading sqlalchemy (4.5MiB)
+Downloading pillow (6.2MiB)
+Downloading uvloop (4.2MiB)
+Downloading hf-xet (3.9MiB)
+Downloading langchain-community (2.3MiB)
+Downloading aiohttp (1.8MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading pygments (1.2MiB)
+ Downloaded pygments
+ Downloaded tiktoken
+ Downloaded openai
+   Building langid==1.1.6
+ Downloaded networkx
+ Downloaded aiohttp
+ Downloaded pydantic-core
+ Downloaded langchain-community
+ Downloaded pypdfium2
+ Downloaded hf-xet
+ Downloaded uvloop
+ Downloaded sqlalchemy
+ Downloaded cryptography
+ Downloaded zstandard
+ Downloaded pdfminer-six
+ Downloaded pillow
+ Downloaded psycopg-binary
+ Downloaded scikit-network
+ Downloaded pandas
+ Downloaded numpy
+ Downloaded scipy
+ Downloaded pyarrow
+      Built langid==1.1.6
+Installed 143 packages in 32.67s
+Bytecode compiled 13290 files in 23.22s
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: /work
+configfile: pytest.ini
+testpaths: tests
+plugins: langsmith-0.14.14, anyio-4.15.1
+collected 3202 items
+
+tests/api/test_admin.py ssss                                             [  0%]
+tests/api/test_auth.py ..sss.s....ss.................ssss..ssss.ssss.s.. [  1%]
+.ss.................ssss...............                                  [  2%]
+tests/api/test_conversations.py ........................................ [  4%]
+.......................................                                  [  5%]
+tests/api/test_datasheets.py .ss...                                      [  5%]
+tests/api/test_deletion.py ssssssssssssssss                              [  6%]
+tests/api/test_email_auth.py ..ssssssssssss......                        [  6%]
+tests/api/test_errors.py ...........................                     [  7%]
+tests/api/test_external_circuits.py .................................... [  8%]
+....................................................................     [ 10%]
+tests/api/test_frontend.py ........................................      [ 11%]
+tests/api/test_full_service_flow.py ssssssss                             [ 12%]
+tests/api/test_google_users.py .......sssssssssss                        [ 12%]
+tests/api/test_health.py ........                                        [ 13%]
+tests/api/test_http_restart.py s                                         [ 13%]
+tests/api/test_http_smoke.py .........                                   [ 13%]
+tests/api/test_injection_http.py ..........                              [ 13%]
+tests/api/test_local_live_config.py ss                                   [ 13%]
+tests/api/test_logs.py .......                                           [ 13%]
+tests/api/test_openapi.py ............................                   [ 14%]
+tests/api/test_prices.py ..........                                      [ 15%]
+tests/api/test_projects.py ............................................. [ 16%]
+......................s.................ss                               [ 17%]
+tests/api/test_public_grants.py sss                                      [ 17%]
+tests/api/test_quotes.py ........s                                       [ 18%]
+tests/api/test_threads.py ..........................sss...ssssssssssssss [ 19%]
+sssssss...ss                                                             [ 20%]
+tests/conversations/test_charge_pool.py ......                           [ 20%]
+tests/conversations/test_dto.py ........................................ [ 21%]
+..............                                                           [ 21%]
+tests/conversations/test_profile.py ..........ss                         [ 22%]
+tests/conversations/test_repository.py sssssssssssssssssssssssssss       [ 23%]
+tests/db/test_schema_docs.py ssssssssss                                  [ 23%]
+tests/evals/test_approval_wait_report.py ..s                             [ 23%]
+tests/evals/test_bit_search.py ....                                      [ 23%]
+tests/evals/test_check_injection_result.py ....                          [ 23%]
+tests/evals/test_chunk_source_check.py .................                 [ 24%]
+tests/evals/test_claim_consistency.py .....                              [ 24%]
+tests/evals/test_compare_supervisor_prompt_v0.py ....                    [ 24%]
+tests/evals/test_embedding_grid.py ......                                [ 24%]
+tests/evals/test_eval_grader.py .........                                [ 25%]
+tests/evals/test_frozen_evals.py ...                                     [ 25%]
+tests/evals/test_gate_report.py ...                                      [ 25%]
+tests/evals/test_import_human_review.py ......                           [ 25%]
+tests/evals/test_import_supervisor_prompt_v0_langfuse.py .......         [ 25%]
+tests/evals/test_injection_baseline.py ................................. [ 26%]
+..................                                                       [ 27%]
+tests/evals/test_injection_baseline_plan.py .....................        [ 27%]
+tests/evals/test_injection_preflight.py ..............................   [ 28%]
+tests/evals/test_input_surfaces.py .........                             [ 29%]
+tests/evals/test_judgement_bundle.py .................s                  [ 29%]
+tests/evals/test_retrieval_d3.py ....                                    [ 29%]
+tests/evals/test_retrieval_layers.py ............                        [ 30%]
+tests/evals/test_retrieval_service.py .....                              [ 30%]
+tests/evals/test_run_graph.py .....................                      [ 31%]
+tests/evals/test_run_judge_dev.py ....                                   [ 31%]
+tests/evals/test_saved_defense_replay.py ....                            [ 31%]
+tests/evals/test_score_answer.py ...............                         [ 31%]
+tests/evals/test_score_compound.py ..                                    [ 31%]
+tests/evals/test_score_ragas.py .....                                    [ 31%]
+tests/evals/test_skill_pair.py ..................                        [ 32%]
+tests/evals/test_stage_timing.py .......                                 [ 32%]
+tests/evals/test_supervisor_guard_injection.py ....                      [ 32%]
+tests/evals/test_supervisor_jev.py ..................................... [ 34%]
+...                                                                      [ 34%]
+tests/evals/test_supervisor_models.py .....................              [ 34%]
+tests/evals/test_supervisor_prompt_v0.py ......                          [ 34%]
+tests/evals/test_supervisor_prompt_v0_common.py ....                     [ 35%]
+tests/evals/test_supervisor_prompt_v0_jev.py .......                     [ 35%]
+tests/evals/test_supervisor_stage3_report.py ..........                  [ 35%]
+tests/evals/test_trust_boundary.py .........                             [ 35%]
+tests/graph/test_agent_netlist.py .............                          [ 36%]
+tests/graph/test_graph_build.py .............................            [ 37%]
+tests/graph/test_graph_generate.py ............                          [ 37%]
+tests/graph/test_graph_grade.py ....                                     [ 37%]
+tests/graph/test_graph_mcp_retriever.py ..................               [ 38%]
+tests/graph/test_graph_mcp_stdio.py s                                    [ 38%]
+tests/graph/test_graph_read_input.py .............                       [ 38%]
+tests/graph/test_graph_refuse.py ........                                [ 38%]
+tests/graph/test_graph_rewrite.py ....                                   [ 39%]
+tests/graph/test_graph_route.py ......                                   [ 39%]
+tests/graph/test_graph_search.py .....                                   [ 39%]
+tests/graph/test_graph_state.py .                                        [ 39%]
+tests/graph/test_graph_supervisor.py .....                               [ 39%]
+tests/judge/test_judge_conditions.py ........................            [ 40%]
+tests/judge/test_judge_pricing.py ............                           [ 40%]
+tests/judge/test_judge_rules_file.py .......                             [ 40%]
+tests/judge/test_judge_sheet_conditions.py .................             [ 41%]
+tests/judge/test_judge_verdict.py ...................................... [ 42%]
+.....                                                                    [ 42%]
+tests/mcp_skill/test_mcp_server.py ..................................... [ 43%]
+...................                                                      [ 44%]
+tests/multi_agent/test_agents.py .............................           [ 45%]
+tests/multi_agent/test_build.py ........................................ [ 46%]
+........................................................................ [ 48%]
+..................                                                       [ 49%]
+tests/multi_agent/test_contracts.py ..............                       [ 49%]
+tests/multi_agent/test_docs_agent.py ................................... [ 51%]
+........................................................................ [ 53%]
+....................................                                     [ 54%]
+tests/multi_agent/test_facts_lookup.py .............                     [ 54%]
+tests/multi_agent/test_judge.py ........................................ [ 56%]
+................................................                         [ 57%]
+tests/multi_agent/test_judge_read.py ................................... [ 58%]
+.................................................                        [ 60%]
+tests/multi_agent/test_part_names.py ..............................      [ 61%]
+tests/multi_agent/test_readme_graph.py .                                 [ 61%]
+tests/multi_agent/test_supervisor.py ................................... [ 62%]
+..................                                                       [ 62%]
+tests/projects/test_catalog.py .....                                     [ 62%]
+tests/projects/test_external_circuit_search.py ...............           [ 63%]
+tests/projects/test_external_schematic.py .............................. [ 64%]
+........................................................................ [ 66%]
+.....                                                                    [ 66%]
+tests/projects/test_netlist.py ......................................... [ 68%]
+......................                                                   [ 68%]
+tests/projects/test_official_schematic.py .............................. [ 69%]
+........................................................................ [ 71%]
+.............                                                            [ 72%]
+tests/projects/test_project_repository.py .s.ssssssssssss                [ 72%]
+tests/projects/test_schematic_dialogue.py ...............                [ 73%]
+tests/projects/test_schematic_discovery.py ............................. [ 74%]
+........................................................................ [ 76%]
+................                                                         [ 76%]
+tests/projects/test_schematic_render.py ................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+...................................                                      [ 83%]
+tests/projects/test_service_schema.py ssssssssss                         [ 83%]
+tests/projects/test_visuals.py .....................                     [ 84%]
+tests/rag/test_card_find.py Timeout (0:04:00)!
+Thread 0x0000ffff415ff180 (most recent call first):
+  File "/usr/local/lib/python3.12/threading.py", line 355 in wait
+  File "/usr/local/lib/python3.12/queue.py", line 171 in get
+  File "/tmp/venv/lib/python3.12/site-packages/langfuse/_utils/prompt_cache.py", line 50 in run
+  File "/usr/local/lib/python3.12/threading.py", line 1075 in _bootstrap_inner
+  File "/usr/local/lib/python3.12/threading.py", line 1032 in _bootstrap
+
+Thread 0x0000ffff5aa2f180 (most recent call first):
+  File "/usr/local/lib/python3.12/threading.py", line 359 in wait
+  File "/usr/local/lib/python3.12/threading.py", line 655 in wait
+  File "/tmp/venv/lib/python3.12/site-packages/opentelemetry/sdk/_shared_internal/__init__.py", line 159 in worker
+  File "/usr/local/lib/python3.12/threading.py", line 1012 in run
+  File "/usr/local/lib/python3.12/threading.py", line 1075 in _bootstrap_inner
+  File "/usr/local/lib/python3.12/threading.py", line 1032 in _bootstrap
+
+Thread 0x0000ffff85e5e4c0 (most recent call first):
+  File "/usr/local/lib/python3.12/threading.py", line 355 in wait
+  File "/usr/local/lib/python3.12/threading.py", line 655 in wait
+  File "/usr/local/lib/python3.12/threading.py", line 999 in start
+  File "/usr/local/lib/python3.12/concurrent/futures/thread.py", line 203 in _adjust_thread_count
+  File "/usr/local/lib/python3.12/concurrent/futures/thread.py", line 180 in submit
+  File "/work/backend/rag/card_find.py", line 296 in gather
+  File "/work/backend/rag/card_find.py", line 303 in find
+  File "/work/tests/rag/test_card_find.py", line 75 in test_search_sentence_uses_words_symbols_and_natural_units
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/python.py", line 187 in pytest_pyfunc_call
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/python.py", line 1798 in runtest
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/runner.py", line 184 in pytest_runtest_call
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/runner.py", line 250 in <lambda>
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/runner.py", line 361 in from_call
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/runner.py", line 249 in call_and_report
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/runner.py", line 139 in runtestprotocol
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/runner.py", line 118 in pytest_runtest_protocol
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/main.py", line 411 in pytest_runtestloop
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/main.py", line 387 in _main
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/main.py", line 333 in wrap_session
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/main.py", line 380 in pytest_cmdline_main
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/tmp/venv/lib/python3.12/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 262 in _main
+  File "/tmp/venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 286 in _console_main
+  File "/tmp/venv/bin/pytest", line 10 in <module>
+exit: 137
+thandler_timeout(240초) 덤프 뒤에도 같은 시험에서 진행이 없어 05:20 KST에 docker kill로 끝냈다(측정자 조작).

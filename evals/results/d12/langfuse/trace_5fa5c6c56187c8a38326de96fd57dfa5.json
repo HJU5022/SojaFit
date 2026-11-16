@@ -1,0 +1,249 @@
+{
+ "endpoint": "/api/public/v3/scores?fields=core,subject&traceId=",
+ "trace_id": "5fa5c6c56187c8a38326de96fd57dfa5",
+ "data": [
+  {
+   "id": "ec4a436f939023d2",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "refusal_code",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.228Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "CATEGORICAL",
+   "value": ""
+  },
+  {
+   "id": "eaba142b883cf970",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "tries",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.170Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 0
+  },
+  {
+   "id": "dd76609a22287f58",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "latency_s",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.164Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 8.2
+  },
+  {
+   "id": "c5d8d9c59906d09b",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "answer_metric",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.155Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "CATEGORICAL",
+   "value": "cited_gold"
+  },
+  {
+   "id": "b3c45eaa7dc17bea",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "fake_citations",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.186Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 0
+  },
+  {
+   "id": "a145aeba6d5e6400",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "uncited_sentences",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.164Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 2
+  },
+  {
+   "id": "8fe942bc376e4073",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "llm_calls",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.162Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 2
+  },
+  {
+   "id": "83d7bd0a0005e331",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "question_type",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.167Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "CATEGORICAL",
+   "value": "candidate_judge"
+  },
+  {
+   "id": "65fe47d434544d17",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "not_found",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.159Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "BOOLEAN",
+   "value": false
+  },
+  {
+   "id": "57c7bf6541188369",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "passed_cards",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.162Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 0
+  },
+  {
+   "id": "539d3bbff2862638",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "cost_usd",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.221Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 0.00089222
+  },
+  {
+   "id": "324e1c2337c94f9b",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "pass",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.161Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "BOOLEAN",
+   "value": true
+  },
+  {
+   "id": "28350ed89cca9346",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "hops",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.168Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 1
+  },
+  {
+   "id": "0f1057d80b40861c",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "docs_found",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.714Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.223Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "NUMERIC",
+   "value": 0
+  },
+  {
+   "id": "eb7014280f9ffb4c",
+   "projectId": "cmwadynwy063mad0eyrziwgqt",
+   "name": "path",
+   "source": "API",
+   "timestamp": "2026-11-16T19:58:29.713Z",
+   "environment": "eval",
+   "createdAt": "2026-11-16T19:58:31.000Z",
+   "updatedAt": "2026-11-16T19:58:30.158Z",
+   "subject": {
+    "kind": "trace",
+    "id": "5fa5c6c56187c8a38326de96fd57dfa5"
+   },
+   "dataType": "CATEGORICAL",
+   "value": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝"
+  }
+ ],
+ "meta": {
+  "limit": 100
+ }
+}
