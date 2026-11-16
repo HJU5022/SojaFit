@@ -1090,7 +1090,7 @@ form {
   color: var(--muted);
   word-break: keep-all;
 }
-/* 공통 시작 동작 두 줄(#45): Claude 새 세션처럼 테두리 한 묶음 안에 줄마다 구분선 */
+/* 공통 시작 동작(#45 #58): Claude 새 세션처럼 테두리 한 묶음. 지금은 첨부 한 줄뿐이다 */
 .start-options {
   width: min(100%, 420px);
   border: 1px solid var(--line);
@@ -1106,15 +1106,6 @@ form {
   border-radius: 0;
   font-size: 13px;
   font-weight: 400;
-  text-align: left;
-}
-.start-options small {
-  display: block;
-  font-size: 12px;
-  line-height: 1.4;
-}
-.start-options button + button {
-  border-top: 1px solid var(--line);
 }
 .new-chat .send {
   margin-left: auto; /* 작업대와 달리 사용 조건 칸이 없어 보내기를 오른쪽 끝에 둔다 */
@@ -1846,11 +1837,6 @@ form {
 }
 .dialog-body > ul > li + li {
   margin-top: 4px;
-}
-/* 칸 아래 도움말(형식 · 샘플 링크)은 그 칸에 붙이고 다음 칸과는 띄운다 */
-.dialog-body form > small {
-  display: block;
-  margin: -8px 0 16px;
 }
 /* 창 맨 아래 버튼 줄: 주 동작은 오른쪽 끝, 취소는 그 왼쪽. 버튼만 덩그러니 있는 창도 오른쪽으로 보낸다 */
 .dialog-actions {

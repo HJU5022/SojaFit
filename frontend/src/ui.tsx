@@ -4,7 +4,6 @@ import {
   AlertCircle,
   ArrowUpRight,
   CircuitBoard,
-  Download,
   Ellipsis,
   FileText,
   LoaderCircle,
@@ -355,7 +354,7 @@ export function AttachmentCard({ file, onRemove }: { file: File; onRemove: () =>
     </div>
   );
 }
-/** 입력창 넷리스트 · 회로도 첨부(#40 #52): + 단추가 위로 여는 메뉴(파일 고르기 · 샘플 넷리스트 받기)와 영역 어디든 끌어 놓기. 새 대화 · 작업대가 같이 쓴다.
+/** 입력창 넷리스트 · 회로도 첨부(#40 #52): + 단추가 위로 여는 메뉴(파일 고르기)와 영역 어디든 끌어 놓기. 새 대화 · 작업대가 같이 쓴다.
  *  accept 밖의 파일은 붙이지 않고 짧게 알린다(서버도 다시 검사한다). */
 export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
   const input = useRef<HTMLInputElement>(null),
@@ -413,20 +412,6 @@ export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
               label: '넷리스트·회로도 첨부 (.net, .kicad_sch)',
               icon: <Paperclip size={14} />,
               onSelect: () => input.current?.click(),
-            },
-            {
-              label: '샘플 넷리스트 받기',
-              icon: <Download size={14} />,
-              onSelect: () => {
-                // [왜] 문서에 붙인 링크를 눌러 내려받는다. 메뉴가 닫히며 지워질 링크에 기대지 않는다
-                const a = Object.assign(document.createElement('a'), {
-                  href: '/assets/samples/attiny85-time-switch.net',
-                  download: '',
-                });
-                document.body.append(a);
-                a.click();
-                a.remove();
-              },
             },
           ]}
         />

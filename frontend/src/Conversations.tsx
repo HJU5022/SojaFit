@@ -1,15 +1,6 @@
 /** 대화가 먼저인 입구: 사이드바의 대화 목록·프로젝트 폴더와 "새 대화" 빈 화면. 프로젝트 하나는 회로 하나다. 출처: SPEC 2절, 4절, 8.8. */
 import { useEffect, useState } from 'react';
-import {
-  ChevronRight,
-  CircuitBoard,
-  CornerDownLeft,
-  FilePlus,
-  Info,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { ChevronRight, CornerDownLeft, FilePlus, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError } from './api';
 import { duplicateAction, projectNameFromQuestion } from './circuit';
 import { isSendKey } from './display';
@@ -305,8 +296,7 @@ export function ConversationNav({
     </div>
   );
 }
-const SAMPLE = '/assets/samples/attiny85-time-switch.net';
-/** "새 대화" 화면: 가운데 공통 안내(첨부 · 예제 회로 두 줄과 지원 범위 한 줄), 아래 질문 입력창 하나(#30 #41 #45 #57). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
+/** "새 대화" 화면: 가운데 공통 안내(첨부 한 줄과 지원 범위 한 줄, 예제 회로를 건네는 입구는 두지 않음), 아래 질문 입력창 하나(#30 #41 #45 #58). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
 export function NewConversation() {
   const [question, setQuestion] = useState(''),
     [attachment, setAttachment] = useState<File | null>(null),
@@ -359,17 +349,6 @@ export function NewConversation() {
       setBusy(false);
     }
   }
-  // [왜] 예제 회로는 고른 파일처럼 첨부 카드로만 붙이고 보내지 않는다. API가 아니라 정적 파일이라 fetch로 받는다
-  async function attachSample() {
-    setError(null);
-    try {
-      const res = await fetch(SAMPLE);
-      if (!res.ok) throw new Error('예제 회로를 불러오지 못했습니다.');
-      setAttachment(new File([await res.text()], SAMPLE.split('/').pop()!, { type: 'text/plain' }));
-    } catch (e) {
-      setError(e as Error);
-    }
-  }
   const disabled = busy || (!question.trim() && !attachment);
   return (
     <div className="page-content new-chat" {...attach.dropZone}>
@@ -380,14 +359,6 @@ export function NewConversation() {
           <button type="button" onClick={() => attach.input.current?.click()}>
             <FilePlus size={16} />
             넷리스트·회로도 첨부하기
-          </button>
-          <button type="button" onClick={attachSample}>
-            <CircuitBoard size={16} />
-            {/* [왜] 실제 서비스에서 "샘플"은 데모 잔재로 보여, 무엇을 붙이는지 출처·부품 수로 밝힌다(#57) */}
-            <span>
-              예제 회로로 체험하기
-              <small>공개 KiCad 예제 · ATtiny85 타이머 · 부품 32개</small>
-            </span>
           </button>
         </div>
         <p>
