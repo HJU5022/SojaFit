@@ -2,8 +2,8 @@
 
 - 상태: 계획 (미결정 선택지. 채택된 방안 없음)
 - 기준일: 2026-11-12
-- 정본 여부: 비정본(정본: [SPEC](../../SPEC.md) 2절·6절, 결정은 ADR로 기록)
-- 관련 문서: [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [MCP 검색 도구 작업서](../specs/mcp-search-tools.md), [ADR 0006](../adr/0006-근거가-없어도-대화는-이어-간다.md)
+- 정본 여부: 비정본(정본: [SPEC](../../../SPEC.md) 2절·6절, 결정은 ADR로 기록)
+- 관련 문서: [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [MCP 검색 도구 작업서](../../specs/mcp-search-tools.md), [ADR 0006](../../adr/0006-근거가-없어도-대화는-이어-간다.md)
 
 ## 1. 질문
 

@@ -39,7 +39,7 @@ TSC는 공식 제품 API·데이터시트의 응용 회로 경로를 사용하�
 
 LM2596의404는 서로 다른 제조사의 정상 자료를 임의로 하나 골라 표시하지 않는 동작이다. 제조사 모호성은 등록 제조사와 해당 검색 범위에서 확인한 결과이며, 모든 제조사의 품번 소유권을 확정하는 기능은 아니다.
 
-근거: [작업 기록](../worklog/osc.md)의 TSC10품번·공식 제조사6곳·병렬 처리 실측 항목과 [사전등록의 초기 결과](../../evals/guides/preregister.md). 실행별 원자료는 아래 보관 목록으로 구분한다.
+근거: [작업 기록](../../worklog/osc.md)의 TSC10품번·공식 제조사6곳·병렬 처리 실측 항목과 [사전등록의 초기 결과](../../../evals/guides/preregister.md). 실행별 원자료는 아래 보관 목록으로 구분한다.
 
 ## 자료 검증 결과
 
@@ -57,7 +57,7 @@ LM2596의404는 서로 다른 제조사의 정상 자료를 임의로 하나 골
 
 프로젝트 소유권·회로 버전·업로드 원본의 전체 연결 일치 검증은 유지했다. 참고 PDF의 성공을 업로드 회로와 같은 원본이라는 증거로 사용하지 않는다. 언어·품번·회로 조건의 일부는 저장 PDF나 가짜 PDF/HTTP 회귀로 확인했으며, 각 조건을 실제 외부 검색에서 모두 독립 재현한 것은 아니다.
 
-근거: [작업 기록](../worklog/osc.md), [사전등록과 초기 결과](../../evals/guides/preregister.md), [공식 회로도 검색 계약](../specs/external-complete-schematics.md).
+근거: [작업 기록](../../worklog/osc.md), [사전등록과 초기 결과](../../../evals/guides/preregister.md), [공식 회로도 검색 계약](../../specs/external-complete-schematics.md).
 
 ## PDF 중복 제거 결과
 
@@ -81,7 +81,7 @@ LM2596의404는 서로 다른 제조사의 정상 자료를 임의로 하나 골
 
 정상 6건에서 선택된 PDF는 각각 다운로드1회·내용검사1회·재사용1회였고 PNG9장이 정상 반환됐다. 이전 시간이 있는 6개 입력은 3건 단축·3건 증가했다. TI 지정 검색은 비교 가능한 이전 API 시간이 없어 전후 비교에서 제외했다. 서로 다른 시점의 각1회 관측으로 공급자·네트워크 조건을 통제하지 않았으므로 전체 첫 조회가 일정하게 빨라졌다고 해석하지 않는다.
 
-기록: [작업 기록](../worklog/osc.md)의 「첫 검색 요청의 공식 PDF 중복 다운로드·검사 제거」. 원자료는 중복 제거 실행 폴더의 `summary.json`, `archived-baseline.json`에 별도 보관한다.
+기록: [작업 기록](../../worklog/osc.md)의 「첫 검색 요청의 공식 PDF 중복 다운로드·검사 제거」. 원자료는 중복 제거 실행 폴더의 `summary.json`, `archived-baseline.json`에 별도 보관한다.
 
 ## 후보 PDF 병렬 처리 결과
 
@@ -110,7 +110,7 @@ LM2596의404는 서로 다른 제조사의 정상 자료를 임의로 하나 골
 
 HTTP manifest 총8건은 인증401 1건·모호성404 1건·정상200 6건이다. 인증 실패는 공급자 검색 전 실패로 실제 검색7건과 별도로 집계했다. 공식 후보 검색 완료 로그9건은 Exa 성공 응답 뒤 기록한 이벤트이며 공급자 HTTP 직접 계측값과 구분한다.
 
-근거: [작업 기록](../worklog/osc.md)의 「공식 후보 PDF 다운로드·검사 최대2개 병렬 처리」. 원자료는 병렬 처리 실행 폴더의 `summary.json`, `stage-comparison.json`, `inspection-intervals.json`, `sheet-index-comparison.json`에 별도 보관한다.
+근거: [작업 기록](../../worklog/osc.md)의 「공식 후보 PDF 다운로드·검사 최대2개 병렬 처리」. 원자료는 병렬 처리 실행 폴더의 `summary.json`, `stage-comparison.json`, `inspection-intervals.json`, `sheet-index-comparison.json`에 별도 보관한다.
 
 ## 관련 회귀 검증과 PR 준비
 
@@ -155,7 +155,7 @@ tests/repo/test_repo_layout.py
 
 `SPEC.md`의 공식 응용 회로 참고 예외는 조장 검토 사항으로 PR 설명에 남겼다. `SPEC.md`와 `docs/adr/`는 수정하지 않았다. `SOJAFIT.md`는 새 검증 보고서의 트리 등록1줄만 추가했다.
 
-검증 보고서를 `docs/research/official-schematic-search-verification-2026-11-16.md`에 저장하고 같은 폴더 문서 목록과 저장소 트리에 등록했다. PR 준비 패치는 위 고정 main 기준이며 실제 dirty OSC에 적용한 패치는 아니다. 제목·변경·검증 범위는 저장소 밖 PR 설명 초안에 보관했다. 커밋·푸시·PR 생성·병합·배포는 수행하지 않았다.
+검증 보고서를 `docs/research/schematic/official-schematic-search-verification-2026-11-16.md`에 저장하고 같은 폴더 문서 목록과 저장소 트리에 등록했다. PR 준비 패치는 위 고정 main 기준이며 실제 dirty OSC에 적용한 패치는 아니다. 제목·변경·검증 범위는 저장소 밖 PR 설명 초안에 보관했다. 커밋·푸시·PR 생성·병합·배포는 수행하지 않았다.
 
 기존 raw index와 HEAD는 유지했다. 앞선 PR 준비의 추가 비교에서는 tracked 변경이 당시 허용한5파일뿐임을 확인했으며, 그 비교가 미추적 파일 각각의 내용 해시까지 재구성한 검사는 아니었다. 이번 문서 저장 작업의 보존 결과는 작업 기록에 별도로 남긴다.
 

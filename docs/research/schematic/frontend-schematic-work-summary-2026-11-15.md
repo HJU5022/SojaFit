@@ -307,9 +307,9 @@ SojaFit은 회로의 부품과 사용 조건을 바탕으로 대체 부품을 �
 | 이미지 변환·회로도 API | `backend/projects/schematic_render.py`, `backend/projects/schematic.py`, `backend/api/external_circuits.py`, `Dockerfile` |
 
 - [기존 최종 검색 검증 보고서](schematic-search-verification-2026-11-15.md)
-- [후보·원본 링크·이미지 로드 관찰 기록](../../scripts/results/smoke/schematic_search_observations_2026-11-15.json)
-- 코드 저장소 내 작업 로그: `docs/worklog/osc.md`. [작업 로그 열기](../worklog/osc.md)
+- [후보·원본 링크·이미지 로드 관찰 기록](../../../scripts/results/smoke/schematic_search_observations_2026-11-15.json)
+- 코드 저장소 내 작업 로그: `docs/worklog/osc.md`. [작업 로그 열기](../../worklog/osc.md)
 
-![CDFER 실제 서비스 표시](../assets/schematic-cdfer-2026-11-15.jpg)
+![CDFER 실제 서비스 표시](../../assets/schematic-cdfer-2026-11-15.jpg)
 
-![1N4148 OPBoard 실제 선택 표시](../assets/schematic-1n4148-2026-11-15.jpg)
+![1N4148 OPBoard 실제 선택 표시](../../assets/schematic-1n4148-2026-11-15.jpg)

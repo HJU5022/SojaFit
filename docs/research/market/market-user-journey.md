@@ -3,8 +3,8 @@
 - 상태: 현행
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
-- 정본 여부: 정본(평가 1축 '문제와 시장 근거'의 증거 정리). 대체재 비교 결과의 정본은 [EVAL_REPORT.md](../../EVAL_REPORT.md) 10장, 서비스 약점의 정본은 11장
-- 관련 문서: [docs/TOPIC.md](../TOPIC.md), [SPEC.md](../../SPEC.md), [EVAL_REPORT.md](../../EVAL_REPORT.md), [docs/reference/evaluation-prep.md](../reference/evaluation-prep.md), [sojafit-domain-jobs-2026-11-12.md](sojafit-domain-jobs-2026-11-12.md), [evidence/EVIDENCE.md](evidence/EVIDENCE.md)
+- 정본 여부: 정본(평가 1축 '문제와 시장 근거'의 증거 정리). 대체재 비교 결과의 정본은 [EVAL_REPORT.md](../../../EVAL_REPORT.md) 10장, 서비스 약점의 정본은 11장
+- 관련 문서: [docs/TOPIC.md](../../TOPIC.md), [SPEC.md](../../../SPEC.md), [EVAL_REPORT.md](../../../EVAL_REPORT.md), [docs/reference/evaluation-prep.md](../../reference/evaluation-prep.md), [sojafit-domain-jobs-2026-11-12.md](sojafit-domain-jobs-2026-11-12.md), [evidence/EVIDENCE.md](../evidence/EVIDENCE.md)
 
 평가 1축(문제와 시장 근거, 15점)의 다섯 항목(채용 공고 50건 분석, 사용자·지불 주체 사실/가설 구분, 반복 문서 업무·페르소나·고객 여정 맵, 범용 챗봇과 동일 질문 5개 비교, 외부 검토 1명 기록)에 대해 확인 사실, 가설, 남은 일을 구분해 적는다.
 
@@ -17,7 +17,7 @@
 
 조사서의 원자료 확인 기준은 2026-11-12 KST다. 전자부품 직접 분야와 제조·기술문서 등 인접 분야, 마감된 공고가 포함되고, 동일 역할의 여러 게시처는 한 그룹으로 묶은 경우가 있다. 따라서 이 50개를 모두 전자부품 RAG 개발 공고로 표현하거나 시장 규모·고객 수로 해석하지 않는다. 공고는 이후 변경·마감되거나 접근이 제한될 수 있다.
 
-과거 2026-10-29의 237건 집계는 당시 제출한 [주제서](../TOPIC.md)에 남아 있는 이력이다. 개별 원자료 사본은 [`evidence/`](evidence/EVIDENCE.md)에 있으나 현재 평가·발표의 채용 근거로 사용하지 않으며, 아래 50개와 같은 모집단이라고 보거나 합산하지 않는다.
+과거 2026-10-29의 237건 집계는 당시 제출한 [주제서](../../TOPIC.md)에 남아 있는 이력이다. 개별 원자료 사본은 [`evidence/`](../evidence/EVIDENCE.md)에 있으나 현재 평가·발표의 채용 근거로 사용하지 않으며, 아래 50개와 같은 모집단이라고 보거나 합산하지 않는다.
 
 ### 1-2. 50개 채용 역할 분석: 반복 업무와 요구 역량 (2026-11-12 자료)
 
@@ -93,21 +93,21 @@
 
 ## 2. 사용자·지불 주체: 확인 사실과 가설의 구분
 
-이미 데이터·경험으로 확인한 사실과 아직 외부 인터뷰로 검증하지 못한 가설을 분리한다(기준: [docs/reference/evaluation-prep.md](../reference/evaluation-prep.md)).
+이미 데이터·경험으로 확인한 사실과 아직 외부 인터뷰로 검증하지 못한 가설을 분리한다(기준: [docs/reference/evaluation-prep.md](../../reference/evaluation-prep.md)).
 
 ### 2-1. 확인된 사실 (Verified Facts)
 
 1. 팀원의 실제 회로 설계·수리 경험 (`docs/TOPIC.md`):
    - ATtiny85 기반 소형 MCU 회로를 다룰 때 제너 다이오드·쇼트키 다이오드가 회로에서 맡은 정확한 역할과 대체 시 지켜야 할 필수 정격 조건을 바로 판단하기 어려워, 부품 수급이나 크기 변경이 필요해도 원본 회로도의 품번을 그대로 따라 썼다.
-2. 공개 KiCad 프로젝트 151개(파일 216개)의 넷리스트 실측 (`docs/TOPIC.md` 각주 [4], 원자료 [`evidence/netlist/manifest_diodes.json`](evidence/netlist/manifest_diodes.json)):
+2. 공개 KiCad 프로젝트 151개(파일 216개)의 넷리스트 실측 (`docs/TOPIC.md` 각주 [4], 원자료 [`evidence/netlist/manifest_diodes.json`](../evidence/netlist/manifest_diodes.json)):
    - 중복 파일을 제외한 다이오드는 554개이고 그중 역할 후보로 검토한 것이 75개다(`summary.diodes_unique_files`, `summary.reviewed_target5_instances_dedup`). 5V급 저전압 회로에서도 `1N4148`(100V)이 53개(8개 저장소), `1N4007`(1000V)이 12개(4개 저장소)로 반복 사용된다(`files[].diodes[].value`를 근사 중복 파일 `near_dup_of` 제외로 집계 [실측]).
    - 오픈소스 하드웨어가 "회로 역할에 필요한 최소 정격"을 다시 계산하기보다 익숙한 과사양 품번이나 기존 BOM 품번을 재사용하는 경향을 보인다.
 3. 데이터시트 표 구조의 조건 결합성 (`EVAL_REPORT.md` 1장, `evals/dataset_v1.jsonl`, `evals/dataset_v2.jsonl`):
    - Taiwan Semiconductor(TSC) 다이오드 데이터시트 1,360건(품번 9,589개, `SPEC.md` 6절)에서 한 문서가 평균 7.05개(9,589/1,360) 품번을 한 표에 묶어 기술한다. 정격 숫자(예: `VZ 3.42~3.78V`, `IR 500µA`, `CJ 55pF`)는 시험 조건(`TA=25°C`, `IZT=5mA`, `30ms 펄스`, `TYP` 대 `MAX`)과 표 밖 주석(예: `AEC-Q101`, 서지 파형)과 함께 읽어야 대체 가능 여부를 판정할 수 있다.
-4. 기존 대체재의 기능 경계 (`docs/TOPIC.md` 각주 [3], 원자료 [`evidence/candidate-g-market-saturation.md`](evidence/candidate-g-market-saturation.md)):
+4. 기존 대체재의 기능 경계 (`docs/TOPIC.md` 각주 [3], 원자료 [`evidence/candidate-g-market-saturation.md`](../evidence/candidate-g-market-saturation.md)):
    - 유통사(Mouser, DigiKey) 파라미터 필터와 제조사 cross-reference 도구는 원래 부품의 사양 이상만 대조하며 동등성을 보증하지 않는다고 명시한다.
    - AI 설계 보조 도구(Flux, Zenode)는 사양 기반 대체품 검색을, SheetsData MCP는 사용자가 직접 입력한 조건의 정격 점검을 제공한다. KiCad 넷리스트의 연결 구조에서 부품 역할을 읽고, 역할별 필수 조건을 도출해, 데이터시트 쪽·표·행 인용과 함께 5종 판정(`IDENTICAL` / `SPEC_EQUIVALENT` / `ROLE_SUFFICIENT` / `NOT_SUFFICIENT` / `NOT_VERIFIED`)을 내리는 흐름은 확인되지 않았다.
-5. 데이터시트 저작권·약관 경계: TSC와 Infineon은 비상업·비수정·출처 표기 조건으로 복제·배포를 허용하고, TI, Diodes, Vishay, ST, Nexperia, PANJIT은 재배포를 금지한다(`data/corpus/CORPUS.md`, `SPEC.md` 6절). Mouser Search API는 가격·재고 응답의 영구 DB 저장을 약관으로 금지한다([ADR 0009](../adr/0009-mouser-응답은-저장하지-않는다.md)).
+5. 데이터시트 저작권·약관 경계: TSC와 Infineon은 비상업·비수정·출처 표기 조건으로 복제·배포를 허용하고, TI, Diodes, Vishay, ST, Nexperia, PANJIT은 재배포를 금지한다(`data/corpus/CORPUS.md`, `SPEC.md` 6절). Mouser Search API는 가격·재고 응답의 영구 DB 저장을 약관으로 금지한다([ADR 0009](../../adr/0009-mouser-응답은-저장하지-않는다.md)).
 
 ### 2-2. 미검증 가설 (Unverified Hypotheses — 사실로 단정하지 않음)
 
@@ -120,7 +120,7 @@
 
 ### 2-3. 지불 주체 외부 근거 (2026-11-13 조사)
 
-인접 직무 공고 말고 "누가, 얼마를 내는가"를 직접 보여 주는 외부 자료를 찾았다. 원문과 신뢰도 표기는 [`evidence/payer-research-2026-11-13.md`](evidence/payer-research-2026-11-13.md)(번호 G·K는 그 파일의 표 번호)이고, 아래 [원문 확인] 표시는 페이지를 다시 열어 문장을 대조한 것이다.
+인접 직무 공고 말고 "누가, 얼마를 내는가"를 직접 보여 주는 외부 자료를 찾았다. 원문과 신뢰도 표기는 [`evidence/payer-research-2026-11-13.md`](../evidence/payer-research-2026-11-13.md)(번호 G·K는 그 파일의 표 번호)이고, 아래 [원문 확인] 표시는 페이지를 다시 열어 문장을 대조한 것이다.
 
 - **부품 대체·단종 도구는 회사 단위 연 구독으로 팔린다.** Accuris Parts Intelligence는 트라이얼 뒤 송장을 결제하면 연 4,950달러 구독이 되고, 사용자는 권한을 받은 부서(Division/Department) 단위로 정한다(G4) [원문 확인]. SiliconExpert·Z2Data 구독사 대상 가격 맞춤은 최소 계약 연 6,000달러, 회사당 1회다(G5) [원문 확인]. 설계자 개인용은 연 180달러(Siemens PartQuest 공급망 앱, G10) [원문 확인]부터 있다.
 - **가격 등급이 올라갈수록 구매·공급망 조직이 대상이다.** Accuris는 하위 등급을 "설계 엔지니어와 소싱 담당", 최상위 등급을 "엔터프라이즈 공급망·구매 조직"용으로 적는다(G6) [원문 확인]. 실명 도입 사례의 인용자도 공급망 디렉터다(G14, 벤더 보도자료).
@@ -141,7 +141,7 @@
 | 역할 | 소형 MCU·임베디드 보드 하드웨어 개발자 (경력 1~4년, 소규모 HW팀 또는 메이커/스타트업) | 하드웨어 팀 리드 / 연구소 파트장 (BOM 승인·시제품 발주 책임) |
 | 반복 문서 업무 | 기존 KiCad 보드의 다이오드가 단종·재고 부족·패키지 변경·원가 절감 대상이 될 때마다, 회로도/넷리스트에서 역할을 확인하고 후보 데이터시트 PDF 3~10개의 정격표·특성곡선·각주·패키지 치수를 대조해 대체 가능 품번을 추린다 | 개발자가 올린 대체 부품 후보와 견적서를 보고, ① 원래 회로 역할에 비춰 전압·전류·속도 여유율이 충분한지, ② 데이터시트 시험 조건이 실제 보드 조건과 맞는지, ③ 패드(풋프린트) 수정이 필요한지 확인한 뒤 발주·견적 저장을 승인한다 |
 | 현재 해결 방법 | 유통사(Mouser/DigiKey) 필터에서 원래 부품과 전압·전류가 같거나 높은 부품을 검색한 뒤, PDF를 하나씩 열어 `Ctrl+F`로 `VRRM`, `VF`, `trr`, `VZ`를 찾고 엑셀/메모장에 수기로 비교표를 만든다 | 개발자가 구두나 메신저로 가져온 품번의 데이터시트 PDF를 다시 열어 1~2쪽 정격표와 패키지 도면을 눈으로 재확인한다 |
-| 핵심 불편 (Pain Point) | ① 원래 부품이 과사양(`5V` 회로에 `1000V 1N4007`)이면 사양 필터만으로는 더 작고 적합한 후보를 못 찾음<br>② 한 PDF에 `1N5817/1N5818/1N5819`나 `BZT52C2V4~C39`가 함께 들어 있어 행·열을 잘못 읽거나 `TYP` 값을 `MAX` 보장값으로 착각하기 쉬움<br>③ 범용 챗봇(Codex 50문항 측정)은 데이터시트 출처(쪽·표·행) 없이 결론만 내고, 조건을 확인하지 못한 값을 단정하거나 넷리스트 없이 연결을 추정함(오답 4건 · 과잉 거절 1건. 후보 찾기 5건이 낸 품번은 모두 정답 집합 안이라 없는 품번을 지어낸 건은 없었다. [EVAL_REPORT.md](../../EVAL_REPORT.md) 10장, [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)) | ① 개발자가 어떤 데이터시트 몇 쪽·어느 표 행을 근거로 판정했는지 추적하기 어려움<br>② 온도 조건(`TA=25°C` 대 `TJ=25°C`)이나 미확인 조건(`USB D+/D-` 정전용량 등)이 빠진 채 "대체 가능"으로 올라오면 시제품 불량으로 이어짐 |
+| 핵심 불편 (Pain Point) | ① 원래 부품이 과사양(`5V` 회로에 `1000V 1N4007`)이면 사양 필터만으로는 더 작고 적합한 후보를 못 찾음<br>② 한 PDF에 `1N5817/1N5818/1N5819`나 `BZT52C2V4~C39`가 함께 들어 있어 행·열을 잘못 읽거나 `TYP` 값을 `MAX` 보장값으로 착각하기 쉬움<br>③ 범용 챗봇(Codex 50문항 측정)은 데이터시트 출처(쪽·표·행) 없이 결론만 내고, 조건을 확인하지 못한 값을 단정하거나 넷리스트 없이 연결을 추정함(오답 4건 · 과잉 거절 1건. 후보 찾기 5건이 낸 품번은 모두 정답 집합 안이라 없는 품번을 지어낸 건은 없었다. [EVAL_REPORT.md](../../../EVAL_REPORT.md) 10장, [TALLY.md](../../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)) | ① 개발자가 어떤 데이터시트 몇 쪽·어느 표 행을 근거로 판정했는지 추적하기 어려움<br>② 온도 조건(`TA=25°C` 대 `TJ=25°C`)이나 미확인 조건(`USB D+/D-` 정전용량 등)이 빠진 채 "대체 가능"으로 올라오면 시제품 불량으로 이어짐 |
 | SojaFit에 기대하는 것 | 넷리스트와 대상 부품(`D1`)만 지정하면 회로 연결에서 역할과 필수 조건을 도출하고, 코퍼스 데이터시트의 정확한 쪽·표·행을 인용해 후보별 판정 5종을 내주며, 조건이 부족하면 억지 추천 대신 무엇이 부족한지 알려 주는 것 | 판정마다 인용된 데이터시트 쪽·표·행과 결정적 수치 비교 결과를 한눈에 검수하고, 내가 판정 결과를 승인한 뒤 견적을 DB에 저장·이력화하는 것 |
 
 ---
@@ -173,11 +173,11 @@
 
 ### 5-2. 비교한 질문과 결과
 
-비교 대상은 범용 코딩 에이전트 Codex다. 질문 5개는 동결 v3의 v3-01, v3-05, v3-10, v3-26, v3-45이고, 질문 요약, 판정 기준, 두 답변, 차이는 [EVAL_REPORT.md](../../EVAL_REPORT.md) 10장 표가 정본이다. Codex 입력은 [evals/guides/v3_50_codex_paste.md](../../evals/guides/v3_50_codex_paste.md), 답변 전문은 [evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md)에 있다. 판정 기준은 [동결 v3 정답](../../evals/dataset_v3.jsonl)의 `expected`를 따르며 두 답변의 자동 채점 결과가 아니다.
+비교 대상은 범용 코딩 에이전트 Codex다. 질문 5개는 동결 v3의 v3-01, v3-05, v3-10, v3-26, v3-45이고, 질문 요약, 판정 기준, 두 답변, 차이는 [EVAL_REPORT.md](../../../EVAL_REPORT.md) 10장 표가 정본이다. Codex 입력은 [evals/guides/v3_50_codex_paste.md](../../../evals/guides/v3_50_codex_paste.md), 답변 전문은 [evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md](../../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md)에 있다. 판정 기준은 [동결 v3 정답](../../../evals/dataset_v3.jsonl)의 `expected`를 따르며 두 답변의 자동 채점 결과가 아니다.
 
 판정 출처 (비교 대상, 정답 작성, 판정자의 기재):
 
-v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 하정운이다(정본: [EVAL_REPORT.md](../../EVAL_REPORT.md) 2절 평가셋 표). 작업 원본은 저장소 밖에 있으며, 비교 대상도 Codex이므로 결과 해석에서 이를 고려한다. v1은 [작업 기록](../worklog/jeongun.md)에 Codex 세션 사용이 명시돼 있다.
+v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 하정운이다(정본: [EVAL_REPORT.md](../../../EVAL_REPORT.md) 2절 평가셋 표). 작업 원본은 저장소 밖에 있으며, 비교 대상도 Codex이므로 결과 해석에서 이를 고려한다. v1은 [작업 기록](../../worklog/jeongun.md)에 Codex 세션 사용이 명시돼 있다.
 
 ---
 
@@ -197,10 +197,10 @@ v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 �
 
 ## 7. 서비스의 약점과 한계
 
-서비스의 약점은 [EVAL_REPORT.md](../../EVAL_REPORT.md) 11장이 정본이고, 검색 실패 유형은 같은 문서 3-1·5장에 있다. 현재 서비스의 그래프 구조는 [SPEC.md](../../SPEC.md) 2절 "그래프"를 따른다.
+서비스의 약점은 [EVAL_REPORT.md](../../../EVAL_REPORT.md) 11장이 정본이고, 검색 실패 유형은 같은 문서 3-1·5장에 있다. 현재 서비스의 그래프 구조는 [SPEC.md](../../../SPEC.md) 2절 "그래프"를 따른다.
 
 | 항목 | 상태 | 근거 |
 |---|---|---|
 | 외부 검토 1명 | 미수행 | 6절 |
 | 지불 주체 가설 H1, H2-A, H2-B, H2-C | 미검증 | 2-2절 |
-| 각주 [3] 대체재 조사 파일 | 저장소에 있다(2026-11-13 이관): [candidate-g-market-saturation.md](evidence/candidate-g-market-saturation.md), [candidate-circuit-role-substitution.md](evidence/candidate-circuit-role-substitution.md). 2-1절 4번의 근거 | [evidence/EVIDENCE.md](evidence/EVIDENCE.md) |
+| 각주 [3] 대체재 조사 파일 | 저장소에 있다(2026-11-13 이관): [candidate-g-market-saturation.md](../evidence/candidate-g-market-saturation.md), [candidate-circuit-role-substitution.md](../evidence/candidate-circuit-role-substitution.md). 2-1절 4번의 근거 | [evidence/EVIDENCE.md](../evidence/EVIDENCE.md) |

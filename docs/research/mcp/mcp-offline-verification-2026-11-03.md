@@ -4,7 +4,7 @@
 - 기준일: 2026-11-03
 - 기준 커밋: 1cf18a9 및 당시 미커밋 MCP 작업
 - 정본 여부: 정본(저장소 TSC PDF 3건의 서명·해시·쪽 수·문자열 점검). 최종 검색 품질 평가가 아니다
-- 관련 문서: [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [Docling 표본 대조](mcp-docling-verification-2026-11-03.md), [사전 등록](../../evals/guides/preregister.md)
+- 관련 문서: [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [Docling 표본 대조](mcp-docling-verification-2026-11-03.md), [사전 등록](../../../evals/guides/preregister.md)
 
 ## 1. 질문과 결론
 

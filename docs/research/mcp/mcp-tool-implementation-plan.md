@@ -3,8 +3,8 @@
 - 상태: 현행
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002 (코드는 `backend/mcp_skill/mcp_server/server.py`, `backend/graph/mcp_retriever.py` 기준)
-- 정본 여부: 정본(MCP 도구 표). 도구 계약의 시험 정본은 [SPEC 8.7](../../SPEC.md)과 [mcp-search-tools.md](../specs/mcp-search-tools.md)
-- 관련 문서: [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md), [검색기 연결 계약](mcp-tool-contract-review.md), [오프라인 점검](mcp-offline-verification-2026-11-03.md), [Docling 표본 대조](mcp-docling-verification-2026-11-03.md), [공개 품번 확인 방안](tsc-public-part-verification-options.md), [웹 검색 공급자 비교](mcp-tool-candidates-draft.md)
+- 정본 여부: 정본(MCP 도구 표). 도구 계약의 시험 정본은 [SPEC 8.7](../../../SPEC.md)과 [mcp-search-tools.md](../../specs/mcp-search-tools.md)
+- 관련 문서: [MCP 서버 안내](../../../backend/mcp_skill/MCP_SKILL.md), [검색기 연결 계약](mcp-tool-contract-review.md), [오프라인 점검](mcp-offline-verification-2026-11-03.md), [Docling 표본 대조](mcp-docling-verification-2026-11-03.md), [공개 품번 확인 방안](tsc-public-part-verification-options.md), [웹 검색 공급자 비교](mcp-tool-candidates-draft.md)
 
 이 문서의 도구 표가 MCP 도구 목록의 유일한 표다. 다른 문서는 이 표를 링크한다.
 
@@ -38,7 +38,7 @@
 |---|---|---|
 | 수치·요구 조건 비교 | MCP 도구 없음. 판정은 `backend/judge/` | `SPEC.md` 8.7 |
 | 견적 생성·승인·저장 | MCP 도구 없음 | 도구 표에 없음 |
-| 가격·재고(Mouser) | MCP 도구 없음. Mouser는 그래프·MCP 밖 `/api/prices`만 호출한다. 응답 저장 금지 정책 | `backend/multi_agent/build.py:94`, [ADR 0009](../adr/0009-mouser-응답은-저장하지-않는다.md) |
+| 가격·재고(Mouser) | MCP 도구 없음. Mouser는 그래프·MCP 밖 `/api/prices`만 호출한다. 응답 저장 금지 정책 | `backend/multi_agent/build.py:94`, [ADR 0009](../../adr/0009-mouser-응답은-저장하지-않는다.md) |
 | 공식 PDF 다운로드·파싱·적재 | MCP 도구에 없음. Exa 검색과 공식 PDF 행 읽기는 `backend/services/exa.py`·`backend/services/datasheet_rows.py`가 맡음 | `backend/services/exa.py:1-25` |
 | 코퍼스 밖 신규 TSC 품번 조회 | 지원하지 않음. 목록 밖 문서는 `unverified`로 차단 | `server.py`의 `search_tsc_web`, [공개 품번 확인 방안](tsc-public-part-verification-options.md) |
 

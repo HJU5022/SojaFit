@@ -3,8 +3,8 @@
 - 상태: 이력 (2026-11-03 구현 전 조사. Skill S1·S2는 이후 작성·적용되었다)
 - 기준일: 2026-11-03 (조사), 현재 상태 확인 2026-11-12
 - 기준 커밋: `6700050` (조사 당시 `jaehun` HEAD). 조사한 소스는 기준 커밋의 코드·SPEC·폴더 설명 파일·ADR
-- 정본 여부: 비정본(정본: Skill 적용 계약 [SPEC](../../SPEC.md) Skill 절, 본문 [SKILL.md](../../backend/mcp_skill/skills/SKILL.md), 검증 상태 [EVAL_REPORT](../../EVAL_REPORT.md) 4장 "도메인 Skill 개발 검증")
-- 관련 문서: [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md), [MCP 서버 도구 6종](mcp-tool-implementation-plan.md)
+- 정본 여부: 비정본(정본: Skill 적용 계약 [SPEC](../../../SPEC.md) Skill 절, 본문 [SKILL.md](../../../backend/mcp_skill/skills/SKILL.md), 검증 상태 [EVAL_REPORT](../../../EVAL_REPORT.md) 4장 "도메인 Skill 개발 검증")
+- 관련 문서: [MCP 서버 안내](../../../backend/mcp_skill/MCP_SKILL.md), [MCP 서버 도구 6종](mcp-tool-implementation-plan.md)
 
 ## 1. 질문과 결론
 
@@ -26,7 +26,7 @@
 | Skill 적용 | `generate.md`만 읽음. Skill 로더·적용 옵션 없음 | 생성 노드가 Skill 본문을 `skill_text`로 전달 | `backend/graph/nodes.py:31,451` |
 | 그래프 | `build_graph()`는 NotImplementedError | 구현됨(단일 `backend/graph/build.py:69`, 멀티 `backend/multi_agent/build.py:67`) | 코드 |
 | MCP | `example_tool()`만 있는 틀 | 도구 6종 | [MCP 서버 도구 6종](mcp-tool-implementation-plan.md) |
-| 모델 설정 | 기본 공급자 OpenRouter, 기본 모델 `anthropic/claude-haiku-5.5` | 노드별 모델 표 `NODE_MODELS` | `backend/services/langfuse_prompts.py:33-34`, [ADR 0014](../adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md) |
+| 모델 설정 | 기본 공급자 OpenRouter, 기본 모델 `anthropic/claude-haiku-5.5` | 노드별 모델 표 `NODE_MODELS` | `backend/services/langfuse_prompts.py:33-34`, [ADR 0014](../../adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md) |
 | Langfuse | 인증 확인 함수만 있음 | 프롬프트·Skill 본문(sha256 포함)을 Langfuse에 등록하는 코드 있음 | `backend/services/langfuse_prompts.py:169-186` |
 | 숫자 판정 | 폴더 설명 파일만 있음 | 조사 당시 값 그대로 재확인하지 않음 | 한계 2 |
 

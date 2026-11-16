@@ -3,7 +3,7 @@
 - 상태: 이력 (2026-11-03 측정. 현재 `search_tsc_web`은 Exa에 `includeDomains`로 `taiwansemi.com`을 지정한다: `backend/mcp_skill/mcp_server/server.py`)
 - 기준일: 2026-11-03
 - 정본 여부: 정본(도메인 필터 유무 비교 수치). 필터 없는 3공급자 30문항 탐색은 [web-search-results-interpretation.md](web-search-results-interpretation.md)
-- 관련 문서: [웹 검색 공급자 3종 30문항 탐색](web-search-results-interpretation.md), [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [사전 등록](../../evals/guides/preregister.md)
+- 관련 문서: [웹 검색 공급자 3종 30문항 탐색](web-search-results-interpretation.md), [MCP 서버 도구 6종](mcp-tool-implementation-plan.md), [사전 등록](../../../evals/guides/preregister.md)
 
 ## 1. 질문과 결론
 
