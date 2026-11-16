@@ -372,7 +372,8 @@ class Conversations:
         def charge(cost):
             """호출 한 번의 예약 USD · 토큰을 사용자 행과 서비스 행에 한 트랜잭션으로 더한다. 하나라도 넘으면 모두 되돌리고 429."""
             tokens, cost = budget.reserving_tokens, Decimal(str(cost))
-            with self.connection() as conn, conn.transaction():
+            # [왜] 호출마다 새 접속(TLS+인증)을 열면 예약 잠금 안에서 동시 호출이 줄을 섰다. 풀 연결을 빌린다(풀도 autocommit · dict_row · prepare_threshold=0이라 같은 의미)
+            with self.pool.connection() as conn, conn.transaction():
                 # [왜] 사용자 행 → 서비스 행 순서로만 잠가 동시 호출끼리 교착하지 않는다. 예외가 나면 트랜잭션이 둘 다 되돌린다
                 usage = conn.execute('SELECT reserved_usd,reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=%s FOR UPDATE',
                                      (user, row['day'])).fetchone()
