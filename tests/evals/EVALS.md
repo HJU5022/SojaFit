@@ -13,7 +13,7 @@
 | 파일 | 확인하는 것 |
 |---|---|
 | `EVALS.md` | 이 문서 |
-| `test_frozen_evals.py` | `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지. `FROZEN.json`이 없으면 검사하지 않고 통과 |
+| `test_frozen_evals.py` | `evals/FROZEN.json`이 있고 기록된 파일의 해시가 바뀌지 않았는지, v2 앞 50건 = v1(더한 칸 `question_type`만 다름), 문항 id 고르기(`select_items`)의 모르는 id 거부 |
 | `test_run_graph.py` | 그래프 평가 실행: 최종 메모장에서 점수 뽑기, 거절 시 점수 제외, 단일·멀티 거절 사유 코드, MCP 사실 확인 + 카드 도구 연결, 판정 인터럽트 한 번 재개, 스레드 검증의 dry-run·덮어쓰기 거부 |
 | `test_run_judge_dev.py` | 판정 연습 문제 채점: 판정 문항의 역할·판정 일치, 찾기 문항의 보여 준 후보·판정 집합, 판정 결과가 없을 때 틀림 처리, 비율 모으기 |
 | `test_skill_pair.py` | Skill 쌍 순차 실행의 경로·검색 상한, 사본 격리·실행 순서 교차, 예외 시 부분 결과·덮어쓰기 금지, 평가 호출·예약비용 상한 |
