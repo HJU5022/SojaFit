@@ -586,3 +586,55 @@ def test_unknown_model_falls_back_to_budget_rates():
                                   completion_rate=0.000015, max_tokens=100, per_model_rates=True)
     budget.reserve('a' * 1000, output_tokens=100, model='openai/gpt-6-luna')
     assert budget.reserved_usd == pytest.approx((1000 + 8192) * 0.000003 + 100 * 0.000015)
+
+
+def test_schematic_dialogue_uses_haiku_and_restores_model_context(monkeypatch):
+    class Description(BaseModel):
+        message: str
+    models = []
+    class Model:
+        def with_structured_output(self, schema):
+            return self
+        def invoke(self, messages, **options):
+            assert options['max_tokens'] == 128
+            return Description(message='제조사가 다른 두 회로도입니다.')
+    monkeypatch.setattr(llm, 'LLM_PROVIDER', 'openrouter')
+    monkeypatch.setattr(llm, '_chat_model', lambda name: models.append(name) or Model())
+    outer = llm._node_model.set('test/other-model')
+    budget = llm.EvaluationBudget(max_calls=1, max_usd=.1, max_seconds=30,
+        max_tokens=128, prompt_rate=1e-7, completion_rate=5e-7)
+    try:
+        with llm.evaluation_limits(budget):
+            answer = llm.schematic_dialogue_chat('system', 'candidates', Description)
+        assert answer.message == '제조사가 다른 두 회로도입니다.'
+        assert models == ['anthropic/claude-haiku-5.5']
+        assert budget.calls == 1
+        assert llm._node_model.get() == 'test/other-model'
+    finally:
+        llm._node_model.reset(outer)
+
+
+def test_schematic_dialogue_cannot_call_provider_without_a_budget(monkeypatch):
+    monkeypatch.setattr(llm, '_chat_model', lambda *args: pytest.fail('unbudgeted provider call'))
+    with pytest.raises(RuntimeError, match='budget'):
+        llm.schematic_dialogue_chat('system', 'candidates', BaseModel)
+
+
+def test_schematic_dialogue_keeps_daily_reservation_and_stops_after_three_calls(monkeypatch):
+    from backend.conversations.memory_service import Conversations
+    charges = []
+    service = Conversations.__new__(Conversations)
+    budget = llm.EvaluationBudget(max_calls=16, max_usd=.5, max_seconds=90,
+        max_tokens=4096, prompt_rate=1e-7, completion_rate=5e-7,
+        on_reserve=lambda cost: charges.append(cost))
+    users = []
+    monkeypatch.setattr(service, '_budget', lambda user: users.append(user) or budget)
+    limited = service.schematic_dialogue_budget(7)
+    assert users == [7]
+    assert limited.remaining() <= 45
+    assert limited.max_tokens <= 2048
+    for _ in range(3):
+        limited.reserve('candidate facts', output_tokens=10)
+    with pytest.raises(llm.EvaluationLimitError):
+        limited.reserve('fourth', output_tokens=10)
+    assert len(charges) == 3

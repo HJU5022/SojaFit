@@ -143,6 +143,7 @@ SojaFit (proj3-b)
 │   │   ├── external_circuit_search.py <- Exa 결과에서 안전한 GitHub 저장소 루트 후보만 정제
 │   │   ├── schematic_source.py <- 검증된 외부 회로도 source DTO
 │   │   ├── external_schematic.py <- 공개 저장소 출처·라이선스·commit 검증과 bounded cache
+│   │   ├── schematic_dialogue.py <- 검증된 다중 회로도 후보의 설명·선택 질문과 LLM 출력 검증
 │   │   ├── schematic.py <- shell 없는 KiCad PDF export 경계
 │   │   ├── schematic_render.py <- PDF/SVG/PNG를 제한된 해상도 PNG로 변환
 │   │   └── schematic_discovery.py <- EDA 원본에 대응하는 전체 회로도 자산 판정
@@ -200,6 +201,7 @@ SojaFit (proj3-b)
 │   │   ├── card_read.md    <- 카드 읽기 프롬프트(영어)
 │   │   ├── card_pick.md    <- 읽을 문서 고르기 프롬프트(영어)
 │   │   ├── docs_answer.md  <- 멀티 RAG 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
+│   │   ├── schematic_dialogue.md <- 회로도 후보의 차이 설명·선택 질문·전체 소개 프롬프트
 │   │   ├── synth.md        <- 멀티 종합: 할 일 2개 이상의 부분 답을 한 답으로(영어, 답은 한국어)
 │   │   └── supervisor.md   <- 멀티 에이전트 Supervisor(계획): 질문 종류 · 할 일 최대 3개 · 지시서 · 거절 사유. Langfuse `supervisor` v4까지 등록(11-06 계획형 본문은 등록 전)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
@@ -536,6 +538,7 @@ SojaFit (proj3-b)
 │   │   ├── test_visuals.py <- 회로도 catalog 15종·원본/배포 해시·경로·라이선스 검증
 │   │   ├── test_external_circuit_search.py <- GitHub 저장소 URL·Exa 호출 상한
 │   │   ├── test_external_schematic.py <- 출처·전체 시트·cache·서명 token 경계
+│   │   ├── test_schematic_dialogue.py <- 후보 누락·추가·사실 변경 차단과 선택 질문·전체 소개 검증
 │   │   ├── test_official_schematic.py <- 등록 제조사 원본 URL·출처 등급·SHA-256 렌더 검증
 │   │   ├── test_schematic_discovery.py <- 완성 회로도 자산 판정
 │   │   └── test_schematic_render.py <- PDF/SVG/PNG 렌더링·픽셀 제한

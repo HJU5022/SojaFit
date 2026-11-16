@@ -338,3 +338,333 @@ def test_renderer_rate_limit_survives_api_and_recovers_after_retry_after(client,
             assert image.content == png
             assert image.headers["content-type"] == "image/png"
             assert len(render_calls) == 2
+
+
+# POST /schematics/dialogue 계약은 검색 후보와 LLM 대화를 분리한다. 아래 시험은
+# 외부 네트워크·DB 없이 검색 함수와 대화 생성기를 주입해, 서버가 소유한 후보
+# metadata만 답변에 사용하고 실패한 검색은 후보와 섞지 않는지 확인한다.
+def _dialogue_choice(*, url, manufacturer, model="LM358", revision="Rev. C", title="LM358 schematic"):
+    return SimpleNamespace(
+        title=title, source_url=url, source_type="community", revision=revision,
+        manufacturer=manufacturer, model=model, source_file="hardware/main.kicad_sch",
+        evidence_grade=3, source_sha256="a" * 64, commit="b" * 40,
+        license="MIT", attribution=f"{manufacturer} contributors",
+        repository_url=url.rsplit("/", 1)[0],
+        license_evidence_url=url.rsplit("/", 1)[0] + "/LICENSE",
+    )
+
+
+def _dialogue_manifest(*choices):
+    first = choices[0]
+    return SimpleNamespace(
+        project=None, commit=first.commit, license=first.license,
+        attribution=first.attribution, repository_url=first.repository_url,
+        source_url=first.source_url, source_file=first.source_file,
+        token="dialogue-token", sheet_count=1, source_type=first.source_type,
+        evidence_grade=first.evidence_grade, manufacturer=first.manufacturer,
+        model=first.model, revision=first.revision,
+        source_sha256=first.source_sha256,
+        license_evidence_url=first.license_evidence_url,
+        choices=tuple(choices), circuit_version=None,
+    )
+
+
+@pytest.fixture
+def dialogue_boundary(client, schematic_boundary, monkeypatch):
+    """POST 계약을 외부 검색·실제 분석 서비스 없이 구동하는 경계 fixture."""
+    from backend.services.llm import EvaluationBudget
+    from backend.api import conversations
+
+    api = import_module("backend.api.external_circuits")
+    state = SimpleNamespace(search_calls=[], chat_calls=[], budget_calls=[])
+    app.dependency_overrides[auth.current_user_id] = lambda: 7
+
+    class Analysis:
+        def schematic_dialogue_budget(self, user):
+            state.budget_calls.append(user)
+            return EvaluationBudget(3, .1, 45, .000001, .000001, max_tokens=2048)
+
+    app.state.conversations = Analysis()
+    # analysis_service는 request.app.state.conversations를 반환하는 기존 의존성이다.
+    app.dependency_overrides[conversations.analysis_service] = lambda: app.state.conversations
+    try:
+        yield state, api
+    finally:
+        app.dependency_overrides.pop(conversations.analysis_service, None)
+        if hasattr(app.state, "conversations"):
+            del app.state.conversations
+
+
+def _patch_dialogue_builder(monkeypatch, api, state, *, status="generated"):
+    from backend.services import llm
+    def chat(system, user, schema):
+        import json
+        payload = json.loads(user)
+        candidates = payload["candidates"]
+        mode = payload["mode"]
+        state.chat_calls.append({"question": payload["question"], "candidates": candidates,
+                                 "requested_multiple": mode == "all"})
+        if status == "unavailable":
+            raise llm.LLMFormatError("test provider failure")
+        return {
+            "message": "검증된 후보를 소개합니다.",
+            "question": "어느 회로를 선택할까요?" if mode == "select" else None,
+            "descriptions": [{"candidate_id": item["candidate_id"],
+                              "text": f"{item.get('manufacturer')} {item.get('model')} {item.get('revision')}",
+                              "facts": [
+                                  {"field": field, "value": str(item[field])}
+                                  for field in ("manufacturer", "model", "revision")
+                                  if item.get(field) not in (None, "")
+                              ]} for item in candidates],
+        }
+    monkeypatch.setattr(llm, "schematic_dialogue_chat", chat)
+
+
+def test_dialogue_same_name_preserves_manufacturer_candidates_and_asks_selection(
+    client, dialogue_boundary, monkeypatch
+):
+    state, api = dialogue_boundary
+    ti = _dialogue_choice(url="https://github.com/ti/lm358/blob/a/hardware/main.kicad_sch",
+                          manufacturer="Texas Instruments")
+    st = _dialogue_choice(url="https://github.com/st/lm358/blob/b/hardware/main.kicad_sch",
+                          manufacturer="STMicroelectronics")
+    monkeypatch.setattr(api, "find_external_schematic",
+                        lambda query, *args, **kwargs: state.search_calls.append(query) or _dialogue_manifest(ti, st))
+    _patch_dialogue_builder(monkeypatch, api, state)
+
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "LM358 회로도 중 어떤 것을 쓸까요?",
+                                 "queries": ["LM358"], "reference_only": True},
+                           headers={"Origin": "http://testserver"})
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["queries"] == ["LM358"] and data["count"] == 2
+    assert [candidate["candidate_id"] for candidate in data["candidates"]] == ["C1", "C2"]
+    assert {candidate["manufacturer"] for candidate in data["candidates"]} == {
+        "Texas Instruments", "STMicroelectronics"
+    }
+    assert all(candidate["selection_url"] for candidate in data["candidates"])
+    assert data["dialogue"]["mode"] == "select"
+    assert data["dialogue"]["selection_required"] is True
+    assert state.chat_calls[0]["requested_multiple"] is False
+
+
+def test_dialogue_multiple_queries_introduces_all_and_deduplicates_originals(
+    client, dialogue_boundary, monkeypatch
+):
+    state, api = dialogue_boundary
+    shared = _dialogue_choice(url="https://github.com/acme/lm358/blob/a/main.kicad_sch",
+                              manufacturer="Acme")
+    other = _dialogue_choice(url="https://github.com/beta/lm358/blob/b/main.kicad_sch",
+                             manufacturer="Beta", model="LM358A")
+    def search(query, *args, **kwargs):
+        state.search_calls.append(query)
+        return _dialogue_manifest(shared) if query == "LM358" else _dialogue_manifest(shared, other)
+    monkeypatch.setattr(api, "find_external_schematic", search)
+    _patch_dialogue_builder(monkeypatch, api, state)
+
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "두 회로도를 모두 소개해줘", "queries": [" LM358 ", "LM358", " LM358A "],
+                                 "reference_only": True},
+                           headers={"Origin": "http://testserver"})
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["count"] == 2 and data["dialogue"]["mode"] == "all"
+    assert [candidate["source_url"] for candidate in data["candidates"]] == [shared.source_url, other.source_url]
+    shared_response = data["candidates"][0]
+    assert set(shared_response["queries"]) == {"LM358", "LM358A"}
+    assert state.search_calls == ["LM358", "LM358A"]
+    assert state.chat_calls[0]["requested_multiple"] is True
+
+
+def test_dialogue_partial_search_failure_is_separate_from_successful_candidates(
+    client, dialogue_boundary, monkeypatch
+):
+    from backend.projects.schematic_source import ExternalSchematicUpstreamError
+    state, api = dialogue_boundary
+    good = _dialogue_choice(url="https://github.com/good/lm358/blob/a/main.kicad_sch",
+                            manufacturer="Good")
+    def search(query, *args, **kwargs):
+        state.search_calls.append(query)
+        if query == "broken":
+            raise ExternalSchematicUpstreamError("upstream")
+        return _dialogue_manifest(good)
+    monkeypatch.setattr(api, "find_external_schematic", search)
+    _patch_dialogue_builder(monkeypatch, api, state)
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "결과를 보여줘", "queries": ["broken", "LM358"],
+                                 "reference_only": True}, headers={"Origin": "http://testserver"})
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["count"] == 1 and len(data["failures"]) == 1
+    assert data["failures"][0]["query"] == "broken"
+    assert data["failures"][0]["code"]
+    assert data["candidates"][0]["manufacturer"] == "Good"
+
+
+def test_dialogue_all_search_failures_return_the_first_existing_error(client, dialogue_boundary, monkeypatch):
+    from backend.projects.schematic_source import ExternalSchematicNotFound
+    state, api = dialogue_boundary
+    def search(query, *args, **kwargs):
+        state.search_calls.append(query)
+        raise ExternalSchematicNotFound(reason="no_candidates")
+    monkeypatch.setattr(api, "find_external_schematic", search)
+    from backend.services import llm
+    monkeypatch.setattr(llm, "schematic_dialogue_chat",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("model called")))
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "없으면 알려줘", "queries": ["missing", "also-missing"],
+                                 "reference_only": True}, headers={"Origin": "http://testserver"})
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "SCHEMATIC_NOT_FOUND"
+    assert response.headers["x-schematic-failure"] == "no_candidates"
+    assert state.search_calls == ["missing", "also-missing"]
+
+
+def test_dialogue_llm_failure_keeps_candidate_metadata(client, dialogue_boundary, monkeypatch):
+    state, api = dialogue_boundary
+    choice = _dialogue_choice(url="https://github.com/acme/lm358/blob/a/main.kicad_sch",
+                              manufacturer="Acme")
+    monkeypatch.setattr(api, "find_external_schematic",
+                        lambda query, *args, **kwargs: _dialogue_manifest(choice))
+    _patch_dialogue_builder(monkeypatch, api, state, status="unavailable")
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "설명해줘", "queries": ["LM358"], "reference_only": True},
+                           headers={"Origin": "http://testserver"})
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["count"] == 1 and data["candidates"][0]["source_url"] == choice.source_url
+    assert data["dialogue"]["status"] == "unavailable"
+
+
+def test_dialogue_budget_failure_makes_zero_search_and_model_calls(client, dialogue_boundary, monkeypatch):
+    state, api = dialogue_boundary
+    from backend.services import llm
+    class Denied:
+        def schematic_dialogue_budget(self, user):
+            raise llm.EvaluationLimitError("daily limit")
+    app.state.conversations = Denied()
+    monkeypatch.setattr(api, "find_external_schematic",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("search called")))
+    from backend.services import llm
+    monkeypatch.setattr(llm, "schematic_dialogue_chat",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("model called")))
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "설명해줘", "queries": ["LM358"], "reference_only": True},
+                           headers={"Origin": "http://testserver"})
+    assert response.status_code in (429, 503)
+    assert response.headers.get("cache-control") == "private, no-store"
+
+
+def test_dialogue_invalid_body_is_rejected_before_search(client, dialogue_boundary, monkeypatch):
+    state, api = dialogue_boundary
+    monkeypatch.setattr(api, "find_external_schematic",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("search called")))
+    for body in (
+        {"question": "x", "queries": [], "reference_only": True},
+        {"question": "x", "queries": ["a"], "reference_only": True},
+        {"question": "x", "queries": ["LM358"], "reference_only": True, "unknown": 1},
+        {"question": "x", "queries": ["LM358"], "reference_only": False},
+    ):
+        response = client.post("/api/external-circuits/schematics/dialogue", json=body,
+                               headers={"Origin": "http://testserver"})
+        assert response.status_code == 422, response.text
+    assert state.search_calls == []
+
+
+def test_dialogue_origin_and_authentication_are_required(client, dialogue_boundary):
+    # Origin 의존성은 POST에서만 동작하며, 인증 실패도 검색 전에 종료돼야 한다.
+    body = {"question": "설명해줘", "queries": ["LM358"], "reference_only": True}
+    response = client.post("/api/external-circuits/schematics/dialogue", json=body,
+                           headers={"Origin": "https://evil.example"})
+    assert response.status_code == 403
+    from fastapi import HTTPException
+    app.dependency_overrides[auth.current_user_id] = lambda: (_ for _ in ()).throw(
+        HTTPException(401, "login"))
+    response = client.post("/api/external-circuits/schematics/dialogue", json=body,
+                           headers={"Origin": "http://testserver"})
+    assert response.status_code == 401
+
+
+def test_dialogue_more_than_24_candidates_preserves_candidates_without_calling_model(
+    client, dialogue_boundary, monkeypatch
+):
+    state, api = dialogue_boundary
+    choices = tuple(_dialogue_choice(
+        url=f"https://github.com/acme/lm358/blob/{index}/main.kicad_sch",
+        manufacturer=f"Manufacturer-{index}", model=f"LM358-{index}", revision=f"Rev. {index}"
+    ) for index in range(1, 26))
+    monkeypatch.setattr(api, "find_external_schematic",
+                        lambda query, *args, **kwargs: _dialogue_manifest(*choices))
+    from backend.services import llm
+    monkeypatch.setattr(llm, "schematic_dialogue_chat",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("model called")))
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "모두 소개해줘", "queries": ["LM358"],
+                                 "reference_only": True}, headers={"Origin": "http://testserver"})
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["count"] == 25 and len(data["candidates"]) == 25
+    assert data["dialogue"]["status"] == "unavailable"
+    assert data["dialogue"]["reason"] == "invalid_candidate_count"
+    assert data["dialogue"]["mode"] == "all"
+
+
+def test_dialogue_project_scope_is_only_in_selection_url(client, dialogue_boundary, monkeypatch):
+    state, api = dialogue_boundary
+    project = SimpleNamespace(
+        connections={"parts": [{"ref": "D1", "value": "SS34"}],
+                     "nets": [{"nodes": [{"ref": "D1", "pin": "1"}]}]},
+        circuit_version=4,
+    )
+    monkeypatch.setattr(api, "ProjectRepository", lambda: SimpleNamespace(
+        get_owned=lambda user, project_id, thread_id: project))
+    choice = _dialogue_choice(url="https://github.com/acme/board/blob/a/main.kicad_sch",
+                              manufacturer="Acme")
+    def search(query, *args, **kwargs):
+        state.search_calls.append((query, kwargs.get("connections")))
+        return _dialogue_manifest(choice)
+    monkeypatch.setattr(api, "find_external_schematic", search)
+    _patch_dialogue_builder(monkeypatch, api, state)
+    thread = "00000000-0000-0000-0000-000000000001"
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": "회로를 설명해줘", "queries": ["LM358"],
+                                 "project_id": 12, "circuit_version": 4, "thread_id": thread,
+                                 "reference_only": False},
+                           headers={"Origin": "http://testserver"})
+    assert response.status_code == 200, response.text
+    candidate = response.json()["candidates"][0]
+    assert "project_id=12" in candidate["selection_url"]
+    assert "circuit_version=4" in candidate["selection_url"]
+    assert f"thread_id={thread}" in candidate["selection_url"]
+    assert "project_id" not in candidate and "thread_id" not in candidate
+    assert state.search_calls == [("LM358", project.connections)]
+
+
+@pytest.mark.parametrize(("question", "mode", "selection"), [
+    ("둘 다 소개해줘", "all", False),
+    ("compare these circuits", "all", False),
+    ("여러 회로도를 찾아서 모두 소개해줘", "all", False),
+    ("어느 하나를 고를까요?", "select", True),
+    ("같은 이름의 여러 회로도 중 어느 판본인가요?", "select", True),
+    ("같은 이름의 두 회로가 검색됐는데 어떤 제조사 것을 고를까요?", "select", True),
+])
+def test_dialogue_request_language_selects_all_or_selection_mode(
+    client, dialogue_boundary, monkeypatch, question, mode, selection
+):
+    state, api = dialogue_boundary
+    first = _dialogue_choice(url="https://github.com/acme/lm358/blob/a/main.kicad_sch",
+                             manufacturer="Acme")
+    second = _dialogue_choice(url="https://github.com/beta/lm358/blob/b/main.kicad_sch",
+                              manufacturer="Beta")
+    monkeypatch.setattr(api, "find_external_schematic",
+                        lambda query, *args, **kwargs: _dialogue_manifest(first, second))
+    _patch_dialogue_builder(monkeypatch, api, state)
+    response = client.post("/api/external-circuits/schematics/dialogue",
+                           json={"question": question, "queries": ["LM358"], "reference_only": True},
+                           headers={"Origin": "http://testserver"})
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["dialogue"]["mode"] == mode
+    assert data["dialogue"]["selection_required"] is selection
+    assert bool(data["dialogue"]["question"]) is selection

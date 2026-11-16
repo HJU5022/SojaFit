@@ -19,6 +19,7 @@
 | `test_service_schema.py` | 일회용 DB에서 서비스 표 규칙: 프로젝트·계정 삭제 연쇄(분석 대화·체크포인트), 체크포인트 삭제 트리거, 분석 대화 FK 거부, `runs.safe_result` 필수 키 CHECK, 승인 칸 NOT NULL·형식, 승인당 견적 중복 허용, 데모일 때만 `demo_id` |
 | `test_external_circuit_search.py` | GitHub 저장소 URL 정제와 Exa 호출 상한 |
 | `test_external_schematic.py` | 라이선스·원본·전체 시트·캐시·서명 token 경계 |
+| `test_schematic_dialogue.py` | 동명 후보 선택 질문·복수 요청 전체 소개, 후보 누락·추가·사실 변경·생성 실패 경계 |
 | `test_official_schematic.py` | 제조사 공식 원본 URL·등급·SHA-256 렌더 검증 |
 | `test_schematic_discovery.py` | GitHub tree에서 완성 회로도 자산 판정, 네트워크 상한(격리된 HTTP 응답) |
 | `test_schematic_render.py` | PDF/SVG/PNG 렌더링과 출력 크기 제한 |

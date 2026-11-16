@@ -6,14 +6,16 @@
 import re
 from uuid import UUID
 from typing import Annotated, Literal
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StringConstraints, model_validator
 
 from backend import auth
 from backend.projects.repository import ProjectRepository, ProjectNotFound
 from backend.projects.netlist import circuit_fingerprint, InvalidNetlist
-from backend.errors import ApiError
+from backend.errors import ApiError, code_for
+from backend.api.conversations import analysis_service
 from backend.projects.external_schematic import find_external_schematic, load_external_schematic_sheet
 from backend.projects.schematic_source import (
     ExternalSchematicConfigurationError, ExternalSchematicInvalidToken, ExternalSchematicNotFound,
@@ -74,6 +76,74 @@ class ExternalSchematicResponse(BaseModel):
         elif self.evidence_grade is None and self.source_type != "public_web":
             raise ValueError("출처 미확인 회로도는 등급을 지정할 수 없습니다.")
         return self
+
+
+SearchTerm = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)]
+
+
+class SchematicDialogueRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [
+        {'question': 'RP2040 회로도들을 모두 소개해 주세요.', 'queries': ['RP2040'], 'reference_only': True}]})
+    question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+    queries: list[SearchTerm] = Field(min_length=1, max_length=3)
+    project_id: int | None = Field(default=None, ge=1)
+    circuit_version: int | None = Field(default=None, ge=1)
+    thread_id: UUID | None = None
+    reference_only: bool = True
+    component_type: Literal['diode'] | None = None
+
+
+class SchematicDialogueCandidate(ExternalSchematicChoice):
+    candidate_id: str
+    number: int
+    queries: list[str]
+    manufacturer: str | None = None
+    model: str | None = None
+    source_file: str | None = None
+    evidence_grade: Literal[2, 3] | None = None
+    source_sha256: str | None = None
+    commit: str | None = None
+    license: str | None = None
+    attribution: str | None = None
+    repository_url: str | None = None
+    license_evidence_url: str | None = None
+    selection_url: str
+
+
+class SchematicDescription(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    candidate_id: str
+    text: str
+
+
+class SchematicDialogue(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    status: Literal['generated', 'unavailable']
+    mode: Literal['select', 'all', 'single']
+    selection_required: bool
+    message: str | None
+    question: str | None
+    descriptions: list[SchematicDescription]
+    reason: str | None
+    clarification_fields: list[str]
+
+
+class SchematicSearchFailure(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    query: str
+    status_code: int
+    code: str
+    message: str
+    retry_after: str | None = None
+
+
+class SchematicDialogueResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    queries: list[str]
+    count: int
+    candidates: list[SchematicDialogueCandidate]
+    dialogue: SchematicDialogue
+    failures: list[SchematicSearchFailure]
 
 
 def _schematic_call(function, *args, **kwargs):
@@ -152,10 +222,91 @@ def external_schematic_manifest(
         source_sha256=manifest.source_sha256, license_evidence_url=manifest.license_evidence_url,
         images=[ExternalSchematicImage(sheet=i, url=f"/api/external-circuits/schematics/{manifest.token}/{i}{scope}")
                 for i in range(manifest.sheet_count)],
-        choices=[ExternalSchematicChoice.model_validate(choice.__dict__)
+        choices=[ExternalSchematicChoice.model_validate({key: getattr(choice, key)
+                                                        for key in ExternalSchematicChoice.model_fields})
                  for choice in manifest.choices],
         circuit_version=circuit_version if project else None,
     )
+
+
+def _multiple_schematics_requested(question, queries):
+    if len(queries) > 1:
+        return True
+    if re.search(r'하나만|어느\s*(?:하나|것|회로|제조사|판본|출처)|'
+                 r'어떤\s*(?:것|회로|제조사|판본|출처).*(?:고르|선택|맞|인가)|'
+                 r'which\s+(?:one|circuit|revision|manufacturer|source)|choose\s+one', question, re.I):
+        return False
+    return bool(re.search(r'모두|전부|각각|둘\s*다|여러|비교|(?:두|세|[2-9])\s*(?:개|가지|종)|'
+                          r'\b(?:all|both|each|multiple|compare|several)\b', question, re.I))
+
+
+@router.post('/schematics/dialogue', response_model=SchematicDialogueResponse,
+             dependencies=[Depends(auth.check_origin)])
+def external_schematic_dialogue(body: SchematicDialogueRequest, response: Response,
+    user_id: Annotated[int, Depends(auth.current_user_id)], analysis=Depends(analysis_service)):
+    """서버가 찾은 후보를 설명한다. 후보 선택과 원본 제공은 기존 GET을 이용한다."""
+    from backend.projects.schematic_dialogue import build_dialogue
+    from backend.services import llm
+
+    response.headers['Cache-Control'] = 'private, no-store'
+    project = _project_circuit(user_id, body.project_id, body.circuit_version, body.thread_id, body.reference_only)
+    if body.component_type is not None and (project is not None or any(len(q) > 194 for q in body.queries)):
+        raise HTTPException(422, '다이오드 검색은 194자 이하 참고 자료 조회로만 사용할 수 있습니다.')
+    queries = list(dict.fromkeys(body.queries))
+    try:
+        budget = analysis.schematic_dialogue_budget(user_id)
+    except llm.EvaluationLimitError:
+        raise ApiError(429, '회로도 소개 요청의 예약 한도에 도달했습니다.', code='LIMIT_EXCEEDED') from None
+    candidates, failures, seen, errors = [], [], {}, []
+    for query in queries:
+        try:
+            manifest = (_schematic_call(find_external_schematic, query, connections=project.connections) if project else
+                        _schematic_call(find_external_schematic, query, None, body.component_type) if body.component_type else
+                        _schematic_call(find_external_schematic, query))
+        except HTTPException as error:
+            errors.append(error)
+            failures.append(SchematicSearchFailure(query=query, status_code=error.status_code,
+                code=code_for(error.status_code, error), message=error.detail,
+                retry_after=(error.headers or {}).get('Retry-After')))
+            continue
+        choices = manifest.choices or (manifest,)
+        for choice in choices:
+            values = {name: getattr(choice, name, None) for name in (
+                'manufacturer', 'model', 'source_file', 'evidence_grade', 'source_sha256', 'commit',
+                'license', 'attribution', 'repository_url', 'license_evidence_url')}
+            primary = choice.source_url == manifest.source_url
+            if primary:
+                for name, value in values.items():
+                    if value is None:
+                        values[name] = getattr(manifest, name, None)
+            key = (choice.source_url, values['source_file'], choice.revision)
+            if key in seen:
+                seen[key].queries.append(query)
+                continue
+            params = {'q': query, 'source_url': choice.source_url}
+            if project:
+                params.update(project_id=body.project_id, circuit_version=body.circuit_version)
+                if body.thread_id:
+                    params['thread_id'] = str(body.thread_id)
+            else:
+                params['reference_only'] = 'true'
+                if body.component_type:
+                    params['component_type'] = body.component_type
+            number = len(candidates) + 1
+            candidate = SchematicDialogueCandidate(candidate_id=f'C{number}', number=number, queries=[query],
+                title=getattr(choice, 'title', None) or manifest.model or manifest.source_file,
+                source_url=choice.source_url, source_type=choice.source_type, revision=choice.revision,
+                selection_url='/api/external-circuits/schematics?' + urlencode(params), **values)
+            seen[key] = candidate
+            candidates.append(candidate)
+    if not candidates and errors:
+        raise errors[0]
+    with llm.evaluation_limits(budget):
+        dialogue = build_dialogue(body.question, [candidate.model_dump() for candidate in candidates],
+            requested_multiple=_multiple_schematics_requested(body.question, queries),
+            chat=llm.schematic_dialogue_chat)
+    return SchematicDialogueResponse(queries=queries, count=len(candidates), candidates=candidates,
+        dialogue=SchematicDialogue.model_validate(dialogue), failures=failures)
 
 
 @router.get(

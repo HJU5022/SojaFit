@@ -19,7 +19,7 @@
 |---|---|
 | `SERVICES.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
-| `llm.py` | LLM·임베딩 호출의 유일한 입구: `node_chat`·`chat`·`node_model`, `embed_texts`, `voyage_embed`·`voyage_rerank`, 평가 전용 `evaluation_*` |
+| `llm.py` | LLM·임베딩 호출의 유일한 입구: `node_chat`·`chat`·`node_model`, 예산 필수 Haiku 5.5 회로도 소개 `schematic_dialogue_chat`, `embed_texts`, `voyage_embed`·`voyage_rerank`, 평가 전용 `evaluation_*` |
 | `langfuse_prompts.py` | 노드별 모델 표 `NODE_MODELS`, 프롬프트·Skill 등록(`publish_nodes`, `publish_skill`)과 고정 버전 대조, 세션 추적, `CostCallbackHandler`, `timed_tool`·`AnalysisTimings` |
 | `service_trace.py` | 서비스 분석의 모델 호출별 Langfuse 추적. 키가 있으면 켜지고, 내보내기 직전 훅 `mask_otel_spans`가 허용 목록 밖의 칸을 지우고 입력·출력은 `[redacted]`로 바꿈. 평가(`evals/`)는 이 파일을 쓰지 않음 |
 | `demo.py` | 키 없는 데모의 LLM 응답 기록 `recorder`·재생 `replayer`(없으면 `ReplayMiss`), `enabled`, `service_chat`, 데모 질문 목록·대조 `questions`·`match`·`refusal`. 유료 모델 호출 없음 |

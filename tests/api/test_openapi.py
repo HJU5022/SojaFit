@@ -19,7 +19,7 @@ from fastapi.testclient import TestClient
 from langgraph.store.memory import InMemoryStore
 
 from backend import auth, auth_email
-from backend.api import admin, conversations, profile, projects, quotes
+from backend.api import admin, conversations, external_circuits, profile, projects, quotes
 from backend.api import auth as auth_api  # [주의] 위 auth는 세션 로직(backend/auth.py), 이것은 로그인 경로 라우터다
 from backend.conversations.profile import ProfileMemory
 from backend.main import app
@@ -27,7 +27,8 @@ from backend.main import app
 ORIGIN = {'origin': 'http://testserver'}
 # 요청 본문 모델 전부. 새 본문 모델을 만들면 여기에 넣어야 아래 시험이 예시 · 모르는 칸 금지를 본다
 BODY_MODELS = [auth_api.Login, auth_api.Signup, auth_api.PasswordAction, auth_api.DemoLogin, admin.AccountState, projects.CreateProject, projects.RenameProject,
-               quotes.ApproveBody, quotes.QuoteBody, conversations.StartRun, conversations.ResumeRun, profile.ProfileUpdate]
+               quotes.ApproveBody, quotes.QuoteBody, conversations.StartRun, conversations.ResumeRun, profile.ProfileUpdate,
+               external_circuits.SchematicDialogueRequest]
 
 
 def openapi():
@@ -98,6 +99,7 @@ ROUTES = {
     ('POST', '/api/projects/{project_id}/threads'), ('GET', '/api/runs/{run_id}'), ('POST', '/api/threads/{thread_id}/runs'),
     ('POST', '/api/runs/{run_id}/resume'), ('GET', '/api/threads/{thread_id}'), ('DELETE', '/api/threads/{thread_id}'),
     ('GET', '/api/external-circuits/schematics'),
+    ('POST', '/api/external-circuits/schematics/dialogue'),
     ('GET', '/api/external-circuits/schematics/{signed_token}/{sheet_index}'),
 }
 
