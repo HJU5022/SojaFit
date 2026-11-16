@@ -44,6 +44,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | `index_row_count_2026-11-13.md` | - | 운영 DB `SojaFit_2` 코퍼스 표 행 수 읽기 전용 조회(문서 1,360 · 청크 51,967), 다시 보는 쿼리, 52,244 → 51,967 날짜와 이유 |
 | `db_content_hash_check_2026-11-16.md` | - | 운영 DB 청크 본문 51,967개를 읽기 전용으로 열어 sha256을 다시 계산: 저장 해시와 51,967/51,967 같음, 정렬 해시 목록 sha256이 저장소 `chunk_sha256.tsv`와 같음(G3). 다시 보는 쿼리 |
 | `alerting_2026-11-16.md` | - | 운영 다운 경보: Cloud Monitoring `/health` 가동 확인(5분) + 경보 정책 + 메일 채널, 일부러 401을 주는 임시 확인으로 경보 OPEN 시험(09:43:30 KST) 뒤 임시 설정 삭제 |
+| `langfuse_scores_2026-11-16.md`, `.json` | - | Langfuse 평가 트레이스(v3-01, 11-15 웹 끔 측정)에 붙은 점수 15개를 v3 점수 API로 읽은 기록(G6). 옛 공개 API 410 제거 확인 |
 | `corpus_swap_2026-11-09/` | - | 11-09 운영 DB 코퍼스 교체 전(`check.log.txt`) · 후(`verify.log.txt`) 행 수 원본(`.log` 파일은 `.txt`를 덧붙여 둠) |
 | `chunk_source_check/` | - | 표·수치 청크 표본 123개를 원본 PDF 같은 쪽과 대조한 결과(`scripts/eval/chunk_source_check.py`) |
 | `chunk_source_check_rows_2026-11-16/` | - | 같은 123개를 PDF 표의 같은 행·열 칸 값까지 대조한 결과(`--rows`): 행 검사 117 일치 · 0 불일치 · 6 미확인(부품 행 표), 변이 시험, 남은 한계 |
