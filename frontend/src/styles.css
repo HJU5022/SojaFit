@@ -2221,6 +2221,39 @@ form {
 .parts-table {
   min-width: 640px;
 }
+/* 데이터시트 서재(#67): 검색 줄은 좁은 화면에서 줄을 바꾸고, 표는 .audit-scroll 안에서만 가로로 밀린다 */
+.library-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+/* 375px에서는 입력칸 한 줄, 분류와 검색 단추가 다음 한 줄 */
+.library-search input {
+  flex: 3 1 220px;
+}
+.library-search select {
+  flex: 1 1 160px;
+  max-width: 320px;
+}
+.library-count {
+  margin-top: 18px;
+}
+.library-table td {
+  white-space: nowrap;
+}
+.library-hits {
+  display: block;
+  color: var(--muted);
+  white-space: normal;
+}
+.library-pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
 .nav-scrim {
   display: none;
 }

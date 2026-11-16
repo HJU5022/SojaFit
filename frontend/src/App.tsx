@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   CheckCheck,
   ChevronsUpDown,
+  LibraryBig,
   LogOut,
   Mail,
   Menu,
@@ -27,6 +28,7 @@ import { Auth } from './Auth';
 import { contactEmail, Settings } from './Account';
 import { ApprovedCases, CaseReport } from './Approved';
 import { Admin } from './Admin';
+import { Library } from './Library';
 import { isLegalPath, LegalModal, LegalPage, legalDocs } from './Legal';
 import { ConversationNav, NewConversation } from './Conversations';
 import { Workbench } from './Workbench';
@@ -89,6 +91,10 @@ function Shell({
           <a href="/approved" className={path === '/approved' ? 'nav-active' : ''}>
             <CheckCheck size={17} />
             승인 사례
+          </a>
+          <a href="/library" className={pathname === '/library' ? 'nav-active' : ''}>
+            <LibraryBig size={17} />
+            데이터시트 서재
           </a>
         </nav>
         {/* [왜] 내 설정·사용자 관리는 계정 화면이라 대화·프로젝트 목록을 보이지 않는다(#21). 돌아가기는 위 "새 대화"·메뉴로 한다 */}
@@ -256,6 +262,8 @@ export default function App() {
         <Settings user={user} onLogout={logout} />
       ) : pathname === '/approved' ? (
         <ApprovedCases />
+      ) : pathname === '/library' ? (
+        <Library search={params.toString()} />
       ) : pathname === '/admin' || pathname === '/admin/users' ? (
         user.role === 'admin' ? (
           <Admin />

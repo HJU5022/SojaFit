@@ -22,6 +22,7 @@
 | `test_logs.py` | `backend/logs.py`: JSON 한 줄 칸, 요청 ID, 메시지 없는 traceback, `setup`의 처리기 부착, 접속 줄의 쿼리 글 가리기 |
 | `test_openapi.py` | `/openapi.json`·`/docs` 계약: 본문 모델 예시와 모르는 칸 거부, 업로드 multipart 칸, SSE 설명, 경로 목록 고정(모두 `backend/api/` 라우터), 응답 모델이 화면 칸을 지우지 않음 |
 | `test_frontend.py` | SPA 직접 진입, assets, 미빌드 때 화면 주소도 공통 404, API JSON 404와 기존 라우트 우선 |
+| `test_datasheets.py` | `GET /api/datasheets`(#67): 로그인 필요, 품번(표지) · 제목 · 제조사 부분 일치(대소문자 무시, `%`·`_`는 글자 그대로), 분류 거르기, 50건 쪽 나눔과 범위 밖 쪽의 전체 수, 폐기 문서 숨김, 입력 422. DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만(코퍼스 표는 002 · 012 SQL의 pgvector 앞까지) |
 | `test_prices.py` | `GET /api/prices`를 가짜 Mouser transport로: 로그인 필요, `no-store`, 화면 칸만 반환, 데모 모드·키 없음·호출 상한·Mouser 실패의 값 없음 모양, 품번 형식 오류 422, 로그에 키·요청 주소 없음 |
 | `test_projects.py` | 프로젝트 HTTP 계약: 세션·Origin·입력 검증·안전한 DB 오류·실제 DB CRUD와 관리자 포함 타 사용자 비공개 404, 업로드의 제한 수신·원본 즉시 close·오류 request ID, 부품 점검표(#68)의 종류 · 개수 · 판정 지원 · 코퍼스 대조(가짜 `corpus_known`)와 소유자 404. DB 시험은 `TEST_AUTH_DATABASE_URL`이 있을 때만 |
 | `test_external_circuits.py` | 완성 회로도 manifest·PNG 응답, 단일 버튼 자동 경로·제조사 없는 품번·빈 프로젝트·기존 명시 범위, 인증·`no-store`·`SCHEMATIC_NOT_FOUND` 및 복수 제조사 오류 경계 |
