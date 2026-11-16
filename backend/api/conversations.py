@@ -255,7 +255,7 @@ def recover_run(run_id: UUID, request: Request, response: Response, user_id: int
 # [왜] failed는 시스템 오류다. 거절(refused, 답할 수 없는 질문)은 답이라 finished(완료)로 끝난다. 둘을 같은 말로 쓰지 않는다
 STAGES = {'running': '입력 확인', 'judge': '판정', 'finished': '완료', 'failed': '오류'}
 # 실행 중 진행 단계: 그래프 노드 이름(backend/multi_agent/build.py) → 화면에 보일 단계 이름(SPEC 4절 SSE 표).
-# [왜] 표에 없는 노드(기억 읽기 · Spec 에이전트 묶음 · 가격 안내 · 끝내기 · 거절)는 따로 보이지 않는다. 마지막 frame이 곧 온다
+# [왜] 표에 없는 노드(기억 읽기 · Spec 에이전트 묶음 · 가격 안내 · 부품 목록 · 끝내기 · 거절)는 따로 보이지 않는다. 마지막 frame이 곧 온다
 NODE_STAGES = {'입력 읽기': STAGES['running'], '품번·판 확인': '품번 확인', 'Supervisor': '질문 분석', 'RAG 에이전트': '문서 검색',
                '회로 읽기': '회로 역할 읽기', '대체 부품 판정': '후보 판정',
                '답 모으기': '답 작성', '답 정리': '답 작성', '종합': '답 작성', '답 검사': '답 작성'}

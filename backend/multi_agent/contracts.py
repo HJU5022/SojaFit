@@ -25,7 +25,8 @@ MAX_REPLANS = 1
 AgentName = Literal['docs', 'judge']
 # 단일 그래프 Route의 다섯 가지에 일상 대화(chat)와 다이오드가 아닌 전자 부품(other_part)을 더했다(11-05 결정). out_of_scope는 서비스와 전혀 무관한 질문만 뜻한다
 # price: 다이오드 품번의 가격 · 재고 질문(11-06 결정, SPEC 1절). 그래프는 품번만 정하고 값은 화면이 그래프 밖에서 조회한다
-QuestionType = Literal['out_of_scope', 'chat', 'other_part', 'price', 'role', 'candidate_find', 'candidate_judge', 'rating']
+# parts_list: 지금 회로의 부품 목록 요청(#55). 코드가 넷리스트에서 표로 답한다. 멀티 Supervisor만 고른다(단일 그래프 route.md에는 없다)
+QuestionType = Literal['out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'role', 'candidate_find', 'candidate_judge', 'rating']
 TaskKind = Literal['role', 'rating', 'candidate_judge', 'candidate_find']  # 할 일 하나가 답하는 부분의 종류
 
 
@@ -92,9 +93,9 @@ class Declined(BaseModel):
 
 
 class Plan(BaseModel):
-    """Supervisor ①의 계획서: 범위 판정 · 질문 종류 · 할 일 목록, 또는 바로 끝내는 길(일상 대화 · 가격 안내 · 거절)."""
+    """Supervisor ①의 계획서: 범위 판정 · 질문 종류 · 할 일 목록, 또는 바로 끝내는 길(일상 대화 · 가격 안내 · 부품 목록 · 거절)."""
     question_type: QuestionType
-    next: Literal['tasks', 'finish', 'price', 'refuse', 'answer']  # answer: 재계획에서 더 할 일 없이 받은 보고로 답한다
+    next: Literal['tasks', 'finish', 'price', 'parts_list', 'refuse', 'answer']  # answer: 재계획에서 더 할 일 없이 받은 보고로 답한다
     reason: Reason | None = None  # 거절이면 필수
     reply: str = Field(default='', max_length=300, description='Korean reply when finishing a chat question')
     tasks: list[Task] = Field(default_factory=list)

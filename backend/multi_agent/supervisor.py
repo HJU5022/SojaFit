@@ -34,7 +34,7 @@ SYNTH_PROMPT = (PROMPTS / 'synth.md').read_text(encoding='utf-8')
 NUMBER = re.compile(r'\d+(?:\.\d+)?')
 # [왜] 그래프 노드 이름은 강의처럼 한국어다(build.py가 이 이름으로 노드를 단다). 갈림 함수는 다음 노드 이름을 그대로 돌려줘
 #      draw_mermaid 그림에 영어 라벨이 붙지 않는다. 계획서 · 모으기의 값(docs · finish · single 등)은 그대로 두고 여기서만 옮긴다
-NODE = {'docs': 'RAG 에이전트', 'judge': 'Spec 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'refuse': '거절',
+NODE = {'docs': 'RAG 에이전트', 'judge': 'Spec 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'parts_list': '부품 목록', 'refuse': '거절',
         'collect': '답 모으기', 'single': '답 정리', 'synth': '종합'}
 REPLAN = '다시 해 볼 실패 · 다시 계획(최대 1번)'  # 답 모으기 → Supervisor 되돌림만 노드 이름이 아닌 키라 그림에 이 라벨이 붙는다
 
@@ -171,7 +171,7 @@ def payload(state: dict, task: dict) -> dict:
 
 
 def after_plan(state: dict):
-    """계획 뒤 갈림길: 일상 대화 → 끝내기, 가격 → 가격 안내, 거절 → 거절, 할 일 → 서브에이전트에 동시에 Send. 노드 이름을 돌려준다."""
+    """계획 뒤 갈림길: 일상 대화 → 끝내기, 가격 → 가격 안내, 부품 목록 → 부품 목록, 거절 → 거절, 할 일 → 서브에이전트에 동시에 Send. 노드 이름을 돌려준다."""
     plan = state.get('plan') or {}
     if state.get('refusal_reason') or not plan:
         return NODE['refuse']

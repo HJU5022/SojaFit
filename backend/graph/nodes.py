@@ -1,7 +1,7 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
 - 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 11개).
-  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다.
+  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다. 부품 목록(`parts_list_answer`, #55)은 멀티 그래프만 붙인다.
   사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
@@ -23,7 +23,7 @@ from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
 from backend.graph.memory import memory_context, memory_sources
 from backend.multi_agent.contracts import QuestionType, Reason
-from backend.multi_agent.messages import price_message, refusal_for, render_judgement
+from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST, price_message, refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
 from backend.rag.units import PREFIX, to_si
 from backend.services import llm
@@ -156,7 +156,7 @@ REFUSED_TYPES = {"out_of_scope": Reason.OUT_OF_SCOPE, "other_part": Reason.NOT_F
 
 
 class Route(BaseModel):
-    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 멀티 Supervisor와 같은 8가지다."""
+    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 route.md의 8가지다(멀티 Supervisor는 부품 목록 parts_list를 더 고른다, #55)."""
     # Literal로 정한 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
     question_type: QuestionType = Field(description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
     reason: FirstStageReason | None = Field(default=None, description="검색 전에 거절할 때만 거절 사유. 거절하지 않으면 비운다")
@@ -221,6 +221,27 @@ def price_answer(state: AgentState) -> dict:
     # [왜] check · skill도 비운다(짧은 답과 같은 이유). 멀티 메모장에는 skill 칸이 없어 LangGraph가 그 칸을 버린다
     return {"price_parts": parts, "answer": price_message(parts), "check": {},
             "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["가격 안내"]}
+
+
+def parts_list_answer(state: dict) -> dict:
+    """부품 목록 노드: 지금 회로(넷리스트)의 부품을 기호 · 값 · 풋프린트 표로 답한다. LLM을 부르지 않는다(#55).
+
+    [왜] Supervisor는 넷리스트 전체를 보지 않아 "부품 리스트" 요청을 일상 대화로 보내 지어낸 거절을 썼다. 값은 넷리스트 글자를 그대로 옮긴다.
+    """
+    connections = state.get("connections")
+    if connections is None and state.get("netlist_path"):  # 평가 실행기는 회로 칸 없이 넷리스트 경로만 준다(read_input과 같은 파일)
+        found = _connections_file(state["netlist_path"])
+        connections = json.loads(found.read_text(encoding="utf-8")) if found else None
+    c = connections or {}
+    parts = c.get("components", c.get("parts")) or []
+    if not parts:
+        # [왜] 회로 없는 대화: 거절 노드와 같은 문구 · 코드라 화면이 넷리스트 첨부 카드를 붙인다(SPEC 8.9)
+        return {"answer": NEED_NETLIST, "check": {}, "refusal": {"code": CIRCUIT_MISSING, "message": NEED_NETLIST}, "path": ["부품 목록"]}
+    cell = lambda v: str(v or "").replace("|", "\\|").replace("\n", " ")  # 표 칸을 깨는 글자만 막는다
+    rows = sorted(parts, key=lambda p: re.sub(r"\d+", lambda m: m[0].zfill(10), str(p.get("ref", ""))))  # 자연 정렬: D1 · D2 · D10 · R1
+    table = ["| 기호 | 값 | 풋프린트 |", "|---|---|---|",
+             *(f"| {cell(p.get('ref'))} | {cell(p.get('value'))} | {cell(p.get('footprint'))} |" for p in rows)]
+    return {"answer": f"이 회로의 부품은 {len(rows)}개입니다.\n\n" + "\n".join(table), "check": {}, "path": ["부품 목록"]}
 
 
 def search(state: AgentState, retriever) -> dict:

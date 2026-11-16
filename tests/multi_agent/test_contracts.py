@@ -26,6 +26,7 @@ def test_valid_plans():
     assert Plan(question_type='chat', next='finish', reply='안녕하세요').reply
     assert Plan(question_type='out_of_scope', next='refuse', reason=Reason.OUT_OF_SCOPE).reason is Reason.OUT_OF_SCOPE
     assert Plan(question_type='price', next='price').tasks == []
+    assert Plan(question_type='parts_list', next='parts_list').tasks == []  # 부품 목록은 코드가 넷리스트로 답한다(#55)
     role = Plan(question_type='role', next='tasks', tasks=[task(kind='role', query='')])  # 역할은 넷리스트로 답해 검색어가 없어도 된다
     assert role.tasks[0].query == ''
 

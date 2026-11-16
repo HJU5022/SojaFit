@@ -1,6 +1,6 @@
 """멀티 에이전트 조립(backend/multi_agent/build.py) 시험: 가짜 LLM · 검색기로 계획 → 서브에이전트 → 모으기 → 답 검사 길을 끝까지 돌려 본다.
 
-- 역할: 바로 끝내는 길(일상 대화 · 가격 안내 · 범위 밖 거절 · 계획 형식 실패), 할 일 1개(역할 · 정격)와 2개(동시 실행 → 종합),
+- 역할: 바로 끝내는 길(일상 대화 · 가격 안내 · 부품 목록 · 범위 밖 거절 · 계획 형식 실패), 할 일 1개(역할 · 정격)와 2개(동시 실행 → 종합),
   판정 길의 인터럽트 재개(읽기 LLM을 다시 부르지 않고, 함께 돈 문서 할 일도 다시 돌지 않음), 판정 거절 보고, 새 턴에서 칸 비우기,
   기억 읽기(Store의 선호 실장 방식 → 찾기 후보 순서, Store 없으면 예전 순서)를 본다.
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
@@ -119,6 +119,49 @@ def test_price_question_ends_with_the_same_notice_as_the_single_graph_and_no_mou
     out = app(scripted(supervisor=[Plan(question_type='price', next='price')]), searched=searched).invoke({'input': '1N5817 지금 가격이랑 재고 알려 줘'})
     assert searched == [] and out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '가격 안내']
     assert out['price_parts'] == ['1N5817'] and out['answer'] == price_message(['1N5817']) and out['question_type'] == 'price'
+
+
+# 넷리스트 순서를 일부러 섞었다(D10이 D2보다 앞). 값 · 풋프린트는 표에 그대로 나와야 한다
+NETLIST = {'components': [{'ref': 'R1', 'value': '10k', 'footprint': 'Resistor_SMD:R_0603_1608Metric'},
+                          {'ref': 'D10', 'value': 'SS14', 'footprint': 'Diode_SMD:D_SMA'},
+                          {'ref': 'D2', 'value': '1N4148', 'footprint': 'Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal'}],
+           'nets': []}
+
+
+def test_parts_list_question_answers_every_component_from_the_netlist_without_an_llm_call():
+    """부품 목록(#55): 계획이 parts_list면 코드가 넷리스트의 부품을 자연 순서(D2 · D10 · R1) 표로 답한다. Supervisor 말고 LLM · 검색을 부르지 않는다."""
+    chat, searched = scripted(supervisor=[Plan(question_type='parts_list', next='parts_list')]), []
+    out = app(chat, searched=searched).invoke({'input': '부품 리스트 좀 보여줄래', 'connections': NETLIST})
+    assert chat.calls == ['supervisor'] and searched == []
+    assert out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '부품 목록'] and out['question_type'] == 'parts_list'
+    assert out['answer'] == ('이 회로의 부품은 3개입니다.\n\n| 기호 | 값 | 풋프린트 |\n|---|---|---|\n'
+                             '| D2 | 1N4148 | Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal |\n'
+                             '| D10 | SS14 | Diode_SMD:D_SMA |\n'
+                             '| R1 | 10k | Resistor_SMD:R_0603_1608Metric |')
+    assert not out.get('refusal') and out['check'] == {}
+
+
+def test_parts_list_reads_the_eval_netlist_path_and_escapes_table_breaking_text():
+    """평가 실행기는 회로 칸 없이 넷리스트 경로만 준다(read_input과 같은 connections.json). 값의 |와 줄바꿈은 표를 깨지 않게 막는다."""
+    import json
+    from pathlib import Path
+    from backend.graph import nodes
+    folder = 'data/circuits/collected/samples/breadboard_supply/converted'
+    refs = [c['ref'] for c in json.loads(Path(f'{folder}/connections.json').read_text(encoding='utf-8'))['components']]
+    lines = nodes.parts_list_answer({'netlist_path': f'{folder}/circuit.net'})['answer'].splitlines()
+    assert lines[0] == f'이 회로의 부품은 {len(refs)}개입니다.' and [row.split(' | ')[0][2:] for row in lines[4:]] == refs  # 이 파일은 이미 자연 순서다
+    out = nodes.parts_list_answer({'connections': {'components': [{'ref': 'J1', 'value': 'A|B\nC'}]}})
+    assert out['answer'].endswith('| J1 | A\\|B C |  |')
+    missing = nodes.parts_list_answer({'netlist_path': '../outside.net'})  # 저장소 밖 경로는 읽지 않는다
+    assert missing['refusal']['code'] == 'circuit_missing'
+
+
+def test_parts_list_without_a_netlist_asks_for_one_like_the_circuitless_refusal():
+    """회로 없는 대화의 부품 목록 요청: 새 거절 문구가 아니라 넷리스트를 달라는 같은 답 · 코드(화면이 첨부 카드를 붙인다, SPEC 8.9)."""
+    chat = scripted(supervisor=[Plan(question_type='parts_list', next='parts_list')])
+    out = circuitless_app(chat).invoke({**CIRCUITLESS, 'input': '부품 목록 보여줘'}, {'configurable': {'thread_id': 'p1'}})
+    assert chat.calls == ['supervisor'] and out['path'][-2:] == ['계획', '부품 목록']
+    assert out['answer'] == NEED_NETLIST and out['refusal'] == {'code': 'circuit_missing', 'message': NEED_NETLIST}
 
 
 def test_one_docs_task_answers_without_a_second_supervisor_call():
@@ -248,7 +291,7 @@ def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
     g = judge_app(scripted()).get_graph(xray=True)
     assert set(g.nodes) - {'__start__', '__end__'} == {
         '입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', 'Spec 에이전트:회로 읽기', 'Spec 에이전트:대체 부품 판정',
-        '답 모으기', '답 정리', '종합', '답 검사', '끝내기', '거절', '가격 안내'}
+        '답 모으기', '답 정리', '종합', '답 검사', '끝내기', '거절', '가격 안내', '부품 목록'}
     assert [(e.source, e.target, e.data) for e in g.edges if e.data] == [('답 모으기', 'Supervisor', REPLAN)]
     assert {('입력 읽기', '기억 읽기'), ('기억 읽기', '품번·판 확인')} <= {(e.source, e.target) for e in g.edges}
     assert {e.target for e in g.edges if e.source == 'Supervisor'} >= {'RAG 에이전트', 'Spec 에이전트:회로 읽기'}  # Send 동시 실행
