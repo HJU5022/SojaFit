@@ -27,7 +27,7 @@
 | `test_conversations.py` | 대화 인증·스트림·삭제 경계(가짜 분석 서비스): thread 연결, 대상 변경 409, 재개, `failed` frame의 `error.code`, 서비스 없음 503, 토큰 상한 429, recover, 저장 기록 GET, 데모 질문 목록 |
 | `test_threads.py` | `Conversations`의 LED/표시기·다이오드 외 부품 분석 전 차단과 일반 다이오드 허용은 가짜 연결/그래프로 DB·모델 없이 검사. 소유권·체크포인트·재개·기억·토큰 상한·데모 조립의 PostgreSQL 통합 부분은 `TEST_THREAD_DATABASE_URL`일 때만 |
 | `test_deletion.py` | 격리 DB의 삭제 범위: 프로젝트 삭제와 단일 대화 삭제가 해당 React 행과 같은 UUID 분석 기록만 지움, 탈퇴가 그 사용자의 기록·Store namespace·계정을 지우고 다른 사용자는 남김, 진행 중 분석과 탈퇴의 409, 보관 기간 청소 |
-| `test_quotes.py` | 승인·견적·사례 API의 Origin·입력 allow-list·안전 오류(같은 메시지 두 번 승인은 409 `ALREADY_APPROVED`) |
+| `test_quotes.py` | 승인·견적·사례 API의 Origin·입력 allow-list·안전 오류(같은 메시지 두 번 승인은 409 `ALREADY_APPROVED`), 승인 사례 상세의 소유자만 · 공개 허용 목록(DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만) |
 | `test_full_service_flow.py` | 격리 PostgreSQL의 업로드 → interrupt 재개 → 승인 → 가격 없는 견적 → 소유권 → cascade 전체 흐름, 저장 대화 GET이 소유자에게만 보임 |
 | `test_public_grants.py` | `db/026_revoke_public_grants_and_rls.sql`을 격리 PostgreSQL에서: 공개 역할 권한 회수, 재실행 동일, 소유자는 RLS 뒤에도 읽기·쓰기, anon은 코퍼스 표를 못 읽음, LangGraph 체크포인트·Store 표 동작 |
 | `test_http_restart.py` | 명시적으로 실행할 때만 Docker로 실제 HTTP 서버를 종료·재기동해 소유자 재개와 다른 계정의 404를 확인. 기본 pytest에서는 건너뜀 |

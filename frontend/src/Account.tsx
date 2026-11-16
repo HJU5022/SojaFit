@@ -1,4 +1,4 @@
-/** 설정·승인 사례·관리자·개인정보 안내. 출처: SPEC 8.5·8.6절. */
+/** 설정·관리자·개인정보 안내. 승인 사례는 Approved.tsx. 출처: SPEC 8.5·8.6절. */
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import {
@@ -189,69 +189,6 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
             }}
           >
             모든 기록과 계정 삭제
-          </button>
-        </Modal>
-      )}
-    </div>
-  );
-}
-export function ApprovedCases() {
-  const data = useResource<any[]>('/approved-cases'),
-    [error, setError] = useState<Error | null>(null),
-    [remove, setRemove] = useState<number | null>(null);
-  return (
-    <div className="page-content">
-      <h1>승인 사례</h1>
-      <p className="page-intro">
-        사람이 확인하고 승인한 후보입니다. 새 검토의 판정 근거로 재사용하지 않습니다.
-      </p>
-      <ErrorBox error={error} />
-      {data.loading ? (
-        <Loading />
-      ) : data.error ? (
-        <ErrorBox error={data.error} retry={data.reload} />
-      ) : data.data?.length ? (
-        <div className="case-list">
-          {data.data.map((c) => (
-            <article key={c.id}>
-              <div>
-                <h2>{c.candidate_part}</h2>
-                <Badge verdict={c.verdict} />
-                <p>{new Date(c.created_at).toLocaleString('ko-KR')} 승인</p>
-                <Disclaimer />
-              </div>
-              <button onClick={() => setRemove(c.id)}>사례 삭제</button>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <Empty title="아직 승인한 후보가 없습니다.">
-          <p>검토 결과의 후보 상세에서 근거를 확인하고 승인하세요.</p>
-          <a href="/app" className="button primary">
-            프로젝트로
-          </a>
-        </Empty>
-      )}
-      {remove !== null && (
-        <Modal title="승인 사례를 삭제할까요?" close={() => setRemove(null)}>
-          <p>
-            승인을 취소하고 사례를 삭제합니다. 기존 견적은 이력으로 남고, 같은 검토에서 후보를 다시
-            승인할 수 있습니다.
-          </p>
-          <button
-            className="primary"
-            onClick={async () => {
-              try {
-                await api('/approved-cases/' + remove, 'DELETE');
-                setRemove(null);
-                data.reload();
-              } catch (e) {
-                setError(e as Error);
-                setRemove(null);
-              }
-            }}
-          >
-            사례 삭제
           </button>
         </Modal>
       )}

@@ -135,6 +135,24 @@ export type Quote = {
   thread_id?: string;
 };
 export type Approval = { id: number; candidate_part: string; verdict: Verdict; quotes?: Quote[] };
+/** GET /api/approved-cases/{id}: 승인 사례 하나의 기록. 후보·근거는 승인 때 저장한 값이다(다시 판정하지 않음). */
+export type ApprovedCaseDetail = {
+  id: number;
+  candidate_part: string;
+  verdict: Verdict;
+  created_at: string;
+  project_id: number;
+  project_name: string;
+  thread_id: string;
+  thread_title: string;
+  question: string;
+  target_ref: string | null;
+  target_value: string | null;
+  answer: string;
+  candidate: Candidate | null;
+  evidence: Citation[];
+  quotes: Quote[];
+};
 /** GET /api/prices?quantity= 의 부품별 예상 금액. 품번·가격 구간·통화를 못 맞추면 서버가 null을 준다. */
 export type PriceEstimate = {
   quantity: number;

@@ -1914,6 +1914,16 @@ form {
 .case-list button {
   font-size: 13px;
 }
+.case-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.case-quotes {
+  padding-left: 20px;
+  font-size: 13px;
+}
 .nav-scrim {
   display: none;
 }

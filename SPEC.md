@@ -153,7 +153,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처는 `docs/reference/team-contract.md`를 따른다(9절).
-- HTTP API: 동작(메서드 + 경로) 52개, 경로 43개입니다. `/openapi.json`(`/docs`)에 동작 45개(경로 36개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 13개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 42개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/types.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+- HTTP API: 동작(메서드 + 경로) 53개, 경로 43개입니다. `/openapi.json`(`/docs`)에 동작 46개(경로 36개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 13개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 43개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/types.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
   - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 27개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
@@ -217,6 +217,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `POST /api/auth/password-reset/confirm` | 없음 | `PasswordAction` | 200 `Ok` | 400 · 422 · 503 | 새 비밀번호로 바꾸고 그 계정의 세션과 로그인 실패 횟수를 지움 |
     | `DELETE /api/me` | 로그인(일반 계정) | - | 200 `Deleted` `{deleted: {이름: 건수}}` | 409(관리자 · 진행 중 분석) · 503 | 동의 철회 · 탈퇴(8.5 삭제, 개인정보 보호법 37조) |
     | `GET /api/approved-cases` | 로그인 | - | 200 `list[ApprovedCase]` `[{id, approval_id, candidate_part, verdict, created_at}]` | | 내가 승인한 사례 확인(`docs/specs/d5-frontend-service.md` How, 장기 기억이 아님 8.5) |
+    | `GET /api/approved-cases/{id}` | 로그인 | - | 200 `ApprovedCaseDetail` `{id, approval_id, candidate_part, verdict, created_at(승인 시각), message_id, project_id, project_name, thread_id, thread_title, question, target_ref, target_value, answer, candidate, evidence, quotes: list[Quote]}`(`Cache-Control: no-store`) | 404 | 승인 사례 하나의 기록(8.4): 원래 대화 · 질문 · 바꿀 부품 · 승인 때 저장한 판정 · 근거 · 견적. 저장한 값을 공개 허용 목록(`BrowserResult`)으로 다시 거르고 다시 판정하지 않음 |
     | `DELETE /api/approved-cases/{id}` | 로그인 | - | 204 | 404 | 승인 사례를 확인 뒤 지움(같은 작업서) |
     | `GET /api/prices` | 로그인 | 쿼리 `parts` 품번 1~10개 | 200 `PricesAvailable \| PricesUnavailable` | 422 | 후보의 가격 · 재고를 근거와 따로 보임, 저장하지 않음(1절 하는 일, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
     | `GET /api/external-circuits/schematics` | 로그인 | 쿼리 `q` 2~200자, 선택 `source_url` 최대 2048자(현재 검색 후보 URL만 허용) | 200 `ExternalSchematicResponse` `{project, commit, license, attribution, repository_url, source_url, source_file, source_type, evidence_grade, manufacturer, model, revision, source_sha256, license_evidence_url, images: [{sheet, url}], choices: [{title, source_url, source_type, revision}]}` (일부 출처 필드는 null 가능) | 404 `SCHEMATIC_NOT_FOUND` · 422 · 502 · 503 | 이름으로 공개 회로도를 찾아 검증된 제조사 원본은 `manufacturer_official`/2등급, GitHub 커뮤니티 원본은 `community`/3등급, 출처 미확인 공개 웹은 `public_web`/등급 없음으로 표시함. 후보 선택과 시트 이미지 주소를 제공하며 저장하지 않음(`Cache-Control: private, no-store`). 서버는 같은 검색어 · 회로 연결의 결과를 프로세스 메모리에 15분 재사용한다(이미지 서명도 15분). 작업대는 저장된 데모 도면이 없고 넷리스트가 있는 프로젝트를 열면 프로젝트 이름으로 한 번 자동 조회하고, 같은 탭에서는 (프로젝트, 회로 버전)마다 다시 보내지 않는다(찾은 결과 14분. 실패(404 · 409 · 502 · 503 · 네트워크)는 탭이 열려 있는 동안 남기고 사용자가 다시 찾을 때만 다시 보낸다. 직접 찾은 이름 · 후보가 실패해도 앞서 찾은 결과는 남긴다) |
@@ -400,6 +401,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   - GIVEN 품번 11개 이상이거나 형식에 맞지 않는 품번, WHEN `GET /api/prices`를 부르면, THEN 422이고 Mouser를 부르지 않는다.
   - GIVEN Mouser 응답, WHEN `GET /api/prices`가 조회하면, THEN 4절의 칸과 조회 시각만 돌려주고 헤더는 `Cache-Control: no-store`이며, 로그에 요청 주소·키·응답 값이 남지 않는다.
 - 견적 승인·저장 수용 기준: [D5 화면 작업서](docs/specs/d5-frontend-service.md) AC(승인 전 견적 409, 가격·재고 비저장, 프로젝트 삭제 때 함께 지움)를 따르고, `tests/api/test_quotes.py` · `tests/services/test_quote_service.py`가 확인합니다.
+- 승인 사례 기록(11-16): 승인 사례는 이력이다. 화면 `/approved`의 "기록 보기"가 `GET /api/approved-cases/{id}`로 그때의 원래 대화(링크) · 질문 · 바꿀 부품 · 후보 · 판정 · 조건 행(필요 값 · 후보 값 · 결과 · 인용 위치) · 근거 문서 · 승인 때의 답 · 승인 시각 · 그 승인의 견적(수량 · 시각)을 보인다. 값은 승인 스냅샷(`approvals.snapshot`) · 메시지 · 견적에서 읽기만 하고 다시 판정하지 않는다. 질문과 따로 적은 사용 조건 · 조건 답변은 run 기록에 저장하지 않으므로(4절 SSE `judgement.input_conditions`는 저장 안 함) 보이지 않는다.
+  - GIVEN 사용자 A의 승인 사례, WHEN A가 상세를 열면, THEN 위 칸을 200으로 돌려주고 후보 · 근거는 `BrowserResult` 허용 목록 밖의 칸(스냅샷의 `part_number` 등)을 담지 않는다. WHEN 다른 사용자가 같은 id를 열거나 A가 사례를 지운 뒤 열면, THEN 404다(`tests/api/test_quotes.py`).
 
 ### 8.5 사용자 사실 기억(장기 기억)
 
