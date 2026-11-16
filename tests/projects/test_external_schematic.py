@@ -1644,3 +1644,32 @@ def test_parallel_worker_error_waits_for_sibling_and_clears_request_state(monkey
     assert sibling_done.is_set()
     assert state_ref and all(state == {} for state in state_ref)
     assert render._PDF_REQUEST.get() is None
+
+
+@pytest.mark.parametrize('query', ['ST-Link v2 clone', 'Deutsch board v2'])
+def test_connected_lookup_keeps_base_github_fallback_without_official_branch(monkeypatch, query):
+    """연결이 있는 원본 찾기(작업대 자동 찾기)는 #146 공식 제조사 · TSC 갈래 없이 9c87ba36처럼 GitHub 원본을 찾는다."""
+    from backend.projects import external_circuit_search as search
+    monkeypatch.setenv('AUTH_SECRET', 'connected-lookup-test'.ljust(32, 'x'))
+    assert not search.is_tsc_query('deutsch board v2')  # 'tsc'는 낱말 전체로만 맞춘다
+    calls = Counter()
+    repo = GitHubRepositoryRef('group', 'board', 'https://github.com/group/board')
+    src = VerifiedSchematicSource('group/board', 'c' * 40, 'MIT', 'group/board contributors', 'https://github.com/group/board',
+                                  'https://github.com/group/board/tree/' + 'c' * 40, 'board.kicad_sch', 'kicad', (), 'board.kicad_sch', 1)
+    st_pdf = WebSchematicRef('https://www.st.com/resource/en/datasheet/x.pdf', 'https://www.st.com/resource/en/datasheet/x.pdf',
+                             'x.pdf', 'pdf', 'x', 'STMicroelectronics', source_type='manufacturer_official', evidence_grade=2,
+                             manufacturer='STMicroelectronics', model='x')
+    fakes = {'search_public_schematics': lambda q, l: calls.update(['public']) or (),
+             'search_manufacturer_schematics': lambda q, l: calls.update(['maker']) or (),
+             'search_github_repositories': lambda q, l: calls.update(['github']) or (repo,),
+             'search_component_repositories': lambda q, l: calls.update(['github']) or (repo,),
+             'search_semiconductor_schematics': lambda q, l: calls.update(['official']) or (st_pdf,),
+             'search_tsc_schematics': lambda q, l: calls.update(['tsc']) or ()}
+    for name, fake in fakes.items():
+        monkeypatch.setattr(search, name, fake)
+    worker = api.ExternalSchematicService(api._search, lambda ref, *, query: (src,) if isinstance(ref, GitHubRepositoryRef) else (),
+                                          lambda source: (b'sheet',), fallback_search=api._search_community,
+                                          match_render=lambda source, expected: (b'sheet',))
+    connections = {'parts': [{'ref': 'D1', 'value': 'SS34', 'footprint': ''}], 'nets': [{'nodes': [{'ref': 'D1', 'pin': '1'}]}]}
+    assert worker.find(query, connections=connections).source_type == 'community'
+    assert calls == {'public': 1, 'maker': 1, 'github': 1}

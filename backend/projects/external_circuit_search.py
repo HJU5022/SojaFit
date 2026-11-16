@@ -245,7 +245,9 @@ def _tsc_model(query: str) -> str | None:
 def is_tsc_query(query: str) -> bool:
     text = query.casefold()
     return bool(_TSC_BARE_PART.fullmatch(query.strip()) or (
-        _tsc_model(query) and any(marker in text for marker in _TSC_QUERY_MARKERS)))
+        # [왜] 'deutsch board v2'의 deutsch 안 'tsc'가 TSC 경로로 보냈다(#146 회귀). 표지는 낱말 전체로만 맞춘다
+        _tsc_model(query) and any(re.search(r"(?<![a-z0-9])" + re.escape(marker) + r"(?![a-z0-9])", text)
+                                  for marker in _TSC_QUERY_MARKERS)))
 
 
 def canonical_tsc_query(query: str) -> str:
