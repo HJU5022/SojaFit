@@ -879,6 +879,9 @@ SojaFit (proj3-b)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
     │   ├── portfolio-<이름>.md  <- 다른 조원 포트폴리오(예정)
+    │   ├── presentation/   <- 최종 발표 덱(11-18)
+    │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
+    │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 덱 20장(본편 17 + Q&A 백업 3)
     │   └── langfuse/       <- Langfuse 스크린샷 3장(11-13 배포본). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
     │       ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
     │       ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세

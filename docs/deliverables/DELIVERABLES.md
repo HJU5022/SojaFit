@@ -16,6 +16,7 @@
 | `portfolio.md` | 제출물 양식 | 포트폴리오 1장 양식. 조원마다 `portfolio-{이름}.md`로 복사 |
 | `portfolio-jeongun.md` | 제출물 | 하정운 포트폴리오 |
 | `submission_checklist.md` | 제출물 | 제출 체크리스트: 게이트·제출물 항목별 증거 경로와 상태 |
+| `presentation/` | 제출물 | 최종 발표 덱(`sojafit-final-2026-11-18.pptx`)과 슬라이드 · 발표자 · 수치 근거 표. [PRESENTATION.md](presentation/PRESENTATION.md) |
 | `langfuse/` | 제출물 | Langfuse 스크린샷 3장(목록 · 트레이스 상세 · 비용). 설명은 아래 "Langfuse 스크린샷" 절 |
 
 ## 남은 일
@@ -27,7 +28,7 @@
 | 시연 영상 | 3분 이내, 정상 경로와 실패 경로. 시연 영상 원본과 동결 시점 커밋 SHA, 배포 리비전 번호 | 영상 파일 없음. 스크립트만 `demo_script.md` | D11 11/16 |
 | Langfuse 스크린샷 | 3장 이상, 트레이스 상세 1장 이상 | 3장(목록, 트레이스 상세, 비용), 2026-11-13 배포본 기준. 아래 "Langfuse 스크린샷" 절 | |
 | 포트폴리오 | 조원 수만큼(LangGraph, 멀티에이전트, 평가, 관측의 수치 포함) | 조원 3명(`README.md` 7절) 중 `portfolio-jeongun.md`만 있음. `portfolio-osc.md`, `portfolio-sth.md` 없음 | D12 11/17 |
-| 발표 자료 | 전원 파트 분담 | 없음 | D12 11/17 |
+| 발표 자료 | 전원 파트 분담 | 덱 20장: [presentation/](presentation/PRESENTATION.md)(11-17). 발표자 배정은 README 7절 역할 기준 초안 | D12 11/17 |
 | 제출 체크리스트 | 최종 제출 때 확인 | 초안 있음: [submission_checklist.md](submission_checklist.md)(2026-11-13). 가이드 원문 사본이 저장소에 없어 `GATES.md` · 이 문서의 요구만 담음 | D12 11/17 |
 | `failure_analysis.md` 보강 | 코드로 되돌린 결정 1건과 이유, 미채택 실험, 판정자 한계 | 11-13 채움: 되돌린 결정(#46), 미채택 실험 4건, 판정자·도구 한계. 11-16 채움: 인젝션 사례 1건(C2 수정 전)과 Luna 한계(파일 9절, 판정을 사람과 대조한 기록은 없음). 남음: 정답 초안 작성자 서술 불일치(판정 기록은 심태현, EVAL_REPORT 2절은 Codex) | D12 11/17 |
 | `ai_tools_log.md` 보강 | 팀의 AI 코딩 도구 사용 기록 | 11-13 Claude 행 추가. 남음: 다른 조원 기록, citation-check 브랜치 행, 채택 판정자(파일 4절) | D12 11/17 |
