@@ -15,6 +15,7 @@ import {
 import { api, ApiError, statuses, streamRun } from './api';
 import {
   Circuit,
+  AttachmentCard,
   Disclaimer,
   ErrorBox,
   Loading,
@@ -917,23 +918,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 }}
               >
                 {attachment && (
-                  <div className="attachment">
-                    <Paperclip size={14} />
-                    {attachment.name}
-                    <button
-                      type="button"
-                      aria-label="첨부 제거"
-                      title="첨부 제거"
-                      onClick={() => setAttachment(null)}
-                    >
-                      <X size={14} />
-                    </button>
-                    <small>
-                      {threadId && !project.data?.circuit_version
-                        ? '보내면 이 대화에 회로를 붙이고, 적은 질문이 있으면 이어서 보냅니다.'
-                        : '보내면 새 회로 버전과 새 검토를 만듭니다.'}
-                    </small>
-                  </div>
+                  <AttachmentCard file={attachment} onRemove={() => setAttachment(null)} />
                 )}
                 <label className="sr-only" htmlFor="question">
                   검토 질문

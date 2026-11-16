@@ -1666,23 +1666,59 @@ form {
   border: 2px dashed #508a99;
   border-radius: 10px;
 }
+/* 입력창 안 첨부 카드(#49): 글 줄 위 왼쪽의 작은 파일 카드. ×는 올리거나 초점이 갈 때 보이고, 올릴 수 없는 터치 화면에서는 늘 보인다 */
 .attachment {
-  padding: 10px 12px;
-  font-size: 13px;
-  background: var(--surface);
+  position: relative;
+  width: 220px;
+  max-width: calc(100% - 24px);
+  height: 56px;
+  margin: 12px 12px 0;
+  padding: 0 12px;
   display: flex;
-  gap: 8px;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
 }
-.attachment button {
-  padding: 0;
-  min-width: 32px;
-  min-height: 32px;
+.attachment > svg {
+  flex: none;
+  color: var(--muted);
+}
+.attachment > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.attachment strong {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .attachment small {
-  flex-basis: 100%;
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.attachment button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  min-height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  opacity: 0;
+}
+.attachment:hover button,
+.attachment:focus-within button {
+  opacity: 1;
+}
+@media (hover: none) {
+  .attachment button {
+    opacity: 1;
+  }
 }
 .demo-questions {
   margin-bottom: 12px;

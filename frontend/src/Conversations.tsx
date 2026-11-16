@@ -6,16 +6,23 @@ import {
   CornerDownLeft,
   FilePlus,
   Info,
-  Paperclip,
   Pencil,
   Plus,
   Trash2,
-  X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
 import { duplicateAction, projectNameFromQuestion } from './circuit';
 import { isSendKey } from './display';
-import { ErrorBox, Loading, Modal, navigate, RowMenu, useNetlistAttach, useResource } from './ui';
+import {
+  AttachmentCard,
+  ErrorBox,
+  Loading,
+  Modal,
+  navigate,
+  RowMenu,
+  useNetlistAttach,
+  useResource,
+} from './ui';
 import { NewProject, refreshNavigation } from './Projects';
 import { openWithQuestion } from './Workbench';
 import type { Demo, Project, ThreadListItem } from './types';
@@ -351,7 +358,7 @@ export function NewConversation() {
       setBusy(false);
     }
   }
-  // [왜] 샘플 회로는 고른 파일처럼 첨부 칩으로만 붙이고 보내지 않는다. API가 아니라 정적 파일이라 fetch로 받는다
+  // [왜] 샘플 회로는 고른 파일처럼 첨부 카드로만 붙이고 보내지 않는다. API가 아니라 정적 파일이라 fetch로 받는다
   async function attachSample() {
     setError(null);
     try {
@@ -392,21 +399,7 @@ export function NewConversation() {
           if (!disabled) void start();
         }}
       >
-        {attachment && (
-          <div className="attachment">
-            <Paperclip size={14} />
-            {attachment.name}
-            <button
-              type="button"
-              aria-label="첨부 제거"
-              title="첨부 제거"
-              onClick={() => setAttachment(null)}
-            >
-              <X size={14} />
-            </button>
-            <small>보내면 파일 이름으로 프로젝트를 만들고 이 회로로 대화를 시작합니다.</small>
-          </div>
-        )}
+        {attachment && <AttachmentCard file={attachment} onRemove={() => setAttachment(null)} />}
         <label className="sr-only" htmlFor="new-question">
           새 대화 질문
         </label>

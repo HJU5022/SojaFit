@@ -6,6 +6,7 @@ import {
   CircuitBoard,
   Download,
   Ellipsis,
+  FileText,
   LoaderCircle,
   Paperclip,
   Plus,
@@ -333,6 +334,21 @@ export function RowMenu({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+/** 입력창 안 첨부 카드(#49, Claude 입력창처럼 글 줄 위 왼쪽): 파일 아이콘 · 말줄임한 이름 · 종류만 보이고 미리보기는 없다. ×는 올리거나 초점이 갈 때 보인다. 새 대화 · 작업대가 같이 쓴다. */
+export function AttachmentCard({ file, onRemove }: { file: File; onRemove: () => void }) {
+  return (
+    <div className="attachment">
+      <FileText size={22} aria-hidden />
+      <div>
+        <strong title={file.name}>{file.name}</strong>
+        <small>KiCad 넷리스트 · {file.name.match(/\.[^.]*$/)?.[0].toLowerCase()}</small>
+      </div>
+      <button type="button" aria-label="첨부 제거" title="첨부 제거" onClick={onRemove}>
+        <X size={12} />
+      </button>
     </div>
   );
 }
