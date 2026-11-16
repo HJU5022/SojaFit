@@ -14,7 +14,7 @@ import { api, ApiError } from './api';
 import { Brand, ErrorBox, followLink, Loading, navigate, useLocation } from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
-import { Admin, ApprovedCases, Privacy, Settings } from './Account';
+import { Admin, ApprovedCases, Privacy, PrivacyLink, Settings } from './Account';
 import { ConversationNav, NewConversation } from './Conversations';
 import { ProjectList } from './Projects';
 import { Workbench } from './Workbench';
@@ -114,9 +114,7 @@ function Shell({
             </button>
           </div>
           <ErrorBox error={error} />
-          <a className="privacy-small" href="/privacy">
-            개인정보 처리방침
-          </a>
+          <PrivacyLink className="privacy-small" />
         </div>
       </aside>
       <div className="app-frame">
