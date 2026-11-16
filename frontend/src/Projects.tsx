@@ -228,13 +228,15 @@ export function ProjectList() {
               <>
                 <span>{selected.length}개 선택</span>
                 <button
+                  className="icon-button"
+                  aria-label="선택 삭제"
+                  title="선택 삭제"
                   onClick={() => {
                     setError(null);
                     setRemove(list.filter((p) => selected.includes(p.id)));
                   }}
                 >
-                  <Trash2 size={15} />
-                  선택 삭제
+                  <Trash2 size={17} />
                 </button>
               </>
             )}
@@ -301,6 +303,7 @@ export function ProjectList() {
               <button
                 className="icon-button"
                 aria-label={p.name + ' 이름 변경'}
+                title={p.name + ' 이름 변경'}
                 onClick={() => setRenaming(p.id)}
               >
                 <Pencil size={17} />
@@ -308,6 +311,7 @@ export function ProjectList() {
               <button
                 className="icon-button"
                 aria-label={p.name + ' 삭제'}
+                title={p.name + ' 삭제'}
                 onClick={() => {
                   setError(null);
                   setRemove([p]);

@@ -1,6 +1,14 @@
 /** 공통 상태·접근성·회로 표시. 서버 값을 시각화하며 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { AlertCircle, ArrowUpRight, CircuitBoard, Ellipsis, LoaderCircle, X } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowUpRight,
+  CircuitBoard,
+  Ellipsis,
+  LoaderCircle,
+  RotateCw,
+  X,
+} from 'lucide-react';
 import { api, verdicts } from './api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -101,8 +109,14 @@ export function ErrorBox({ error, retry }: { error: Error | string | null; retry
         {typeof error === 'string' ? error : error.message}
         {retry && (
           // [주의] 폼 안에 놓이는 일이 있어 type="button"이 없으면 제출 버튼이 된다
-          <button type="button" className="text-button" onClick={retry}>
-            다시 시도
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="다시 시도"
+            title="다시 시도"
+            onClick={retry}
+          >
+            <RotateCw size={16} />
           </button>
         )}
       </div>
@@ -156,7 +170,7 @@ export function Modal({
     >
       <div className="dialog-head">
         <h2>{title}</h2>
-        <button aria-label="닫기" className="icon-button" onClick={close}>
+        <button aria-label="닫기" title="닫기" className="icon-button" onClick={close}>
           <X size={20} />
         </button>
       </div>
@@ -195,6 +209,7 @@ export function RowMenu({
       <button
         className="icon-button"
         aria-label={label}
+        title={label}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(!open)}

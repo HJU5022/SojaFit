@@ -1,5 +1,6 @@
 /** 승인 사례 목록과 사례 하나의 기록(원래 대화·판정·근거·견적). 저장한 값을 보이기만 하고 다시 판정하지 않는다. 출처: SPEC 4절·8.4절. */
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { api } from './api';
 import { formatAmount, opLabel } from './display';
 import {
@@ -169,7 +170,14 @@ export function ApprovedCases() {
                 <button className="primary" onClick={() => setOpen(c.id)}>
                   기록 보기
                 </button>
-                <button onClick={() => setRemove(c.id)}>사례 삭제</button>
+                <button
+                  className="icon-button"
+                  aria-label="사례 삭제"
+                  title="사례 삭제"
+                  onClick={() => setRemove(c.id)}
+                >
+                  <Trash2 size={17} />
+                </button>
               </div>
             </article>
           ))}
