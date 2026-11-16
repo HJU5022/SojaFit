@@ -1,0 +1,16 @@
+{
+  "round": 3,
+  "variant": "included",
+  "api_bytes": 1793629178,
+  "api_image": "sha256:ea3413b6c09e95589ecd02453765e544ab119ba2b411bed728caf7543121b484",
+  "renderer_bytes": null,
+  "up_health_s": 110.4678,
+  "up_png_s": 111.5165,
+  "health_png_s": 1.0487,
+  "png_bytes": 70865,
+  "png_sha256": "c169f3c9afb5661e4145424572c505a23c248a9d05b9cc1864ea014ba449d85a",
+  "width": 3508,
+  "height": 2481,
+  "kicad": "9.0.2",
+  "profile_sha256": "9fd8732d81fca2e7e638fa5c70f94b955d5ced6a5d559f524c4d2975f0c68d01"
+}

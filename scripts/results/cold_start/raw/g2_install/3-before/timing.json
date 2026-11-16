@@ -1,0 +1,19 @@
+{
+  "run": 3,
+  "variant": "before",
+  "sha": "5f697b28b59c9c2ccf27c447ee5bde250b0243c5",
+  "up_health_s": 114.228,
+  "clone_health_s": 118.097,
+  "status": "{\"status\":\"ok\"}",
+  "engine": "27.5.1",
+  "compose": "Docker Compose version v2.33.0",
+  "build_cache": {
+    "Active": "0",
+    "Reclaimable": "0B",
+    "Size": "0B",
+    "TotalCount": "0",
+    "Type": "Build Cache"
+  },
+  "initial_images": 0,
+  "initial_volumes": 0
+}
