@@ -554,6 +554,7 @@ SojaFit (proj3-b)
 │   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
+│   │   ├── test_charge_pool.py <- 예산 차감이 공용 연결 풀을 쓰고, 풀이 0.5초 안에 못 주면 새 연결로 같은 트랜잭션을 도는지(가짜 풀)
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
 │   │   ├── test_profile.py <- 사용자 사실 기억: 칸 검사·틀 문장·version·지우기·의미 순위(가짜 임베딩)·설정 API, 격리 DB 색인 표
 │   │   └── test_repository.py  <- 소유권·원자성·접근 권한·삭제 잠금 시험
