@@ -73,7 +73,8 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
     <div className="page-content settings">
       <h1>내 설정</h1>
       <p className="page-intro">
-        다음 검토에도 사용할 내 정보입니다. 회로의 전압·전류는 기억하지 않습니다.
+        여기에 입력한 정보는 계정에 기억되어 새 대화에서도 유지됩니다. 대화 내용에서 자동으로
+        기억하지 않으며, 이 화면에서 직접 입력한 것만 기억합니다.
       </p>
       <ErrorBox error={error} />
       {notice && (
@@ -83,9 +84,26 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
       )}
       <section className="settings-row">
         <div>
-          <h2>사용자 사실 기억</h2>
-          <p>선호 실장 방식은 후보 순서에만 쓰이며 판정은 바꾸지 않습니다.</p>
-          <p>소속과 직무는 판정 입력에 넣지 않습니다.</p>
+          {/* [주의] 문구는 SPEC 8.5(기억 칸·에이전트 활용·기억이 아닌 것)와 맞춘다(#25) */}
+          <h2>기억해 두는 정보</h2>
+          <p>
+            <strong>선호 실장 방식</strong>: 질문에 실장 방식이 없을 때, 같은 판정을 받은 후보
+            가운데 이 방식의 패키지가 있는 후보를 먼저 보여 줍니다. 판정 결과는 바뀌지 않으며,
+            질문에 실장 방식을 적으면 질문을 따릅니다. 후보가 많으면 보이는 후보가 달라질 수
+            있습니다.
+          </p>
+          <p>
+            <strong>소속·직무</strong>: 기억만 하고, 판정이나 답변을 만드는 데에는 쓰지 않습니다.
+          </p>
+          <p>
+            <strong>기억하지 않는 것</strong>: 전압·전류 같은 회로 값은 회로마다 다르므로 검토할
+            때마다 그 회로에서 다시 확인합니다. 승인한 후보는 승인 사례에, 주문 수량은 견적에 따로
+            저장됩니다.
+          </p>
+          <p>
+            기억은 기한 없이 보관되며, 칸별로 또는 한 번에 모두 지울 수 있습니다. 지운 내용은 다음
+            질문부터 반영됩니다.
+          </p>
         </div>
         <div className="settings-panel">
           {memory.loading ? (
