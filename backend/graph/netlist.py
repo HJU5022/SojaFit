@@ -1,4 +1,4 @@
-"""KiCad .net 업로드를 circuit_around가 읽는 연결 목록으로 바꾼다. 파일 접근 없음."""
+"""KiCad .net을 circuit_around가 읽는 연결 목록으로 바꾼다(평가 실행기 · 시험용, 서비스 업로드는 projects/netlist.py). S-expression 파서 _sexpr는 projects/도 쓴다. 파일 접근 없음."""
 import json
 import re
 from xml.etree import ElementTree as ET

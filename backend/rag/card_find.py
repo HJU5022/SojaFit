@@ -7,11 +7,12 @@
   (원래 부품의 패키지 → 원래 부품의 분류 → 기준에 가까운 순 → 품번 순). 반환 모양도 같다: [{'part', 'category', 'packages', 'matches'}].
   `default_find()`는 실제 검색 · DB(DATABASE_URL) · 카드 읽기 · node_chat을 묶는다. 테스트는 make_find에 가짜를 넘긴다.
 - 하지 않는 일: 판정 · 대체 가능 여부(`backend/judge/`, AGENTS 지킬 것 7), 카드 값 읽기와 원문 대조(`card_read.py`),
-  단위 환산(조건 · 행 값은 이미 SI), LLM 직접 호출(chat을 받아 넘긴다). 비교는 행을 거르는 >= · <=와 순서 비율뿐이다(spec_lookup과 같음).
+  LLM 직접 호출(chat을 받아 넘긴다). 조건 · 행 값은 이미 SI다. 예외로 문서 고르기(`code_pick`)는 제목의 대표 값(V · A · W, m · k 접두어)을 읽어
+  조건과 10%(`SLACK`) 넘게 어긋나는 문서를 버린다. 그 밖의 비교는 행을 거르는 >= · <=와 순서 비율뿐이다.
 - 출처: 지운 사양 표 찾기(ADR 0013 → 0016)와 같은 규칙(SPEC.md 8.7), lab v3 사양 표 제거(part_specifications가 빈 sojafit_v4),
   문서 고르기 코드 먼저(사전 등록 #44)
 
-[주의] 검색에 걸린 앞 문서 n_docs개만 본다. 여기서 빠진 품번은 "조건 불충족"이 아니라 "못 찾음"이다(spec_lookup과 같은 뜻).
+[주의] 검색에 걸린 앞 문서 n_docs개만 본다. 여기서 빠진 품번은 "조건 불충족"이 아니라 "못 찾음"이다(지운 사양 표 찾기와 같은 뜻).
 """
 import contextvars
 import json

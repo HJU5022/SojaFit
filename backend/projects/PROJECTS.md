@@ -26,6 +26,10 @@ GitHub 라이선스 metadata의 deprecated GPL 식별자는 canonical SPDX 표�
 
 ## 검색 · 원본 제공 계약
 
+- 열리는 조건: `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`, 32바이트 이상 `AUTH_SECRET`이 모두 있어야 외부 회로도 검색이 열린다(`external_schematic.py` `_enabled`, 아니면 503). 올린 회로도 그림(`uploaded_schematic_sheet`)은 이 조건 없이 그린다. 계약 상세는 [external-complete-schematics.md](../../docs/specs/external-complete-schematics.md).
+- 바깥 요청은 모두 `schematic_discovery.download_bounded`(허용 호스트, 리다이렉트 · 크기 · 시간 상한)를 거친다. `KICAD_RENDERER_URL`이 있으면 KiCad 원본은 원격 렌더러로, 없으면 로컬 `kicad-cli`로 그린다.
+- PDF · SVG · PNG 해석은 `python -m backend.projects.schematic_render <모드>` 하위 프로세스에서 시간 상한(`schematic.py`의 `COMMAND_TIMEOUT_SECONDS`, 30초)과 Linux 메모리 상한(2 GiB `RLIMIT_AS`)을 걸고 돌린다.
+
 검색어는 발견용 키워드로 취급하며 3자 이상 단어/품번의 앞부분도 대조한다. 숫자 부품 키워드는 실제 배치 정보에서 확인하고 전압/단위·출처·자료 유형·업로드 전체 연결 검증은 유지한다. 품번 없는 다이오드 용도 검색은 기존 GitHub 경로와 동일 상한을 사용한다. manifest의 검증된 choices를 먼저 표시하고 도면은 사용자가 선택한 뒤 표시하며, 후보 제목은 파일 식별정보를 포함한다.
 
 프로젝트 원본은 소유 회로 버전의 전체 연결과 일치한 native EDA만 제공한다. 원격 렌더러는 공개 후보의 실제 export 연결과 PNG를 반환하며, API가 업로드 연결과 대조한다. 업로드 연결은 외부 검색·렌더러에 보내지 않는다. 공개 PDF·이미지의 기존 원본/게시 내용 검사는 참고 검색에만 사용한다. 다이오드 참고 모드를 골라도 프로젝트 원본의 토큰·회로별 캐시·동일성 관문을 우회할 수 없다.
