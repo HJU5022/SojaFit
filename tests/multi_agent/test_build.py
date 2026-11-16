@@ -1,6 +1,6 @@
 """멀티 에이전트 조립(backend/multi_agent/build.py) 시험: 가짜 LLM · 검색기로 계획 → 서브에이전트 → 모으기 → 답 검사 길을 끝까지 돌려 본다.
 
-- 역할: 바로 끝내는 길(일상 대화 · 가격 안내 · 부품 목록 · 범위 밖 거절 · 계획 형식 실패), 할 일 1개(역할 · 정격)와 2개(동시 실행 → 종합),
+- 역할: 바로 끝내는 길(일상 대화 · 가격 안내 · 부품 목록(종류 거르기 · 종류별 개수, #59) · 범위 밖 거절 · 계획 형식 실패), 할 일 1개(역할 · 정격)와 2개(동시 실행 → 종합),
   판정 길의 인터럽트 재개(읽기 LLM을 다시 부르지 않고, 함께 돈 문서 할 일도 다시 돌지 않음), 판정 거절 보고, 새 턴에서 칸 비우기,
   기억 읽기(Store의 선호 실장 방식 → 찾기 후보 순서, Store 없으면 예전 순서)를 본다.
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
@@ -134,7 +134,7 @@ def test_parts_list_question_answers_every_component_from_the_netlist_without_an
     out = app(chat, searched=searched).invoke({'input': '부품 리스트 좀 보여줄래', 'connections': NETLIST})
     assert chat.calls == ['supervisor'] and searched == []
     assert out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '부품 목록'] and out['question_type'] == 'parts_list'
-    assert out['answer'] == ('이 회로의 부품은 3개입니다.\n\n| 기호 | 값 | 풋프린트 |\n|---|---|---|\n'
+    assert out['answer'] == ('이 회로의 부품은 3개입니다.\n\n종류별: 다이오드 2 · 저항 1\n\n| 기호 | 값 | 풋프린트 |\n|---|---|---|\n'
                              '| D2 | 1N4148 | Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal |\n'
                              '| D10 | SS14 | Diode_SMD:D_SMA |\n'
                              '| R1 | 10k | Resistor_SMD:R_0603_1608Metric |')
@@ -149,11 +149,95 @@ def test_parts_list_reads_the_eval_netlist_path_and_escapes_table_breaking_text(
     folder = 'data/circuits/collected/samples/breadboard_supply/converted'
     refs = [c['ref'] for c in json.loads(Path(f'{folder}/connections.json').read_text(encoding='utf-8'))['components']]
     lines = nodes.parts_list_answer({'netlist_path': f'{folder}/circuit.net'})['answer'].splitlines()
-    assert lines[0] == f'이 회로의 부품은 {len(refs)}개입니다.' and [row.split(' | ')[0][2:] for row in lines[4:]] == refs  # 이 파일은 이미 자연 순서다
+    assert lines[0] == f'이 회로의 부품은 {len(refs)}개입니다.' and lines[2].startswith('종류별: ')  # 이 파일에는 심볼이 없어 기호로만 가른다
+    assert [row.split(' | ')[0][2:] for row in lines[6:]] == refs  # 이 파일은 이미 자연 순서다
     out = nodes.parts_list_answer({'connections': {'components': [{'ref': 'J1', 'value': 'A|B\nC'}]}})
     assert out['answer'].endswith('| J1 | A\\|B C |  |')
     missing = nodes.parts_list_answer({'netlist_path': '../outside.net'})  # 저장소 밖 경로는 읽지 않는다
     assert missing['refusal']['code'] == 'circuit_missing'
+
+
+@pytest.mark.parametrize(('ref', 'symbol', 'kind'), [
+    # 샘플 넷리스트(data/circuits/collected/**/*.net, normalize_netlist)에 실제로 있는 기호 · 심볼
+    ('D1', 'Device:D_Schottky', 'diode'), ('D5', 'Device:D_Zener', 'diode'), ('D1', 'Device:D', 'diode'),
+    ('D3', 'Franzininho-eagle-import:DIODE1N4148', 'diode'), ('D1', 'import_input-eagle-import:DIODEPTH', 'diode'),
+    ('LED1', 'Device:LED', 'led'), ('D4', 'Device:LED', 'led'), ('D2', 'Device:LED_Small', 'led'),  # 심볼이 기호보다 먼저다
+    ('ON1', 'Franzininho-eagle-import:LED3MM', 'led'), ('D1', 'import_input-eagle-import:LED0603', 'led'),
+    ('R1', 'Device:R', 'resistor'), ('R2', 'Device:R_Small', 'resistor'), ('RV1', 'Device:R_Potentiometer', 'resistor'),
+    ('R2', 'import_input-eagle-import:RESISTOR0603-RES', 'resistor'),
+    ('C1', 'Device:C', 'capacitor'), ('C2', 'Device:CP', 'capacitor'), ('C1', 'Device:C_Polarized', 'capacitor'),
+    ('C1', 'Franzininho-eagle-import:C-US025-025X050', 'capacitor'), ('C1', 'import_input-eagle-import:CAP0603-CAP', 'capacitor'),
+    ('L1', 'Device:L', 'inductor'), ('L1', 'pspice:INDUCTOR', 'inductor'),
+    ('Q1', 'Device:Q_NPN_BCE', 'transistor'), ('Q1', 'Transistor_FET:Q_NMOS_GSD', 'transistor'),
+    ('SW1', 'Switch:SW_Push', 'switch'), ('S1', 'import_input-eagle-import:SWITCH-SPSTPTH', 'switch'),
+    ('RESET1', 'Franzininho-eagle-import:TACTILE-SWITCH-PTH', 'switch'),
+    ('Y1', 'Device:Crystal_Small', 'crystal'), ('Y1', 'import_input-eagle-import:CRYSTAL5X3', 'crystal'),
+    ('F1', 'Device:Fuse', 'fuse'), ('F1', 'Device:Polyfuse', 'fuse'), ('F1', 'attiny85_time_switch_library:0751.0052_Fuse', 'fuse'),
+    ('J3', 'Connector:Conn_01x02_Pin', 'connector'), ('J3', 'Connector_Generic:Conn_01x04', 'connector'),
+    # 심볼 이름의 첫 글자만 보면 틀리는 것: 온도 센서 · 메모리 · 레귤레이터 · 릴레이 · 로고
+    ('U2', 'Sensor_Temperature:DS18B20', 'ic'), ('U13', 'nescart:CY62128EV30LL-45SXIT_Compat', 'ic'),
+    ('U2', 'Regulator_Linear:L78L05_SOT89', 'ic'), ('U2', 'Regulator_Linear:LM1117DT-3.3', 'ic'), ('IC1', 'MP2307:MP2307', 'ic'),
+    ('K1', 'components:RELAY_FINDER-43.41', 'other'), ('LOGO1', 'Franzininho-eagle-import:OSHW-LOGOM', 'other'),
+    ('Case1', 'attiny85_time_switch_library:Case_EL111', 'other'),
+    # 심볼로 못 가르면 기호 앞부분 전체로: Q · J · D는 그 종류, RV · TP · BT · H는 기타
+    ('Q1', 'Transistor_FET:IRF540N', 'transistor'), ('J1', 'Connector:USB_B_Micro', 'connector'), ('D2', 'Diode:SS34', 'diode'),
+    ('RV1', 'Device:Varistor', 'other'), ('TP1', 'Connector:TestPoint', 'other'), ('BT1', 'Device:Battery_Cell', 'other'),
+    ('H1', 'Mechanical:MountingHole_Pad', 'other'),
+    ('C1', '', 'capacitor'), ('LED2', '', 'led'), ('P1', '', 'connector'), ('X1', '', 'other'), ('', '', 'other'),
+])
+def test_part_kind_reads_the_symbol_name_then_the_reference_prefix(ref, symbol, kind):
+    """부품 종류(#59): 심볼 이름(`:` 뒤) 전체 → 기호 앞 영문 전체 → other. 이름 첫 글자만 보는 규칙이 틀리는 실제 심볼도 넣었다."""
+    from backend.graph.nodes import KIND_NAMES, part_kind
+    from backend.multi_agent.contracts import PartKind
+    from typing import get_args
+    assert part_kind({'ref': ref, 'symbol': symbol}) == kind and list(KIND_NAMES) == list(get_args(PartKind))
+
+
+# 실제 84부품 회로(c02)의 다이오드 · LED 심볼에 기호 자연 순서(D10이 D2 뒤)를 섞었다
+KINDS = {'components': [{'ref': 'R1', 'value': '10k', 'symbol': 'Device:R', 'footprint': 'R_0603'},
+                        {'ref': 'LED2', 'value': 'PWR_GREEN', 'symbol': 'Device:LED', 'footprint': 'LED_0603'},
+                        {'ref': 'D10', 'value': 'SS34', 'symbol': 'Device:D_Schottky', 'footprint': 'D_SMA'},
+                        {'ref': 'C1', 'value': '1u', 'symbol': 'Device:C', 'footprint': 'C_0603'},
+                        {'ref': 'D2', 'value': 'SS34', 'symbol': 'Device:D_Schottky', 'footprint': 'D_SMA'},
+                        {'ref': 'LED1', 'value': 'STATUS_BLUE', 'symbol': 'Device:LED', 'footprint': 'LED_0603'},
+                        {'ref': 'C2', 'value': '100n', 'symbol': 'Device:C', 'footprint': 'C_0603'}], 'nets': []}
+
+
+def test_parts_list_of_diodes_includes_leds_with_a_symbol_column_in_natural_order():
+    """다이오드만(#59): 이 서비스의 "다이오드"는 LED도 포함한다. 첫 줄이 LED 수를 밝히고, 표에 심볼 칸이 붙고, 기호 자연 순서다."""
+    from backend.graph.nodes import parts_list_answer
+    out = parts_list_answer({'connections': KINDS, 'plan': {'part_kinds': ['diode']}})
+    assert out['answer'] == ('이 회로의 다이오드는 4개입니다(LED 2개 포함).\n\n| 기호 | 값 | 심볼 | 풋프린트 |\n|---|---|---|---|\n'
+                             '| D2 | SS34 | Device:D_Schottky | D_SMA |\n| D10 | SS34 | Device:D_Schottky | D_SMA |\n'
+                             '| LED1 | STATUS_BLUE | Device:LED | LED_0603 |\n| LED2 | PWR_GREEN | Device:LED | LED_0603 |')
+    assert parts_list_answer({'connections': KINDS, 'plan': {'part_kinds': ['led']}})['answer'].startswith('이 회로의 LED는 2개입니다.\n\n')
+    both = parts_list_answer({'connections': KINDS, 'plan': {'part_kinds': ['resistor', 'capacitor']}})['answer'].splitlines()
+    assert both[0] == '이 회로의 저항 · 커패시터는 3개입니다.' and [row.split(' | ')[0][2:] for row in both[4:]] == ['C1', 'C2', 'R1']
+
+
+def test_parts_list_of_a_missing_kind_says_so_in_one_line():
+    """없는 종류(#59): 표도 지어낸 부품도 없이 한 줄. 받침에 맞춰 이/가를 붙인다."""
+    from backend.graph.nodes import parts_list_answer
+    for kinds, answer in ((['resistor'], '이 회로에는 저항이 없습니다.'), (['fuse'], '이 회로에는 퓨즈가 없습니다.'),
+                          (['diode'], '이 회로에는 다이오드가 없습니다.')):
+        out = parts_list_answer({'connections': {'components': [{'ref': 'U1', 'value': 'ATtiny85'}]}, 'plan': {'part_kinds': kinds}})
+        assert out == {'answer': answer, 'check': {}, 'path': ['부품 목록']}
+
+
+def test_full_parts_list_counts_each_kind_largest_first():
+    """종류를 고르지 않은 전체 목록(#59): 첫 줄 아래에 종류별 개수 한 줄(많은 순, 같으면 종류 순서). 다이오드와 LED는 따로 센다."""
+    from backend.graph.nodes import parts_list_answer
+    lines = parts_list_answer({'connections': KINDS, 'plan': {'part_kinds': []}})['answer'].splitlines()
+    assert lines[:4] == ['이 회로의 부품은 7개입니다.', '', '종류별: 다이오드 2 · LED 2 · 커패시터 2 · 저항 1', '']
+    assert [row.split(' | ')[0][2:] for row in lines[6:]] == ['C1', 'C2', 'D2', 'D10', 'LED1', 'LED2', 'R1']
+
+
+def test_parts_list_plan_with_a_kind_answers_only_that_kind_without_search():
+    """그래프(#59): 계획이 parts_list에 종류(diode)를 고르면 부품 목록 노드가 그 종류만 답한다. Supervisor 한 번, 검색 없음."""
+    chat, searched = scripted(supervisor=[Plan(question_type='parts_list', next='parts_list', part_kinds=['diode'])]), []
+    out = app(chat, searched=searched).invoke({'input': '아니 저기 리스트에 다이오드가 뭐뭐 있냐고', 'connections': KINDS})
+    assert chat.calls == ['supervisor'] and searched == [] and out['path'][-2:] == ['계획', '부품 목록']
+    assert out['answer'].startswith('이 회로의 다이오드는 4개입니다(LED 2개 포함).') and '| R1 |' not in out['answer']
 
 
 def test_parts_list_without_a_netlist_asks_for_one_like_the_circuitless_refusal():

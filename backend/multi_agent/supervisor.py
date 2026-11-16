@@ -78,12 +78,17 @@ def _history_for_reference(state: dict) -> list[str]:
 
 
 def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> str:
-    """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
+    """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 회로가 붙었는지(부품 수) · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
     part = state.get('target_part') or {}
     # Footprint annotations are untrusted metadata, not planning or role instructions.
     target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')}".strip() or state.get('target', '')
     agents = ['docs'] + (['judge'] if judge_enabled else [])
-    lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}', f"Conditions: {state.get('conditions', '')}",
+    # [왜] "다이오드는 뭐뭐 있어"가 회로의 부품 목록(parts_list)인지 일반 설명(chat)인지 가르려면 회로가 붙었는지 알아야 한다(#59).
+    #      부품 목록 노드와 같은 함수로 개수만 준다(부품 글자는 주지 않는다). nodes.py가 이 파일을 import해 citations처럼 함수 안에서 가져온다
+    from backend.graph.nodes import circuit_parts
+    count = len(circuit_parts(state))
+    lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}',
+             f'Circuit attached: {f"yes ({count} parts)" if count else "no"}', f"Conditions: {state.get('conditions', '')}",
              *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents),
              f'External web fallback: {"enabled" if web_enabled else "disabled"}']
     if state.get('reports'):

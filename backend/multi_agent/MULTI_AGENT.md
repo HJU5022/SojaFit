@@ -7,7 +7,7 @@
 - 담당: 에이전트
 
 ## graph/와의 관계
-두 폴더는 서로 import한다. 이 폴더는 `backend/graph/`에서 `nodes.py`의 도우미(`read_input`, `price_answer`, `parts_list_answer`, `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`, 상수 `REVISION`·`WORD`·`NOT_FOUND`·`QUANTITY`·`STANDARD`), `memory.py`(`read_profile`, `memory_context`, `memory_sources`), `mcp_retriever.py`(`RetrievalUnavailableError`)를 가져다 쓴다. 반대로 `backend/graph/nodes.py`는 이 폴더의 `contracts.py`, `messages.py`, `supervisor.py`(`Facts`·`render_facts`)를 가져다 쓰고, 단일 그래프(`backend/graph/build.py`)는 `facts.py`의 `facts_node`와 `agents/judge.py`의 Spec 에이전트 노드를 그대로 붙인다. 사용처별 근거는 [GRAPH.md](../graph/GRAPH.md)의 분담 표다. 순환을 피하려고 `supervisor.py:314`는 `citations`를 함수 안에서 import한다.
+두 폴더는 서로 import한다. 이 폴더는 `backend/graph/`에서 `nodes.py`의 도우미(`read_input`, `price_answer`, `parts_list_answer`, `circuit_parts`, `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`, 상수 `REVISION`·`WORD`·`NOT_FOUND`·`QUANTITY`·`STANDARD`), `memory.py`(`read_profile`, `memory_context`, `memory_sources`), `mcp_retriever.py`(`RetrievalUnavailableError`)를 가져다 쓴다. 반대로 `backend/graph/nodes.py`는 이 폴더의 `contracts.py`, `messages.py`, `supervisor.py`(`Facts`·`render_facts`)를 가져다 쓰고, 단일 그래프(`backend/graph/build.py`)는 `facts.py`의 `facts_node`와 `agents/judge.py`의 Spec 에이전트 노드를 그대로 붙인다. 사용처별 근거는 [GRAPH.md](../graph/GRAPH.md)의 분담 표다. 순환을 피하려고 `supervisor.py`는 `citations`(답 검사)와 `circuit_parts`(계획 입력의 `Circuit attached` 줄, #59)를 함수 안에서 import한다.
 
 ## 구조
 그래프 노드 이름은 한국어이고 조립한 그래프의 `get_graph().draw_mermaid()`로 그림을 뽑는다(SPEC.md 2절).
@@ -24,7 +24,7 @@
 | `답 정리` | 할 일 1개의 답(판정은 코드 답 틀) | 없음 |
 | `종합` | 보고를 코드로 이을 수 없을 때만(조건은 [SPEC.md](../../SPEC.md) 2절 "종합으로 가는 조건"). 판정 표는 코드가 그대로 붙임 | `synth` |
 | `답 검사` | 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답·판정 결과·질문에 있던 숫자인지 검사. 걸리면 거절 | 없음 |
-| `끝내기`, `거절`, `가격 안내`, `부품 목록` | 마무리. 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고, 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답 | 없음 |
+| `끝내기`, `거절`, `가격 안내`, `부품 목록` | 마무리. 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고(첫 줄 아래 종류별 개수), 계획의 `part_kinds`가 있으면 그 종류만 심볼 칸을 더해 옮기며(다이오드는 LED 포함, 없으면 한 줄, #59), 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답 | 없음 |
 
 - 노드별 모델: `backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 정본이고, 선정 이유는 ADR 0014·0017이다.
 - 상한(질문당): 할 일 수, 재계획, Supervisor LLM 호출, 서브에이전트 실행, 문서 할 일의 검색 횟수는 `contracts.py`의 `MAX_TASKS`, `MAX_REPLANS`, `MAX_SUPERVISOR_CALLS`, `MAX_AGENT_RUNS`, `MAX_SEARCHES`다. 넘으면 거절한다.

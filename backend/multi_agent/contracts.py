@@ -28,6 +28,8 @@ AgentName = Literal['docs', 'judge']
 # parts_list: 지금 회로의 부품 목록 요청(#55). 코드가 넷리스트에서 표로 답한다. 멀티 Supervisor만 고른다(단일 그래프 route.md에는 없다)
 QuestionType = Literal['out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'role', 'candidate_find', 'candidate_judge', 'rating']
 TaskKind = Literal['role', 'rating', 'candidate_judge', 'candidate_find']  # 할 일 하나가 답하는 부분의 종류
+# 부품 목록에서 거를 부품 종류(#59). Supervisor는 종류만 고르고, 부품마다 어느 종류인지는 코드(graph.nodes.part_kind)가 정한다
+PartKind = Literal['diode', 'led', 'resistor', 'capacitor', 'inductor', 'transistor', 'ic', 'connector', 'switch', 'crystal', 'fuse', 'other']
 
 
 class Reason(str, Enum):
@@ -106,9 +108,13 @@ class Plan(BaseModel):
     # [왜] 처음엔 앞 회차 할 일 번호 목록(list[int])이었는데, 직통 구조화 출력에서 모델이 그 칸에 1만 자리 숫자를 써 계획이 깨졌다(11-07 G4 시험).
     #      참 · 거짓 하나로 줄인다: 참이면 앞 회차의 ok 보고를 답에 남긴다
     keep_earlier: bool = Field(default=False, description='replan only: true to keep the earlier ok answers in the final answer (e.g. the found candidates when the user asked for them)')
+    part_kinds: list[PartKind] = Field(default_factory=list,
+                                       description='next=parts_list only: the part kinds the user asks to list or count; empty = every part')
 
     @model_validator(mode='after')
     def consistent(self):
+        if self.next != 'parts_list':
+            self.part_kinds = []  # [왜] 종류는 부품 목록 길만 쓴다. 다른 길에 채워 와도 형식 재시도(유료)로 다시 부르지 않고 비운다(#59)
         # [왜] 형식이 틀린 계획은 llm.chat이 다시 부르게 ValidationError로 낸다(MULTI_AGENT.md "구조 결정": 형식이 틀리면 다시 부름)
         if self.next == 'refuse' and self.reason not in REFUSAL_REASONS:
             raise ValueError('refuse needs a refusal reason')
