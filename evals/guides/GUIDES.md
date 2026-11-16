@@ -15,3 +15,5 @@
 | `preregister.md` | 사전 등록(동결) | 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적은 기록 |
 | `v3_50_codex_paste.md` | 입력 원문 | v3 50문항을 Codex에 붙여넣는 평가 입력(정답·채점 없음) |
 | `supervisor-prompt-v0.md` | 실행 절차 | Supervisor Prompt V0 세 후보의 준비, live 승인 gate, 실행·집계 순서 |
+
+`v3_50_codex_paste.md`는 규칙 문서가 아니라 측정 입력이라 위 "넣는 것"과 어긋난다. `scripts/eval/run_codex_v3_isolated.py`(상수 `PASTE`), 결과 폴더 `evals/results/graph/2026-11-16-terra-v3-50-isolated-web/scripts/run_isolated_baseline.py`와 `TALLY.md`·`codex_answers.md`, `EVAL_REPORT.md`가 이 경로를 기록해 옮기지 않았다(`evals/inputs/`는 json만 두는 폴더라 옮기려면 하위 폴더도 새로 만들어야 한다).
