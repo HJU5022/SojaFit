@@ -15,7 +15,7 @@
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
 | 기준 커밋 | `799ae636`(`main`, PR #147 병합, 11-17 04:45 KST) | 11-17 재측정([evals/results/d12/](evals/results/d12/README.md))의 대상 커밋이고, 지금 운영 리비전 이름의 소스 커밋과 같다(이미지 내용과 커밋을 따로 대조하지는 않았다). 이 문서의 수치 중 측정 커밋이 따로 적힌 행은 그 커밋의 값이다. 이전 기준 `a0abece5`(11-16)와 `backend frontend db Dockerfile docker-compose.yml` 차이는 96개 파일이다 |
 | 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 새 대화(`/app`: 회로 없이 바로 질문하거나 넷리스트 · 회로도를 첨부), 회로 작업대(`/app?project=`: 프로젝트 · KiCad 넷리스트(`.net`) · 회로도(`.kicad_sch`) 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 부품 점검표 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`, 사례마다 대체 검토 보고서), 데이터시트 서재(`/library`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
-| 시연 영상 | 영상 파일 없음. 초안 스크립트 [`docs/deliverables/demo_script.md`](docs/deliverables/demo_script.md) | 정상 1 + 실패(거절) 1, 3분 이내 |
+| 시연 영상 | [`docs/deliverables/video/sojafit-demo-2026-11-17.mp4`](docs/deliverables/video/sojafit-demo-2026-11-17.mp4)(1분 48초). 대본 [`demo_script.md`](docs/deliverables/demo_script.md) | 정상 경로 v3-01(조건 질문 정지 → 재개 → 판정 · 근거 → 승인 → 견적 → 보고서) + 실패 경로 3개(실측값 요청 · 코퍼스에 없는 품번 · 프롬프트 인젝션), 화면마다 자막. 첫 장면 배포 `/health`, 나머지는 같은 코드(main `799ae636`)의 로컬 실제 모드 |
 
 ```bash
 curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.run.app/health
