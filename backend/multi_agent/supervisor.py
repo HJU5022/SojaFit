@@ -151,6 +151,8 @@ def payload(state: dict, task: dict) -> dict:
             'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
     if state.get('approved_memories'):
         base['approved_memories'] = state['approved_memories']
+    if task['agent'] == 'docs':
+        base['facts'] = state.get('facts') or {}  # [왜] 요청한 개정판이 코퍼스에 없다고 확인됐으면 문서 에이전트가 필터 해제 재검색을 건너뛴다
     if task['agent'] == 'judge':
         base.update(conditions=state.get('conditions', ''), target=state.get('target', ''), facts=state.get('facts') or {},
                     question_type=task['kind'],  # [왜] 판정 코드는 question_type으로 판정 · 찾기를 가른다. 할 일 종류가 그 값이다

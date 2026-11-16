@@ -1096,3 +1096,109 @@ def test_per_part_searches_run_together_and_keep_part_order():
 
     rows = D.retrieve_with_k(retriever, 'q', parts=['SS14', 'SS14H'], k=20)
     assert [r['chunk_id'] for r in rows][:2] == ['SS14-0', 'SS14-1'] and rows[10]['chunk_id'] == 'SS14H-0'
+
+
+# ---- 속도: 쓸모없는 필터 해제 검색 · 주석 검색 중복 · 그림 읽기 겹침 ----
+
+REV_QUESTION = 'SS12 SERIES_B2405.pdf 판본의 SS12 VRRM을 알려 줘.'
+
+
+def _rev_run(facts, question=REV_QUESTION):
+    wrong_edition = dict(chunk_id=5, file='SS12 SERIES_B2304.pdf', page=1, table='ratings',
+                         content='SS12 VRRM 20 V', doc_parts=['SS12'])
+    calls = []
+
+    def retrieve(query, parts=None):
+        calls.append(parts)
+        return [wrong_edition]
+    payload = dict(question=question, task=dict(id=1, agent='docs', kind='rating', goal='VRRM',
+                                                query='SS12 VRRM', parts=['SS12']))
+    if facts is not None:
+        payload['facts'] = facts
+    report = D.docs_agent(payload, retriever=retrieve, chat=lambda *a, **k: pytest.fail('LLM 호출 없음'))['reports'][0]
+    return calls, report
+
+
+def test_relax_search_is_skipped_only_when_every_requested_revision_is_known_absent():
+    base_calls, base = _rev_run(None)
+    assert base_calls.count(None) == 1 and base['searches'][-1]['filter_released']
+    for facts in ({'parts': {'SS12': True}, 'revisions': {'B2405': False}},):
+        calls, report = _rev_run(facts)
+        assert calls == [['SS12']]
+        for key in ('status', 'reason', 'docs', 'references', 'summary', 'llm_calls'):
+            assert report[key] == base[key]
+    # 모르거나(없는 키 · 사실 없음) 있다고 했거나 코퍼스 목록이 모르는 꼴이면 예전처럼 푼다
+    for facts, question in ((None, REV_QUESTION), ({'revisions': {}}, REV_QUESTION),
+                            ({'revisions': {'B2405': True}}, REV_QUESTION),
+                            ({'revisions': {'F16': False}}, 'SS12 F16 판본의 VRRM을 알려 줘.'),
+                            ({'revisions': {'B2405': False}}, 'SS12 SERIES_B2405.pdf와 K2611 판본 비교')):
+        assert _rev_run(facts, question)[0].count(None) == 1
+
+
+def test_revisions_all_absent_needs_every_requested_code_known_absent():
+    # [왜] 품번 부재는 건너뛰는 근거로 쓰지 않는다: 표지 목록에 없어도 본문 언급은 _mentions_exact_part를 통과할 수 있다(데모 스냅샷에 TS4148)
+    assert D.revisions_all_absent('B2405 판', {'revisions': {'B2405': False}}) is True
+    assert D.revisions_all_absent('B2405 판', {'revisions': {'B2405': None}}) is False
+    assert D.revisions_all_absent('개정 없음', {'revisions': {'B2405': False}}) is False
+
+
+def test_variant_notes_are_fetched_once_per_parts_tuple():
+    note = {'chunk_id': 9, 'file': 'SMAJ.pdf', 'page': 3, 'table': 'T 주석',
+            'content': 'bi-directional devices IR limit is double'}
+    row = dict(chunk_id=1, file='SMAJ.pdf', page=1, table='ratings', content='SMAJ6.5CA IR 5', doc_parts=['SMAJ6.5CA'])
+    searches = []
+
+    def retrieve(query, parts=None):
+        searches.append((query, tuple(parts or ())))
+        return [note] if query == D.VARIANT_QUERY else ([row] if len(searches) < 4 and parts else [])
+    answers = iter([('partial', 'again SMAJ6.5CA IR'), ('enough', '')])
+
+    def chat(node, system, user, schema, **kw):
+        grade, nxt = next(answers)
+        return schema(grade=grade, answer='IR은 5입니다 [1].', next_query=nxt)
+    D.docs_agent(dict(question='SMAJ6.5CA의 IR은?',
+                      task=dict(id=1, agent='docs', kind='rating', goal='IR', query='SMAJ6.5CA IR', parts=['SMAJ6.5CA'])),
+                 retriever=retrieve, chat=chat)
+    assert [s for s in searches if s[0] == D.VARIANT_QUERY] == [(D.VARIANT_QUERY, ('SMAJ6.5CA',))]
+    assert len(searches) == 3  # 본 검색 2번 + 주석 1번
+
+
+def _figure_run(overlap):
+    import threading
+    import time
+    image = base64.b64encode(b'official-raster').decode('ascii')
+    row = {'chunk_id': 'W1', 'file': 'UF4001 SERIES_P2104.pdf', 'source_type': 'external_web',
+           'source_url': 'https://maker.example/uf4001.pdf', 'source_sha256': 'a' * 64,
+           'retrieved_at': '2026-11-12T00:00:00+00:00', 'evidence_grade': 2, 'page': 2,
+           'table': 'Reverse recovery test circuit', 'row': 'Reverse recovery time trr', 'content': 'UF4007 trr MAX 75 ns',
+           'doc_parts': ['UF4007'], 'cells': [('UF4007', '75')], 'unit': 'ns',
+           'conditions': 'IF = 0.5 A, IR = 1.0 A, Irr = 0.25 A',
+           'figure': {'page': 4, 'caption': 'Reverse recovery characteristic test circuit', 'image_base64': image}}
+    spans, lock, order = {}, threading.Lock(), []
+
+    def chat(node, system, user, schema, **kwargs):
+        start = time.monotonic()
+        with lock:
+            order.append(schema.__name__)
+        if schema is D.PdfOnlyAnswer:
+            time.sleep(0.15)
+            out = schema(grade='enough', pdf_rows=['W1'])
+        else:
+            time.sleep(0.15)
+            out = schema(labels=['+0.5 A', '-1.0 A', '-0.25 A'], forward_current=0.5, reverse_peak=-1.0,
+                         recovery_end=-0.25, arrow_start=0.0, arrow_end=-0.25, unit='A',
+                         start_on_zero_crossing=True, end_on_recovery=True, readable=True)
+        spans[schema.__name__] = (start, time.monotonic())
+        return out
+    report = D.docs_agent(
+        {'question': 'UF4007의 trr 시험 파형과 측정 조건을 알려 줘.',
+         'task': {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['UF4007'], 'goal': 'w', 'query': 'UF4007 trr'},
+         'target_part': {}}, retriever=lambda *a, **k: [], chat=chat, web_search=lambda *a: [row])['reports'][0]
+    return report, spans
+
+
+def test_first_figure_read_overlaps_pdf_answer_and_report_is_unchanged():
+    report, spans = _figure_run(True)
+    (a0, a1), (f0, f1) = spans['PdfOnlyAnswer'], spans['RecoveryFigure']
+    assert f0 < a1 and a0 < f1  # 두 호출이 시간상 겹친다
+    assert report['status'] == 'ok' and report['llm_calls'] == 2 and 'W4' in report['answer']
