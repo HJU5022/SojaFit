@@ -1044,14 +1044,58 @@ form {
   color: var(--muted);
   margin-top: 9px;
 }
+/* 새 대화(#41): 화면을 채우는 세로 칸. 안내는 남는 높이의 가운데, 입력창은 맨 아래(최대 760px 가운데). */
 .new-chat {
-  max-width: 680px;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 18px);
 }
-.new-chat .page-intro {
-  margin-bottom: 28px;
+.new-chat > :not(.drop-overlay) {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
 }
-.new-chat .composer {
-  margin-top: 24px;
+.new-chat > .error-box,
+.new-chat > .notice {
+  margin-bottom: 12px;
+}
+.new-chat-guide {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 0;
+  text-align: center;
+}
+.new-chat-guide > p {
+  font-size: 12px;
+  color: var(--muted);
+  word-break: keep-all;
+}
+.example-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+.example-cards button {
+  flex: 1 1 200px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  text-align: left;
+}
+.example-cards small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
 }
 .new-chat .send {
   margin-left: auto; /* 작업대와 달리 사용 조건 칸이 없어 보내기를 오른쪽 끝에 둔다 */
@@ -1311,18 +1355,13 @@ form {
   scroll-behavior: smooth;
 }
 .conversation-start {
-  padding: 34px 0 30px;
-}
-.large-diode {
-  font-size: 40px;
-  font-weight: 300;
-  color: #82959d;
-  line-height: 1.2;
+  padding: 12vh 0 30px;
+  text-align: center;
 }
 .conversation-start h2 {
-  font-size: 22px;
-  font-weight: 500;
-  margin: 15px 0;
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 12px;
 }
 .conversation-start p {
   font-size: 13px;
@@ -2352,11 +2391,15 @@ form {
   .app-frame {
     margin: 0;
     padding: 0;
+    min-height: 0; /* 고정 머리 54px만큼 화면보다 길어지지 않게(높이는 .app-sheet가 정한다, #41) */
   }
   .app-sheet {
     min-height: calc(100dvh - 54px);
     border: 0;
     border-radius: 0;
+  }
+  .new-chat {
+    min-height: calc(100dvh - 54px);
   }
   .page-content {
     padding: 25px 20px;
@@ -2479,10 +2522,10 @@ form {
     overflow: visible;
   }
   .conversation-start {
-    padding: 10px 0 25px;
+    padding: 8vh 0 25px;
   }
   .conversation-start h2 {
-    font-size: 20px;
+    font-size: 24px;
   }
   .conversation-start p {
     font-size: 13px;

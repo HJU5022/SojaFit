@@ -287,7 +287,12 @@ export function ConversationNav({
     </div>
   );
 }
-/** "새 대화" 화면: 질문 입력창 하나(#30). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
+const EXAMPLES = [
+  ['1N4148 역전압은 몇 V야?', '부품 정격 묻기'],
+  ['D1을 1N5819로 바꿔도 될까?', '+로 넷리스트 첨부 후 교체 검토'],
+  ['이 회로에서 D1 역할이 뭐야?', '넷리스트 첨부 후 회로 역할'],
+];
+/** "새 대화" 화면: 가운데 짧은 안내와 예시, 아래 질문 입력창 하나(#30 #41). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
 export function NewConversation() {
   const [question, setQuestion] = useState(''),
     [attachment, setAttachment] = useState<File | null>(null),
@@ -335,8 +340,54 @@ export function NewConversation() {
     error instanceof ApiError && error.status === 409 ? (error.details?.duplicates ?? []) : [];
   return (
     <div className="page-content new-chat" {...attach.dropZone}>
-      <h1>새 대화</h1>
-      <p className="page-intro">궁금한 부품이나 바꿀 부품을 물어보세요.</p>
+      {/* [왜] 채팅 앱처럼 안내는 가운데, 입력창은 아래에 둔다(#41). 예시는 입력창을 채우기만 하고 보내지 않는다 */}
+      <div className="new-chat-guide">
+        <h1>무엇을 검토할까요?</h1>
+        <div className="example-cards">
+          {EXAMPLES.map(([example, caption]) => (
+            <button
+              key={example}
+              type="button"
+              onClick={() => {
+                setQuestion(example);
+                document.getElementById('new-question')?.focus();
+              }}
+            >
+              {example}
+              <small>{caption}</small>
+            </button>
+          ))}
+        </div>
+        <p>지금은 다이오드를 판정합니다 · 판정은 데이터시트 근거가 있을 때만 냅니다</p>
+      </div>
+      {busy && <Loading label="대화를 준비하는 중" />}
+      <ErrorBox error={duplicates.length ? null : error} />
+      {duplicates.length > 0 && (
+        <div className="notice" role="alert">
+          <p>같은 이름이나 같은 회로의 프로젝트가 있습니다.</p>
+          <div className="duplicate-actions">
+            {duplicates.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true);
+                  openWithQuestion(d.id, question).catch((e) => {
+                    setError(e as Error);
+                    setBusy(false);
+                  });
+                }}
+              >
+                {d.name} 프로젝트로 계속
+              </button>
+            ))}
+            <button type="button" disabled={busy} onClick={() => start(true)}>
+              새 프로젝트로 만들기
+            </button>
+          </div>
+        </div>
+      )}
       <form
         className="composer"
         onSubmit={(e) => {
@@ -387,34 +438,6 @@ export function NewConversation() {
           </button>
         </div>
       </form>
-      {busy && <Loading label="대화를 준비하는 중" />}
-      <ErrorBox error={duplicates.length ? null : error} />
-      {duplicates.length > 0 && (
-        <div className="notice" role="alert">
-          <p>같은 이름이나 같은 회로의 프로젝트가 있습니다.</p>
-          <div className="duplicate-actions">
-            {duplicates.map((d) => (
-              <button
-                key={d.id}
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  setBusy(true);
-                  openWithQuestion(d.id, question).catch((e) => {
-                    setError(e as Error);
-                    setBusy(false);
-                  });
-                }}
-              >
-                {d.name} 프로젝트로 계속
-              </button>
-            ))}
-            <button type="button" disabled={busy} onClick={() => start(true)}>
-              새 프로젝트로 만들기
-            </button>
-          </div>
-        </div>
-      )}
       {attach.overlay}
     </div>
   );

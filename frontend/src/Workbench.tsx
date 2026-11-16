@@ -624,8 +624,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               ) : (
                 <>
                   {!detail?.messages.length && !pendingQuestion && !active && (
+                    // 새 대화 화면 안내와 같은 모양(가운데 맞춤 제목 + 흐린 짧은 글, #41)
                     <div className="conversation-start">
-                      <div className="large-diode">↳</div>
                       <h2>어떤 부품으로 바꾸고 싶으세요?</h2>
                       <p>
                         후보 품번과 사용 조건을 알려주세요.
