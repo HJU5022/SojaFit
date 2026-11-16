@@ -13,6 +13,7 @@ erDiagram
     approvals ||--o| approved_cases : "approval_id+user_id (CASCADE)"
     messages ||--o{ approvals : "message_id (CASCADE)"
     project_circuit_versions ||--o{ threads : "project_id+circuit_version (CASCADE)"
+    project_circuit_versions ||--o| circuit_schematics : "project_id+circuit_version (CASCADE)"
     projects ||--o{ project_circuit_versions : "project_id (CASCADE)"
     projects ||--o{ threads : "project_id (CASCADE)"
     projects ||--o| circuits : "project_id (CASCADE)"
@@ -121,6 +122,13 @@ erDiagram
         text parser_version
         text source_kind
         text demo_id
+        timestamptz created_at
+    }
+    circuit_schematics {
+        bigint project_id PK, FK
+        int circuit_version PK, FK
+        text file_name
+        text source
         timestamptz created_at
     }
     threads {

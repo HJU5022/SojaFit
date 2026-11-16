@@ -3,7 +3,7 @@
 <!-- 자동 생성: scripts/db/gen_schema_docs.py. 직접 고치지 않는다(표 설명은 그 파일의 TABLES, 구조는 DB). -->
 
 - 구조(타입 · NULL · 기본값 · 제약 · 인덱스)는 실제 DB에서 읽은 값이고, 목적 · 칸 의미는 `scripts/db/gen_schema_docs.py`의 `TABLES`에 있다. 그림은 [erd.md](erd.md).
-- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 26개.
+- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 27개.
 
 | 스키마.표 | 목적 |
 |---|---|
@@ -20,6 +20,7 @@
 | `public.projects` | 프로젝트 |
 | `public.circuits` | 프로젝트의 정규화 회로(1:1) |
 | `public.project_circuit_versions` | 프로젝트별 불변 회로 버전 이력(대화가 참조) |
+| `public.circuit_schematics` | 회로 버전에 붙은 업로드 KiCad 회로도 원문(#52, 그림은 저장 안 함) |
 | `public.threads` | 프로젝트 안의 대화 |
 | `public.runs` | 질문 한 번의 실행과 공개 결과 |
 | `public.messages` | 화면 대화 기록 |
@@ -285,7 +286,7 @@
 |---|---|---|---|---|
 | `project_id` | bigint | NOT NULL |  | 프로젝트(1:1, 키) |
 | `connections` | jsonb | NOT NULL |  | 정규화한 회로(부품 · 넷 JSON) |
-| `source_sha256` | text | NOT NULL |  | 원본 넷리스트 SHA-256(원문은 저장 안 함) |
+| `source_sha256` | text | NOT NULL |  | 올린 파일 SHA-256(넷리스트 · 회로도 원문 파일. 넷리스트 원문은 저장 안 함, 회로도 원문은 circuit_schematics) |
 | `parser_version` | text | NOT NULL |  | 회로 변환기 버전 |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP |  |
 | `version` | integer | NOT NULL | 1 | 현재 회로 버전 번호(새 버전 저장마다 증가; 불변 버전 이력과 연결) |
@@ -316,7 +317,7 @@
 | `project_id` | bigint | NOT NULL |  | 프로젝트 |
 | `version` | integer | NOT NULL |  | 불변 회로 버전 번호(프로젝트별 기본 빈 회로는 0) |
 | `connections` | jsonb | NOT NULL |  | 해당 버전의 정규화한 회로(부품 · 넷 JSON) |
-| `source_sha256` | text | NULL |  | 해당 버전 원본 넷리스트 SHA-256(버전 0은 NULL, 원문은 저장 안 함) |
+| `source_sha256` | text | NULL |  | 해당 버전 올린 파일 SHA-256(버전 0은 NULL, 넷리스트 원문은 저장 안 함) |
 | `parser_version` | text | NOT NULL |  | 해당 버전 회로 변환기 버전 |
 | `source_kind` | text | NOT NULL |  | demo \| upload |
 | `demo_id` | text | NULL |  | 데모 회로 이름(데모일 때만 값이 있다. 이름 목록은 앱이 검사) |
@@ -341,6 +342,30 @@
 | 트리거 | 정의 |
 |---|---|
 | `reject_circuit_version_update` | `CREATE TRIGGER reject_circuit_version_update BEFORE UPDATE ON public.project_circuit_versions FOR EACH ROW EXECUTE FUNCTION reject_circuit_version_update()` |
+
+## `public.circuit_schematics`
+
+- **목적**: 회로 버전에 붙은 업로드 KiCad 회로도 원문(#52, 그림은 저장 안 함)
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `project_id` | bigint | NOT NULL |  | 프로젝트(회로 버전과 복합 FK) |
+| `circuit_version` | integer | NOT NULL |  | 이 회로도에서 만든 회로 버전(1 이상) |
+| `file_name` | text | NOT NULL |  | 올린 파일 이름(공백 제거 1~255자, 화면 표시용) |
+| `source` | text | NOT NULL |  | .kicad_sch 원문(UTF-8, 5 MiB 이하). 그림을 다시 그릴 때만 읽음 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 올린 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `circuit_schematics_pkey` | PK | `PRIMARY KEY (project_id, circuit_version)` |
+| `circuit_schematics_project_id_circuit_version_fkey` | FK | `FOREIGN KEY (project_id, circuit_version) REFERENCES project_circuit_versions(project_id, version) ON DELETE CASCADE` |
+| `circuit_schematics_circuit_version_check` | CHECK | `CHECK ((circuit_version >= 1))` |
+| `circuit_schematics_file_name_check` | CHECK | `CHECK (((char_length(btrim(file_name)) >= 1) AND (char_length(btrim(file_name)) <= 255)))` |
+| `circuit_schematics_source_check` | CHECK | `CHECK (((octet_length(source) >= 1) AND (octet_length(source) <= 5242880)))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `circuit_schematics_pkey` | `UNIQUE btree (project_id, circuit_version)` |
 
 ## `public.threads`
 
