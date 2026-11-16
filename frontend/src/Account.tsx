@@ -255,7 +255,7 @@ export function ApprovedCases() {
       ) : (
         <Empty title="아직 승인한 후보가 없습니다.">
           <p>검토 결과의 후보 상세에서 근거를 확인하고 승인하세요.</p>
-          <a href="/app" className="button primary">
+          <a href="/projects" className="button primary">
             프로젝트로
           </a>
         </Empty>
