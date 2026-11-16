@@ -18,7 +18,7 @@
 |---|---|---|---|
 | G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 그 뒤 리비전(`main7ba86325-1115` · `main76fadcb4-1116` · 지금 `main-a0abece5-1116`)의 로그인 뒤 25단계 점검 기록은 없다(확인 못 함). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: clone 시작 → `/health` 200 243.9초, 스모크 28/28. 한계는 G2 절) |
-| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요 |
+| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 충족 (운영 DB 청크 본문 51,967개를 직접 열어 다시 계산한 sha256이 모두 서로 다르고 저장소 해시 목록과 같다(11-16, [db_content_hash_check](../evals/results/d10/db_content_hash_check_2026-11-16.md)), 문서 1,360, 파싱 Docling + pdfplumber. 한계는 G3 절) |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
 | G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 증거 보강 필요 (스크린샷 3장 · 배포본 트레이스 수신 확인, 대시보드에서 평가 점수가 트레이스에 붙은 화면은 아직 없음) |
@@ -94,6 +94,7 @@
 | 결과 파일 sha256 | `manifest.jsonl` · `summary.json` · `table_suspects.jsonl` | `evals/results/chunking/v4h-2026-11-08/SHA256.txt` |
 | 청크별 sha256 목록 | 51,967행, 서로 다른 해시 51,967, 문서 1,360. 해시는 `chunks.jsonl`의 `text`(UTF-8, LF) 51,967건 전부 재계산과 일치. 청크 본문 없음 | [chunk_sha256.tsv](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.tsv), 형식·확인·재생성 명령 [chunk_sha256.md](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.md) |
 | 새 Supabase 프로젝트 | 문서 1,360 · 청크 51,967 · 임베딩 51,967(옛 운영 DB에서 복사할 때 센 값, 2026-11-11) | `docs/worklog/jeongun.md` 11-11 항목 |
+| 운영 DB 청크 본문 직접 대조(2026-11-16 09:38 KST) | 운영 DB `document_chunks` 51,967행의 본문을 읽기 전용으로 열어 sha256을 다시 계산: 저장된 `chunk_sha256`과 같은 행 51,967/51,967, 서로 다른 값 51,967. 정렬한 해시 목록의 sha256(`82dff159…`)이 저장소 `chunk_sha256.tsv`의 같은 값과 같다(본문 집합이 해시 목록과 정확히 같다) | [db_content_hash_check_2026-11-16.md](../evals/results/d10/db_content_hash_check_2026-11-16.md) |
 | v1 manifest | 문서 1,360행, 청크 합 52,244, 서로 다른 본문 45,898(외부 스냅샷). v4h와 서로 다른 버전이라 섞어 세지 않는다 | `data/manifest.jsonl` |
 | 파싱 | Docling 2.145.0 + pdfplumber 대조 | [EVAL_REPORT.md](../EVAL_REPORT.md) 1-1절 |
 
@@ -101,7 +102,6 @@
 
 | 항목 | 이유 |
 |---|---|
-| 운영 DB에서 `sha256(본문)`을 다시 센 값 | 청크별 sha256 목록과 `distinct_text`는 청킹 산출물의 값이다. DB의 `chunk_sha256` 열 서로 다른 값은 51,967이지만([조회 기록](../evals/results/d10/index_row_count_2026-11-13.md)), 본문에서 다시 계산해 대조하지는 않았다 |
 | 새 clone에서 청킹 전체 재실행 | `chunks.jsonl`이 저장소에 없어 불가. 해시 목록과의 대조에도 필요하다 |
 
 ### G4 에이전트
