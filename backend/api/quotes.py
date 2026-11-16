@@ -72,6 +72,22 @@ class ApprovedCase(BaseModel):
     created_at: datetime
 
 
+class ApprovedCaseDetail(ApprovedCase):
+    """승인 사례 하나의 기록. 후보 · 근거는 승인 때 저장한 값을 화면 결과와 같은 허용 목록(BrowserResult)에 통과시킨 것이다(다시 판정하지 않음)."""
+    message_id: int  # 승인한 판정 메시지
+    project_id: int
+    project_name: str
+    thread_id: str  # 원래 대화. 화면이 /app?project=&thread= 링크에 쓴다
+    thread_title: str
+    question: str  # 그 판정을 낸 질문(사용자가 쓴 글). 따로 적은 사용 조건은 run 기록에 없어 담지 않는다
+    target_ref: str | None  # 바꿀 부품(D1 등). 분석 기록이 없으면 null
+    target_value: str | None  # 그 부품의 넷리스트 값
+    answer: str  # 승인 때의 답
+    candidate: dict | None  # 승인한 후보 판정 {part, verdict, checks: [{code, op, threshold, value, unit, result, citation…}], …}. 옛 기록이 허용 목록을 못 지나면 null
+    evidence: list[dict]  # 근거 문서 위치 {document, page, table, row, section, source_url, …}
+    quotes: list[Quote]  # 이 승인으로 저장한 견적(가격 칸 없음)
+
+
 def service():
     try:
         yield QuoteService()
@@ -108,6 +124,12 @@ def list_quotes(project_id: int, user_id: int = Depends(auth.current_user_id), q
 @router.get('/approved-cases', response_model=list[ApprovedCase])
 def list_cases(user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
     return quotes.list_cases(user_id)
+
+
+@router.get('/approved-cases/{case_id}', response_model=ApprovedCaseDetail)
+def get_case(case_id: int, response: Response, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
+    response.headers['Cache-Control'] = 'no-store'
+    return quotes.get_case(user_id, case_id)
 
 
 @router.delete('/approved-cases/{case_id}', status_code=204, dependencies=[Depends(auth.check_origin)])

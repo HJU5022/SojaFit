@@ -47,10 +47,60 @@ def test_thread_delete_uses_safe_errors(web, monkeypatch, failure_kind, status):
     assert response.json()['error']['request_id']
 
 
+def test_thread_list_and_rename_require_login(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.get('/api/threads').status_code == 401
+        assert client.patch(f'/api/threads/{uuid4()}', json={'title': '이름'}, headers=ORIGIN).status_code == 401
+
+
+def test_thread_list_is_the_session_users_and_not_cached(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    calls = []
+    monkeypatch.setattr(ConversationRepository, 'list_all_threads', lambda self, user: calls.append(user) or [])
+    with web(None, None) as client:
+        response = client.get('/api/threads')
+    assert response.status_code == 200 and response.json() == []
+    assert response.headers['cache-control'] == 'no-store'
+    assert calls == [1]
+
+
+def test_thread_rename_checks_origin_and_title_before_repository(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    calls, thread = [], str(uuid4())
+    def rename(self, user, key, title):
+        calls.append((user, key, title))
+        return {'id': key, 'project_id': 3, 'project_name': '전원부', 'title': title,
+                'created_at': '2026-11-16T00:00:00Z', 'last_activity_at': '2026-11-16T00:00:00Z'}
+    monkeypatch.setattr(ConversationRepository, 'rename_thread', rename)
+    with web(None, None) as client:
+        assert client.patch(f'/api/threads/{thread}', json={'title': '이름'}).status_code == 403
+        for body in ({'title': ''}, {'title': '   '}, {'title': 'x' * 201}, {'title': '이름', 'project_id': 9}, {}):
+            assert client.patch(f'/api/threads/{thread}', json=body, headers=ORIGIN).status_code == 422, body
+        assert client.patch('/api/threads/not-a-uuid', json={'title': '이름'}, headers=ORIGIN).status_code == 422
+        assert calls == []
+        response = client.patch(f'/api/threads/{thread}', json={'title': '  D1\n 교체   검토 '}, headers=ORIGIN)
+    assert response.status_code == 200 and response.json()['title'] == 'D1 교체 검토'
+    assert calls == [(1, thread, 'D1 교체 검토')]  # 줄바꿈 · 겹친 공백은 한 칸으로, 앞뒤 공백은 지운다(DB CHECK와 같은 모양)
+
+
+@pytest.mark.parametrize('failure_kind, status', [('missing', 404), ('database', 503)])
+def test_thread_rename_uses_safe_errors(web, monkeypatch, failure_kind, status):
+    import psycopg
+    from backend.conversations.repository import ConversationRepository, ConversationNotFound
+    def fail(*args):
+        raise {'missing': ConversationNotFound, 'database': psycopg.OperationalError}[failure_kind]('private database detail')
+    monkeypatch.setattr(ConversationRepository, 'rename_thread', fail)
+    with web(None, None) as client:
+        response = client.patch(f'/api/threads/{uuid4()}', json={'title': '이름'}, headers=ORIGIN)
+    assert response.status_code == status
+    assert 'private database detail' not in response.text
+
+
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None, refuse=None):
-        self.calls, self.targets, self.version, self.hints = [], {}, 1, []
+        self.calls, self.targets, self.version, self.hints, self.nodes, self.choices = [], {}, 1, [], [], None
         self.state, self.interrupt, self.error, self.refuse = state or {'answer': 'ok'}, interrupt, error, refuse
         self.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values=self.state))
     def config(self, thread): return {'configurable': {'thread_id': thread}}
@@ -59,6 +109,8 @@ class FakeAnalysis:
             raise self.refuse
     def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
         self.calls.append(('ensure', thread, filename, target, question, conditions))
+        if target is None and self.choices:  # 실제 서비스처럼 대상을 못 정하면 분석 thread를 만들지 않고 후보를 돌려준다
+            return self.choices
         if self.targets.setdefault(thread, target) != target:
             raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
     def _run(self, *call):
@@ -66,8 +118,11 @@ class FakeAnalysis:
         if self.error:
             raise self.error
         return {'interrupt': self.interrupt, 'version': self.version, 'profile_hints': self.hints}
-    def message(self, user, thread, text, conditions='', request_id=''): return self._run('message', thread, text, conditions)
-    def resume(self, user, thread, answers, role, version, request_id=''): return self._run('resume', thread, answers, role, version)
+    def message(self, user, thread, text, conditions='', request_id='', progress=None):
+        for node in self.nodes:  # 실제 서비스처럼 그래프 노드가 시작할 때마다 노드 이름으로 알린다
+            progress(node)
+        return self._run('message', thread, text, conditions)
+    def resume(self, user, thread, answers, role, version, request_id='', progress=None): return self._run('resume', thread, answers, role, version)
     def detail(self, user, thread): return {'version': self.version}
 
 
@@ -294,6 +349,123 @@ def test_first_run_creates_analysis_thread_and_saves_before_completed(web):
     assert repo.calls == ['start', ('commit', 'completed')]
 
 
+def sse_frames(text):
+    """SSE 본문을 (이벤트 이름, data) 목록으로 나눈다."""
+    return [(lines[0].removeprefix('event: '), json.loads(lines[1].removeprefix('data: ')))
+            for block in text.strip().split('\n\n') if (lines := block.split('\n'))]
+
+
+def test_run_streams_a_status_frame_per_new_stage_before_the_last_frame(web):
+    """노드가 시작할 때마다 화면 단계가 바뀌면 status 하나. 같은 단계 · 표에 없는 노드는 보내지 않고, 마지막 frame은 그대로 하나다."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis = FakeAnalysis()
+    analysis.nodes = ['입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', 'Spec 에이전트', '회로 읽기',
+                      '대체 부품 판정', '답 모으기', '답 정리', '답 검사', '끝내기']
+    with web(analysis, FakeRepo(thread, run)) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': 'hello', 'target_ref': 'D1'}, headers=ORIGIN).text)
+    assert [name for name, _ in frames] == ['run_started'] + ['status'] * 7 + ['completed']
+    assert [data['stage'] for name, data in frames if name == 'status'] == ['입력 확인', '품번 확인', '질문 분석', '문서 검색', '회로 역할 읽기', '후보 판정', '답 작성']
+    assert all(data['status'] == 'running' and data['answer'] == '' for name, data in frames if name == 'status')
+
+
+CHOICES = [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': 'SS34'}]
+
+
+def test_start_without_target_asks_which_part_then_resume_runs_the_first_question(web):
+    """대상을 못 정하면 그래프 없이 requires_input(target_choices)로 묻고, 고른 부품으로 재개하면 그 부품 · 처음 질문 · 사용 조건으로 분석한다(SPEC 8.9)."""
+    from backend.conversations.models import SafeResult
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
+    analysis.choices = CHOICES
+    with web(analysis, repo) as client:
+        asked = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': '1N5819로 바꿔도 돼?', 'conditions': '입력 12 V'}, headers=ORIGIN).text)
+        assert [name for name, _ in asked] == ['run_started', 'status', 'requires_input']
+        interrupt = asked[-1][1]['interrupt']
+        assert interrupt == {'target_choices': CHOICES, 'question': '넷리스트에서 다이오드 D1(1N4007), D3(SS34)를 찾았어요. 어떤 부품을 바꿀까요?'}
+        assert analysis.calls == [('ensure', thread, '프로젝트', None, '1N5819로 바꿔도 돼?', '입력 12 V')]  # 그래프를 돌리지 않았다
+        assert repo.status == 'requires_input' and SafeResult.model_validate(repo.result).interrupt.target_choices[1].ref == 'D3'
+        saved = client.get(f'/api/runs/{run}')
+        assert saved.json()['result']['interrupt']['target_choices'] == CHOICES
+        assert 'pending_start' not in saved.text and '입력 12 V' not in saved.text  # 처음 질문 · 조건은 run 기록에만 둔다
+        done = sse_frames(client.post(f'/api/runs/{run}/resume', json={'answers': {}, 'target': 'D3'}, headers=ORIGIN).text)
+    assert done[-1][0] == 'completed' and repo.status == 'completed'
+    assert analysis.calls[1:] == [('ensure', thread, '프로젝트', 'D3', '1N5819로 바꿔도 돼?', '입력 12 V'), ('message', thread, '1N5819로 바꿔도 돼?', '입력 12 V')]
+    assert ('claim', thread, run) in repo.calls
+
+
+def real_target_service(parts):
+    """ensure_thread만 진짜(고정 회로 · 분석 thread는 가짜 연결)인 분석 서비스. 만든 분석 thread의 대상과 분석한 질문을 남긴다."""
+    from contextlib import contextmanager
+    from backend.conversations.memory_service import Conversations
+    inserted, questions = [], []
+
+    class Connection:
+        def execute(self, query, params):
+            if query.startswith('INSERT'):
+                inserted.append(params[0])
+                return None
+            if query.startswith('SELECT t.*'):  # _owned
+                row = {'target': inserted[0], 'connections': {'parts': parts}}
+            elif 'project_circuit_versions' in query:  # 고정 회로 버전
+                row = {'connections': {'parts': parts, 'nets': []}}
+            else:  # 아직 분석 thread가 없다
+                row = None
+            return SimpleNamespace(fetchone=lambda: row)
+
+    @contextmanager
+    def connection():
+        yield Connection()
+
+    service = object.__new__(Conversations)
+    service.mode, service.connection, service._hold_account, service.admission = 'live', connection, lambda *a: None, lambda user: None
+    service.message = lambda user, thread, text, conditions='', request_id='', progress=None: questions.append(text) or {'interrupt': None}
+    service.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values={'answer': 'ok'}))
+    return service, inserted, questions
+
+
+ONE_DIODE = [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'RED', 'description': 'Light emitting diode'}, {'ref': 'R1', 'value': '10k'}]
+
+
+@pytest.mark.parametrize('question, ref', [('D2를 바꿔도 돼?', 'D2'), ('R1을 바꿔도 돼?', 'R1')])
+def test_start_naming_an_unsupported_part_is_the_same_422_before_any_thread_or_run(web, question, ref):
+    """질문이 회로의 미지원 부품만 가리키면 유일한 다이오드 D1로 넘어가지 않는다. 그 부품을 target_ref로 보낸 것과 같은 422 · 문구다(SPEC 8.9)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, inserted, questions = real_target_service(ONE_DIODE)
+    repo = FakeRepo(thread, run)
+    with web(analysis, repo) as client:
+        named = client.post(f'/api/threads/{thread}/runs', json={'question': question}, headers=ORIGIN)
+        explicit = client.post(f'/api/threads/{thread}/runs', json={'question': question, 'target_ref': ref}, headers=ORIGIN)
+    assert named.status_code == explicit.status_code == 422
+    assert named.json()['error']['message'] == explicit.json()['error']['message'] and ref in named.json()['error']['message']
+    assert inserted == [] and repo.calls == [] and questions == []  # 분석 thread · run · 분석 모두 없음
+
+
+def test_start_without_any_ref_falls_back_to_the_only_supported_diode(web):
+    """질문에 회로 ref가 하나도 없으면 회로의 유일한 지원 다이오드로 분석한다(LED D2 · 저항 R1은 후보가 아니다)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, inserted, questions = real_target_service(ONE_DIODE)
+    repo = FakeRepo(thread, run)
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': '1N5819로 바꿔도 돼?'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'completed'
+    assert inserted == ['D1'] and questions == ['1N5819로 바꿔도 돼?'] and repo.calls == ['start', ('commit', 'completed')]
+
+
+@pytest.mark.parametrize('saved, body', [
+    ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {}, 'target': 'D2'}),  # 후보 밖
+    ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {}}),  # 고르지 않음
+    ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {'v_in_max': '12'}, 'target': 'D1'}),
+    ({'interrupt': {'missing': ['v_in_max'], 'role_choices': []}}, {'answers': {}, 'target': 'D1'}),  # 부품을 묻지 않은 run
+])
+def test_resume_target_must_be_one_of_the_offered_parts(web, saved, body):
+    thread, run = str(uuid4()), str(uuid4())
+    repo, analysis = FakeRepo(thread, run, status='requires_input', result=saved), FakeAnalysis()
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/runs/{run}/resume', json=body, headers=ORIGIN)
+    assert response.status_code == 422
+    assert analysis.calls == [] and repo.calls == [] and repo.status == 'requires_input'
+
+
 @pytest.fixture
 def native_input_path(monkeypatch):
     """Real HTTP/service/graph; fake SQL, auth and model replies only."""
@@ -372,6 +544,23 @@ def test_free_http_names_stay_out_of_model_prompts_but_conditions_reach(web,nati
     assert any('CONDITION_SURFACE' in user for _,user in prompts)
 
 
+@pytest.mark.parametrize('case_id, stages', [('T1', ['입력 확인', '품번 확인', '질문 분석', '문서 검색', '답 작성']),
+                                             ('T5', ['입력 확인', '품번 확인', '질문 분석', '회로 역할 읽기', '후보 판정', '답 작성'])])
+def test_live_stages_come_from_the_real_graph_nodes(web, native_input_path, case_id, stages):
+    """진짜 그래프의 노드 이름이 진행 단계 표와 맞는지 본다(노드 이름을 바꾸면 여기서 깨진다)."""
+    from backend.conversations import memory_service
+    from backend.services.langfuse_prompts import AnalysisTimings
+    analysis, repo, _, _, question = native_input_path(case_id, 'synthetic.net')
+    graph = analysis.graph
+    # [왜] 고정 장치의 _invoke는 callback 없이 그래프만 돈다. 실제 _invoke처럼 노드 시간 callback에 진행 알림을 붙인다
+    analysis._invoke = lambda conn, tid, payload, budget, request_id='': graph.invoke(
+        payload, {**analysis.config(tid), 'callbacks': [AnalysisTimings(on_node=memory_service._progress.get())]})
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{repo.thread}/runs', json={'question': question, 'target_ref': 'D1'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'completed' and all(name == 'status' for name, _ in frames[1:-1])
+    assert [data['stage'] for name, data in frames if name == 'status'] == stages
+
+
 def test_free_resume_text_reaches_later_question_history_not_immediate_read(web,native_input_path):
     analysis,repo,prompts,history,question=native_input_path('T5','synthetic.net',missing_current=True)
     question=question.replace('부하 최대 0.1 A, ','')
@@ -408,6 +597,55 @@ def test_completed_frame_carries_profile_hints_but_run_record_does_not(web):
     assert '"profile_hints": [{"kind": "mounting_preference", "value": "smd", "text": "이 사용자는 SMD 실장을 선호한다."}]' in completed
     assert '"version": 3' not in completed
     assert 'profile_hints' not in repo.result and recovered['profile_hints'] == []
+
+
+@pytest.mark.parametrize('status, unavailable', [(402, True), (429, True), (200, False)])
+def test_exa_failure_flags_the_run_and_the_notice_survives_reload(web, monkeypatch, status, unavailable):
+    """#28: Exa가 402 · 429면 검색은 예전처럼 빈 목록이지만, 분석 서비스(_invoke)가 그 실행에 표시를 남기고
+    결과 frame · run 기록 · 다시 읽기에 web_search_unavailable이 실린다(화면 Reply.tsx가 이 칸으로 안내 한 줄을 붙인다).
+    정상 응답(0건)은 '못 찾음'이라 표시하지 않는다."""
+    from typing import TypedDict
+    import httpx
+    from langgraph.checkpoint.memory import InMemorySaver
+    from langgraph.graph import END, START, StateGraph
+    from backend.conversations.memory_service import Conversations
+    from backend.conversations.models import SafeResult
+    from backend.services import exa
+    from backend.services.llm import EvaluationBudget
+    for key, value in {'DEMO_MODE': '0', 'EXA_WEB_SEARCH_ENABLED': '1', 'EXA_API_KEY': 'unit-test'}.items():
+        monkeypatch.setenv(key, value)
+    for key in ('LANGFUSE_PUBLIC_KEY', 'LANGFUSE_SECRET_KEY'):
+        monkeypatch.delenv(key, raising=False)
+    transport = httpx.MockTransport(lambda request: httpx.Response(status, json={'results': []}))
+
+    class State(TypedDict, total=False):
+        answer: str
+
+    def search(state):
+        assert exa.search_grade2_evidence(['SS34'], 'reverse voltage', transport=transport) == []  # 결과는 예전처럼 빈 목록
+        return {'answer': '이 부품 자료를 찾지 못했어요.'}
+    graph = StateGraph(State)
+    graph.add_node('search', search)
+    graph.add_edge(START, 'search')
+    graph.add_edge('search', END)
+    service = object.__new__(Conversations)
+    service.graph, service.mode = graph.compile(checkpointer=InMemorySaver()), 'live'
+    service._finish = service._record_event = lambda *args, **kwargs: None
+    conn = SimpleNamespace(execute=lambda *args: SimpleNamespace(fetchone=lambda: {'user_id': 1}))
+    budget = EvaluationBudget(max_calls=1, max_usd=1.0, max_seconds=30, prompt_rate=0.000001, completion_rate=0.000001)
+    thread, run = str(uuid4()), str(uuid4())
+    assert service._invoke(conn, thread, {'answer': ''}, budget) is unavailable
+    monkeypatch.setenv('DEMO_MODE', '1')  # 아래 API는 다른 시험처럼 데모 설정으로 연다(AUTH_SECRET 없이)
+
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
+    detail = analysis._run  # 실제 message()처럼 detail에 _invoke가 본 값을 더한다
+    analysis._run = lambda *call: {**detail(*call), 'web_search_unavailable': unavailable}
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/threads/{thread}/runs', json={'question': 'SS34 역전압', 'target_ref': 'D1'}, headers=ORIGIN)
+        reloaded = client.get(f'/api/runs/{run}').json()['result']
+    completed = json.loads(response.text.split('event: completed\ndata: ', 1)[1].split('\n', 1)[0])
+    assert completed['web_search_unavailable'] is unavailable and reloaded['web_search_unavailable'] is unavailable
+    assert SafeResult.model_validate(repo.result).web_search_unavailable is unavailable  # 실제 저장소의 검사(extra 금지)를 통과한다
 
 
 def test_changed_target_is_409_before_a_run_is_created(web):
@@ -595,7 +833,7 @@ def test_disconnected_stream_keeps_running_and_saves_terminal():
         def finish(self, *args): self.result = args
     repo = Repo()
     analysis = FakeAnalysis()
-    def slow():
+    def slow(progress):
         time.sleep(0.05)
         return {'interrupt': None}
     async def run():

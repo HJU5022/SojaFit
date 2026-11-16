@@ -1,0 +1,8562 @@
+{
+ "meta": {
+  "preregister": "2026-11-16 jeongun · 리랭크 전 후보 수(N_CAND) 50 → 200",
+  "run_at": "2026-11-16T09:48:56+0900",
+  "dataset_sha256": "999d2ab7ea0e60ff80d4540e823e5be337bdd0a410f257c5af50d33afe3a5f48",
+  "rewrite_sha256": "5447b5e6e209045763455557cbc368a8d1e0bd283c12bc1bff0b4870e1124f2b",
+  "cards_sha256": "9e62fb6a80eb703ce0d8d98e69669d222c9fc307da36d9b272ae4e51083d4516",
+  "arms": {
+   "before": "C|v4large|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3",
+   "after": "C|v4large|hybrid|bm25|T0|60|200|Q3|part+kind|rerank-3"
+  },
+  "new_rerank_calls": 25,
+  "new_rerank_tokens": 1223184
+ },
+ "summary": {
+  "before": {
+   "all": {
+    "page_recall@5": 0.881,
+    "page_hit@5": 0.8929,
+    "all_evidence@5": 0.869,
+    "page_mrr": 0.775,
+    "fails": {
+     "outside_candidates": 7,
+     "below_top_k": 2
+    }
+   },
+   "dev": {
+    "page_recall@5": 0.8587,
+    "page_hit@5": 0.8696,
+    "all_evidence@5": 0.8478,
+    "page_mrr": 0.7833,
+    "fails": {
+     "outside_candidates": 5,
+     "below_top_k": 1
+    }
+   },
+   "test": {
+    "page_recall@5": 0.9079,
+    "page_hit@5": 0.9211,
+    "all_evidence@5": 0.8947,
+    "page_mrr": 0.7649,
+    "fails": {
+     "outside_candidates": 2,
+     "below_top_k": 1
+    }
+   }
+  },
+  "after": {
+   "all": {
+    "page_recall@5": 0.8929,
+    "page_hit@5": 0.9048,
+    "all_evidence@5": 0.881,
+    "page_mrr": 0.7843,
+    "fails": {
+     "outside_candidates": 3,
+     "below_top_k": 5
+    }
+   },
+   "dev": {
+    "page_recall@5": 0.8804,
+    "page_hit@5": 0.8913,
+    "all_evidence@5": 0.8696,
+    "page_mrr": 0.8014,
+    "fails": {
+     "outside_candidates": 2,
+     "below_top_k": 3
+    }
+   },
+   "test": {
+    "page_recall@5": 0.9079,
+    "page_hit@5": 0.9211,
+    "all_evidence@5": 0.8947,
+    "page_mrr": 0.7635,
+    "fails": {
+     "outside_candidates": 1,
+     "below_top_k": 2
+    }
+   }
+  }
+ },
+ "compare": {
+  "all": {
+   "page_recall@5": {
+    "W": 2,
+    "L": 1,
+    "T": 81,
+    "mean_diff": 0.0119,
+    "ci95": [
+     -0.0238,
+     0.0595
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": 0.0,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0,
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": 0.0,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -1.0,
+     "BAT46GW_B2606.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     0.0,
+     0.0241
+    ]
+   },
+   "page_hit@5": {
+    "W": 2,
+    "L": 1,
+    "T": 81,
+    "mean_diff": 0.0119,
+    "ci95": [
+     -0.0238,
+     0.0595
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": 0.0,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0,
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": 0.0,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -1.0,
+     "BAT46GW_B2606.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     0.0,
+     0.0241
+    ]
+   },
+   "all_evidence@5": {
+    "W": 2,
+    "L": 1,
+    "T": 81,
+    "mean_diff": 0.0119,
+    "ci95": [
+     -0.0238,
+     0.0595
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": 0.0,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0,
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": 0.0,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -1.0,
+     "BAT46GW_B2606.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     0.0,
+     0.0241
+    ]
+   },
+   "page_mrr": {
+    "W": 2,
+    "L": 4,
+    "T": 78,
+    "mean_diff": 0.0093,
+    "ci95": [
+     -0.0251,
+     0.0499
+    ],
+    "sign_p": 0.6875,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": -0.1667,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0,
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": -0.75,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -0.1389,
+     "BAT46GW_B2606.pdf": -0.1667
+    },
+    "leave_one_pdf_out": [
+     -0.0027,
+     0.0184
+    ]
+   }
+  },
+  "dev": {
+   "page_recall@5": {
+    "W": 1,
+    "L": 0,
+    "T": 45,
+    "mean_diff": 0.0217,
+    "ci95": [
+     0.0,
+     0.0652
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": 0.0,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     0.0,
+     0.0222
+    ]
+   },
+   "page_hit@5": {
+    "W": 1,
+    "L": 0,
+    "T": 45,
+    "mean_diff": 0.0217,
+    "ci95": [
+     0.0,
+     0.0652
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": 0.0,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     0.0,
+     0.0222
+    ]
+   },
+   "all_evidence@5": {
+    "W": 1,
+    "L": 0,
+    "T": 45,
+    "mean_diff": 0.0217,
+    "ci95": [
+     0.0,
+     0.0652
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": 0.0,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     0.0,
+     0.0222
+    ]
+   },
+   "page_mrr": {
+    "W": 1,
+    "L": 1,
+    "T": 44,
+    "mean_diff": 0.0181,
+    "ci95": [
+     -0.0109,
+     0.0652
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "TESD5V0V4UA_B2109.pdf": 0.0,
+     "TSCDK12065G1_A2507.pdf": 0.0,
+     "RS1AH SERIES_B2304.pdf": 0.0,
+     "HER101G SERIES_L2104.pdf": 0.0,
+     "TSUP3150H_A2505.pdf": 0.0,
+     "GS1Z_A2510.pdf": 0.0,
+     "SFF501G SERIES_I2105.pdf": 0.0,
+     "US1AH SERIES_A2102.pdf": 0.0,
+     "RB500V-40H_A2502.pdf": 0.0,
+     "TSUP10150H_A2505.pdf": 0.0,
+     "S3JFSH_A2303.pdf": 0.0,
+     "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+     "TESDD5V0_E1901.pdf": 0.0,
+     "RS1DLWH SERIES_A2103.pdf": 0.0,
+     "RB520S-30_D2510.pdf": 0.0,
+     "TSSA3U45_P2307.pdf": 0.0,
+     "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+     "TSCDF06065G1_A2404.pdf": 0.0,
+     "P4KE SERIES_N2104.pdf": 0.0,
+     "RB706F-40_C2102.pdf": 0.0,
+     "TST10122C_A2405.pdf": 0.0,
+     "UG2D_F2105.pdf": 0.0,
+     "TSD2GFSH SERIES_B2312.pdf": 0.0,
+     "TESD5V0L1UC_E2007.pdf": 0.0,
+     "SMB10JH SERIES_A2102.pdf": 0.0,
+     "RS5D-T SERIES_C2602.pdf": 0.0,
+     "HS1QBH_A2408.pdf": 0.0,
+     "UR2KB60 SERIES_L2104.pdf": 0.0,
+     "S2DAL SERIES_B2103.pdf": 0.0,
+     "MMSZ4678 SERIES_A2311.pdf": 0.0,
+     "PU2BM SERIES_B2103.pdf": 0.0,
+     "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+     "TSCDK16065G1_A2507.pdf": 0.0,
+     "TBS806 SERIES_A2010.pdf": 0.0,
+     "UG1004G SERIES_D2601.pdf": 0.0,
+     "S2DA-T SERIES_D2111.pdf": 0.0,
+     "1SMA4737 SERIES_P2102.pdf": 0.0,
+     "TS40P05G SERIES_G2203.pdf": -0.1667,
+     "BAS70 SERIES_G2606.pdf": 0.0,
+     "GBJL45J_D2606.pdf": 0.0,
+     "PLAD15Q_B2606.pdf": 0.0,
+     "SD103AWH SERIES_A2502.pdf": 1.0,
+     "GS2ZA_A2510.pdf": 0.0,
+     "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+     "SBS34 SERIES_F2103.pdf": 0.0,
+     "S1Q_B2102.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     -0.0037,
+     0.0222
+    ]
+   }
+  },
+  "test": {
+   "page_recall@5": {
+    "W": 1,
+    "L": 1,
+    "T": 36,
+    "mean_diff": 0.0,
+    "ci95": [
+     -0.0789,
+     0.0789
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": 0.0,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -1.0,
+     "BAT46GW_B2606.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     -0.027,
+     0.027
+    ]
+   },
+   "page_hit@5": {
+    "W": 1,
+    "L": 1,
+    "T": 36,
+    "mean_diff": 0.0,
+    "ci95": [
+     -0.0789,
+     0.0789
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": 0.0,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -1.0,
+     "BAT46GW_B2606.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     -0.027,
+     0.027
+    ]
+   },
+   "all_evidence@5": {
+    "W": 1,
+    "L": 1,
+    "T": 36,
+    "mean_diff": 0.0,
+    "ci95": [
+     -0.0789,
+     0.0789
+    ],
+    "sign_p": 1.0,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": 0.0,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -1.0,
+     "BAT46GW_B2606.pdf": 0.0
+    },
+    "leave_one_pdf_out": [
+     -0.027,
+     0.027
+    ]
+   },
+   "page_mrr": {
+    "W": 1,
+    "L": 3,
+    "T": 34,
+    "mean_diff": -0.0015,
+    "ci95": [
+     -0.0665,
+     0.0702
+    ],
+    "sign_p": 0.625,
+    "verdict": "차이 입증 못 함",
+    "per_pdf_mean_diff": {
+     "SMA4S12AH SERIES_C2103.pdf": 0.0,
+     "TS20K40-T SERIES_A2208.pdf": 0.0,
+     "BAT54WH_A2501.pdf": 0.0,
+     "BAS16_F2001.pdf": 0.0,
+     "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+     "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+     "TSCDK08065G1_A2507.pdf": 0.0,
+     "SMA6J SERIES_E2102.pdf": 0.0,
+     "GBL005 SERIES_K2103.pdf": 0.0,
+     "BAS21H_A2412.pdf": 0.0,
+     "SF41G SERIES_G2105.pdf": 0.0,
+     "1.5SMCH SERIES_B2207.pdf": 0.0,
+     "HER101G-K SERIES_B2104.pdf": 0.0,
+     "BAV19WS SERIES_K2212.pdf": 0.0,
+     "PU1BB SERIES_A2510.pdf": 0.0,
+     "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+     "BA157G-K SERIES_B2104.pdf": 0.0,
+     "BAV99WH_A2412.pdf": 0.0,
+     "BZD17C SERIES_L2103.pdf": 0.0,
+     "TPMR10D SERIES_D2309.pdf": 0.0,
+     "TSCDT20065G1_A2404.pdf": 0.0,
+     "TSS42U SERIES_D1601.pdf": 0.0,
+     "TSAD10H120H_A2601.pdf": 0.0,
+     "PU6BBH SERIES_B2109.pdf": 0.0,
+     "TSCDH40065G1_A2404.pdf": 0.0,
+     "BYG20D SERIES_F2102.pdf": 0.0,
+     "TS20P01G SERIES_O2203.pdf": 0.0,
+     "TSUP10M60SH_B2103.pdf": 0.0,
+     "FR201G-T SERIES_B2105.pdf": 0.0,
+     "TSSW3H120H_A2510.pdf": 0.0,
+     "TS4148 SERIES_A2301.pdf": -0.75,
+     "1SS355_D2212.pdf": 0.0,
+     "S3Q_C2102.pdf": 0.0,
+     "MMBD3004 SERIES_C2001.pdf": 0.0,
+     "FRAF10JG_A2206.pdf": 0.0,
+     "TSUP15H120H_A2403.pdf": 1.0,
+     "B0520LW SERIES_J2112.pdf": -0.1389,
+     "BAT46GW_B2606.pdf": -0.1667
+    },
+    "leave_one_pdf_out": [
+     -0.0285,
+     0.0188
+    ]
+   }
+  }
+ },
+ "pool": {
+  "all": {
+   "50": 77,
+   "100": 81,
+   "200": 81,
+   "400": 82,
+   "800": 82
+  },
+  "before_outside_candidates": {
+   "ids": [
+    "r1-083",
+    "r1-089",
+    "r1-090",
+    "r1-094",
+    "r1-100",
+    "r1-091",
+    "r1-097"
+   ],
+   "50": 0,
+   "100": 4,
+   "200": 4,
+   "400": 5,
+   "800": 5
+  }
+ },
+ "rerank_tokens_per_call": {
+  "before": {
+   "calls": 84,
+   "p50": 4902,
+   "p95": 17026,
+   "max": 18225
+  },
+  "after": {
+   "calls": 84,
+   "p50": 4902,
+   "p95": 66597,
+   "max": 79764
+  }
+ },
+ "changes": [
+  {
+   "id": "r1-083",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "1N4148WH_A2501.pdf",
+      1
+     ],
+     [
+      "1N5391G SERIES_G2309.pdf",
+      1
+     ],
+     [
+      "1N4148WTH_A2501.pdf",
+      1
+     ],
+     [
+      "1N4148WSH_A2501.pdf",
+      1
+     ],
+     [
+      "FR151G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSUP3S150H_A2604.pdf",
+      1
+     ],
+     [
+      "TSUP8S150H_A2604.pdf",
+      1
+     ],
+     [
+      "TSUP5S150H_A2604.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP15150H_A2505.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 385
+   }
+  },
+  {
+   "id": "r1-086",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "TS40P05G SERIES_G2203.pdf",
+      1
+     ],
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "ABS20M-T_C2103.pdf",
+      1
+     ],
+     [
+      "TS40P05G SERIES_G2203.pdf",
+      1
+     ],
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 382
+   }
+  },
+  {
+   "id": "r1-087",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "BAW56 SERIES_I2001.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 92
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "BAW56 SERIES_I2001.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 333
+   }
+  },
+  {
+   "id": "r1-088",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GBJL45J_D2606.pdf",
+      1
+     ],
+     [
+      "UGS5JH_D2606.pdf",
+      1
+     ],
+     [
+      "UGS20JH_F2510.pdf",
+      1
+     ],
+     [
+      "ES3DB-A SERIES_C2102.pdf",
+      1
+     ],
+     [
+      "PU1BBH SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GBJL45J_D2606.pdf",
+      1
+     ],
+     [
+      "PU3JAH_A2409.pdf",
+      1
+     ],
+     [
+      "PU3JA_B2412.pdf",
+      1
+     ],
+     [
+      "UGS5JH_D2606.pdf",
+      1
+     ],
+     [
+      "UGS20JH_F2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 391
+   }
+  },
+  {
+   "id": "r1-089",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "PLAD15Q_B2606.pdf",
+      1
+     ],
+     [
+      "TSCDH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "PLAD15Q_B2606.pdf",
+      1
+     ],
+     [
+      "TSCDH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDK15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDT15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH15120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 392
+   }
+  },
+  {
+   "id": "r1-090",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SSL22H SERIES_B2309.pdf",
+      1
+     ],
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ],
+     [
+      "B0520LW SERIES_J2112.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 96
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SD103AWH SERIES_A2502.pdf",
+      1
+     ],
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SK32B SERIES_P2212.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 391
+   }
+  },
+  {
+   "id": "r1-093",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "S2YH_A2408.pdf",
+      1
+     ],
+     [
+      "S2YAH_A2408.pdf",
+      1
+     ],
+     [
+      "2A01G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 96
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "S2YH_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 376
+   }
+  },
+  {
+   "id": "r1-094",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "SSL22 SERIES_M2309.pdf",
+      2
+     ],
+     [
+      "TSUP12122_B2508.pdf",
+      2
+     ],
+     [
+      "SSL22H SERIES_B2309.pdf",
+      2
+     ],
+     [
+      "BZT52B2V4 SERIES_F15.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 92
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "TSF20H45C_C2012.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "SSL22 SERIES_M2309.pdf",
+      2
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      2
+     ],
+     [
+      "TSUP12122_B2508.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 375
+   }
+  },
+  {
+   "id": "r1-096",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "SSC3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "SSA3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSSA3U60_H2306.pdf",
+      1
+     ],
+     [
+      "TSSA3U60H_B2306.pdf",
+      1
+     ],
+     [
+      "3A60 SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 98
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "SSA3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "SSC3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSSA3U60_H2306.pdf",
+      1
+     ],
+     [
+      "TSSA3U60H_B2306.pdf",
+      1
+     ],
+     [
+      "TSFS3M60H_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 377
+   }
+  },
+  {
+   "id": "r1-100",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QH_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QFSH_A2505.pdf",
+      1
+     ],
+     [
+      "HS1QALH_A2505.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDAH10120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH40120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 389
+   }
+  },
+  {
+   "id": "r1-084",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "BAS116_F2001.pdf",
+      1
+     ],
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.25,
+    "fail": null,
+    "top5": [
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "BAS116_F2001.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 396
+   }
+  },
+  {
+   "id": "r1-085",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40102C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 98
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "TSCDM08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDM10065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 392
+   }
+  },
+  {
+   "id": "r1-091",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSCDAH30120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDH30120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDT05120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH30120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 385
+   }
+  },
+  {
+   "id": "r1-092",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "BAV23CH_A2501.pdf",
+      1
+     ],
+     [
+      "ES3DB-A SERIES_C2102.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 98
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "TSCDT08065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF10065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF08065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 395
+   }
+  },
+  {
+   "id": "r1-095",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "PUUP10JH_A2412.pdf",
+      1
+     ],
+     [
+      "PUUP10J_B2412.pdf",
+      1
+     ],
+     [
+      "SFAS1008G_E2103.pdf",
+      1
+     ],
+     [
+      "SFAS1008GH_A2103.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "PUUP10J_B2412.pdf",
+      1
+     ],
+     [
+      "PUUP10JH_A2412.pdf",
+      1
+     ],
+     [
+      "SFAS1008G_E2103.pdf",
+      1
+     ],
+     [
+      "SFAS1008GH_A2103.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 386
+   }
+  },
+  {
+   "id": "r1-097",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSF20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 73
+   },
+   "after": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP15H120H_A2403.pdf",
+      1
+     ],
+     [
+      "TST20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST30122C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 360
+   }
+  },
+  {
+   "id": "r1-098",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.25,
+    "fail": null,
+    "top5": [
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ],
+     [
+      "B0520LW SERIES_J2112.pdf",
+      1
+     ],
+     [
+      "SS22M SERIES_M2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.1111111111111111,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "SD103AWH SERIES_A2502.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 371
+   }
+  },
+  {
+   "id": "r1-099",
+   "group": "G4",
+   "before": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.16666666666666666,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSSW1H100H_A2510.pdf",
+      1
+     ],
+     [
+      "TSAD10H100CH_A2601.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 91
+   },
+   "after": {
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "1SS400_E2510.pdf",
+      1
+     ],
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF30102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40102C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 382
+   }
+  }
+ ],
+ "rows": {
+  "before": [
+   {
+    "id": "r1-001",
+    "pdf": "TESD5V0V4UA_B2109.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "439efb116c210ad2"
+   },
+   {
+    "id": "r1-002",
+    "pdf": "TSCDK12065G1_A2507.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 40,
+    "candidates_sha": "afb9ef4f3aaa6cce"
+   },
+   {
+    "id": "r1-004",
+    "pdf": "RS1AH SERIES_B2304.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      3
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "3121e5aa3dd7d7d9"
+   },
+   {
+    "id": "r1-005",
+    "pdf": "HER101G SERIES_L2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      3
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "2bbf2a4de6bd7010"
+   },
+   {
+    "id": "r1-008",
+    "pdf": "TSUP3150H_A2505.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 36,
+    "candidates_sha": "38b591023e6bdacf"
+   },
+   {
+    "id": "r1-011",
+    "pdf": "GS1Z_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "cdf5cf4c44742e3e"
+   },
+   {
+    "id": "r1-013",
+    "pdf": "SFF501G SERIES_I2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "24fe74612d361779"
+   },
+   {
+    "id": "r1-018",
+    "pdf": "US1AH SERIES_A2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "89a49acad4cf1571"
+   },
+   {
+    "id": "r1-020",
+    "pdf": "RB500V-40H_A2502.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "539ed819b2c8c97d"
+   },
+   {
+    "id": "r1-021",
+    "pdf": "TSUP10150H_A2505.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "d3173c1391600c88"
+   },
+   {
+    "id": "r1-024",
+    "pdf": "S3JFSH_A2303.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "3ee68a153c5fa18a"
+   },
+   {
+    "id": "r1-025",
+    "pdf": "BZD27C11PWH SERIES_B2203.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      4
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 57,
+    "candidates_sha": "a9d03ba07e4c2576"
+   },
+   {
+    "id": "r1-027",
+    "pdf": "TESDD5V0_E1901.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      2
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 28,
+    "candidates_sha": "89f36cfb278d4446"
+   },
+   {
+    "id": "r1-030",
+    "pdf": "RS1DLWH SERIES_A2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      3
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "d84c8797b9b9a07a"
+   },
+   {
+    "id": "r1-033",
+    "pdf": "RB520S-30_D2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "9a7e69adbd0dfcea"
+   },
+   {
+    "id": "r1-034",
+    "pdf": "TSSA3U45_P2307.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "f14c6428eded9d78"
+   },
+   {
+    "id": "r1-038",
+    "pdf": "BZX84JB2V4H SERIES_A2503.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      2
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 50,
+    "candidates_sha": "634dd525416f7993"
+   },
+   {
+    "id": "r1-041",
+    "pdf": "TSCDF06065G1_A2404.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "b7a291a12441d1c7"
+   },
+   {
+    "id": "r1-042",
+    "pdf": "P4KE SERIES_N2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 50,
+    "candidates_sha": "2e18c376c22f411c"
+   },
+   {
+    "id": "r1-046",
+    "pdf": "RB706F-40_C2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      3
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      4
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "9b5a45c0ee6c4d7d"
+   },
+   {
+    "id": "r1-047",
+    "pdf": "TST10122C_A2405.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 39,
+    "candidates_sha": "ac4895b4052029d3"
+   },
+   {
+    "id": "r1-049",
+    "pdf": "UG2D_F2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "eba5642aa4e27b8a"
+   },
+   {
+    "id": "r1-050",
+    "pdf": "TSD2GFSH SERIES_B2312.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      4
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      2
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      3
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 39,
+    "candidates_sha": "cd60cf1399469e88"
+   },
+   {
+    "id": "r1-053",
+    "pdf": "TESD5V0L1UC_E2007.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      4
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "dabd9bc4dc3f6c19"
+   },
+   {
+    "id": "r1-055",
+    "pdf": "SMB10JH SERIES_A2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 44,
+    "candidates_sha": "a848bd2b7cf403ff"
+   },
+   {
+    "id": "r1-056",
+    "pdf": "RS5D-T SERIES_C2602.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 50,
+    "candidates_sha": "204fdd08f03a8277"
+   },
+   {
+    "id": "r1-057",
+    "pdf": "HS1QBH_A2408.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "3b94bbb46a44fbf8"
+   },
+   {
+    "id": "r1-058",
+    "pdf": "UR2KB60 SERIES_L2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "0eca93cbec13c744"
+   },
+   {
+    "id": "r1-062",
+    "pdf": "S2DAL SERIES_B2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "f7c41c192c22a7f5"
+   },
+   {
+    "id": "r1-063",
+    "pdf": "MMSZ4678 SERIES_A2311.pdf",
+    "page_recall@5": 0.5,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 52,
+    "candidates_sha": "38949e48d9f22438"
+   },
+   {
+    "id": "r1-069",
+    "pdf": "PU2BM SERIES_B2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 35,
+    "candidates_sha": "69bb19912601c669"
+   },
+   {
+    "id": "r1-071",
+    "pdf": "TSZU52C2V0 SERIES_G2009.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      1
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 50,
+    "candidates_sha": "298df0fd761672fd"
+   },
+   {
+    "id": "r1-073",
+    "pdf": "TSCDK16065G1_A2507.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDK16065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 40,
+    "candidates_sha": "c055df6475be2ff3"
+   },
+   {
+    "id": "r1-075",
+    "pdf": "TBS806 SERIES_A2010.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 47,
+    "candidates_sha": "fc666c1d9ee6e71f"
+   },
+   {
+    "id": "r1-077",
+    "pdf": "UG1004G SERIES_D2601.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      2
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "0d8e38c8b27c4cf7"
+   },
+   {
+    "id": "r1-078",
+    "pdf": "S2DA-T SERIES_D2111.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "3dbde089e4952aae"
+   },
+   {
+    "id": "r1-083",
+    "pdf": "1SMA4737 SERIES_P2102.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "1N4148WH_A2501.pdf",
+      1
+     ],
+     [
+      "1N5391G SERIES_G2309.pdf",
+      1
+     ],
+     [
+      "1N4148WTH_A2501.pdf",
+      1
+     ],
+     [
+      "1N4148WSH_A2501.pdf",
+      1
+     ],
+     [
+      "FR151G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100,
+    "candidates_sha": "9e64829715b76549"
+   },
+   {
+    "id": "r1-086",
+    "pdf": "TS40P05G SERIES_G2203.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "TS40P05G SERIES_G2203.pdf",
+      1
+     ],
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100,
+    "candidates_sha": "31eb9ae262b7373e"
+   },
+   {
+    "id": "r1-087",
+    "pdf": "BAS70 SERIES_G2606.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "BAW56 SERIES_I2001.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 92,
+    "candidates_sha": "c578cd7cf4d31d25"
+   },
+   {
+    "id": "r1-088",
+    "pdf": "GBJL45J_D2606.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GBJL45J_D2606.pdf",
+      1
+     ],
+     [
+      "UGS5JH_D2606.pdf",
+      1
+     ],
+     [
+      "UGS20JH_F2510.pdf",
+      1
+     ],
+     [
+      "ES3DB-A SERIES_C2102.pdf",
+      1
+     ],
+     [
+      "PU1BBH SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100,
+    "candidates_sha": "252561fa7b6ff606"
+   },
+   {
+    "id": "r1-089",
+    "pdf": "PLAD15Q_B2606.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "PLAD15Q_B2606.pdf",
+      1
+     ],
+     [
+      "TSCDH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100,
+    "candidates_sha": "0f4fa4eed912e905"
+   },
+   {
+    "id": "r1-090",
+    "pdf": "SD103AWH SERIES_A2502.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SSL22H SERIES_B2309.pdf",
+      1
+     ],
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ],
+     [
+      "B0520LW SERIES_J2112.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 96,
+    "candidates_sha": "cb226d3a61c3fa44"
+   },
+   {
+    "id": "r1-093",
+    "pdf": "GS2ZA_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "S2YH_A2408.pdf",
+      1
+     ],
+     [
+      "S2YAH_A2408.pdf",
+      1
+     ],
+     [
+      "2A01G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 96,
+    "candidates_sha": "f13017d6b8dc8834"
+   },
+   {
+    "id": "r1-094",
+    "pdf": "BZT52B2V4-G SERIES_H2002.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "SSL22 SERIES_M2309.pdf",
+      2
+     ],
+     [
+      "TSUP12122_B2508.pdf",
+      2
+     ],
+     [
+      "SSL22H SERIES_B2309.pdf",
+      2
+     ],
+     [
+      "BZT52B2V4 SERIES_F15.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 92,
+    "candidates_sha": "5f601aea9f56e7e9"
+   },
+   {
+    "id": "r1-096",
+    "pdf": "SBS34 SERIES_F2103.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "SSC3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "SSA3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSSA3U60_H2306.pdf",
+      1
+     ],
+     [
+      "TSSA3U60H_B2306.pdf",
+      1
+     ],
+     [
+      "3A60 SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 98,
+    "candidates_sha": "870bccd334a29909"
+   },
+   {
+    "id": "r1-100",
+    "pdf": "S1Q_B2102.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QH_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QFSH_A2505.pdf",
+      1
+     ],
+     [
+      "HS1QALH_A2505.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97,
+    "candidates_sha": "7a8fbd5fb18eaf6f"
+   },
+   {
+    "id": "r1-003",
+    "pdf": "SMA4S12AH SERIES_C2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      2
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      4
+     ]
+    ],
+    "n_candidates": 41,
+    "candidates_sha": "1e96c1c0caf5044b"
+   },
+   {
+    "id": "r1-006",
+    "pdf": "TS20K40-T SERIES_A2208.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      2
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      2
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "92bde4d5aeee8b5a"
+   },
+   {
+    "id": "r1-007",
+    "pdf": "BAT54WH_A2501.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      2
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "002dd7e1ae307db3"
+   },
+   {
+    "id": "r1-009",
+    "pdf": "BAS16_F2001.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "ae9ebc1dbc775c3e"
+   },
+   {
+    "id": "r1-012",
+    "pdf": "BZT52C2V4S SERIES_K2411.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 53,
+    "candidates_sha": "abe2e57742736e95"
+   },
+   {
+    "id": "r1-014",
+    "pdf": "TESDA5V0U40P1Q0_A2505.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      1
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      3
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "7a7c65daf0ed1091"
+   },
+   {
+    "id": "r1-015",
+    "pdf": "TSCDK08065G1_A2507.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      6
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 40,
+    "candidates_sha": "c5594c44c3fa966c"
+   },
+   {
+    "id": "r1-016",
+    "pdf": "SMA6J SERIES_E2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      2
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "4d195cf60d34f287"
+   },
+   {
+    "id": "r1-019",
+    "pdf": "GBL005 SERIES_K2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "4094fbc9544265a4"
+   },
+   {
+    "id": "r1-022",
+    "pdf": "BAS21H_A2412.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "756efe30da94ecd2"
+   },
+   {
+    "id": "r1-026",
+    "pdf": "SF41G SERIES_G2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "81f13685d3c0607b"
+   },
+   {
+    "id": "r1-029",
+    "pdf": "1.5SMCH SERIES_B2207.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.25,
+    "fail": null,
+    "top5": [
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      2
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 71,
+    "candidates_sha": "e8071c0eb9bf5bef"
+   },
+   {
+    "id": "r1-031",
+    "pdf": "HER101G-K SERIES_B2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "1a89f7c0eb047e4b"
+   },
+   {
+    "id": "r1-035",
+    "pdf": "BAV19WS SERIES_K2212.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "c4295f2e96ad1a1c"
+   },
+   {
+    "id": "r1-036",
+    "pdf": "PU1BB SERIES_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 39,
+    "candidates_sha": "236fbfb451a9d9aa"
+   },
+   {
+    "id": "r1-040",
+    "pdf": "TESDH3V3B03P1Q0_A2305.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      1
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "7f3c97012b0b589a"
+   },
+   {
+    "id": "r1-043",
+    "pdf": "BA157G-K SERIES_B2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "5f4f5616533974bc"
+   },
+   {
+    "id": "r1-048",
+    "pdf": "BAV99WH_A2412.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      4
+     ]
+    ],
+    "n_candidates": 35,
+    "candidates_sha": "dbd642847e819cbf"
+   },
+   {
+    "id": "r1-051",
+    "pdf": "BZD17C SERIES_L2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 45,
+    "candidates_sha": "33a63088d6960537"
+   },
+   {
+    "id": "r1-052",
+    "pdf": "TPMR10D SERIES_D2309.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      5
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 44,
+    "candidates_sha": "cd4a019a3ed8b191"
+   },
+   {
+    "id": "r1-054",
+    "pdf": "TSCDT20065G1_A2404.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 38,
+    "candidates_sha": "103d9641ee42f39a"
+   },
+   {
+    "id": "r1-059",
+    "pdf": "TSS42U SERIES_D1601.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 28,
+    "candidates_sha": "c55a951c4a553232"
+   },
+   {
+    "id": "r1-060",
+    "pdf": "TSAD10H120H_A2601.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      6
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 35,
+    "candidates_sha": "0b029daab238c76a"
+   },
+   {
+    "id": "r1-061",
+    "pdf": "PU6BBH SERIES_B2109.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 38,
+    "candidates_sha": "8a383488493366fe"
+   },
+   {
+    "id": "r1-064",
+    "pdf": "TSCDH40065G1_A2404.pdf",
+    "page_recall@5": 0.5,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 36,
+    "candidates_sha": "34995a8016ca96fe"
+   },
+   {
+    "id": "r1-066",
+    "pdf": "BYG20D SERIES_F2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "38cd9a7cc94faf1b"
+   },
+   {
+    "id": "r1-067",
+    "pdf": "TS20P01G SERIES_O2203.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      2
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "350505f48dd3772f"
+   },
+   {
+    "id": "r1-068",
+    "pdf": "TSUP10M60SH_B2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "c4864bada0e55bb5"
+   },
+   {
+    "id": "r1-074",
+    "pdf": "FR201G-T SERIES_B2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      2
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "4e9b4fc0f2229508"
+   },
+   {
+    "id": "r1-076",
+    "pdf": "TSSW3H120H_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "2dd78e3a8196e179"
+   },
+   {
+    "id": "r1-084",
+    "pdf": "TS4148 SERIES_A2301.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "BAS116_F2001.pdf",
+      1
+     ],
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97,
+    "candidates_sha": "ffd0ac6a738dff3b"
+   },
+   {
+    "id": "r1-085",
+    "pdf": "1SS355_D2212.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40102C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 98,
+    "candidates_sha": "70395115e16c9002"
+   },
+   {
+    "id": "r1-091",
+    "pdf": "S3Q_C2102.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSCDAH30120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDH30120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 100,
+    "candidates_sha": "982d11549dc7d826"
+   },
+   {
+    "id": "r1-092",
+    "pdf": "MMBD3004 SERIES_C2001.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "BAV23CH_A2501.pdf",
+      1
+     ],
+     [
+      "ES3DB-A SERIES_C2102.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 98,
+    "candidates_sha": "83690f0397d60e50"
+   },
+   {
+    "id": "r1-095",
+    "pdf": "FRAF10JG_A2206.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "PUUP10JH_A2412.pdf",
+      1
+     ],
+     [
+      "PUUP10J_B2412.pdf",
+      1
+     ],
+     [
+      "SFAS1008G_E2103.pdf",
+      1
+     ],
+     [
+      "SFAS1008GH_A2103.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97,
+    "candidates_sha": "1de5b13366ec1ef7"
+   },
+   {
+    "id": "r1-097",
+    "pdf": "TSUP15H120H_A2403.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSF20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 73,
+    "candidates_sha": "5f8a93bb5b60ed7c"
+   },
+   {
+    "id": "r1-098",
+    "pdf": "B0520LW SERIES_J2112.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.25,
+    "fail": null,
+    "top5": [
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ],
+     [
+      "B0520LW SERIES_J2112.pdf",
+      1
+     ],
+     [
+      "SS22M SERIES_M2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 97,
+    "candidates_sha": "f8d10d2d1c24c795"
+   },
+   {
+    "id": "r1-099",
+    "pdf": "BAT46GW_B2606.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.16666666666666666,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSSW1H100H_A2510.pdf",
+      1
+     ],
+     [
+      "TSAD10H100CH_A2601.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 91,
+    "candidates_sha": "670f2e9f7488c629"
+   }
+  ],
+  "after": [
+   {
+    "id": "r1-001",
+    "pdf": "TESD5V0V4UA_B2109.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "439efb116c210ad2"
+   },
+   {
+    "id": "r1-002",
+    "pdf": "TSCDK12065G1_A2507.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 40,
+    "candidates_sha": "afb9ef4f3aaa6cce"
+   },
+   {
+    "id": "r1-004",
+    "pdf": "RS1AH SERIES_B2304.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      3
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "3121e5aa3dd7d7d9"
+   },
+   {
+    "id": "r1-005",
+    "pdf": "HER101G SERIES_L2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      3
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "2bbf2a4de6bd7010"
+   },
+   {
+    "id": "r1-008",
+    "pdf": "TSUP3150H_A2505.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 36,
+    "candidates_sha": "38b591023e6bdacf"
+   },
+   {
+    "id": "r1-011",
+    "pdf": "GS1Z_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "cdf5cf4c44742e3e"
+   },
+   {
+    "id": "r1-013",
+    "pdf": "SFF501G SERIES_I2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "24fe74612d361779"
+   },
+   {
+    "id": "r1-018",
+    "pdf": "US1AH SERIES_A2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "89a49acad4cf1571"
+   },
+   {
+    "id": "r1-020",
+    "pdf": "RB500V-40H_A2502.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "539ed819b2c8c97d"
+   },
+   {
+    "id": "r1-021",
+    "pdf": "TSUP10150H_A2505.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "d3173c1391600c88"
+   },
+   {
+    "id": "r1-024",
+    "pdf": "S3JFSH_A2303.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "3ee68a153c5fa18a"
+   },
+   {
+    "id": "r1-025",
+    "pdf": "BZD27C11PWH SERIES_B2203.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      4
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 93,
+    "candidates_sha": "c9bca31c74585ce8"
+   },
+   {
+    "id": "r1-027",
+    "pdf": "TESDD5V0_E1901.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      2
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 28,
+    "candidates_sha": "89f36cfb278d4446"
+   },
+   {
+    "id": "r1-030",
+    "pdf": "RS1DLWH SERIES_A2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      3
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "d84c8797b9b9a07a"
+   },
+   {
+    "id": "r1-033",
+    "pdf": "RB520S-30_D2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "9a7e69adbd0dfcea"
+   },
+   {
+    "id": "r1-034",
+    "pdf": "TSSA3U45_P2307.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "f14c6428eded9d78"
+   },
+   {
+    "id": "r1-038",
+    "pdf": "BZX84JB2V4H SERIES_A2503.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      2
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 59,
+    "candidates_sha": "56591843274642fd"
+   },
+   {
+    "id": "r1-041",
+    "pdf": "TSCDF06065G1_A2404.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "b7a291a12441d1c7"
+   },
+   {
+    "id": "r1-042",
+    "pdf": "P4KE SERIES_N2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 116,
+    "candidates_sha": "756b533024b36414"
+   },
+   {
+    "id": "r1-046",
+    "pdf": "RB706F-40_C2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      3
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      4
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "9b5a45c0ee6c4d7d"
+   },
+   {
+    "id": "r1-047",
+    "pdf": "TST10122C_A2405.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 39,
+    "candidates_sha": "ac4895b4052029d3"
+   },
+   {
+    "id": "r1-049",
+    "pdf": "UG2D_F2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "eba5642aa4e27b8a"
+   },
+   {
+    "id": "r1-050",
+    "pdf": "TSD2GFSH SERIES_B2312.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      4
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      2
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      3
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 39,
+    "candidates_sha": "cd60cf1399469e88"
+   },
+   {
+    "id": "r1-053",
+    "pdf": "TESD5V0L1UC_E2007.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      4
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "dabd9bc4dc3f6c19"
+   },
+   {
+    "id": "r1-055",
+    "pdf": "SMB10JH SERIES_A2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 44,
+    "candidates_sha": "a848bd2b7cf403ff"
+   },
+   {
+    "id": "r1-056",
+    "pdf": "RS5D-T SERIES_C2602.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 50,
+    "candidates_sha": "204fdd08f03a8277"
+   },
+   {
+    "id": "r1-057",
+    "pdf": "HS1QBH_A2408.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "3b94bbb46a44fbf8"
+   },
+   {
+    "id": "r1-058",
+    "pdf": "UR2KB60 SERIES_L2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "0eca93cbec13c744"
+   },
+   {
+    "id": "r1-062",
+    "pdf": "S2DAL SERIES_B2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "f7c41c192c22a7f5"
+   },
+   {
+    "id": "r1-063",
+    "pdf": "MMSZ4678 SERIES_A2311.pdf",
+    "page_recall@5": 0.5,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 59,
+    "candidates_sha": "7ffeb945be68eb1c"
+   },
+   {
+    "id": "r1-069",
+    "pdf": "PU2BM SERIES_B2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 35,
+    "candidates_sha": "69bb19912601c669"
+   },
+   {
+    "id": "r1-071",
+    "pdf": "TSZU52C2V0 SERIES_G2009.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      1
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 53,
+    "candidates_sha": "14adf550057aaef2"
+   },
+   {
+    "id": "r1-073",
+    "pdf": "TSCDK16065G1_A2507.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDK16065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 40,
+    "candidates_sha": "c055df6475be2ff3"
+   },
+   {
+    "id": "r1-075",
+    "pdf": "TBS806 SERIES_A2010.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 47,
+    "candidates_sha": "fc666c1d9ee6e71f"
+   },
+   {
+    "id": "r1-077",
+    "pdf": "UG1004G SERIES_D2601.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      2
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "0d8e38c8b27c4cf7"
+   },
+   {
+    "id": "r1-078",
+    "pdf": "S2DA-T SERIES_D2111.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "3dbde089e4952aae"
+   },
+   {
+    "id": "r1-083",
+    "pdf": "1SMA4737 SERIES_P2102.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSUP3S150H_A2604.pdf",
+      1
+     ],
+     [
+      "TSUP8S150H_A2604.pdf",
+      1
+     ],
+     [
+      "TSUP5S150H_A2604.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP15150H_A2505.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 385,
+    "candidates_sha": "64f46586f21170ab"
+   },
+   {
+    "id": "r1-086",
+    "pdf": "TS40P05G SERIES_G2203.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "ABS20M-T_C2103.pdf",
+      1
+     ],
+     [
+      "TS40P05G SERIES_G2203.pdf",
+      1
+     ],
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 382,
+    "candidates_sha": "68da38a06bd4f978"
+   },
+   {
+    "id": "r1-087",
+    "pdf": "BAS70 SERIES_G2606.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "BAW56 SERIES_I2001.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 333,
+    "candidates_sha": "0d9ed73e0d5c8f08"
+   },
+   {
+    "id": "r1-088",
+    "pdf": "GBJL45J_D2606.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GBJL45J_D2606.pdf",
+      1
+     ],
+     [
+      "PU3JAH_A2409.pdf",
+      1
+     ],
+     [
+      "PU3JA_B2412.pdf",
+      1
+     ],
+     [
+      "UGS5JH_D2606.pdf",
+      1
+     ],
+     [
+      "UGS20JH_F2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 391,
+    "candidates_sha": "ffb0ff5a42ddcf2c"
+   },
+   {
+    "id": "r1-089",
+    "pdf": "PLAD15Q_B2606.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "PLAD15Q_B2606.pdf",
+      1
+     ],
+     [
+      "TSCDH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDK15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDT15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH15120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 392,
+    "candidates_sha": "0022b3783f10f527"
+   },
+   {
+    "id": "r1-090",
+    "pdf": "SD103AWH SERIES_A2502.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SD103AWH SERIES_A2502.pdf",
+      1
+     ],
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SK32B SERIES_P2212.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 391,
+    "candidates_sha": "e8ff51a49bca73c1"
+   },
+   {
+    "id": "r1-093",
+    "pdf": "GS2ZA_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "S2YH_A2408.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 376,
+    "candidates_sha": "03a0208962e94fe9"
+   },
+   {
+    "id": "r1-094",
+    "pdf": "BZT52B2V4-G SERIES_H2002.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "TSF20H45C_C2012.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "SSL22 SERIES_M2309.pdf",
+      2
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      2
+     ],
+     [
+      "TSUP12122_B2508.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 375,
+    "candidates_sha": "413e958216adf006"
+   },
+   {
+    "id": "r1-096",
+    "pdf": "SBS34 SERIES_F2103.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "SSA3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "SSC3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSSA3U60_H2306.pdf",
+      1
+     ],
+     [
+      "TSSA3U60H_B2306.pdf",
+      1
+     ],
+     [
+      "TSFS3M60H_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 377,
+    "candidates_sha": "b74825889000d997"
+   },
+   {
+    "id": "r1-100",
+    "pdf": "S1Q_B2102.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDAH10120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH40120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 389,
+    "candidates_sha": "f4fd91ff8614ceb9"
+   },
+   {
+    "id": "r1-003",
+    "pdf": "SMA4S12AH SERIES_C2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      2
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      4
+     ]
+    ],
+    "n_candidates": 41,
+    "candidates_sha": "1e96c1c0caf5044b"
+   },
+   {
+    "id": "r1-006",
+    "pdf": "TS20K40-T SERIES_A2208.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      2
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      2
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "92bde4d5aeee8b5a"
+   },
+   {
+    "id": "r1-007",
+    "pdf": "BAT54WH_A2501.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      2
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "002dd7e1ae307db3"
+   },
+   {
+    "id": "r1-009",
+    "pdf": "BAS16_F2001.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 31,
+    "candidates_sha": "ae9ebc1dbc775c3e"
+   },
+   {
+    "id": "r1-012",
+    "pdf": "BZT52C2V4S SERIES_K2411.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 66,
+    "candidates_sha": "4bae99ab71b4466f"
+   },
+   {
+    "id": "r1-014",
+    "pdf": "TESDA5V0U40P1Q0_A2505.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      1
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      3
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "7a7c65daf0ed1091"
+   },
+   {
+    "id": "r1-015",
+    "pdf": "TSCDK08065G1_A2507.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      6
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 40,
+    "candidates_sha": "c5594c44c3fa966c"
+   },
+   {
+    "id": "r1-016",
+    "pdf": "SMA6J SERIES_E2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      2
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 32,
+    "candidates_sha": "4d195cf60d34f287"
+   },
+   {
+    "id": "r1-019",
+    "pdf": "GBL005 SERIES_K2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "4094fbc9544265a4"
+   },
+   {
+    "id": "r1-022",
+    "pdf": "BAS21H_A2412.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "756efe30da94ecd2"
+   },
+   {
+    "id": "r1-026",
+    "pdf": "SF41G SERIES_G2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 33,
+    "candidates_sha": "81f13685d3c0607b"
+   },
+   {
+    "id": "r1-029",
+    "pdf": "1.5SMCH SERIES_B2207.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.25,
+    "fail": null,
+    "top5": [
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      2
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 100,
+    "candidates_sha": "da1b91a9eb39ec56"
+   },
+   {
+    "id": "r1-031",
+    "pdf": "HER101G-K SERIES_B2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "1a89f7c0eb047e4b"
+   },
+   {
+    "id": "r1-035",
+    "pdf": "BAV19WS SERIES_K2212.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 37,
+    "candidates_sha": "c4295f2e96ad1a1c"
+   },
+   {
+    "id": "r1-036",
+    "pdf": "PU1BB SERIES_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 39,
+    "candidates_sha": "236fbfb451a9d9aa"
+   },
+   {
+    "id": "r1-040",
+    "pdf": "TESDH3V3B03P1Q0_A2305.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      1
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "7f3c97012b0b589a"
+   },
+   {
+    "id": "r1-043",
+    "pdf": "BA157G-K SERIES_B2104.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 29,
+    "candidates_sha": "5f4f5616533974bc"
+   },
+   {
+    "id": "r1-048",
+    "pdf": "BAV99WH_A2412.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      4
+     ]
+    ],
+    "n_candidates": 35,
+    "candidates_sha": "dbd642847e819cbf"
+   },
+   {
+    "id": "r1-051",
+    "pdf": "BZD17C SERIES_L2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 45,
+    "candidates_sha": "33a63088d6960537"
+   },
+   {
+    "id": "r1-052",
+    "pdf": "TPMR10D SERIES_D2309.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.5,
+    "fail": null,
+    "top5": [
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      5
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      3
+     ]
+    ],
+    "n_candidates": 44,
+    "candidates_sha": "cd4a019a3ed8b191"
+   },
+   {
+    "id": "r1-054",
+    "pdf": "TSCDT20065G1_A2404.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 38,
+    "candidates_sha": "103d9641ee42f39a"
+   },
+   {
+    "id": "r1-059",
+    "pdf": "TSS42U SERIES_D1601.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 28,
+    "candidates_sha": "c55a951c4a553232"
+   },
+   {
+    "id": "r1-060",
+    "pdf": "TSAD10H120H_A2601.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.3333333333333333,
+    "fail": null,
+    "top5": [
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      6
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 35,
+    "candidates_sha": "0b029daab238c76a"
+   },
+   {
+    "id": "r1-061",
+    "pdf": "PU6BBH SERIES_B2109.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 38,
+    "candidates_sha": "8a383488493366fe"
+   },
+   {
+    "id": "r1-064",
+    "pdf": "TSCDH40065G1_A2404.pdf",
+    "page_recall@5": 0.5,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 36,
+    "candidates_sha": "34995a8016ca96fe"
+   },
+   {
+    "id": "r1-066",
+    "pdf": "BYG20D SERIES_F2102.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "38cd9a7cc94faf1b"
+   },
+   {
+    "id": "r1-067",
+    "pdf": "TS20P01G SERIES_O2203.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      2
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 27,
+    "candidates_sha": "350505f48dd3772f"
+   },
+   {
+    "id": "r1-068",
+    "pdf": "TSUP10M60SH_B2103.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "c4864bada0e55bb5"
+   },
+   {
+    "id": "r1-074",
+    "pdf": "FR201G-T SERIES_B2105.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      2
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 30,
+    "candidates_sha": "4e9b4fc0f2229508"
+   },
+   {
+    "id": "r1-076",
+    "pdf": "TSSW3H120H_A2510.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ]
+    ],
+    "n_candidates": 34,
+    "candidates_sha": "2dd78e3a8196e179"
+   },
+   {
+    "id": "r1-084",
+    "pdf": "TS4148 SERIES_A2301.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.25,
+    "fail": null,
+    "top5": [
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "BAS116_F2001.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 396,
+    "candidates_sha": "708e38178888ab34"
+   },
+   {
+    "id": "r1-085",
+    "pdf": "1SS355_D2212.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "TSCDM08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDM10065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 392,
+    "candidates_sha": "52571d014e290e74"
+   },
+   {
+    "id": "r1-091",
+    "pdf": "S3Q_C2102.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "outside_candidates",
+    "top5": [
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDT05120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH30120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 385,
+    "candidates_sha": "ab9ab69e34feb21c"
+   },
+   {
+    "id": "r1-092",
+    "pdf": "MMBD3004 SERIES_C2001.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "TSCDT08065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF10065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF08065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 395,
+    "candidates_sha": "afc27d7561f5a487"
+   },
+   {
+    "id": "r1-095",
+    "pdf": "FRAF10JG_A2206.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 0.2,
+    "fail": null,
+    "top5": [
+     [
+      "PUUP10J_B2412.pdf",
+      1
+     ],
+     [
+      "PUUP10JH_A2412.pdf",
+      1
+     ],
+     [
+      "SFAS1008G_E2103.pdf",
+      1
+     ],
+     [
+      "SFAS1008GH_A2103.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 386,
+    "candidates_sha": "ad08e7c6f12aacb3"
+   },
+   {
+    "id": "r1-097",
+    "pdf": "TSUP15H120H_A2403.pdf",
+    "page_recall@5": 1.0,
+    "page_hit@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_mrr": 1.0,
+    "fail": null,
+    "top5": [
+     [
+      "TSUP15H120H_A2403.pdf",
+      1
+     ],
+     [
+      "TST20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST30122C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 360,
+    "candidates_sha": "d976944b28b250f2"
+   },
+   {
+    "id": "r1-098",
+    "pdf": "B0520LW SERIES_J2112.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.1111111111111111,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "SD103AWH SERIES_A2502.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 371,
+    "candidates_sha": "efc6d10e7f26b649"
+   },
+   {
+    "id": "r1-099",
+    "pdf": "BAT46GW_B2606.pdf",
+    "page_recall@5": 0.0,
+    "page_hit@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_mrr": 0.0,
+    "fail": "below_top_k",
+    "top5": [
+     [
+      "1SS400_E2510.pdf",
+      1
+     ],
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF30102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40102C_A2405.pdf",
+      1
+     ]
+    ],
+    "n_candidates": 382,
+    "candidates_sha": "cb08b336b7502e30"
+   }
+  ]
+ },
+ "pool_rows": [
+  {
+   "id": "r1-001",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-002",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-004",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-005",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-008",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-011",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-013",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-018",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-020",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-021",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-024",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-025",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-027",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-030",
+   "split": "dev",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-033",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-034",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-038",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-041",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-042",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-046",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-047",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-049",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-050",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-053",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-055",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-056",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-057",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-058",
+   "split": "dev",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-062",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-063",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-069",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-071",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-073",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-075",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-077",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-078",
+   "split": "dev",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-083",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": false,
+   "cand_hit@100": false,
+   "cand_hit@200": false,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-086",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-087",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-088",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-089",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": false,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-090",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": false,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-093",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-094",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": false,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-096",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-100",
+   "split": "dev",
+   "group": "G4",
+   "cand_hit@50": false,
+   "cand_hit@100": false,
+   "cand_hit@200": false,
+   "cand_hit@400": false,
+   "cand_hit@800": false
+  },
+  {
+   "id": "r1-003",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-006",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-007",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-009",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-012",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-014",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-015",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-016",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-019",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-022",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-026",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-029",
+   "split": "test",
+   "group": "G1",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-031",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-035",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-036",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-040",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-043",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-048",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-051",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-052",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-054",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-059",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-060",
+   "split": "test",
+   "group": "G2",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-061",
+   "split": "test",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-064",
+   "split": "test",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-066",
+   "split": "test",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-067",
+   "split": "test",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-068",
+   "split": "test",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-074",
+   "split": "test",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-076",
+   "split": "test",
+   "group": "G3",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-084",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-085",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-091",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": false,
+   "cand_hit@100": false,
+   "cand_hit@200": false,
+   "cand_hit@400": false,
+   "cand_hit@800": false
+  },
+  {
+   "id": "r1-092",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-095",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-097",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": false,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-098",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  },
+  {
+   "id": "r1-099",
+   "split": "test",
+   "group": "G4",
+   "cand_hit@50": true,
+   "cand_hit@100": true,
+   "cand_hit@200": true,
+   "cand_hit@400": true,
+   "cand_hit@800": true
+  }
+ ]
+}

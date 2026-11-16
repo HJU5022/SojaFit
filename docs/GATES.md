@@ -17,8 +17,8 @@
 | 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
 |---|---|---|---|
 | G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 그 뒤 리비전(`main7ba86325-1115` · `main76fadcb4-1116` · 지금 `main-a0abece5-1116`)의 로그인 뒤 25단계 점검 기록은 없다(확인 못 함). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
-| G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: clone 시작 → `/health` 200 243.9초, 스모크 28/28. 한계는 G2 절) |
-| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요 |
+| G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: 11-16 GitHub `main` `3ce5abdc` 새 clone → `/health` 200 242.8초, 스모크 28/28, [boot_2026-11-16](../evals/results/d10/boot_2026-11-16/README.md). 한계는 G2 절) |
+| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 충족 (운영 DB 청크 본문 51,967개를 직접 열어 다시 계산한 sha256이 모두 서로 다르고 저장소 해시 목록과 같다(11-16, [db_content_hash_check](../evals/results/d10/db_content_hash_check_2026-11-16.md)), 문서 1,360, 파싱 Docling + pdfplumber. 한계는 G3 절) |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
 | G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 증거 보강 필요 (스크린샷 3장 · 배포본 트레이스 수신 확인, 대시보드에서 평가 점수가 트레이스에 붙은 화면은 아직 없음) |
@@ -33,6 +33,7 @@
 | 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
 | 이전 리비전 `sojafit-api-main76fadcb4-1116`(소스 `76fadcb4`, 2026-11-16 04:07 ~ 04:36 KST)과 `sojafit-api-main7ba86325-1115`(소스 `7ba86325`, 11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 지금 리비전은 README 「배포 리비전」 칸 | 리비전 이름은 `gcloud run revisions list`로 확인했다(11-16 04:37 KST). 두 리비전 모두 로그인 뒤 25단계 점검 기록은 없다(확인 못 함) | [README.md](../README.md) 표 |
 | 운영 시작 실패와 복구(2026-11-14 22:43 ~ 11-15 21:26 KST) | Secret Manager `EXA_API_KEY` 버전 1이 파기(DESTROYED)됐는데 서비스 설정이 그 버전을 고정해, 최소 인스턴스 0대인 운영 리비전 `574de79-rs`의 새 인스턴스가 시작하지 못했다(21:22 KST `/health` · `/login` · `/` 500). 같은 이미지에 `EXA_API_KEY:2`만 바꾼 리비전 `sojafit-api-574de79-exa2`를 21:26 KST에 100%로 돌려 복구했고, 22:29 KST에 위 현재 리비전으로 바꿨다. 누가 · 왜 버전 1을 파기했는지는 확인하지 못했다 | `docs/worklog/jeongun.md` 11-15 항목 「운영 다운 복구」 |
+| 운영 다운 경보(2026-11-16) | 위 다운을 사람이 발견한 뒤 Cloud Monitoring에 `/health` 가동 확인(5분 주기, 2xx만 통과)과 경보 정책(실패 지역이 1개를 넘으면 메일)을 걸었다. 일부러 401을 주는 임시 확인으로 시험해 09:43:30 KST에 경보가 OPEN 되는 것을 API로 확인하고 임시 설정은 지웠다. 메일 도착 · 실제 다운 발령은 확인하지 않았다 | [alerting_2026-11-16.md](../evals/results/d10/alerting_2026-11-16.md) |
 | 리비전 `sojafit-api-574de79-rs`(소스 `main` `574de79`, 2026-11-13 12:07 KST 100% 전환, 11-15 21:26 KST까지 100%) 평가용 계정 25단계 | 배포 서버 · 실제 모델로 평가용 계정 A · B 로그인 200, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작(같은 이미지 다이제스트의 새 리비전), 같은 run 재개 200, 승인, 같은 승인 409, 견적, 계정 B의 접근 404. 통과 25 · 실패 0 · 건너뜀 0. 환경변수 32개(`EXA_WEB_SEARCH_ENABLED=1` 포함). 재개 요청을 이 리비전이 처리한 것은 서버 로그로 확인했다. 이 리비전은 `574de79`의 설정 그대로다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md), [서버 로그 발췌](../evals/results/d10/deploy_574de79/restart_server_log_2026-11-13.txt), [smoke_..._2026-11-13_120624.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_120624.json) |
 | 리비전 `sojafit-api-574de79`(소스 `main` `574de79`) 로그인 없는 점검 | 2026-11-13 10:53 KST: `/health` 200(0.11초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34, `/api/auth/me` 401, `/api/auth/demo-login` 404(`DEMO_MODE=0`) | [unauth_checks_raw.txt](../evals/results/d10/deploy_574de79/unauth_checks_raw.txt) |
 | 리비전 `sojafit-api-fadde2a`(소스 `main` `fadde2a`, 2026-11-13) 인증 없는 점검 | 소스를 `git archive origin/main`으로 올려 `--no-traffic --tag main-fadde2a --revision-suffix fadde2a`로 만든 뒤(빌드 08:12~08:17 KST, 이미지 `sha256:95d6f571…`) 0% 점검 주소에서: `/health` 200(냉 기동 11.1초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), `/app`이 가리키는 주 JS 번들(`/assets/index-BFnytjKy.js`)에 `모두 모름으로 계속` · `원하는 정격도 적어 주세요` 문구가 둘 다 있음(새 화면이 이미지에 들어갔다), 오류 로그(심각도 ERROR 이상, 10분) 없음. 08:17 KST에 100% 전환. 공개 주소: `/health` 200(0.13초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 둘 다 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security: max-age=31536000`. 환경변수는 지정하지 않아 서비스의 기존 설정을 그대로 이었다. 측정 커밋 `ad8612e`와 `fadde2a` 사이에서 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`은 비어 있다. `ae3de0b`와 `fadde2a` 사이에는 `frontend/src` 2개 파일(예시 질문 · 안내 문구)과 문서만 바뀌었다. 이전 100% 리비전 `sojafit-api-ae3de0b`(11-13 08:07 KST 전환)가 되돌릴 대상이다 | `docs/worklog/jeongun.md` 11-13 항목 |
@@ -64,6 +65,7 @@
 |---|---|---|
 | 키 없는 첫 기동 사전 점검(2026-11-13, `main` `574de79`의 `git archive` 사본, `.env` 없음, Apple M2 Docker Desktop) | `docker compose build --no-cache` 89.6초, `up --build -d` 반환 7.8초 · `/health` 200까지 11.0초(빌드 층 캐시 적중), 합계 약 100초. db healthy, thread-setup · corpus-load 정상 종료, 적재 문서 42 · 청크 1,556. 호스트 8000 포트 충돌로 사본에서만 18000으로 바꿨다 | [keyless_boot_574de79.md](../evals/results/d10/keyless_boot_574de79.md) |
 | 배포본의 평가용 계정 로그인(`574de79`, 2026-11-13) | 평가용 계정 A · B 로그인 200(0.96초 · 0.85초). 로컬 기동과 별개로 배포 주소에서의 로그인이다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md) |
+| 현행 측정(2026-11-16, GitHub `main` `3ce5abdc`) | 빈 `docker:dind`(29.9.3)에서 새 clone, `.env` 없음 · 키 없음, `docker compose up --build`. clone 시작 → `/health` 200 **242.8초**, → 스모크 끝 251.4초, 스모크 `--demo --refusal` 28 통과 · 0 실패 · 0 건너뜀. 내려받은 양 585 MB. 호스트 부하가 높은 때(1분 평균 10)였다 | [boot_2026-11-16/README.md](../evals/results/d10/boot_2026-11-16/README.md) |
 | 현행 측정(2026-11-13, `jeongun-2` @ `ad8612e` = `main` `ea5797c`과 같은 트리 `6452cdfc…`) | 빈 `docker:dind`(29.9.3)에서 새 clone, `.env` 없음 · 키 없음, `docker compose up --build`. 냉: clone 시작 → `/health` 200 243.9초, `up` → `/health` 200 235.5초, `up` → 스모크 종료 243.1초, clone 시작 → 스모크 종료 251.6초(clone 8.4초). 온(`down -v` 뒤): `up` → `/health` 200 11.7초, → 스모크 종료 19.0초. 스모크 `--demo --refusal` 28 통과 · 0 실패 · 0 건너뜀(냉 · 온). 내려받은 양 852 MB(냉) | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json), [timeline_warm.json](../evals/results/d10/boot/timeline_warm.json), [smoke_cold.json](../evals/results/d10/boot/smoke_cold.json), [smoke_warm.json](../evals/results/d10/boot/smoke_warm.json) |
 | 시간이 늘어난 이유 | 시간은 이미지 빌드가 정한다(빌드 202.2초: `apt-get install kicad libcairo2` 70.0초, 이미지 내보내기 65.9초, `uv sync` 48.6초, `npm ci` 45.4초, 일부 겹침). `kicad libcairo2` 설치는 커밋 `e928d59`(11-11)가 `Dockerfile`에 넣었고 아래 11-10 측정은 그 전이다. 11-10과의 차이를 단계별로 나누어 재지는 않았다. 이미지 2.51 GB | [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json) `build_steps_seconds`, [Dockerfile](../Dockerfile) |
 | 이전 측정(2026-11-10, 커밋 `5631309`, kicad 설치 전) | 이미지 0개 · 볼륨 0개인 빈 Docker 엔진(`docker:dind` 29.9.3), 번들에서 clone, `.env` 없이 `docker compose up -d` 한 줄 | `scripts/results/smoke/smoke_localhost-18000_2026-11-10_055128.json`(맥), `_055423.json`(WSL) |
@@ -76,7 +78,6 @@
 
 | 항목 | 이유 |
 |---|---|
-| 현재 코드로 새 clone 기동 | 측정 대상 `ad8612e` 뒤에 `Dockerfile` · `docker-compose.yml` · `db/`가 바뀌었다: 회로 버전 SQL `031_circuit_versions.sql`(`2ba3e623`), KiCad 렌더러 분리(`75e602b4`: `renderer` target, `--profile schematic`), 로컬 실제 API 구성(`c3041b39`). 그 코드로 키 없는 새 clone 기동과 스모크를 다시 재지 않았다. 동결 커밋에서 다시 재야 한다(`db/031`은 새 볼륨에서 적용되는지도 확인) |
 | 평가자 환경에서의 기동 | 발표 때 평가자가 하는 실행은 이 측정과 별개다. 이 측정은 Mac 호스트의 docker-in-docker 1회(냉)다 |
 | WSL에서 11-13 측정 | 하지 않았다. WSL 값은 11-10 측정뿐이다 |
 | 11-13 측정의 반복 · 회선 속도 | 냉 1회 · 온 1회, 호스트 부하 5.62 → 8.21, 회선 속도 미측정([측정 문서](../evals/results/d10/startup_restart_isolation_2026-11-13.md) 한계) |
@@ -94,6 +95,7 @@
 | 결과 파일 sha256 | `manifest.jsonl` · `summary.json` · `table_suspects.jsonl` | `evals/results/chunking/v4h-2026-11-08/SHA256.txt` |
 | 청크별 sha256 목록 | 51,967행, 서로 다른 해시 51,967, 문서 1,360. 해시는 `chunks.jsonl`의 `text`(UTF-8, LF) 51,967건 전부 재계산과 일치. 청크 본문 없음 | [chunk_sha256.tsv](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.tsv), 형식·확인·재생성 명령 [chunk_sha256.md](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.md) |
 | 새 Supabase 프로젝트 | 문서 1,360 · 청크 51,967 · 임베딩 51,967(옛 운영 DB에서 복사할 때 센 값, 2026-11-11) | `docs/worklog/jeongun.md` 11-11 항목 |
+| 운영 DB 청크 본문 직접 대조(2026-11-16 09:38 KST) | 운영 DB `document_chunks` 51,967행의 본문을 읽기 전용으로 열어 sha256을 다시 계산: 저장된 `chunk_sha256`과 같은 행 51,967/51,967, 서로 다른 값 51,967. 정렬한 해시 목록의 sha256(`82dff159…`)이 저장소 `chunk_sha256.tsv`의 같은 값과 같다(본문 집합이 해시 목록과 정확히 같다) | [db_content_hash_check_2026-11-16.md](../evals/results/d10/db_content_hash_check_2026-11-16.md) |
 | v1 manifest | 문서 1,360행, 청크 합 52,244, 서로 다른 본문 45,898(외부 스냅샷). v4h와 서로 다른 버전이라 섞어 세지 않는다 | `data/manifest.jsonl` |
 | 파싱 | Docling 2.145.0 + pdfplumber 대조 | [EVAL_REPORT.md](../EVAL_REPORT.md) 1-1절 |
 
@@ -101,7 +103,6 @@
 
 | 항목 | 이유 |
 |---|---|
-| 운영 DB에서 `sha256(본문)`을 다시 센 값 | 청크별 sha256 목록과 `distinct_text`는 청킹 산출물의 값이다. DB의 `chunk_sha256` 열 서로 다른 값은 51,967이지만([조회 기록](../evals/results/d10/index_row_count_2026-11-13.md)), 본문에서 다시 계산해 대조하지는 않았다 |
 | 새 clone에서 청킹 전체 재실행 | `chunks.jsonl`이 저장소에 없어 불가. 해시 목록과의 대조에도 필요하다 |
 
 ### G4 에이전트
@@ -161,8 +162,8 @@
 
 | 항목 | 이유 |
 |---|---|
-| 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 없다. 스크린샷 3장(목록 · 모델 호출 상세 · 비용)에는 점수 열이나 점수 화면이 없다. 점수 연결은 API로 확인한 기록뿐이다(EVAL_REPORT 7장). 남은 일 |
-| 배포본 서비스 분석 트레이스의 Langfuse 수신 | 수신을 확인했다: 11-13 09:38~10:10 배포본 요청이 트레이스로 보인다(스크린샷 `01`, 최근 1일 루트 관측 약 101건). 403 원인은 [langfuse_403_2026-11-13.md](../evals/results/d10/langfuse_403_2026-11-13.md). 확인 시점의 리비전은 `fadde2a`이고 그 뒤의 100% 리비전(`574de79-rs`, 현재는 `main7ba86325-1115`)에서 새로 캡처하지는 않았다 |
+| 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 캡처는 없다(스크린샷 3장에는 점수 열 · 점수 화면이 없다). 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md) |
+| 배포본 서비스 분석 트레이스의 Langfuse 수신 | 수신을 확인했다: 11-13 09:38~10:10 배포본 요청이 트레이스로 보인다(스크린샷 `01`, 최근 1일 루트 관측 약 101건). 403 원인은 [langfuse_403_2026-11-13.md](../evals/results/d10/langfuse_403_2026-11-13.md). 확인 시점의 리비전은 `fadde2a`이고 그 뒤의 100% 리비전(`574de79-rs`, 지금 리비전은 README 표 「배포 리비전」)에서 새로 캡처하지는 않았다 |
 | 현재 Skill 실행 UI | 확인하지 않았다 |
 
 ### G7 제출물

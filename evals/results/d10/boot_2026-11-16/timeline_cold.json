@@ -1,0 +1,118 @@
+{
+ "phase": "cold",
+ "T0_epoch": 1794790587.320426,
+ "events": [
+  {
+   "event": "host_load_before_cold",
+   "iso_kst": "2026-11-16T09:51:26.768+09:00",
+   "epoch": 1794790286.769,
+   "t_sec": null,
+   "load1_5_15": [
+    22.34,
+    14.04,
+    11.85
+   ]
+  },
+  {
+   "event": "host_load_after_wait",
+   "iso_kst": "2026-11-16T09:56:26.949+09:00",
+   "epoch": 1794790586.95,
+   "t_sec": null,
+   "waited_s": 300,
+   "load1_5_15": [
+    9.97,
+    13.15,
+    12.32
+   ]
+  },
+  {
+   "event": "t0_git_clone_start",
+   "iso_kst": "2026-11-16T09:56:27.320+09:00",
+   "epoch": 1794790587.32,
+   "t_sec": 0.0,
+   "rx_bytes_total": 0,
+   "branch": "main"
+  },
+  {
+   "event": "git_clone_end",
+   "iso_kst": "2026-11-16T09:56:40.012+09:00",
+   "epoch": 1794790600.012,
+   "t_sec": 12.692,
+   "commit": "3ce5abdcc83f578a7ac7b29e58e894c13313a1ed",
+   "tree": "72aed5920ddaa88c1eec1cfc73e786c4a7e3a40d",
+   "branch": "main",
+   "origin_url_after": "https://github.com/aihuman-7th/proj3-b.git",
+   "git_dir_kb": 43284,
+   "total_kb": 111720,
+   "has_env_file": false,
+   "rx_bytes": 44832723
+  },
+  {
+   "event": "host_load_at_up",
+   "iso_kst": "2026-11-16T09:56:40.012+09:00",
+   "epoch": 1794790600.013,
+   "t_sec": 12.692,
+   "load1_5_15": [
+    11.74,
+    13.43,
+    12.43
+   ]
+  },
+  {
+   "event": "compose_up_issued",
+   "iso_kst": "2026-11-16T09:56:40.012+09:00",
+   "epoch": 1794790600.013,
+   "t_sec": 12.692,
+   "command": "docker compose up --build",
+   "cwd": "/work/proj3-b",
+   "env_set": "COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)"
+  },
+  {
+   "event": "health_200",
+   "iso_kst": "2026-11-16T10:00:30.143+09:00",
+   "epoch": 1794790830.144,
+   "t_sec": 242.823,
+   "rx_bytes": 584965056
+  },
+  {
+   "event": "demo_login_A_done",
+   "iso_kst": "2026-11-16T10:00:30.237+09:00",
+   "epoch": 1794790830.237,
+   "t_sec": 242.917,
+   "status": "python3: can't open file '/tools/login.py': [Errno 2] No such file or directory\n",
+   "seconds": 0.091
+  },
+  {
+   "event": "smoke_start",
+   "iso_kst": "2026-11-16T10:00:30.237+09:00",
+   "epoch": 1794790830.237,
+   "t_sec": 242.917,
+   "flags": "--base-url http://localhost:8000 --demo --refusal",
+   "python": "alpine python3 + py3-httpx inside dind (host network of dind)"
+  },
+  {
+   "event": "smoke_end",
+   "iso_kst": "2026-11-16T10:00:38.674+09:00",
+   "epoch": 1794790838.675,
+   "t_sec": 251.354,
+   "exit_code": 0,
+   "rx_bytes": 584965056
+  },
+  {
+   "event": "host_load_end",
+   "iso_kst": "2026-11-16T10:00:40.828+09:00",
+   "epoch": 1794790840.828,
+   "t_sec": 253.508,
+   "load1_5_15": [
+    10.88,
+    14.2,
+    13.17
+   ]
+  }
+ ],
+ "rx_total_bytes": 584965056,
+ "commit": "ad8612e61c86be4376af5cca454843bb35cdc44d",
+ "tree": "6452cdfc4188942e62b1be7e2eb73c55094c3b97",
+ "branch": "jeongun-2 (NOT main)",
+ "baseline": "b5f050d"
+}

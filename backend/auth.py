@@ -11,7 +11,7 @@ Google 신원 확인 뒤 사용자가 명시적으로 일반 가입하거나 기
 출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
 DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단).
-테이블 정의는 db/020_service_baseline.sql과 추가 인증 SQL 027·029·030을 따른다. 옛 서비스 증분 SQL은 db/legacy/ 이력이다.
+테이블 정의는 db/020_service_baseline.sql과 추가 인증 SQL 027·029·030, 관리자 작업 이력 034를 따른다. 옛 서비스 증분 SQL은 db/legacy/ 이력이다.
 """
 import getpass
 import argparse
@@ -506,13 +506,23 @@ def logout(request: Request) -> None:
             cur.execute("DELETE FROM auth_sessions WHERE token_hash = %s", (session_token_hash(token),))
 
 
+def _require_admin(conn, actor_id: int) -> None:
+    """요청자가 활성 관리자가 아니면 403. [왜] 요청자 행을 FOR UPDATE로 잠가 권한 확인 중 관리자가 비활성화되는 경합을 막는다."""
+    actor = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (actor_id,)).fetchone()
+    if not actor or actor != ("admin", True):
+        raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
+
+
+def _audit(conn, actor_id: int, target_id: int, email: str, action: str, reason: str | None = None) -> None:
+    """관리자 작업 이력(admin_audit, db/034) 한 줄. INSERT만 한다. 대상은 가린 이메일로만 남긴다(탈퇴 뒤에도 누구였는지 알아볼 정도)."""
+    conn.execute("INSERT INTO admin_audit(actor_id,target_id,target_email_masked,action,fields,reason) VALUES (%s,%s,%s,%s,%s,%s)",
+                 (actor_id, target_id, mask_email(email), action, ["email"] if action == "unmask" else [], reason))
+
+
 def admin_users(actor_id: int) -> list[dict]:
     """전체 계정 목록을 id 순으로 돌려준다(요청자가 활성 관리자가 아니면 403)."""
     with connection() as conn:
-        # [왜] 요청자 행을 FOR UPDATE로 잠가 권한 확인 중 관리자가 비활성화되는 경합을 막는다
-        actor = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (actor_id,)).fetchone()
-        if not actor or actor != ("admin", True):
-            raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
+        _require_admin(conn, actor_id)
         # [주의] password_hash는 SELECT하지 않아 응답에 해시가 나갈 수 없다
         rows = conn.execute("SELECT id, login_id, role, is_active FROM users ORDER BY id").fetchall()
         return [{"id": row[0], "email": row[1], "role": row[2], "is_active": row[3]} for row in rows]
@@ -527,18 +537,61 @@ def admin_set_active(actor_id: int, target_id: int, active: bool) -> None:
     """
     with connection() as conn:
         # [왜] 요청자·대상 행을 FOR UPDATE로 잠가 로그인(authenticate)과 동시에 일어나도 세션이 남지 않게 직렬화한다
-        actor = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (actor_id,)).fetchone()
-        if not actor or actor != ("admin", True):
-            raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
-        target = conn.execute("SELECT role FROM users WHERE id=%s FOR UPDATE", (target_id,)).fetchone()
-        if not target:
-            raise HTTPException(status_code=404, detail="계정을 찾을 수 없습니다.")
-        if target[0] != "user":
-            raise HTTPException(status_code=403, detail="관리자 계정은 변경할 수 없습니다.")
+        email = _lock_user_target(conn, actor_id, target_id)
         conn.execute("UPDATE users SET is_active=%s, updated_at=CURRENT_TIMESTAMP WHERE id=%s", (active, target_id))
         if not active:
             # [왜] 세션을 지워야 재활성화 후에도 예전 세션을 쓸 수 없다(SPEC 8.6절)
             conn.execute("DELETE FROM auth_sessions WHERE user_id=%s", (target_id,))
+        _audit(conn, actor_id, target_id, email, "activate" if active else "deactivate")
+
+
+def _lock_user_target(conn, actor_id: int, target_id: int) -> str:
+    """요청자가 활성 관리자이고 대상이 일반 계정(user)인지 잠가서 확인하고 대상 이메일을 돌려준다.
+
+    Raises:
+        HTTPException: 403 요청자가 관리자 아님 · 대상이 관리자(자기 자신 포함), 404 대상 없음.
+    """
+    _require_admin(conn, actor_id)
+    target = conn.execute("SELECT role, login_id FROM users WHERE id=%s FOR UPDATE", (target_id,)).fetchone()
+    if not target:
+        raise HTTPException(status_code=404, detail="계정을 찾을 수 없습니다.")
+    if target[0] != "user":
+        raise HTTPException(status_code=403, detail="관리자 계정은 변경할 수 없습니다.")
+    return target[1]
+
+
+def admin_check_deletable(actor_id: int, target_id: int) -> None:
+    """탈퇴 처리 전 확인: 요청자는 활성 관리자, 대상은 자기 자신이 아닌 일반 계정. 분석 기록을 지우기 전에 부른다(403 · 404)."""
+    if actor_id == target_id:
+        raise HTTPException(status_code=403, detail="자기 계정은 이 기능으로 지울 수 없습니다.")
+    with connection() as conn:
+        _lock_user_target(conn, actor_id, target_id)
+
+
+def admin_unmask(actor_id: int, target_id: int, reason: str) -> str:
+    """사유를 이력에 먼저 남기고 대상 한 명의 이메일 원문을 돌려준다(관리자 전용).
+
+    [주의] 이력 INSERT와 원문 읽기는 한 트랜잭션이라 기록이 실패하면 원문이 나가지 않는다. 원문은 로그에 적지 않는다.
+    Raises:
+        HTTPException: 403 요청자가 관리자 아님, 404 대상 없음(이력도 남기지 않는다).
+    """
+    with connection() as conn:
+        _require_admin(conn, actor_id)
+        target = conn.execute("SELECT login_id FROM users WHERE id=%s", (target_id,)).fetchone()
+        if not target:
+            raise HTTPException(status_code=404, detail="계정을 찾을 수 없습니다.")
+        _audit(conn, actor_id, target_id, target[0], "unmask", reason)
+        return target[0]
+
+
+def admin_audit_log(actor_id: int, limit: int = 100) -> list[dict]:
+    """관리자 작업 이력을 최근 순으로 돌려준다(요청자가 활성 관리자가 아니면 403). 처리한 관리자 이메일은 가린다."""
+    with connection() as conn:
+        _require_admin(conn, actor_id)
+        rows = conn.execute("SELECT a.id,a.actor_id,u.login_id,a.target_id,a.target_email_masked,a.action,a.fields,a.reason,a.created_at "
+                            "FROM admin_audit a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT %s", (limit,)).fetchall()
+    return [{"id": r[0], "actor_id": r[1], "actor_email": mask_email(r[2] or ""), "target_id": r[3], "target_email": r[4],
+             "action": r[5], "fields": r[6], "reason": r[7], "created_at": r[8]} for r in rows]
 
 
 def delete_provisioned_user(user_id: int) -> bool:
@@ -571,11 +624,12 @@ def delete_provisioned_user(user_id: int) -> bool:
     return True
 
 
-def delete_account(user_id: int) -> dict:
+def delete_account(user_id: int, actor_id: int | None = None) -> dict:
     """탈퇴의 마지막 단계: 일반 계정 행을 지우고 지운 건수를 돌려준다(backend/api/profile.py `DELETE /api/me`가 분석 기록 · 기억을 지운 뒤 부른다).
 
     계정 행을 지우면 세션 · 프로젝트(회로 · 대화 · run · 메시지) · 승인 · 견적 · 승인 사례 · 분석 사용량이 FK cascade로 함께 지워진다.
     그 이메일의 로그인 실패 기록도 지운다. 계정이 이미 없으면 모두 0이다.
+    actor_id(관리자의 탈퇴 처리 `DELETE /api/admin/users/{id}`)를 주면 계정 행을 지우는 같은 트랜잭션에서 관리자 작업 이력을 남긴다.
     Raises:
         HTTPException: 409 관리자 계정(운영자 CLI `--delete-user-id`도 관리자는 지우지 않는다).
     """
@@ -590,6 +644,8 @@ def delete_account(user_id: int) -> dict:
         current = conn.execute("SELECT role FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
         if current and current[0] != "user":
             raise HTTPException(status_code=409, detail="관리자 계정은 이 기능으로 삭제할 수 없습니다.")
+        if actor_id is not None and current:
+            _audit(conn, actor_id, user_id, account[0], "delete")  # 계정 행 삭제와 함께 커밋되거나 함께 취소된다
         counts = {"projects": conn.execute("SELECT count(*) FROM projects WHERE user_id=%s", (user_id,)).fetchone()[0],
                   "quotes": conn.execute("SELECT count(*) FROM quotes WHERE user_id=%s", (user_id,)).fetchone()[0],
                   "account": conn.execute("DELETE FROM users WHERE id=%s", (user_id,)).rowcount}

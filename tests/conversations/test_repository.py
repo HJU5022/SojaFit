@@ -213,6 +213,31 @@ def test_saved_history_pages_are_owned_and_read_only(storage, monkeypatch):
         assert conn.execute('SELECT (SELECT count(*) FROM threads),(SELECT count(*) FROM runs),(SELECT count(*) FROM messages)').fetchone() == counts
 
 
+def test_all_threads_list_and_rename_are_owned_and_fall_back_to_first_question(storage):
+    from backend.conversations.repository import ConversationNotFound
+    repo, (owner, other), project, connect = storage
+    with connect() as conn:
+        second = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,'두 번째','upload') RETURNING id", (owner,)).fetchone()[0]
+        foreign = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,'남의 회로','upload') RETURNING id", (other,)).fetchone()[0]
+    older, newer = repo.create_thread(owner, project), repo.create_thread(owner, second)
+    hidden = repo.create_thread(other, foreign)
+    run, _ = repo.start(owner, older, {'question': '첫 질문 이름'})
+    repo.finish(owner, older, run, 'completed', {'answer': '답'})
+    listing = repo.list_all_threads(owner)
+    assert [t['id'] for t in listing] == [older, newer]  # 나중에 만든 대화보다 최근에 질문한 대화가 먼저, 남의 대화는 없음
+    assert (listing[0]['title'], listing[0]['project_name']) == ('첫 질문 이름', 'test')
+    assert (listing[1]['title'], listing[1]['project_id'], listing[1]['project_name']) == ('새 대화', second, '두 번째')
+    renamed = repo.rename_thread(owner, newer, '고친 이름')
+    assert (renamed['id'], renamed['project_id'], renamed['title']) == (newer, second, '고친 이름')
+    assert repo.thread_detail(owner, newer)['title'] == repo.list_threads(owner, second)[0]['title'] == '고친 이름'
+    for user, thread in ((other, newer), (owner, hidden)):
+        with pytest.raises(ConversationNotFound):
+            repo.rename_thread(user, thread, '가로채기')
+    with connect() as conn:
+        assert conn.execute('SELECT title FROM threads WHERE id=%s', (hidden,)).fetchone()[0] is None
+    assert [(t['id'], t['title']) for t in repo.list_all_threads(other)] == [(hidden, '새 대화')]
+
+
 def test_empty_history_and_foreign_page_do_not_expose_other_messages(storage):
     repo, (owner, _), project, _ = storage
     empty = repo.create_thread(owner, project)

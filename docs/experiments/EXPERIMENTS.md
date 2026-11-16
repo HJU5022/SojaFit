@@ -20,6 +20,7 @@
 | `injection-baseline-plan.md` | 실험 기록 | 인젝션 기준선: T1~T7 짝 측정 계약과 실행 현황 |
 | `injection-baseline-preflight.md` | 실험 기록 | 인젝션 기준선 준비 관문과 무료 검증 |
 | `speed-p95-levers-2026-11-11.md` | 실험 기록 | D8 p95 레버 A/B와 채택·폐기 |
+| `supervisor-guard-injection-recheck.md` | 실험 기록 | Supervisor 답 가드(끝내기) 켬/끔을 코퍼스 · 질문 인젝션과 정상 일상 대화로 짝 재측정(11-16) |
 | `supervisor-model-comparison.md` | 실험 기록 | 수퍼바이저 후보 5종 70문항 1차 비교의 사전 등록 계약 |
 | `supervisor-model-comparison-postregistration.md` | 실험 기록 | 1차 비교의 실제 조건, 결과, 사후등록 |
 | `supervisor-stage2-six-models.md` | 실험 기록 | 6종 70문항 2차 공동 평가 사전 등록(#32) |

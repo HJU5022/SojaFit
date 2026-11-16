@@ -28,6 +28,10 @@ def _failure(stage: str, error: BaseException) -> None:
     """외부 호출 실패를 운영 로그(WARNING)에 남긴다. 단계 · 예외 종류 · 상태 코드만 적는다(키 · 질의 · 주소 · 예외 글은 적지 않는다)."""
     status = error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None
     LOGGER.warning('exa_failure stage=%s error=%s status=%s', stage, type(error).__name__, status)
+    # [왜] Exa 검색 호출 실패(402 · 429 · 시간 초과 등)도 []라 화면에서 '못 찾음'과 같았다(#28). 이 요청에 표시만 남긴다.
+    #      PDF 받기 · 미리 받기 실패는 웹 검색을 못 쓴 것이 아니라 넣지 않는다
+    if stage.startswith('search') and (seen := _unavailable.get()) is not None:
+        seen['web_search_unavailable'] = True
 
 
 PART = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._+/-]{1,39}$')
@@ -132,6 +136,7 @@ def _candidate_score(hit: dict, parts: list[str]) -> int:
 
 # LangGraph copies context to worker threads; they share the same per-invocation lock.
 _budget = ContextVar('datasheet_search_slot', default=None)
+_unavailable = ContextVar('web_search_unavailable', default=None)  # 요청마다 하나의 dict를 하위 스레드가 같이 고친다(_budget과 같은 방식)
 
 
 class SearchBudgetExhausted(RuntimeError):
@@ -168,9 +173,12 @@ def request_scope():
     # while retaining the per-grade single-call guard for concurrent retries.
     token = _budget.set({'grade2': Lock(), 'grade3': Lock()})
     prefetch_token = _prefetched.set({})  # [왜] 미리 받은 PDF는 이 요청 안에서만 쓰고 끝나면 버린다(저장하지 않음)
+    seen = {'web_search_unavailable': False}
+    unavailable_token = _unavailable.set(seen)
     try:
-        yield
+        yield seen  # 끝난 뒤 web_search_unavailable: 이 요청에서 Exa 검색 호출이 한 번이라도 실패했는지(#28)
     finally:
+        _unavailable.reset(unavailable_token)
         _prefetched.reset(prefetch_token)
         _budget.reset(token)
 

@@ -526,7 +526,7 @@ def refuse(state: AgentState) -> dict:
         answer = refusal_for(Reason(reason), state.get("facts") or {})
     elif state.get("retrieval_error"):
         reason = Reason.SEARCH_ERROR.value
-        answer = "검색 도구를 사용할 수 없어 문서 근거를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요."
+        answer = refusal_for(Reason.SEARCH_ERROR, {})  # 멀티 거절과 같은 문구(#29)
     else:
         reason = Reason.NOT_FOUND.value  # [왜] 없는 품번은 사실 확인에서 걸러지므로, 검색 고리의 거절은 '찾지 못함'(추정)이다
         docs, parts = state.get("docs") or [], state.get("parts") or []

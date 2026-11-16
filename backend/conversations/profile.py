@@ -19,12 +19,14 @@ from langgraph.store.base import PutOp
 
 LOGGER = logging.getLogger('backend.conversations.profile')
 
-# 칸 → 고를 수 있는 값(코드 → 화면 이름). 소속은 자유 글이라 None
+# 칸 → 고를 수 있는 값(코드 → 화면 이름). 소속 · 직무는 자유 글이라 None
 CHOICES = {
     'affiliation': None,
-    'job_role': {'design': '설계', 'purchasing': '구매', 'student': '학생', 'other': '기타'},
+    'job_role': None,
     'mounting_preference': {'smd': 'SMD', 'through_hole': '스루홀', 'any': '상관없음'},
 }
+# [왜] 직무는 #24 전까지 이 네 코드 중에서 골랐다. 예전 코드로 보내도 받아 화면 이름으로 저장한다
+OLD_JOB_ROLES = {'design': '설계', 'purchasing': '구매', 'student': '학생', 'other': '기타'}
 
 
 def namespace(user) -> tuple[str, str]:
@@ -38,10 +40,11 @@ def clean(kind: str, value) -> str:
     if kind not in CHOICES or not isinstance(value, str):
         raise ValueError('알 수 없는 칸입니다.')
     if CHOICES[kind] is None:
-        # [왜] 소속 글은 화면 머리와 임베딩에 그대로 들어간다. 줄바꿈 같은 제어 문자(Cc)는 앞뒤 공백을 떼기 전에 막는다
+        # [왜] 소속 · 직무 글은 화면 머리와 임베딩에 그대로 들어간다. 줄바꿈 같은 제어 문자(Cc)는 앞뒤 공백을 떼기 전에 막는다
         if any(unicodedata.category(c) == 'Cc' for c in value) or not 1 <= len(value.strip()) <= 100:
-            raise ValueError('소속은 제어 문자 없이 1~100자로 입력하세요.')
-        return value.strip()
+            raise ValueError('소속 · 직무는 제어 문자 없이 1~100자로 입력하세요.')
+        value = value.strip()
+        return OLD_JOB_ROLES.get(value, value) if kind == 'job_role' else value
     if value not in CHOICES[kind]:
         raise ValueError('고를 수 있는 값이 아닙니다.')
     return value
@@ -52,7 +55,7 @@ def sentence(kind: str, value: str) -> str:
     if kind == 'affiliation':
         return f'이 사용자의 소속은 {value}이다.'
     if kind == 'job_role':
-        return f'이 사용자의 직무는 {CHOICES[kind][value]}이다.'
+        return f'이 사용자의 직무는 {value}이다.'
     if value == 'any':
         return '이 사용자는 실장 방식을 가리지 않는다.'
     return f'이 사용자는 {CHOICES[kind][value]} 실장을 선호한다.'

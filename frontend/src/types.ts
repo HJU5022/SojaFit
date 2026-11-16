@@ -50,8 +50,16 @@ export type Result = {
     capped?: boolean;
   };
   price_parts: string[];
-  interrupt: { missing?: string[]; role_choices?: string[]; question?: string };
+  interrupt: {
+    missing?: string[];
+    role_choices?: string[];
+    question?: string;
+    /** 대상 부품을 물을 때만(SPEC 8.9). 고른 ref를 재개 본문의 target으로 보낸다 */
+    target_choices?: { ref: string; value: string }[];
+  };
   error?: { code: string; message: string } | null;
+  /** 이 실행에서 웹 검색(Exa)이 실패해 등록된 자료로만 답했는지(#28) */
+  web_search_unavailable?: boolean;
 };
 export type Run = { id: string; thread_id: string; message_id: number | null; result: Result };
 export type Project = {
@@ -75,6 +83,15 @@ export type Thread = {
   status: string | null;
   latest_run_id: string | null;
   circuit_version: number;
+};
+/** GET /api/threads 한 줄: 모든 프로젝트의 대화(사이드바 "대화"). title은 고친 이름, 없으면 첫 질문으로 만든 이름. */
+export type ThreadListItem = {
+  id: string;
+  project_id: number;
+  project_name: string;
+  title: string;
+  created_at: string;
+  last_activity_at: string;
 };
 type Message = {
   id: number;
@@ -120,6 +137,24 @@ export type Quote = {
   thread_id?: string;
 };
 export type Approval = { id: number; candidate_part: string; verdict: Verdict; quotes?: Quote[] };
+/** GET /api/approved-cases/{id}: 승인 사례 하나의 기록. 후보·근거는 승인 때 저장한 값이다(다시 판정하지 않음). */
+export type ApprovedCaseDetail = {
+  id: number;
+  candidate_part: string;
+  verdict: Verdict;
+  created_at: string;
+  project_id: number;
+  project_name: string;
+  thread_id: string;
+  thread_title: string;
+  question: string;
+  target_ref: string | null;
+  target_value: string | null;
+  answer: string;
+  candidate: Candidate | null;
+  evidence: Citation[];
+  quotes: Quote[];
+};
 /** GET /api/prices?quantity= 의 부품별 예상 금액. 품번·가격 구간·통화를 못 맞추면 서버가 null을 준다. */
 export type PriceEstimate = {
   quantity: number;
@@ -130,6 +165,20 @@ export type PriceEstimate = {
 };
 export type Fact = { kind: string; value: string; text: string };
 export type User = { user_id: number; role: 'admin' | 'user'; email: string };
+/** GET /api/admin/users 한 줄. email은 서버가 가린 값이다. */
+export type Account = { id: number; email: string; role: 'admin' | 'user'; is_active: boolean };
+/** GET /api/admin/audit 한 줄: 관리자 작업 이력. 이메일은 모두 가린 값이다. */
+export type AuditEntry = {
+  id: number;
+  actor_id: number;
+  actor_email: string;
+  target_id: number;
+  target_email: string;
+  action: 'unmask' | 'deactivate' | 'activate' | 'delete';
+  fields: string[];
+  reason: string | null;
+  created_at: string;
+};
 type SchematicChoice = {
   title: string;
   source_url: string;
