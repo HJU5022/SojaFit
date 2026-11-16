@@ -151,6 +151,15 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     window.addEventListener('thread-renamed', fn);
     return () => window.removeEventListener('thread-renamed', fn);
   }, []);
+  useEffect(() => {
+    // [왜] 사이드바에서 프로젝트 이름을 바꾸면 제목만 고친다. 다시 읽으면 작업대 전체가 불러오는 중으로 바뀐다
+    const fn = (e: Event) => {
+      const p = (e as CustomEvent<Project>).detail;
+      project.setData((d) => (d && d.id === p.id ? { ...d, name: p.name } : d));
+    };
+    window.addEventListener('project-renamed', fn);
+    return () => window.removeEventListener('project-renamed', fn);
+  }, []);
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
       questions.data?.filter(

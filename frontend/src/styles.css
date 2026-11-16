@@ -873,9 +873,27 @@ form {
   color: var(--muted);
   font-size: 13px;
 }
-/* 사이드바 대화 줄(이름 + ⋯ 메뉴)과 프로젝트 폴더. 긴 이름은 한 줄로 자른다. */
-.sidebar-projects > p:not(:first-child) {
+/* 사이드바 나무(#31): "대화"(회로 없는 대화) · "프로젝트 +" 머리글, 줄마다 이름 + ⋯ 메뉴. 긴 이름은 한 줄로 자른다. */
+.sidebar-projects > p:not(:first-child),
+.sidebar-projects > .nav-section:not(:first-child) {
   margin-top: 22px;
+}
+.nav-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 12px;
+  margin-bottom: 4px;
+}
+.nav-section p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.nav-section .icon-button {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 4px;
+  color: var(--muted);
 }
 .thread-row {
   display: flex;
@@ -942,7 +960,8 @@ form {
   color: #9f352f;
 }
 .folder-toggle {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 34px;
   justify-content: flex-start;
   gap: 6px;

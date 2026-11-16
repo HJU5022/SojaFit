@@ -256,7 +256,7 @@ export function ResizeHandle({
     />
   );
 }
-/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화 줄 · 작업대 상단이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. */
+/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화·프로젝트 줄 · 작업대 상단이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. */
 export function RowMenu({
   label,
   items,
