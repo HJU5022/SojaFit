@@ -67,6 +67,14 @@ def row_sentence(doc):
         if ambient and ambient[0] not in conditions:
             conditions = '; '.join(filter(None, (conditions, ambient[0])))
     condition = f" ({conditions})" if conditions else ''
+    if (doc.get('requested_symbol') == 'VRRM'
+            and re.sub(r'[^A-Z]', '', str(doc.get('symbol', '')).upper()) == 'VR'
+            and doc['row'] == 'Diode reverse voltage'):
+        sentence = (f"{part}의 공식 표 항목은 VR(역전압), {doc['row']}{condition}이며 "
+                f"값은 {', '.join(values)}이며, 요청하신 VRRM(반복 피크 역전압)은 "
+                f"이 행으로 확인되지 않으므로 이 VR 값을 VRRM으로 대신 답하거나 "
+                f"대체 판정에 사용하지 않습니다 [{doc['chunk_id']}].")
+        return sentence.replace('입니다. 요청하신', '입니다; 요청하신').replace('않습니다. 이 VR', '않으며, 이 VR')
     return f"{part}의 {doc['row']}{condition} 값은 {', '.join(values)}입니다 [{doc['chunk_id']}]."
 
 

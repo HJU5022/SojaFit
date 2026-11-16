@@ -8,7 +8,7 @@ import time
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from itertools import zip_longest
-from urllib.parse import quote, unquote, urljoin, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlencode, urljoin, urlsplit
 
 import httpx
 
@@ -183,6 +183,42 @@ _MANUFACTURER_ALIASES = {
     "raspberrypi.com": ("raspberry pi", "raspberrypi"),
     "pjrc.com": ("teensy", "pjrc"),
 }
+# Semiconductor manufacturers are kept separate from the board-source list:
+# their application notes and reference designs are official sources, but are
+# not product-board portals.  Hosts are exact so a lookalike domain cannot be
+# promoted to an official source.
+# Register providers only after an English official source has been confirmed.
+# A translated edition does not disqualify a provider with English originals.
+_SEMICONDUCTOR_MANUFACTURERS = {
+    "ti.com": "Texas Instruments",
+    "st.com": "STMicroelectronics",
+    "analog.com": "Analog Devices",
+    "onsemi.com": "onsemi",
+    "infineon.com": "Infineon",
+    "vishay.com": "Vishay",
+}
+_SEMICONDUCTOR_PUBLISHER_HOSTS = {
+    "ti.com": frozenset({"ti.com", "www.ti.com"}),
+    "st.com": frozenset({"st.com", "www.st.com"}),
+    "analog.com": frozenset({"analog.com", "www.analog.com"}),
+    "onsemi.com": frozenset({"onsemi.com", "www.onsemi.com"}),
+    "infineon.com": frozenset({"infineon.com", "www.infineon.com"}),
+    "vishay.com": frozenset({"vishay.com", "www.vishay.com"}),
+}
+_SEMICONDUCTOR_ALIASES = {
+    "ti.com": ("texas instruments", "ti"),
+    "st.com": ("stmicroelectronics", "st"),
+    "analog.com": ("analog devices",),
+    "onsemi.com": ("onsemi", "on semiconductor"),
+    "infineon.com": ("infineon",),
+    "vishay.com": ("vishay",),
+}
+_TSC_HOST = "services.taiwansemi.com"
+_TSC_QUERY_MARKERS = ("tsc", "taiwan semiconductor", "타이완반도체")
+_TSC_BARE_PART = re.compile(
+    r"(?:TS\d{4,}[A-Z0-9]*|TSCR\d{3,}[A-Z0-9]*|TSL\d[A-Z0-9]*|TQL\d{3,}[A-Z0-9]*)"
+    r"(?:\s+series)?", re.I,
+)
 _KOREAN_PRODUCT_ALIASES = {
     "라즈베리파이": "Raspberry Pi",
     "피코": "Pico",
@@ -199,6 +235,100 @@ def canonical_product_query(query: str) -> str:
     return re.sub(r"^pico\b", "Raspberry Pi Pico", query, flags=re.I)
 
 
+def _tsc_model(query: str) -> str | None:
+    for token in re.findall(r"[A-Za-z0-9]+", query):
+        if any(char.isdigit() for char in token) and re.search(r"[A-Za-z]", token):
+            return token
+    return None
+
+
+def is_tsc_query(query: str) -> bool:
+    text = query.casefold()
+    return bool(_TSC_BARE_PART.fullmatch(query.strip()) or (
+        _tsc_model(query) and any(marker in text for marker in _TSC_QUERY_MARKERS)))
+
+
+def canonical_tsc_query(query: str) -> str:
+    """Share the official route/cache with explicit TSC queries, not old generic results."""
+    return 'tsc ' + query.strip() if _TSC_BARE_PART.fullmatch(query.strip()) else query
+
+
+def is_board_query(query: str) -> bool:
+    board = re.sub(r'^(?:(?:original|schematics?|원본|회로도)\s+)+', '', canonical_product_query(query).casefold())
+    return any(board.startswith(alias) for aliases in _MANUFACTURER_ALIASES.values() for alias in aliases) or bool(re.match(r'pico\b', board))
+
+
+def semiconductor_manufacturer(query: str) -> str | None:
+    """Return the named semiconductor manufacturer, if the query names one.
+
+    Short aliases such as ``TI`` and ``ST`` are token matches, not substring
+    matches, so part numbers and unrelated words cannot select a host.
+    """
+    if not isinstance(query, str):
+        return None
+    text = query.casefold()
+    for domain, aliases in _SEMICONDUCTOR_ALIASES.items():
+        for alias in aliases:
+            if re.search(r"(?<![a-z0-9])" + re.escape(alias) + r"(?![a-z0-9])", text):
+                return _SEMICONDUCTOR_MANUFACTURERS[domain]
+    return None
+
+
+def semiconductor_source_manufacturer(url: str) -> str | None:
+    """Return a manufacturer only for an exact registered official host."""
+    safe = _safe_url(url)
+    if safe is None:
+        return None
+    host = (urlsplit(safe).hostname or "").casefold().rstrip(".")
+    for domain, hosts in _SEMICONDUCTOR_PUBLISHER_HOSTS.items():
+        if host in hosts:
+            return _SEMICONDUCTOR_MANUFACTURERS[domain]
+    return None
+
+
+def semiconductor_part_query(query: str) -> str | None:
+    """Recognize a part identifier without inferring its manufacturer."""
+    if not isinstance(query, str):
+        return None
+    generic = {'datasheet', 'data', 'sheet', 'schematic', 'circuit', 'application',
+               'diode', 'english', 'pdf', '데이터시트', '회로도', '다이오드'}
+    words = [word for word in query.split() if word.casefold() not in generic]
+    if len(words) != 1:
+        return None
+    part = words[0]
+    if (not 4 <= len(part) <= 48 or not re.fullmatch(r'[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*', part)
+            or not re.search(r'[A-Za-z]', part) or not re.search(r'\d', part)):
+        return None
+    # Keep the existing short/unsupported TSC-family boundary.
+    if re.fullmatch(r'TS\d{1,3}[A-Za-z]*', part, re.I):
+        return None
+    return part
+
+
+def english_official_document_url(url: str) -> str | None:
+    """Select an English official URL without guessing translated document IDs.
+
+    TI's localized part-number symlinks share the English symlink path. Other
+    translated paths must be found independently; PDF contents are still checked.
+    """
+    if _safe_url(url) is None:
+        return None
+    if not _manufacturer_for(url) and urlsplit(url).hostname != _TSC_HOST:
+        return url
+    parsed = urlsplit(url)
+    path = unquote(parsed.path)
+    if (parsed.hostname in _SEMICONDUCTOR_PUBLISHER_HOSTS['ti.com']
+            and re.fullmatch(r'/(?:cn|jp|de|fr|es|ko)/lit/ds/symlink/[A-Za-z0-9_.-]+\.pdf', path, re.I)):
+        return parsed._replace(path='/' + path.split('/', 2)[2], query='', fragment='').geturl()
+    if re.search(r'/(?:cn|zh(?:[-_]cn|[-_]tw)?|jp|ja|ko|kr|de|fr|es|pt|ru)(?:/|$)', path, re.I):
+        return None
+    for key, values in parse_qs(parsed.query).items():
+        if key.casefold() in {'lang', 'language', 'locale'} and any(
+                not re.fullmatch(r'en(?:[-_](?:us|gb))?|english', value, re.I) for value in values):
+            return None
+    return url
+
+
 _DIODE_EVIDENCE = ("diode", "schottky", "rectifier", "zener", "다이오드")
 _DIODE_CONFLICTS = ("radio", "transceiver", "receiver", "walkie", "ham", "무전기", "라디오")
 
@@ -209,14 +339,54 @@ def component_context(query: str) -> str | None:
     return "diode" if any(term in text for term in _DIODE_EVIDENCE) else None
 
 
+_DIODE_PART_QUERY = re.compile(
+    r'(?:1N\d{3,5}|SS\d{2,4}|BA[TV]\d{2,4}|BZ[TXV]\d{2,4})[A-Z0-9-]{0,12}', re.I,
+)
+_PART_WORD = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")
+
+
+def _part_identifiers(value: str) -> set[str]:
+    ignored = {"diode", "radio", "rf", "application", "note", "schematic", "circuit"}
+    return {
+        token.replace("-", "").casefold() for token in _PART_WORD.findall(str(value))
+        if len(token) >= 4 and any(char.isalpha() for char in token)
+        and any(char.isdigit() for char in token) and token.casefold() not in ignored
+    }
+
+
+def automatic_schematic_context(query: str) -> str:
+    """Choose a search scope without treating a reference as the uploaded original."""
+    if (is_tsc_query(query) or semiconductor_manufacturer(query)
+            or component_context(query) or is_board_query(query)):
+        return 'reference'
+    if _DIODE_PART_QUERY.fullmatch(query.strip()):
+        return 'diode'
+    if semiconductor_part_query(query):
+        return 'reference'
+    return 'original'
+
+
 def component_evidence_matches(query: str, text: str) -> bool:
     """Require component evidence and reject a conflicting product family."""
     if component_context(query) != "diode":
         return True
     tokens = set(re.findall(r"[a-z0-9]+|[가-힣]+", str(text).casefold()))
-    if any(marker in tokens for marker in _DIODE_CONFLICTS):
+    evidence = any(marker in tokens for marker in _DIODE_EVIDENCE)
+    application_note = {"application", "note"}.issubset(tokens)
+    if not evidence and not application_note:
         return False
-    return any(marker in tokens for marker in _DIODE_EVIDENCE)
+    if not any(marker in tokens for marker in _DIODE_CONFLICTS):
+        return True
+    if not (evidence and application_note and tokens & {'rf', 'detector', 'detection', 'rectification'}):
+        return False
+    # RF application notes legitimately mention radio/receiver terms.  Keep
+    # the old unrelated-product guard by requiring the exact diode part and
+    # diode evidence in the same result; a generic radio schematic still fails.
+    requested_parts = _part_identifiers(query)
+    source_parts = _part_identifiers(str(text))
+    if not requested_parts or not requested_parts & source_parts:
+        return False
+    return True
 
 
 _OFFICIAL_GITHUB_OWNERS = {
@@ -337,6 +507,10 @@ def _asset_kind(url: str, label: str = "") -> str | None:
     if is_non_circuit_asset(url, label):
         return None
     path = urlsplit(url).path.casefold()
+    if semiconductor_source_manufacturer(url):
+        if path.endswith('.pdf') or (semiconductor_source_manufacturer(url) == 'Texas Instruments'
+                                    and re.fullmatch(r'/lit/pdf/[a-z0-9_-]+', path)):
+            return 'pdf'
     if path.endswith(".zip"):
         return "pdf" if _manufacturer_for(url) else None
     suffix = next((suffix for suffix in _WEB_ASSET_KIND if path.endswith(suffix)), None)
@@ -355,6 +529,9 @@ def _manufacturer_for(url: str) -> str | None:
     host = (urlsplit(url).hostname or "").casefold()
     for domain, name in _OFFICIAL_MANUFACTURERS.items():
         if host in _OFFICIAL_PUBLISHER_HOSTS[domain]:
+            return name
+    for domain, name in _SEMICONDUCTOR_MANUFACTURERS.items():
+        if host in _SEMICONDUCTOR_PUBLISHER_HOSTS[domain]:
             return name
     return None
 
@@ -480,7 +657,9 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
                               include_domains: tuple[str, ...] | None = None,
                               search_text: str | None = None) -> tuple[WebSchematicRef, ...]:
     """회로도 이름으로 공개 웹 후보를 찾고, 게시 페이지와 파일 URL을 함께 반환한다."""
-    if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= 5:
+    max_limit = (len(_SEMICONDUCTOR_MANUFACTURERS) if semiconductor_part_query(query)
+                 and set(include_domains or ()) == set(_SEMICONDUCTOR_MANUFACTURERS) else 5)
+    if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= max_limit:
         raise ValueError("검색어 또는 결과 수가 유효하지 않습니다.")
     key = _require_external_search_configuration()
     if client is None:
@@ -490,6 +669,16 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
     query_text = canonical_product_query(query.strip())
     component = component_context(query_text)
     query_tokens = {token.casefold() for token in re.findall(r"[A-Za-z0-9]+|[가-힣]+", query_text) if len(token) > 1}
+    # The manufacturer name is a routing constraint, not a model-evidence
+    # requirement.  Exa titles commonly omit ``TI``/``ST`` while retaining the
+    # exact part number.
+    named_manufacturer = semiconductor_manufacturer(query_text)
+    if named_manufacturer:
+        manufacturer_tokens = {
+            token.casefold() for alias in _SEMICONDUCTOR_ALIASES.values()
+            for token in alias for token in re.findall(r"[A-Za-z0-9]+", token)
+        }
+        query_tokens -= manufacturer_tokens
     model_tokens = {token for token in query_tokens if any(char.isdigit() for char in token)}
     try:
         with client.stream(
@@ -508,21 +697,38 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
         raise ExternalCircuitSearchError("외부 회로 검색 요청 또는 응답 처리에 실패했습니다.") from None
     found: list[WebSchematicRef] = []
     seen: dict[str, int] = {}
+    if named_manufacturer or semiconductor_part_query(query_text):
+        rows.sort(key=lambda row: _asset_kind(str(row.get('url', '')), str(row.get('title', ''))) != 'pdf')
+    page_lookups = 0
     for item in rows:
         page_url = _safe_url(item.get("url"))
         if not page_url:
             continue
         title = item.get("title") if isinstance(item.get("title"), str) else ""
         highlights = item.get("highlights") if isinstance(item.get("highlights"), list) else []
+        english_url = english_official_document_url(page_url)
+        if english_url is None:
+            continue
+        if english_url != page_url:
+            page_url = english_url
+            # Translated titles/highlights describe different bytes. Do not
+            # attach that metadata to the English original.
+            title = urlsplit(page_url).path.rsplit('/', 1)[-1]
+            highlights = []
         context = " ".join([title, *(value for value in highlights if isinstance(value, str))])
         context_tokens = {token.casefold() for token in re.findall(
             r"[A-Za-z0-9]+|[가-힣]+", context + " " + urlsplit(page_url).path)}
+        source_manufacturer = semiconductor_source_manufacturer(page_url)
+        official_document = (source_manufacturer is not None
+                             and (source_manufacturer == named_manufacturer
+                                  or named_manufacturer is None and semiconductor_part_query(query_text))
+                             and _asset_kind(page_url, context) == 'pdf')
         required_tokens = model_tokens if component == "diode" else query_tokens
         matched_tokens = {term for term in required_tokens if any(
             word == term or (len(term) >= 3 and word.startswith(term)) for word in context_tokens)}
-        if required_tokens and len(matched_tokens) < min(2, len(required_tokens)):
+        if required_tokens and len(matched_tokens) < min(2, len(required_tokens)) and not official_document:
             continue
-        if component == "diode" and not component_evidence_matches(
+        if component == "diode" and not official_document and not component_evidence_matches(
                 query_text, f"{context} {page_url}"):
             continue
         candidates: list[tuple[str, str]] = []
@@ -536,17 +742,26 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
                 candidates.append((raw, title))
         page_path = urlsplit(page_url).path.casefold()
         if page_path.endswith(("/downloads", "/download", "/resources", ".html", ".htm", ".md")) or not urlsplit(page_url).path.rsplit("/", 1)[-1].count("."):
+            if named_manufacturer and (found or page_lookups >= 2):
+                continue
+            page_lookups += 1
             if not candidates or page_path.endswith(".md"):
                 candidates.extend(_page_assets(page_url, client=client))
             if page_path.endswith(".md"):
                 candidates.extend(_page_assets(page_url[:-3], client=client))
         identity = re.sub(r"[^a-z0-9]", "", " ".join(
             [title, page_url, *(f"{url} {label}" for url, label in candidates)]).casefold())
-        if not all(token in identity for token in model_tokens):
+        if not all(token in identity for token in model_tokens) and not official_document:
             continue
         manufacturer = _manufacturer_for(page_url)
         ranked_candidates = []
         for source_url, label in candidates:
+            english_url = english_official_document_url(source_url)
+            if english_url is None:
+                continue
+            if english_url != source_url:
+                source_url = english_url
+                label = urlsplit(source_url).path.rsplit('/', 1)[-1]
             kind = _asset_kind(source_url, f"{context} {label}")
             if kind is None and _SCHEMATIC_WORDS.search(label) and not urlsplit(source_url).path.rsplit("/", 1)[-1].count("."):
                 kind = "png"
@@ -585,9 +800,26 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
         }
         credible_official = ref.source_type == "manufacturer_official" and matched >= max(1, len(model_words) * .6)
         tier = 0 if credible_official else 1 if exact else 2 if ref.source_type == "manufacturer_official" else 3
-        return (tier, -exact, -matched, *_candidate_priority(ref.source_type, ref.asset_kind, ref.source_url))
+        application = bool(re.search(r'application[-_ ]?notes?|reference[-_ ]?design|schematic|/lit/df/',
+                                     ref.source_url + ' ' + ref.title, re.I))
+        datasheet = bool(re.search(r'data[-_ ]?sheets?|/lit/ds/', ref.source_url + ' ' + ref.title, re.I))
+        preferred = datasheet if re.search(r'\bdatasheet\b|데이터시트', query_text, re.I) else application
+        return ((0 if preferred else 1) if named_manufacturer else 0,
+                tier, -exact, -matched, *_candidate_priority(ref.source_type, ref.asset_kind, ref.source_url))
 
     found.sort(key=priority)
+    if named_manufacturer is None and semiconductor_part_query(query_text):
+        # Keep one document per publisher ahead of extra documents from the
+        # same publisher, so the five-candidate cap does not hide ambiguity.
+        first, extra, publishers = [], [], set()
+        for ref in found:
+            publisher = semiconductor_source_manufacturer(ref.source_url)
+            if publisher and publisher not in publishers:
+                first.append(ref)
+                publishers.add(publisher)
+            else:
+                extra.append(ref)
+        found = first + extra
     distinct = []
     identities = set()
     for ref in found:
@@ -686,6 +918,127 @@ def search_manufacturer_schematics(query: str, limit: int = 5, *, client: httpx.
             found.append(candidate)
             if len(found) >= limit:
                 return tuple(found)
+    return tuple(found)
+
+
+def search_semiconductor_schematics(query: str, limit: int = 5, *, client: httpx.Client | None = None) -> tuple[WebSchematicRef, ...]:
+    """Search registered official hosts; a bare part never selects a guessed host."""
+    if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= 5:
+        raise ValueError("검색어 또는 결과 수가 유효하지 않습니다.")
+    manufacturer = semiconductor_manufacturer(query)
+    if manufacturer is None and semiconductor_part_query(query) is None:
+        return ()
+    domains = tuple(domain for domain, name in _SEMICONDUCTOR_MANUFACTURERS.items()
+                    if manufacturer is None or name == manufacturer)
+    _require_external_search_configuration()
+    if client is None:
+        with httpx.Client(trust_env=False) as owned:
+            return search_semiconductor_schematics(query, limit, client=owned)
+    # Cache keys are case-insensitive, but provider ranking is not. Preserve a
+    # canonical uppercase part identifier in discovery without guessing a maker.
+    search_query = query.strip()
+    if manufacturer is None:
+        part = semiconductor_part_query(query)
+        search_query = search_query.replace(part, part.upper(), 1)
+    search_hint = (f'{search_query} English PDF' if re.search(r'\bdatasheet\b|데이터시트', query, re.I)
+                   else f'{search_query} English application note reference design schematic circuit datasheet')
+    scan_limit = len(_SEMICONDUCTOR_MANUFACTURERS) if manufacturer is None else limit
+    candidates = _search_public_schematics(
+        query, scan_limit, client=client, include_domains=domains,
+        search_text=search_hint,
+    )
+    return tuple(candidate for candidate in candidates
+                 if candidate.source_type == "manufacturer_official"
+                 and candidate.asset_kind == 'pdf'
+                 and semiconductor_source_manufacturer(candidate.source_url) is not None
+                 and (manufacturer is None or candidate.manufacturer == manufacturer))[:scan_limit]
+
+
+def _tsc_pdf_url(raw: object) -> str | None:
+    if not isinstance(raw, str):
+        return None
+    try:
+        parsed = urlsplit(urljoin('https://services.taiwansemi.com/', raw))
+        path = quote(unquote(parsed.path), safe='/._-()')
+        url = parsed._replace(path=path).geturl()
+        return url if (safe_public_https_url(url, allowed_hosts=frozenset({_TSC_HOST}))
+                       and not parsed.query and not parsed.fragment
+                       and re.fullmatch(r'/storage/resources/datasheet/[^/]+\.pdf', path, re.I)) else None
+    except ValueError:
+        return None
+
+
+def search_tsc_schematics(query: str, limit: int = 3, *, client: httpx.Client | None = None) -> tuple[WebSchematicRef, ...]:
+    """Discover TSC application references without community/GitHub requests."""
+    model = _tsc_model(query)
+    if not is_tsc_query(query) or not model or type(limit) is not int or not 1 <= limit <= 3:
+        return ()
+    if client is None:
+        with httpx.Client(trust_env=False) as owned:
+            return search_tsc_schematics(query, limit, client=owned)
+    from backend.projects.schematic_discovery import download_bounded
+    endpoint = 'https://services.taiwansemi.com/api/products_v2?' + urlencode({
+        'language': 'en', 'is_with_datasheet': 'true', 'category': 'power-management-38',
+        'limit': '20', 'keyword': model, 'properties': '{}',
+    })
+    body, mime = download_bounded(endpoint, max_bytes=1024 * 1024,
+                                  allowed_hosts=frozenset({_TSC_HOST}), client=client,
+                                  phase='official_product_search')
+    try:
+        if mime != 'application/json':
+            raise ValueError()
+        payload = json.loads(body)
+        records = payload['data']['records']
+        if not isinstance(records, list):
+            raise ValueError()
+    except (KeyError, ValueError, TypeError):
+        raise ExternalCircuitSearchError() from None
+    model_id = re.sub(r'[^a-z0-9]', '', model.casefold())
+    found, seen = [], set()
+    def append(name, raw, status='', listed=True):
+        url = _tsc_pdf_url(raw)
+        if url is None or url in seen:
+            return
+        seen.add(url)
+        filename = unquote(urlsplit(url).path.rsplit('/',1)[-1])
+        attribution = 'Taiwan Semiconductor · 데이터시트 응용 회로'
+        if not listed:
+            attribution += ' · 제품 목록 미확인'
+        found.append(WebSchematicRef(url, url, filename, 'pdf',
+            ' · '.join(filter(None,(name,status,'데이터시트 응용 회로'))), attribution,
+            source_type='manufacturer_official', evidence_grade=2,
+            manufacturer='Taiwan Semiconductor', model=name))
+    for record in records[:20]:
+        if not isinstance(record, dict) or not isinstance(record.get('name'), str):
+            continue
+        name = record['name']
+        name_id = re.sub(r'[^a-z0-9]', '', name.casefold())
+        if not name_id.startswith(model_id):
+            continue
+        append(name, record.get('datasheet'), record.get('status') if isinstance(record.get('status'),str) else '')
+        if len(found) >= limit:
+            return tuple(found)
+    # An older official datasheet can remain available after its product record
+    # disappears. Search the exact official resource path once, never GitHub.
+    if not records:
+        key = _require_external_search_configuration()
+        try:
+            with client.stream('POST', 'https://api.exa.ai/search', timeout=20, follow_redirects=False,
+                    headers={'x-api-key':key,'Accept-Encoding':'identity'},
+                    json={'query':f'{model} datasheet', 'numResults':3, 'type':'auto',
+                          'includeDomains':['services.taiwansemi.com/storage/resources/datasheet/']}) as response:
+                response.raise_for_status()
+                results = json.loads(read_bounded_body(response,256*1024))['results']
+            if not isinstance(results,list):
+                raise ValueError()
+        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            raise ExternalCircuitSearchError() from None
+        for row in results[:3]:
+            url = _tsc_pdf_url(row.get('url')) if isinstance(row,dict) else None
+            if url and model_id in re.sub(r'[^a-z0-9]','',unquote(urlsplit(url).path.rsplit('/',1)[-1]).casefold()):
+                append(model, url, listed=False)
+            if len(found) >= limit:
+                break
     return tuple(found)
 
 

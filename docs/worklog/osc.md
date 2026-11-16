@@ -1,5 +1,39 @@
 # 오세창 작업 기록
 
+## 2026-11-16 OSC-chunk · 메인 충돌 해결과 PR 검증
+
+- 기준 main `9c87ba36`을 반영하고 API 문서·OpenAPI 본문 모델 목록의 충돌을 해결했다. 관리자·전체 대화·승인 사례 계약과 회로도 POST를 모두 유지했으며 경로57개를 확인했다.
+- 커밋은 공식 PDF 근거 확장(`4385bb1a`)과 회로도 후보 대화(`046e9605`)로 나눴다. v3-07 입력 보정과 A/B 옵션은 제외 상태를 유지했다.
+- 병합본 전체 `uv run --offline --no-sync pytest -q`: **2,661 passed, 195 skipped, 1 warning**, 실패0건(96.42초). 경고는 기존 docling_core ListItem DeprecationWarning이다. 메인 대비 diff 검사와 충돌 표시 검사를 통과했고 PR 변경에 프런트 파일은 없다.
+- 검증 원문·파일 목록·PR 본문은 저장소 밖 `pr-create-20261116/`에 보존했다. 새 모델·검색·운영 부하 호출은 하지 않았으며 저장된 회로도 실측3건과 이번 회귀 검사를 구분한다.
+
+## 2026-11-16 OSC-chunk · 백엔드 PR 준비와 메인 병합 검사
+
+- 포함: 공식 데이터시트 2등급 검색·검증·인용 확장, 다중 회로도 후보 대화. v3-07 입력 보정과 A/B 순차 검색 옵션은 제외했다.
+- 정리: 사용하지 않는 예외 변수를 제거하고 회로도 계약의 중복된 배경 설명과 작업 기록의 미완료형 문구를 줄였다. 사전등록·실측 원문과 실패·한계는 보존했다.
+- 검증: 관련453 passed. 최종 전체 `uv run --offline --no-sync pytest -q`는 **2,602 passed, 187 skipped, 1 warning**, 실패0건(88.66초). 경고는 기존 docling_core ListItem DeprecationWarning이다. 새 모델·검색·운영 부하 호출은 하지 않았다.
+- 메인: `git fetch origin main` 후 `9c87ba36`을 기준으로 별도 인덱스에서 전체 변경을 3-way 적용했다. `backend/api/API.md`와 `tests/api/test_openapi.py`에서 충돌했다. 메인의 추가 경로·본문 모델과 이번 POST 경로·요청 모델을 함께 유지해야 한다. 실제 브랜치 병합과 병합본 테스트는 수행하지 않았다.
+- 보존: 변경39파일, 백업·PR 초안·파일 목록·전체 패치·충돌 원문은 저장소 밖 `pr-prepare-20261116/`에 보존했다. 프런트·동결 평가셋·기존 분리 패치는 수정하지 않았다. 커밋·푸시·PR 생성·배포는 하지 않았다.
+
+## 2026-11-16 OSC-chunk · 다중 회로도 후보 대화
+
+- 목적: 검증된 여러 회로도 후보의 제조사·판본·출처 차이를 설명하고 선택을 묻는다. 복수 회로 요청은 모두 소개한다. 프런트·배포·PR·동결 v3는 변경하지 않는다.
+- 사전등록: `evals/guides/preregister.md`의 같은 제목 항목. 기존 staged/미커밋 변경, 후보 API·출처 코드, 문서와 해시는 저장소 밖 `schematic-dialogue-20261116/`에 보존했다.
+- 가능성 확인: 중앙 LLM 입구로 Haiku 5.5 구조화 응답 1회 성공. 신규 외부 서비스·권한 없이 기존 검색·선택 경계를 재사용한다.
+- 변경: 기존 GET/PNG 응답을 유지하고 인증·Origin·일일 예약을 적용하는 POST 대화 API를 추가했다. 서버가 후보와 차이 항목을 정하고 LLM이 설명과 질문을 작성하며 후보 집합·사실값을 검사한다. 원본 선택은 기존 검색·URL 검증을 이용한다.
+- 실측 조건: 등록한 고정 후보 입력3건을 Haiku 5.5에 각1회 요청했다. 예비 확인 포함 모델 예약 USD0.50/12호출, 기능 요청 전체10분 상한을 적용했으며 같은 입력을 반복 요청하지 않았다. 회귀 시험은 외부 검색·PDF·운영 DB 호출 없이 실행했다.
+- 결과: 관련 회귀233건과 전체 `uv run --offline --no-sync pytest -q`의 **2,602 passed, 187 skipped, 1 warning**, 실패0건(91.93초). 경고는 기존 docling_core ListItem DeprecationWarning이다. 후보 제조사·판본 보존, 출처만 다른 후보, 선택/전체 소개, 잘못된 ID·사실값·숫자·URL, 일부 검색 실패, 생성 장애, Origin·인증·예약 한도를 확인했다.
+- 실모델: 고정 후보를 주입한 실제 POST 경로 3건에서 Haiku 5.5가 각각1회 응답했다. 동명 제조사·동명 판본은 선택 질문, 복수 요청은 두 후보 전체 소개와 question=null이었다. 후보 ID·사실값·설명을 별도 대조했고 추가·누락·교차 대입은 없었다. 응답 시간은6.480/3.159/2.251초, 공급자 보고 모델 비용 합USD0.00107414이며 청구서 확정액은 아니다. 새 실제 회로 검색 성공률·운영 p95·운영 DB 저장을 검증한 결과는 아니다.
+- 보존·한계: 실요청 전후 제품·프롬프트 해시가 같고 프런트43파일·기존23개 staged diff·동결v3 해시는 유지했다. 원시 응답·모델 메타·시험 로그·보고서는 저장소 밖 `schematic-dialogue-20261116/`에 있다. 검색어는 호출 측이1~3개로 제공하며 24후보 초과 시 자연어 생성은 하지 않고 후보 상세를 보존한다. 문장의 모든 의미를 기계적으로 증명하는 검사는 아니다. 루트 SPEC의 경로표·개수 갱신은 조장 소유 규칙에 따라 반영 요청을 별도 기록했다. 프런트 연결·배포·커밋·푸시·PR 생성은 하지 않았다.
+
+## 2026-11-16 OSC-chunk · 2등급 검색·검증·인용 범위 정리
+
+- 범위: 2등급 공식 원문을 TSC·Texas Instruments(TI)·STMicroelectronics·Analog Devices·onsemi·Infineon·Vishay의 허용 호스트에서만 검색한다. Nexperia와 허용 목록 밖 제조사는 2등급으로 채택하지 않으며 1등급 내부 코퍼스와 3등급 참고 링크는 별도 등급으로 유지한다.
+- 동작 기준: 영어·한국어 문서만 허용하고, 제조사·정확 품번·판본·표의 행/셀·값·조건·쪽·SHA-256을 확인한 원문만 인용한다. VRRM과 VR은 동일한 값으로 대체하지 않으며, 인용 번호와 원문 위치가 일치해야 한다.
+- 변경: 제조사별 검색 조건과 공식 PDF 경로, 영어·한국어 본문 판정, 정확 품번·판본·행 인용, W1~W5 선택과 표·그림 번호를 정리했다. 언어 검사에서 항상 거짓인 숫자 토큰 조건과 사용하지 않는 반환값을 제거했다. 정격표 제목이 없는 행을 거른 뒤 실행될 수 없는 기본 제목 분기도 제거했다.
+- 검증: 관련 회귀 `615 passed`, 최종 전체 `uv run --offline --no-sync pytest -q` 결과 **2,567 passed, 187 skipped, 1 warning**, 실패0건(90.61초). 경고는 기존 docling_core ListItem DeprecationWarning이다. `git diff --check`와 인용·판정 분리 검사가 통과했다. 로그와 코드 해시는 별도로 보존했다. 실제 외부 API·유료 모델·운영 DB 연결과 성능 실측은 수행하지 않았다.
+- 한계: 기존 실요청에서 TI 정격 행을 확인했으며, onsemi에는 주문표 인용 위치 누락, ST·Analog Devices에는 PDF 다운로드 실패 기록이 있다. 이번 코드 정리 후 실제 모델 재측정은 수행하지 않았다.
+
 ## 2026-11-14 프로필 지연 로딩 및 Docker 첫 응답 실측
 
 - API의 프로필 입력 검증 시점에 모듈을 읽도록 변경했다. [실측 보고서](../research/docker-cold-start-measurements.md)에 G2 반복 측정, 첫 기능과 회로도 응답, 운영 시험 조건을 정리했다. 같은 조건의 로컬 질문 목록 응답은 5회 중앙값 4.892초에서 4.782초로 줄었다.
@@ -1080,3 +1114,189 @@
 - 변경: `scripts/results/cold_start/`의 자료 10개를 단일 `scripts/results/docker_performance/` 폴더로 옮겼다. 파일명마다 프로필 지연 로딩, KiCad·Python 설치 순서, KiCad 내장 API·분리 렌더러 비교의 대상과 단회·단계·회차·중앙값·결과 유형을 표시했다.
 - 내용: 파일 내용은 수정하지 않았다. `SOJAFIT.md` 트리 한 줄과 `scripts/SCRIPTS.md` 파일 목록을 새 경로·이름에 맞췄다. 이미지 파일은 추가하지 않았다.
 - 실행하지 않은 것: 사용자 지시에 따라 추가 시험·재측정·집계 재검증을 하지 않았다.
+
+## 2026-11-16 제조사 이름 없는 품번의 공식 영어 회로도 검색
+
+- 기준: OSC `8d385697`, 기존 TSC·6제조사·영어 자료 작업과 staged13파일 보존. 기존 버튼1개·입력칸·UI 소스/정적자산을 유지했다. 사전등록은 `evals/guides/preregister.md`의 제조사 없는 품번 항목이며 새 원자료는 `C:\Users\user\AppData\Local\Temp\osc-bare-part-20261116-30ahequz`에 저장했다.
+- 검색: 품번 형태를 인식하되 제조사 접두어 대응표는 만들지 않았다. 6개 등록 공식 호스트를 한 요청에 지정하고 실제 문서의 호스트·영어 본문·정확 품번·회로/PNG·원본 해시를 검사한다. 기존 다이오드 분류·TSC 경로·프로젝트 소유권·원본 연결 검사를 유지했다. 공식 후보가 전혀 없는 품번의 기존 공개/커뮤니티 보완은 남기고, 발견한 공식 후보의 검증 실패를 GitHub 자료로 대체하지 않는다.
+- 모호성: 다른 제조사 자료가 둘 이상 검사·PNG 변환까지 통과하면 첫 제조사나 source URL을 선택하지 않는다. 기존404/SCHEMATIC_NOT_FOUND와 `ambiguous_manufacturer` 이유를 기존 오류 영역에 표시한다. 제조사별 첫 후보를 우선하며 모호성 확인에만 최대6후보를 검사해 여섯 번째 제조사가 빠지지 않게 했다. 정상 응답의 choices 최대5개와 서명/캐시 계약은 유지한다. 다른 제조사 조회 오류를 단일 제조사 확인으로 처리하지 않는다.
+- RED/GREEN: 최초18실패로 bare 자동 경로·공식 검색·정확 품번·모호성/선택 URL/실패 캐시 문제를 재현했다. 제조사 문서 중복이 다른 제조사를 밀어내는 실패1건, 여섯 번째 제조사의 정상 자료 누락2건, 공식 데이터시트 보완1건, 공급자 검색어의 소문자 품번1건을 별도 실패로 확인했다. API/프로젝트 관련6파일 시험 최종529 passed(31.36초). `git diff --check`와 staged diff 검사 통과. 전체 평가셋·LLM 품질 실측은 수행하지 않았다.
+- L7805 원인/수정: 첫 실측404, 공식 자료 보완 추가 후 두 번째 실측도404였다. 원인 재현3회는 별도 프로세스의 실제 Exa 호출이며 최초 응답과 동일하다고 주장하지 않는다. 기본 검색은 AN290만, 소문자 `l7805 datasheet`는 TI LM7805/AN290만 남았고, 대문자 `L7805 datasheet`는 정상 ST L78 원문을 찾았다. 같은 원문을 uppercase/lowercase query로 검사하면 둘 다 통과했다. 모든 공식 후보가 검증 탈락한 bare 요청에만 공식 datasheet 검색 최대1회를 보완하고, 공급자 검색어의 품번만 대문자로 정규화했다. 사용자 입력·캐시 키는 유지한다. 세 번째 실측은200·ST 영어 원문·PNG3장으로 통과했다. 초기 실패2건을 보존했다.
+- 최종 실제 API/화면: 제조사 없는 입력 L7805→ST3장, LT1763→Analog Devices2장, NSVR351SDSA3→onsemi1장, BAT62-02V→Infineon1장, VEML7700→Vishay1장. 모두 검색200·PNG8장200, 브라우저 complete=true·양수 원본 크기, 출처·원본 링크 일치를 확인했다. LT1763은88.73초로180초 상한 안에서 완료했다. LT1763CS8만 쓰는 DC368B 원문을 기본 품번으로 추정하지 않고 실제 LT1763 데이터시트1763fh.pdf를 반환했다.
+- LM2596: 최초 실측은 복수 제조사 정상 자료로404 `ambiguous_manufacturer`, 이미지0·버튼1·제조사 확인 문구였다. 검색어 정규화와6후보 상한 보완 뒤 최종 동일 입력1회에서도 같은404/이유·기존 오류 영역·이미지0을 확인했다. 이는 회로도 검색 실패가 아니라 제조사를 임의 선택하지 않는 기대 동작이다. 별도 제조사 선택 UI나 버튼은 추가하지 않았다.
+- 예산: 최초 API8회·Exa14회(API11+원인 재현3)에서 중단했다. 최종 코드의 LM2596 실측이 남아, 실행 전에 별도 사전등록 변경을 적고 고정 입력1회만 추가했다. 최종 API9회·Exa15회이며 원래14회 상한을 지킨 것으로 집계하지 않는다. 마지막 확인은 별도5분 구간이다. 공급자 차단·결제/조회 한도 오류는 없었고, LLM·임베딩·가격 호출0, DB/한도 설정·운영배포·커밋·푸시0이다. 명시 제조사 추가 대조·TSC/기존5다이오드의 새 외부 실측은 이번 예산에 넣지 않았고 관련 단위/API 회귀와 구분한다.
+- 로컬 반영: 기존8011 API 컨테이너에 백엔드5파일만 복사·재시작했다. DB 컨테이너/데이터·UI149자산·DEMO_MODE=0·DEMO_REPLAY=0·KICAD_RENDERER_URL 빈 값과 로컬 KiCad 제외 구성을 보존했다. 새 이미지 빌드·DB 마이그레이션·공개 배포는 하지 않았다.
+- 문서: `docs/specs/external-complete-schematics.md`, `backend/projects/PROJECTS.md`, `backend/api/API.md`, 관련 테스트 폴더 목록을 갱신했다. 주요 루트 SPEC은 조장 소유로 직접 수정하지 않았으며 모호성 이유와 품번 자동 경로는 해당 작업서에 기록했다. 모호성은 제한된 검색·검증 범위의 판단이며 모든 제조사의 품번 소유권을 확정하지 않는다.
+
+## 2026-11-16 공식 회로도 검색의 영어 원문 선택
+
+- 범위: OSC `8d385697`의 기존 TSC 스테이징과 6개 제조사 확장을 보존하고 영어 원문 선택만 수정했다. 사전등록은 `evals/guides/preregister.md`의 같은 날 영어 문서 선택 항목이다. 영어 공식 자료가 확인된 TI·ST·Analog Devices·onsemi·Infineon·Vishay·TSC는 유지한다. 중국어판을 함께 제공한다는 이유로 제조사를 제외하지 않으며 영어 자료 미확인 제조사를 새로 2등급에 등록하지 않는다. 기존 등록 중 영어 원문이 없는 것으로 확인돼 제거한 회사는 없다.
+- 원인: 실제 LM2596 검색은 TI `/cn/lit/ds/symlink/lm2596.pdf` 중국어판을 반환했다. 해당 46쪽 원문 23쪽에 회로가 있으나 영어 제목 관문에 걸려 선택0쪽이었다. 같은 품번 영어47쪽 원문은 검사·변환에 통과했다. PDF 길이·GitHub 한도·변환 엔진 장애와 구분했다.
+- 수정: `external_circuit_search.py`에서 English 검색어, 공식 URL 언어 경로·쿼리 검사, TI 품번 symlink의 영어 경로 정규화를 추가했다. 번역 제목/highlights를 영어 파일에 붙이지 않는다. `schematic_render.py`의 반도체·TSC 검사는 첫3쪽과 선택 회로 쪽에서 영어 텍스트를 확인한다. 영어 제목만 붙은 비영어 본문과 영어 소개 뒤 비영어 회로를 거절한다. 설명문 없는 영어 CAD는 project/sheet 필드와 실제 부품 참조로 구분하고 기존 배선·품번·해시·자원 상한을 유지한다. 검증 단계·서명 이미지 재조회에서도 명시적 비영어 URL을 거절한다.
+- RED/GREEN: 최초 신규 회귀10건에서 잘못된 중국어판 유지·비영어 후보 통과·본문 언어 미검사를 재현했다. 소개와 회로 언어가 다른 문서1건도 실패로 확인했다. 선택 쪽 언어 관문을 보완하는 중 실제 ST MB1136 CAD4시트가 기능어 부족으로 탈락한 회귀를 발견했고, 별도 실패 시험 후 CAD 문서 구분을 추가해 원래4시트를 복구했다. `uv run --no-sync pytest -q tests/projects/test_official_schematic.py tests/projects/test_schematic_render.py tests/projects/test_external_circuit_search.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py tests/api/test_openapi.py --tb=short -p no:cacheprovider` 최종504 passed(32.30초). 전체 평가셋·모델 품질 재측정은 수행하지 않았다.
+- 저장 원문 회귀: 기존 실제 영어 PDF8개(TI LM2596/TIDM908, ST MB1136/L78, ADI DC368B, onsemi AND9482, Infineon AN1807, Vishay86537)를 새 검사기로 재검사했다. 영어8개 통과, TI 중국어판 거절. 이는 저장된 원문을 사용한 오프라인 검사이며 새 외부 검색8회로 집계하지 않는다.
+- 실제 외부 호출: 별도 진단 프로세스의 Exa 검색1회200, TI 영어 PDF GET2회 모두200. 실제 검색 후보에서 영어 `https://www.ti.com/lit/ds/symlink/lm2596.pdf`를 선택했다. 최초 검사 함수는 source tuple을 반환했으나 진단 출력에서 tuple에 `asdict()`를 적용한 TypeError가 발생했다. 최초 기록을 보존하고 Exa 재요청 없이 같은 후보·기존 영어 원문 해시로 변환을 진행했다. 새로 받은 바이트의 SHA-256 `2eec90879908cf711b84d4f0c5d534c3cd12c576d25254b7019247435af4ab0f` 일치, PNG1장2550×3301 디코딩·영어 본문·실제 회로 내용을 확인했다. 이는 실제 외부 검색·검사·변환 함수 검증이며 로그인 브라우저를 재조작한 결과로 집계하지 않는다.
+- 로컬 반영: 테스트 통과 후 8011 API 컨테이너의 백엔드2파일만 교체·재시작했다. UI 빌드·DB 재생성·키/한도설정·운영 배포는 하지 않았다. 로컬 `/health`200을 확인했다. KiCad 제외 구성과 원격 renderer 빈 URL은 유지한다.
+- 계약·문서: `docs/specs/external-complete-schematics.md`, `backend/projects/PROJECTS.md`, `tests/projects/PROJECTS.md`에 영어 자료 등록·선택 기준을 기록했다. 보수적 언어 휴리스틱이며 모든 혼합 언어를 완전 판별한다고 주장하지 않는다. 기존 보드 본문/PNG/SVG와 RAG 데이터시트 행 검색의 2등급 계약·UI는 변경하지 않았다.
+- 증거: `C:\Users\user\AppData\Local\Temp\osc-official-english-20261116-4qnljicc`에 시작 manifest·index·patch·컨테이너/UI 상태, 중간 실패, 최종 PDF 회귀와 실제 검색/PNG 원자료를 구분해 보관했다. 기존 작업·스테이징을 보존하며 커밋·푸시·PR·배포는 하지 않았다.
+- 최종 보존 대조: 이번9파일 외 tracked 파일 변경0, 기존 git index byte 동일, UI 소스 변경0·실행UI149자산 hash 동일, API ID·환경 hash·DB ID/마운트 동일, 호스트/컨테이너 백엔드 hash 일치, `kicad-cli` 없음. `git diff --check`와 staged diff 검사 통과. 전체 DB 내용의 재집계는 하지 않았으며 DB 변경 명령을 실행하지 않았다.
+
+## 2026-11-16 공식 제조사 6곳 검색 확장과 제한 실측
+
+- 사전등록: `evals/guides/preregister.md`의 공식 제조사 6곳·긴 PDF·RF 회귀 항목을 코드 수정 전에 추가했다. TI TIDA-010197, ST NUCLEO MB1136, Analog Devices DC368B, onsemi AND9482, Infineon AN1807, Vishay SiC PFC와 긴 PDF LM2596/L78을 고정했다. 외부 검색 최대24회·로컬 manifest 최대16회·각180초·실측30분, 공급자 한도/결제 오류 중단 조건이다.
+- 선행 확인: 기존 로컬 API/DB 컨테이너와 로그인 세션, Exa 실제 검색200·후보3건을 확인했다. 기술 진행 조건 PASS. 공식 자료와 이용 조건 확인은 구분하며 신규 운영 배포·코퍼스 편입·LLM/임베딩/가격 호출은 범위 밖이다.
+- 보존: 저장소 밖 `C:\Users\user\AppData\Local\Temp\osc-official-six-20261116-neq__191`에 기존 index13파일의 blob hash·patch, dirty/untracked 원본, 프런트60파일 hash와 로컬 API/DB ID·설정hash를 보관했다. 이번 변경은 unstaged로 유지한다. UI 파일은 수정하지 않는다.
+- 진행: 공식 검색 경로 실패6건과 잘못된 GitHub fallback1건을 새 회귀로 재현했다. 검색/검증·PDF 처리는 파일 소유권을 나눠 수정하며, 완료 후 실제 API·PNG·화면 성공과 외부 오류를 분리해 기록한다.
+
+### 수정과 검증 결과
+
+- 검색: 공식 제조사 6곳의 정확한 호스트·별칭과 공식 PDF 검색을 추가했다. TI/ST 짧은 별칭은 토큰 단위로 인식한다. 명시 제조사 요청은 GitHub로 대체하지 않고, 검색 메타데이터에 품번이 없는 공식 PDF도 실제 본문 검증까지 진행한다. 확장자 없는 TI PDF 경로, PDF 우선 탐색과 제품 페이지 최대2개, 명시한 datasheet 검색 의도·자료 우선순위를 보완했다. 외부 오류는 자료 없음으로 바꾸지 않는다.
+- RF: 기존 radio 충돌 토큰을 일괄 해제하지 않았다. RF 예외에는 application note·다이오드·검출/정류 문맥과 정확한 요청 품번을 함께 요구한다. Ranger SS33 문서에 diode만 추가한 음성 대조, 다른 품번·위조 호스트 거절 회귀를 확인했다.
+- PDF: 원문 최대200쪽과 반환 최대20시트를 분리하고, 실제 PNG 변환 단계에 남은 원문20쪽 제한도 수정했다. 20MiB·worker 시간/메모리·PNG 제한은 유지했다. 공식 문서의 제목/문서 식별자·본문 품번·실부품·배선을 검사하며 Overview·핀배치·순수 표/그래프/사진·지원 안내 페이지 오탐을 줄였다. 실제 원문을 사용한 검사와 최종 API 결과는 별도로 집계한다.
+- 관련 검사: `uv run --no-sync pytest -q tests/projects/test_official_schematic.py tests/projects/test_external_circuit_search.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py --tb=short -p no:cacheprovider` 280passed, `uv run --no-sync pytest -q tests/projects/test_schematic_render.py tests/api/test_openapi.py --tb=short -p no:cacheprovider` 209passed. 두 묶음의 총489건 통과. 프런트 파일을 수정하거나 재빌드하지 않았다.
+
+| 실제 검색어 | 실제 원문 | API·화면 결과 |
+|---|---|---|
+| TI TIDA-010197 | TI TIDM908 | 200, PNG2장 로드·원본 링크 일치 |
+| ST NUCLEO MB1136 C05 | ST MB1136 C05 | 200, PNG4장 로드·원본 링크 일치 |
+| Analog Devices DC368B schematic | ADI DC368B schematic | 200, PNG1장 로드·원본 링크 일치 |
+| onsemi NSVR351SDSA3 diode | onsemi AND9482 | 초기404 후보 누락, 보완 후200·PNG1장 |
+| Infineon BAT62-02V diode | Infineon AN1807 | 초기404 검증 거절, 보완 후200·PNG1장 |
+| Vishay 86537 SiC diode PFC | Vishay 문서86537 | 200, PNG1장 로드·원본 링크 일치 |
+| ST L7805 datasheet | ST L78, 55쪽 | 초기404 거절 기록 보존, 보완 후200·회로 PNG3장 |
+| TQL821CSV50 | TSC TQL821CSV50_A2206 | 200, PNG1장. 기존 공식 경로·표기 유지 |
+| TI LM2596 datasheet / Rev G | 대상 TI LM2596, 47쪽 | 별도 실제 다운로드·검사·PNG1장 변환은 통과. 검색 API는 마지막까지404 검증 거절, 성공 집계 제외 |
+
+- 실측 집계: manifest16회 중200 10회·404 6회, 로드된 PNG16장(재검색 중복 포함). 대표 제조사6곳은 각1건 이상 실제 검색·PNG·화면 로드와 출처/링크 대조를 확인했다. 모든 PDF 페이지의 회로를 빠짐없이 찾았다는 의미는 아니다. 라이선스/이용·재배포 조건 미확인 표시는 유지했다. 초기 정상자료 누락·검증 실패와 최종 미해결 TI47쪽 경로를 원자료에서 지우지 않았다.
+- 상한: 계정 선행1회·초기 발견 단계6회·원인 확인2회·서비스 내 제조사 검색15회로 Exa24회, 로컬 manifest16회에서 추가 호출을 중단했다. TSC2건 계획 중 TQL821CSV50만 실측했고 TS19371CX6는 미실측으로 남겼다. 최종 요청은 실측 시작 약1758초에 시작해 약1761초에 완료됐으나 마지막 관찰·증거 저장은1904초로30분 계획을 넘었다. 추가 네트워크 요청과 증거 저장 시간을 구분한다. Exa 청구 금액은 미측정이며 LLM·임베딩·가격 호출은0이다.
+- 실행 중 수정: 데이터시트 검색어 정리 과정에서 들여쓰기 오류가 발생했고 테스트 실패 뒤 로컬 재시작 명령이 이어져 일시적으로 로컬 API 시작에 실패했다. 문법을 수정한 뒤 280건 통과를 확인하고 재기동했으며, 후속 렌더러/API 계약209건과 실제 요청으로 복구를 확인했다. 운영에는 반영하지 않았다.
+- 보존 결과: 기존 staged13파일의 blob hash·프런트60파일·실행 UI149자산 hash가 동일하다. 기존 API/DB 컨테이너 ID·이미지·마운트·환경hash와 KiCad 제외/renderer URL 빈 값·DEMO_MODE=0/DEMO_REPLAY=0을 유지했다. 관련 없는 dirty/untracked 원본도 유지했다. 이번 확장·사전등록·문서·검증 변경은 unstaged다. 커밋·푸시·PR 생성·운영 배포는 하지 않았다.
+- 남은 범위: TI47쪽 검색 후보가 실제 원문 검증과 다르게 거절되는 경로의 추가 원인 분리와 실제 API 재검증, 미실측 TSC TS19371CX6, 표본 밖 제조사 품번/추가 회로 페이지의 완전성은 확인하지 않았다. 주요 SPEC의 범위 변경은 조장 검토 대상이며 직접 수정하지 않았다.
+- 증거: 위 임시 폴더의 `ui-api-results.json`, `final-summary.json`, `stop-record.json`, 제조사별 `*-result.json`·`*-screen.png`·`*-first.png`, `sources/`, `runtime-before.json`·`runtime-final.json`, `manifest-before.json`과 patch. API 응답·브라우저 PNG MIME/로드 크기·원본 링크를 대조했고 저장한 PNG도 디코딩 검사했다. 서명/인증 키와 전체 환경변수는 기록하지 않았다.
+
+## 2026-11-16 TSC 공식 데이터시트 응용 회로 참고 검색
+
+- 사용자 승인 범위: GitHub에 의존하지 않는 TSC 공식 데이터시트 응용 회로 수신·검증·PNG 표시, 앞서 안내한 예시10개 로컬 API·화면 검증. 기존 인터페이스·사용자 작업·데이터·환경값 보존. 커밋·푸시·운영 배포 없음.
+- 검색은 명시적인 `TSC <품번>`/`Taiwan Semiconductor <품번>`에서 공식 `products_v2` API의 현재 품번·자료 URL을 사용한다. 현재 제품 레코드가 없을 때만 TSC 공식 datasheet 경로로 한정한 Exa 검색1회를 보완한다. 이 경로는 후보 없음·검증 실패에도 GitHub 검색을 호출하지 않는다. 모델별 URL/해시 목록은 코드에 추가하지 않았다.
+- TSC 공식 HTTPS 호스트·datasheet 경로와 PDF 본문의 공식 브랜드·정확한 실제 제품명을 대조한다. 응용 회로 제목 아래 벡터 또는 밝은 배경의 얇은 직교선·분기가 확인되는 래스터 회로만 선택한다. TS2596 원문의 APPLICATIN 오기와 TQL821CSV50의 alpha/stencil 회로 이미지를 실제 원문으로 확인했다. 일반 PDF·상용 보드·업로드 연결 일치·서명·SHA-256·SSRF·크기·20쪽·worker 제한은 유지한다.
+- 변경 파일: backend/projects/external_circuit_search.py, external_schematic.py, schematic_render.py 및 기존 관련 테스트2개. docs/specs/external-complete-schematics.md와 backend/projects/PROJECTS.md에 제한된 TSC 예외를 반영했다. 주요 SPEC 변경은 조장 검토 사항으로 남겼다. 프런트 소스 변경 없음.
+- TDD: 품번/연결/제목/호스트 경계 미구현5건 실패 후 통과, 공식 목록에 없는 자료 보완·잘못된 port/확장자3건 실패 후 통과, 단일 블록과 연결된 래스터 회로 구분 실패 후 통과. 최종 uv run --no-sync pytest -q tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/projects/test_schematic_render.py tests/projects/test_external_circuit_search.py tests/api/test_external_circuits.py --tb=short -p no:cacheprovider 결과383passed(26.85초).
+- Docker 이미지 osc-schematic-local-api:tsc-application-20261116 빌드 성공. API만 기존8011포트에 교체하고 이전 API컨테이너는 정지된 롤백 대상으로 보존했다. 기존 DB컨테이너 ID와 모든 API환경값 해시는 동일하고 런타임의 변경된3개 소스 hash는 작업 트리와 일치했다.
+- 실제 화면에서 기존 프로젝트13의 제품·보드 참고 모드에 TSC 품번을 입력하고 후보를 명시적으로 선택했다. 검색10개 모두 manifestHTTP200, PNG17장 모두 HTTP200/image/png, complete=true·양수원본크기 확인. 10개별 화면 증거와 응답 요약은 아래 임시 폴더에 보관했다. 과거 응답을 새 검색 결과로 주입하지 않았다.
+
+| 검색어(TSC 접두어) | 표시된 실제 모델 | 응용 회로 시트 | 결과 |
+|---|---|---:|---|
+| TS19503CB10H | TS19503CB10H | 1 | API·화면 정상 |
+| TS19371CX6 | TS19371CX6 | 1 | 공식 목록0건 후 공식 PDF 보완, API·화면 정상 |
+| TSCR420CX6 | TSCR420CX6H | 3 | 현재 공식 H모델을 그대로 표시, 옛 품번 동일성 주장 없음 |
+| TSCR400CX6 | TSCR400CX6H | 2 | 현재 공식 H모델을 그대로 표시, 옛 품번 동일성 주장 없음 |
+| TS19605CA20H | TS19605CA20H | 1 | API·화면 정상 |
+| TS34063CS | TS34063CS | 4 | API·화면 정상 |
+| TS2596 | TS2596CM5 | 2 | 공식 제품군 후보 중 선택, API·화면 정상 |
+| TS2596S | TS2596SCS | 1 | 공식 제품군 후보 중 선택, API·화면 정상 |
+| TSL9A12V | TSL9A12V18CX | 1 | 공식 제품군 후보 중 선택, API·화면 정상 |
+| TQL821CSV50 | TQL821CSV50 | 1 | API·화면 정상 |
+
+- 실제 음성 대조: TSC SS33 radio와 TSC TS999999999는 각각404 SCHEMATIC_NOT_FOUND, 무전기나 다른 자료로 대체하지 않았다. 위조 호스트·비표준 포트·비PDF·다른 품번·블록도·배선 없는 페이지·원본 hash 변조·일반 PDF 경계는 단위/통합 회귀로 확인했다. 이 검사는 회로의 전기적 설계 정확성이나 재배포 권한을 보증하지 않으며 화면의 라이선스 미확인 표시는 유지한다.
+- 자료 범위: 제품·보드 참고 회로이며 업로드 넷리스트의 동일 원본이나 분석 가능한 새 회로 프로젝트로 등록한 것이 아니다. 신규 임베딩·LLM·Mouser 호출은 없었다.
+- 검증 증거: C:\Users\user\AppData\Local\Temp\osc-tsc-application-707f5ba79ac94b8390a155b39addc11a (ui-api-proof.json, ui-01.jpg~ui-12.jpg, final-local-tsc.jpg, runtime-before/after.json).
+
+## 2026-11-16 TSC 접두어 없는 품번 검색 경로 보완
+
+- 원인: TS19371CX6 등 품번만 입력하면 TSC 전용 검색으로 인식하지 못해 일반 웹·GitHub 검색으로 내려갔다. 앞선 실제10건 검증은 TSC 접두어를 붙여 실행하여 이 입력을 놓쳤다.
+- 수정: 특정10품번/원본URL 목록을 추가하지 않고 TS(4자리 이상 숫자), TSCR, TSL, TQL 계열의 제한된 단일 품번 패턴을 인식한다. 서비스에서 bare query를 tsc <품번>으로 정규화해 공식 경로와 캐시를 공유하고 이전 bare query의 GitHub 제한·후보/실패 캐시와 분리한다. 일반 SS33/1N4148/BAT54/TS100/보드 검색은 기존 경로를 유지한다. 공식 본문 품번·호스트·응용 회로 검증 조건과 기존 인터페이스/API 계약은 바꾸지 않았다.
+- 실제 경로 확인용 로그는 phase=tsc_official와 candidate_count만 기록하며 품번·검색어·URL·토큰을 남기지 않는다. 공식 검색 결과가 없거나 렌더링이 실패해도 GitHub fallback을 호출하지 않는 회귀를 유지했다.
+- RED/GREEN: 기존 품번 단독 경로 실패8건, 기존 GitHub cache 영향2건, 진단 로그 누락1건을 수정 전에 확인한 뒤 관련20개 회귀 통과. 최종 uv run --no-sync pytest -q tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/projects/test_schematic_render.py tests/projects/test_external_circuit_search.py tests/api/test_external_circuits.py --tb=short -p no:cacheprovider 결과403passed(26.35초).
+- 로컬 이미지 osc-schematic-local-api:tsc-bare-part-20261116 빌드 성공. 8011 API만 교체했고 기존 API 컨테이너는 정지 상태의 롤백 대상으로 보존했다. DB컨테이너ID·API환경값 해시는 동일하며 런타임 소스2개와 작업 트리의 hash가 일치한다.
+- 실제UI검증: 기존 프로젝트13의 제품·보드 참고 모드에서 아래10품번을 TSC 접두어 없이 입력하고 후보를 명시 선택했다. 브라우저Network의 실제 q 값도 모두 입력 품번과 동일하다. 검색10건 HTTP200, PNG17장 HTTP200/image/png/complete/양수원본크기. 각 manifest의 request_id를 서버 로그와 대조해 공식 경로10건, GitHub 경로 이벤트0건을 확인했다. 과거 응답을 새 검색 결과로 주입하지 않았다.
+
+| 접두어 없는 입력 | 실제 표시 모델 | 시트 | 결과 |
+|---|---|---:|---|
+| TS19503CB10H | TS19503CB10H | 1 | API·화면 정상 |
+| TS19371CX6 | TS19371CX6 | 1 | API·화면 정상 |
+| TSCR420CX6 | TSCR420CX6H | 3 | 현재 공식 H 모델 표기 유지 |
+| TSCR400CX6 | TSCR400CX6H | 2 | 현재 공식 H 모델 표기 유지 |
+| TS19605CA20H | TS19605CA20H | 1 | API·화면 정상 |
+| TS34063CS | TS34063CS | 4 | API·화면 정상 |
+| TS2596 | TS2596CM5 | 2 | 공식 제품군 후보 선택 |
+| TS2596S | TS2596SCS | 1 | 공식 제품군 후보 선택 |
+| TSL9A12V | TSL9A12V18CX | 1 | 공식 제품군 후보 선택 |
+| TQL821CSV50 | TQL821CSV50 | 1 | API·화면 정상 |
+
+- 검증 증거: C:\Users\user\AppData\Local\Temp\osc-tsc-bare-0d20e0f17b4a4b4e846299c67e0caf8a (ui-api-proof.json, route-proof.json, ui-01.jpg~ui-10.jpg, runtime-before/after.json).
+- 기존 dirty 문서·코드·평가 사전등록·미추적 파일은 보존했으며 이번 변경은 위 검색분기·캐시정규화·관련테스트·기존 설명문서와 이 append기록에 한정한다. 프런트 수정·신규 임베딩·LLM/가격 호출·커밋·푸시·운영 배포 없음. 전체 TSC 제품군을 자동 판별한다고 주장하지 않으며, 이번 품번 계열에만 적용한다.
+
+## 2026-11-16 TSC 10품번 동일 조건 재검증
+
+- 현재8011 reference-ui-20261116의 제품·보드 참고 모드에서 앞선10품번을 TSC접두어 없이 실제 검색했다. 사용자 기존 탭의 진행중SS33조회는 건드리지 않고 별도탭을 사용했다. 캐시정책을 유지했으며 외부 공급자 재검색·PDF재다운로드는 강제하지 않았다.
+- manifest10건 HTTP200, PNG17건 HTTP200. 17장이 모두 complete=true·양수원본크기로 표시됐고, 출처·원본링크가 각API의 source_url과 일치했다. 이전검증과10개모두 모델/원본URL/출처종류/시트수가 동일하다. H변형과제품군실제모델 표기는 그대로 유지했다.
+- 코드·DB·환경값변경, 서버재시작, 모델/임베딩/가격호출, 커밋·푸시·배포 없음. 실측 전후 저장소파일hash변경0을 확인한 뒤 이 작업기록만 추가했다. 증거 C:\Users\user\AppData\Local\Temp\osc-tsc-ten-recheck-hflkb_yx (verification.md, final-proof.json, ui-api-proof.json, image-network-proof.json, 품번별화면).
+
+## 2026-11-16 첫 검색 요청의 공식 PDF 중복 다운로드·검사 제거
+
+- 기준: OSC / HEAD `8d385697dc777b1e2375d99a3ebb9ed4a57d43b4`. 기존 TSC·6개 제조사 검색 작업과 index는 유지했다. 대상 파일의 작업 전 원문과 raw index를 저장소 밖에 보존했다. 기존 구현의 실제 API·화면 비교군은 재실행하지 않았다.
+- 변경: `ExternalSchematicService.find`의 검색 생산 구간을 요청별 `official_pdf_request`로 감쌌다. 6개 반도체 제조사 PDF의 기존 영어·정확 품번·제조사·회로 검사에 통과한 원문과 선택 쪽수만 변환에 전달한다. URL·모델·제조사·SHA-256·시트 수가 일치해야 재사용하며 변환 직전 바이트 해시도 확인한다. PDF를 PNG로 그리는 읽기는 유지한다.
+- 경계: `ContextVar`에 한 후보 최대20MiB만 임시 보관하고 변환 시 소비하며 요청 종료·예외 때 해제한다. 원문은 DTO·서명 토큰·검색/검사 캐시에 추가하지 않는다. 임시 자료가 없는 독립 렌더와 식별 불일치는 기존 다운로드·해시·내용 검사로 처리한다. TSC·public_web·PNG/SVG·KiCad, 후보 수·순서·보완 검색·제조사 모호성·기존 외부 오류 재시도 정책은 변경하지 않았다. 후보 병렬화·검사 조기 종료·검색어 변경·요청 간 PDF 캐시도 추가하지 않았다.
+- 단위 검증: 가짜 PDF/HTTP로 동일 검사→변환 중복을 먼저 확인하고 다운로드1회·검사1회로 수정했다. 요청 간·동시 요청 격리, 모델/해시/시트 수 불일치, 변환 예외 정리, 변조 바이트 거절과 토큰/로그 원문 미포함을 확인했다. `uv run --no-sync pytest -q tests/projects/test_official_schematic.py tests/projects/test_schematic_render.py tests/projects/test_external_circuit_search.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py tests/api/test_openapi.py --tb=short -p no:cacheprovider` =537passed(34.85초). helper 배치만 정리한 뒤 신규 경계8건 재확인 =8passed(0.64초).
+- 로컬 실행: 기존 `osc-schematic-local-api-1`에 변경한 백엔드2파일만 복사했다. 로컬 파일과 컨테이너 파일의 SHA-256이 일치한다(`schematic_render.py` f0c00c8327a822f713bd13edf984a0c1d6fb3e377676abc58637803429e2be0f, `external_schematic.py` 7412c243fd107dbe730a54a8c906f9d2ee1d527a035de977b591938bb8c0ffba). 고정 입력7건마다 같은 API 컨테이너만 재시작하고 health200 뒤 기존 화면의 찾기 버튼을 한 번 눌렀다. 검색·검사·이미지 메모리 캐시는 매 측정 전에 비웠고 브라우저 HTTP 캐시도 끈 뒤 종료 시 복구했다. 서버 기동 시간은 측정에 포함하지 않았다. Cloud Run 인스턴스 최초 기동 시험은 아니다.
+
+| 입력 | 이전 저장 API 응답(초) | 이번 첫 API 응답(초) | 실제 API·화면 결과 |
+|---|---:|---:|---|
+| LM2596 | 30.958510 | 21.249576 | HTTP404 `ambiguous_manufacturer`, 제조사 지정 안내·이미지0 유지 |
+| L7805 | 27.086196 | 29.446198 | HTTP200, STMicroelectronics 공식 PDF·PNG3장 |
+| LT1763 | 88.730241 | 87.868889 | HTTP200, Analog Devices 공식 PDF·PNG2장 |
+| NSVR351SDSA3 | 13.885129 | 19.810348 | HTTP200, onsemi 공식 PDF·PNG1장 |
+| BAT62-02V | 9.960108 | 11.015185 | HTTP200, Infineon 공식 RF 응용 회로·PNG1장 |
+| VEML7700 | 29.036788 | 27.288175 | HTTP200, Vishay 공식 PDF·PNG1장 |
+| TI LM2596 datasheet | 비교 가능한 API 기록 없음 | 4.599869 | HTTP200, Texas Instruments 공식 PDF·PNG1장 |
+
+- 결과 보존: 정상6건의 선택 원문은 모두 다운로드1회·내용검사1회·재사용1회다. 앞선5개 bare 성공 결과는 원본URL·제조사·SHA-256·시트 수가 이전 기록과 같고, TI 지정 결과도 앞서 확인한 원문 SHA-256과 같다. PNG9건 모두 실제 HTTP200이며 저장한 PNG9장을 디코딩했다. 브라우저9장 모두 complete·양수 원본 크기, 출처·공식 제조사 표기·원본 링크 일치, 찾기 버튼1개/select0을 확인했다. 제조사별 반환 페이지를 직접 열어 영어 본문과 해당 응용 회로를 확인했다.
+- 시간 해석: 이전 값을 새로 측정하지 않았으며 공급자·네트워크 조건을 통제한 동시 비교도 아니다. 이전6기록 대비3건은 단축되고3건은 증가했다. 검사→변환 사이의 중복 작업 제거는 횟수와 로컬 단위 검증으로 확인했으나 전체 첫 조회의 일관된 속도 개선율이나 첫 화면 페인트 단축으로 보고하지 않는다. TI 지정 조회는 이전 API 시간과 비교하지 않는다.
+- 잔여 동작: L7805의 탈락 URL1개는 다운로드2회·검사2회·재사용0이었다. 기존 보완 검색에서 같은 URL의 후보가 다시 등장하거나 외부 오류를 재시도하는 경로는 합치지 않았다. 현재 단계 로그만으로 두 원인을 구분하지 못하며, 이번 수용 기준인 통과 원문의 검사→변환 재사용 성공과 별도로 기록한다. 실패 후보 정책 변경을 다른 속도 개선으로 추가하지 않았다.
+- 호출/중단: 17:39:55 KST에 시작한 고정 검색7건을 각1회 실행했고 마지막 PDF 작업 로그는17:52:11.333 KST다. 공식 후보 검색 완료 로그는9건이며 해당 코드 경로에서 Exa 성공 응답 뒤 기록되는 이벤트다. HTTP 공급자 로그는 활성화하지 않았다. manifest7회/Exa14회/요청180초/실측30분 상한 안에서 종료했고 실패 요청 재전송·성공 표본 선별은 하지 않았다. 모델·임베딩·가격 API와 GitHub 검색은 실행하지 않았다.
+- 보존: raw index hash·HEAD·기존 git status 동일, 허용9파일 외 새 변경0, 프런트 런타임149파일 manifest hash 동일. API 컨테이너ID·환경값hash 동일, DB 컨테이너ID와 기존 `osc-schematic-local_pgdata` 볼륨 유지. 로컬 `DEMO_MODE=0`, `DEMO_REPLAY=0`, `KICAD_RENDERER_URL` 빈 값과 KiCad 제외 상태를 유지했다. DB·한도 설정·배포·커밋·푸시·PR 변경 없음. `git diff --check`와 `git diff --cached --check` 통과.
+- 원자료: `C:/Users/user/AppData/Local/Temp/osc-pdf-request-reuse-20261116-v9s2edw1/`의 `summary.json`, `*-result.json`, `pdf-work.json`, `search-events.json`, `cold-starts.json`, `*-sheet-*.png`, `*-screen.jpg`. 이전 비교 기록은 같은 폴더의 `archived-baseline.json`에 복사해 보존했다. 별도 보존 점검은 `osc-pdf-reuse-preservation-20261116-172515/post-implementation-preservation.json`이다. 쿠키·서명 이미지 토큰·비밀값·전체 환경변수는 저장하지 않았다.
+
+## 2026-11-16 공식 후보 PDF 다운로드·검사 최대2개 병렬 처리
+
+- 시작 기준: OSC / HEAD `8d385697dc777b1e2375d99a3ebb9ed4a57d43b4`, 기존 dirty/index 보존. 준비 원문 전달 로직을 유지하면서 반도체6공식제조사 PDF의 검사만 최대2개로 병렬화한다. 기존 순차 구현은 실제 API/화면에서 재실행하지 않는다. 후보 순서·검증·제조사 모호성·검색 보완·PNG 순차 변환·UI·DB를 유지한다.
+- 사전점검PASS: 현재 공식 PDF 검사는 독립 subprocess와 기존 시간/메모리 제한을 사용한다. 검사 캐시는 thread-safe single-flight이며 요청별 준비 원문은 잠금/식별 대조가 필요하다. 기존 API 컨테이너와 로그인한8011 화면·저장된 직전7결과가 있어 추가 키·의존성·배포·DB 변경 없이 진행한다.
+- 변경/로컬 기준: 연속 공식 PDF 후보를2개씩 검사하고 프로세스 공통 semaphore도2개로 제한한다. copy_context로 요청 문맥을 전파하고 준비 원문 최대2개·각20MiB와 지표는 RLock으로 보호한다. 결과는 원래 순서로 소비하며 retry_budget·오류 집계·렌더는 주 스레드에 둔다. 작업 전9파일과 raw index는 `C:/Users/user/AppData/Local/Temp/osc-pdf-parallel-20261116-d9bw5k01/before` 및 `index-before.bin`에 보존했다.
+- 실행 전 조건: 외부 호출 없는 동시성/순서/원문/오류 회귀와 기존6개 테스트 파일을 먼저 통과한다. 백엔드2파일만 기존 `osc-schematic-local-api-1`의 `/app/backend/projects/`에 복사하고 고정7입력 전마다 같은 API만 restart한다. health200 후 기존 UI 찾기 버튼으로 실제 검색하고 브라우저 HTTP 캐시를 비활성화한다. DB 컨테이너·볼륨·환경과 로컬 KiCad 제외 상태는 유지한다. 입력·비교 기준은 사전등록의 LM2596/L7805/LT1763/NSVR351SDSA3/BAT62-02V/VEML7700/TI LM2596 datasheet다.
+- 예산/중단: manifest7회·Exa 최대14회·요청180초·실측30분. 공급자402/403/429/503·한도에 해당 공급자 추가 요청을 중단하며 같은 실패를 반복하지 않는다. LLM·임베딩·가격 호출, 다른 속도 개선, DB/한도 설정 변경, 커밋·푸시·PR·배포0. 실제 request_id·응답 시간·PDF 중첩 구간/최대 동시 수·PNG·DOM·출처/원본링크를 저장소 밖 같은 임시 폴더에 기록한다. 이전 관측과 새 각1회의 차이를 인과적 성능 개선율로 일반화하지 않는다.
+- 회귀: 새 동시성 테스트가 순차 구현에서 peak1로 실패한 것을 확인했다. 실제 서비스 진입점의 동시 검사2·완료/선택 순서·각 PDF 바이트 재사용·4후보 상한·요청 전체 retry1·서로 다른 요청의 프로세스 공통 상한·worker 오류 시 형제 종료/ContextVar 정리를 추가했다. 기존6개 파일을 `uv run --no-sync pytest -q tests/projects/test_official_schematic.py tests/projects/test_schematic_render.py tests/projects/test_external_circuit_search.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py tests/api/test_openapi.py --tb=short -p no:cacheprovider`로 실행해544passed(30.10초). 기존 영어·품번·회로·여섯 번째 제조사 모호성·API/서명 경계가 함께 통과했다.
+- 인증 준비 실패: 첫 LM2596 요청은 세션 만료로401이었고 공급자 검색/PDF 작업은0이었다. 로그인 화면에 이미 입력된 기존 로컬 계정으로 로그인했으며 비밀번호·쿠키 값은 출력하거나 저장하지 않았다. `auth-lm2596-result.json`과 화면을 별도 보존하고 실제 검색 전 사전등록에 HTTP manifest 상한을8회(인증 실패1+고정 검색7)로 정정했다. 최초7회 상한을 지켰다고 집계하지 않으며 Exa14회/원래30분 상한은 늘리지 않았다. 실제 검색 실패를 반복한 것은 아니다.
+
+| 입력 | 직전 저장 순차 API(초) | 이번 병렬 첫 API(초) | 실제 API·화면 결과 |
+|---|---:|---:|---|
+| LM2596 | 21.249576 | 16.463492 | HTTP404 `ambiguous_manufacturer`, 기존 안내·이미지0 유지 |
+| L7805 | 29.446198 | 25.012200 | HTTP200, STMicroelectronics·PNG3장 |
+| LT1763 | 87.868889 | 97.733370 | HTTP200, Analog Devices·PNG2장 |
+| NSVR351SDSA3 | 19.810348 | 12.438175 | HTTP200, onsemi·PNG1장 |
+| BAT62-02V | 11.015185 | 9.189724 | HTTP200, Infineon RF 응용 회로·PNG1장 |
+| VEML7700 | 27.288175 | 19.704108 | HTTP200, Vishay·PNG1장 |
+| TI LM2596 datasheet | 4.599869 | 11.201275 | HTTP200, Texas Instruments·PNG1장 |
+
+- 실제 병렬/결과 보존: 7검색 모두 `pdf_inspection_peak=2`이며 worker 시작·종료 구간을 독립 집계해 실제 중첩과 상한2를 확인했다. 정상6건의 선택 원문은 각각 다운로드1회·내용검사1회·재사용1회다. 원본URL·제조사·SHA-256·시트 수가 직전 순차 기록과 같고, PNG9건 HTTP200·디코딩 통과·API의 실제 시트 index별 PNG 바이트 hash도 이전9장과 모두 같다. 측정용 sheet-N 파일명은 네트워크 도착 순서이므로 실제 URL의 시트 index로 대조했다(`sheet-index-comparison.json`). 화면9장 complete/양수 크기·영어 응용 회로·공식 출처/원본링크 일치·찾기 버튼1개/select0을 유지했다. 후보·검색 순서는 바꾸지 않았으며 실제 공급자 결과의 후보 수 변동은 따로 기록했다.
+- 시간 해석: 정상 제조사6건 중4건 단축·2건 증가, 모호성 조회는 단축했다. ADI는 첫 후보 검색 완료 전 구간이 약79.545→93.963초로 증가했고 이후 처리는8.324→3.770초로 줄었다(후보5→4). TI는 후보2→3이며 새 탈락 PDF의 다운로드6.463초·검사0.813초가 추가됐다. 후보 이후 구간은3.377→9.307초였다. 첫 후보 전 시간은 API 응답 시간과 서버 로그 시각으로 계산한 근삿값이다. 서로 다른 시점의 각1회 관측이며 후보 구성·네트워크 변동이 있어 전체 지연 차이를 병렬화 단독 효과로 환산하지 않는다. 검사/변환 worker 시작·완료와 API/PNG 표시 시간을 구분하며 브라우저 첫 페인트나 Cloud Run 기동 속도를 측정했다고 주장하지 않는다.
+- 호출/실행: 실제 검색7회는 재전송 없이 종료됐다. HTTP manifest 총8회(401 1/404 1/200 6), 공식 후보 검색 완료 로그9건(Exa 성공 응답 후 기록)이다. 19:58:18 KST 시작 후 원래30분 상한 안에 끝났으며 각 실제 검색은180초 이내였다. 수정한 백엔드2파일만 기존 API에 복사하고 각 표본 전 동일 컨테이너를 재시작했다. DB·한도·환경·UI·운영 배포와 기존 순차 구현의 실제 재실행은 없다.
+- 보존/증거: raw index·HEAD·git status 및 허용9파일 밖의 tracked 파일 hash가 같고, 프런트149파일 manifest hash·API 환경 hash·DB 컨테이너/기존 볼륨을 보존했다. 로컬 DEMO_MODE/DEMO_REPLAY=0·KiCad 제외와 KICAD_RENDERER_URL 빈 값을 유지했다. 원자료는 같은 임시 폴더의 `summary.json`, `runtime-events.json`, `pdf-work.json`, `inspection-intervals.json`, `search-events.json`, `stage-comparison.json`, `manifest-access.json`, `cold-starts.json`, `*-result.json`, PNG·화면이다. 보존 점검은 `osc-pdf-parallel-preservation-20261116-194037/post-run-comparison.json`. 커밋·푸시·PR·배포 없음.
+
+## 2026-11-16 공식 회로도 검색 PR 준비
+
+- PR 범위는 TSC와 6개 제조사의 영어 공식 회로 검색, 품번·회로 검증, 제조사 모호성 처리, 요청 안의 PDF 재사용과 최대2개 병렬 검사다. 프런트·배포 설정·연구 자료·평가 결과 파일·DB 변경은 제외한다.
+- `external_circuit_search.py`에서 사용하지 않는 `dataclasses.replace` import를 제거했다. PDF 검사·원문 전달·정리 함수는 동적 import와 서비스 호출 경로에서 사용하므로 유지했다. 문서 목록과 API 설명에 검색 범위와 기본값을 적었다. 기존 UI와 연결하는 작업은 별도로 남긴다.
+- 시작 기준은 OSC / HEAD `8d385697dc777b1e2375d99a3ebb9ed4a57d43b4`다. 원격 main `9c87ba36e3f7e16537f3fce285f6c185604e64fb`을 가져와 저장소 밖 복사본에만 선별 변경을 적용했다. 코드 충돌은 없었고 API 설명과 화면 사양의 문서 충돌2곳은 최신 main 내용을 보존해 정리했다. 실제 OSC 브랜치는 병합하지 않았으며 기존 index를 유지한다.
+- 선별 패치는17파일이다. 작업 기록과 사전등록은 공식 검색에 해당하는 절만 포함하고 다른 작업 기록은 원본에 보존한다. 산출물은 `C:/Users/user/AppData/Local/Temp/osc-pr-prep-20261116-plt98y9o/`에 저장한다.
+- 실제 검색·PNG·화면 결과는 앞선 TSC10품번과 6개 제조사 검증 기록을 사용한다. 이번 정리에서는 서비스·외부 공급자 API를 호출하거나 컨테이너를 재시작하지 않는다. 커밋·푸시·PR 생성·배포는 하지 않는다.
+- 선별 복사본에서 관련6개 테스트 파일과 `tests/repo/test_repo_layout.py`를 실행해552passed(33.75초)를 확인했다. 외부 연결과 기존 로컬 서비스 연결을 차단하고 테스트용 로컬 통신만 허용했다. 최신 main의 OpenAPI·프로젝트 소유권·서명·모호성·PDF 상한·영어/RF/긴 PDF 회귀와 문서 목록 검사가 포함된다. 이후 변경은 문서뿐이며 Python9파일 구문 검사·Markdown 상대 링크·선별 패치의 `diff --check`도 통과했다.
+- 독립 검토에서 검색 코드의 의존성과 기존 API 계약을 확인했다. 기준 main 화면이 새 참고 검색 옵션을 보내지 않는 점은 화면 반영 범위에 명시했다. 백엔드 배포만으로 기존 화면 연결까지 완료됐다고 기록하지 않는다. 자원표는 코드에 맞춰 참고 PDF 원문200쪽·반환20시트·선택 없는 전체 변환20쪽으로 구분했다. 주요 `SPEC.md`의 응용 회로 참고 예외는 조장 검토 사항으로 PR 설명 초안에 남겼다.
+
+## 2026-11-16 공식 회로도 검증 보고서 저장과 PR 패치 갱신
+
+- `docs/research/official-schematic-search-verification-2026-11-16.md`에 검색 확대·자료 검증·PDF 중복 제거·최대2개 병렬 처리 결과를 저장했다. 기존 비교표2개·총14행의 수치와552passed(33.75초) 기록을 유지하며 실제 API·화면과 오프라인 검증을 구분했다.
+- 같은 폴더 `RESEARCH.md`에 문서 목록1행, `SOJAFIT.md`에 새 파일 트리1행만 추가했다. 주요 문서 변경은 AGENTS.md의 새 파일 등록 예외를 적용했으며 다른 루트 문서·ADR은 수정하지 않았다.
+- 저장소 문서는 근거를 상대 링크로 연결한다. 작성자 로컬 임시 폴더의 JSON·PNG·PDF·실행 로그·검토용 복사본은 포함하지 않았으며 원자료 별도 보관 범위를 명시했다.
+- 기존 고정 main `9c87ba36` 기준 PR 준비 패치에 보고서·문서 목록·트리 등록을 추가했다. 총20파일(백엔드5·테스트4·문서와 목록11)이며 실제 OSC 병합·기존 index 변경 없이 별도 index와 복사본에서 정리한다. 다른 연구 자료·UI·배포·DB 변경은 선별하지 않는다.
+- 추가 서비스 실측·기능 테스트·앱 코드 수정·API/DB 요청·재시작·커밋·푸시·PR 생성·배포는 없다. 기존552건 시험을 재실행하지 않으며 문서 내용·링크·목록·패치 적용 여부만 확인한다. 작업 전 tracked1307개·untracked16개 개별 해시는 `C:/Users/user/AppData/Local/Temp/osc-official-search-doc-preservation-20261116-212926/`에 보관했다.
+- 확인: 공유 보고서와 준비 복사본 일치, 비교표14행·기존552passed 기록 보존, 상대 링크 유효, 저장소 구조 정적 검사5항목·패치 적용·`diff --check` 통과. Python9파일 해시가 추가 전과 같고 기존 raw index를 유지했다. 선별한 작업 기록에는 보고서의 근거가 되는 제조사 확장·영어 원문·품번 검색의 기존 절도 포함했다. JSON·PNG·로컬 전용 링크는 PR에 넣지 않았다.

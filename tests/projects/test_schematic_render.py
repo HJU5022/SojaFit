@@ -1146,3 +1146,230 @@ def test_upload_client_bounds_the_call_and_needs_a_configured_renderer(monkeypat
                     lambda request: httpx.Response(500)):
         with httpx.Client(transport=httpx.MockTransport(respond)) as client, pytest.raises(schematic.KicadServiceUnavailable):
             schematic.export_uploaded_kicad('(kicad_sch)', client=client)
+
+
+@pytest.mark.parametrize("query,heading,wires,accepted", [
+    ("TSC TS19503CB10H", "TYPICAL APPLICATION CIRCUIT", True, True),
+    ("TSC TS19503CB10H", "BLOCK DIAGRAM", True, False),
+    ("TSC TS19503CB10H", "TYPICAL APPLICATION CIRCUIT", False, False),
+    ("TSC TS19504CB10H", "TYPICAL APPLICATION CIRCUIT", True, False),
+])
+def test_tsc_application_requires_exact_model_heading_and_connections(query, heading, wires, accepted):
+    data = published_pdf(f"Taiwan Semiconductor TS19503CB10H {heading} VIN GND OUT C1 C2 U1", wires=wires, pages=2)
+    if accepted:
+        assert render._tsc_application_pages(data, query) == (0, 1)
+    else:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._tsc_application_pages(data, query)
+
+
+def test_tsc_gate_does_not_accept_lookalike_or_unrelated_pdf_urls():
+    for url in (
+        "https://services.taiwansemi.com.evil.test/storage/resources/datasheet/TS19503.pdf",
+        "https://services.taiwansemi.com/storage/resources/mtbf-mttf-report-9/TS19503.pdf",
+        "http://services.taiwansemi.com/storage/resources/datasheet/TS19503.pdf",
+    ):
+        assert not render._is_tsc_datasheet(url)
+    assert render._is_tsc_datasheet("https://services.taiwansemi.com/storage/resources/datasheet/TS19503CB10H_A2103.pdf")
+
+
+def test_tsc_application_worker_and_render_preserve_hash_and_page_selection():
+    import hashlib
+    url = 'https://services.taiwansemi.com/storage/resources/datasheet/TS19503CB10H_A2103.pdf'
+    data = published_pdf('Taiwan Semiconductor TS19503CB10H TYPICAL APPLICATION CIRCUIT VIN GND OUT C1 C2 U1', pages=2)
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, content=data, headers={'Content-Type':'application/pdf'}))) as client:
+        digest, count = render.inspect_public_schematic(url, 'pdf', 'TS19503CB10H', page_url=url, client=client)
+        assert digest == hashlib.sha256(data).hexdigest() and count == 2
+        source = VerifiedSchematicSource('', '', '미확인', 'Taiwan Semiconductor', url, url, 'TS19503CB10H_A2103.pdf',
+            'pdf', (), 'TS19503CB10H_A2103.pdf', count, 'manufacturer_official', 2, 'Taiwan Semiconductor',
+            'TS19503CB10H', source_sha256=digest)
+        assert len(render.render_public_schematic(source, client=client)) == 2
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render.render_public_schematic(replace(source, source_sha256='0'*64), client=client)
+
+
+def test_tsc_branded_application_pdf_does_not_relax_generic_pdf_gate():
+    data = published_pdf('Taiwan Semiconductor TS19503CB10H TYPICAL APPLICATION CIRCUIT VIN GND OUT C1 C2 U1', pages=2)
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._pdf_schematic_pages(data)
+
+
+def test_tsc_raster_connections_reject_plain_block_and_allow_wired_components():
+    from PIL import ImageDraw
+    block = Image.new('RGB', (400, 200), 'white')
+    ImageDraw.Draw(block).rectangle((150, 40, 250, 160), outline='black', width=2)
+    assert not render._tsc_bitmap_has_connections(block)
+    circuit = block.copy()
+    draw = ImageDraw.Draw(circuit)
+    for x in (40, 90, 300, 350):
+        draw.line((x, 70, x, 170), fill='black', width=2)
+    for y in (70, 110, 170):
+        draw.line((20, y, 380, y), fill='black', width=2)
+    assert render._tsc_bitmap_has_connections(circuit)
+
+
+def test_official_semiconductor_pdf_uses_long_source_limit_and_bounded_return(monkeypatch):
+    """Official application-note PDFs may be long, but the rendered selection stays bounded."""
+    import hashlib
+
+    data = b"%PDF-official-long-document"
+    url = "https://www.ti.com/lit/ds/symlink/lm2596.pdf"
+    calls = []
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (data, "application/pdf"))
+    monkeypatch.setattr(render, "_bounded_official_pdf_schematic_pages",
+                        lambda payload, query, manufacturer: (2, 17))
+    monkeypatch.setattr(
+        "backend.projects.external_circuit_search.semiconductor_source_manufacturer",
+        lambda value: "Texas Instruments" if value == url else None,
+    )
+    monkeypatch.setattr(render, "_sheets", lambda *args, **kwargs: calls.append(kwargs["pdf_pages"]) or (b"p", b"q"))
+    digest, count = render.inspect_public_schematic(
+        url, "pdf", "TI LM2596", page_url=url, source_file="lm2596.pdf"
+    )
+    assert (digest, count) == (hashlib.sha256(data).hexdigest(), 2)
+    source = VerifiedSchematicSource(
+        "", "", "미확인", "TI", url, url, "lm2596.pdf", "pdf", (),
+        "lm2596.pdf", 2, "manufacturer_official", 2, "Texas Instruments",
+        "TI LM2596", source_sha256=digest,
+    )
+    assert render.render_public_schematic(source) == (b"p", b"q")
+    assert calls == [(2, 17)]
+
+
+def test_official_query_model_terms_exclude_manufacturer_and_generic_words():
+    assert render._official_query_model_terms("Analog Devices DC368B diode reference design") == ("dc368b",)
+    assert render._official_query_model_terms("onsemi NSVR351SDSA3 diode") == ("nsvr351sdsa3",)
+
+
+def test_official_vector_fallback_rejects_a_page_without_connection_paths():
+    class EmptyPage:
+        def get_objects(self, max_depth=5):
+            return []
+
+    assert not render._official_vector_connections(EmptyPage(), "R1 C1")
+
+
+def test_official_pdf_rejects_non_english_body_with_english_circuit_heading():
+    # Real vector PDF with a Spanish body; an English diagram caption is not
+    # enough to establish that the datasheet itself is English.
+    text = ('Texas Instruments LM2596 Typical Application Circuit R1 R2 C1 ' +
+            'Este dispositivo proporciona una salida estable mediante componentes externos. ' * 20)
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._official_application_pages(published_pdf(text), 'TI LM2596', 'Texas Instruments')
+
+
+def test_official_english_application_pdf_remains_accepted():
+    text = ('Texas Instruments LM2596 Typical Application Circuit R1 R2 C1 ' +
+            'The device provides a stable output with external components for this application. ' * 20)
+    assert render._official_application_pages(published_pdf(text), 'TI LM2596', 'Texas Instruments') == (0,)
+
+
+def test_english_introduction_cannot_approve_foreign_circuit_page():
+    import pypdfium2 as pdfium
+    english = published_pdf('Texas Instruments LM2596 The device provides an output with components for this application.',
+                            wires=False, pages=3)
+    spanish = published_pdf('Texas Instruments LM2596 Typical Application Circuit R1 R2 C1 ' +
+                            'Este dispositivo proporciona una salida estable mediante componentes externos. ' * 20)
+    with pdfium.PdfDocument.new() as document, pdfium.PdfDocument(english) as intro, pdfium.PdfDocument(spanish) as circuit:
+        document.import_pages(intro)
+        document.import_pages(circuit)
+        data = io.BytesIO()
+        document.save(data)
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._official_application_pages(data.getvalue(), 'TI LM2596', 'Texas Instruments')
+
+
+def test_english_cad_sheet_does_not_require_prose_function_words():
+    text = ('STMicroelectronics MB1136 Title: MCU Sheet: of Project: NUCLEO Reference: MB1136 ' +
+            'R1 R2 R3 C1 C2 U1 PA0 PA1 PA2 PB0 PB1 PB2 ' * 25)
+    assert render._official_application_pages(published_pdf(text), 'ST MB1136', 'STMicroelectronics') == (0,)
+
+
+@pytest.mark.parametrize('query,part', [('LM2596','LM2596A'), ('BAT62-02V','BAT62-02W'), ('LT1763','LT17630')])
+def test_bare_official_part_must_match_full_pdf_identifier(query,part):
+    data=published_pdf(f'Texas Instruments {part} Typical Application Circuit R1 R2 C1')
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._official_application_pages(data,query,'Texas Instruments')
+
+
+@pytest.mark.parametrize('mismatch',['query','hash','sheet_count'])
+def test_request_pdf_cannot_replace_a_different_verified_source(monkeypatch,mismatch):
+    import hashlib
+    data=b'%PDF-request-source';url='https://www.ti.com/lit/ds/symlink/lm2596.pdf'
+    downloads=[];queries=[];converted=[]
+    def download(*a,**kw):downloads.append(True);return data,'application/pdf'
+    def pages(payload,query,maker):queries.append(query);return (1,) if query=='LM2596A' else (0,)
+    monkeypatch.setattr(render,'_public_asset',download)
+    monkeypatch.setattr(render,'_bounded_official_pdf_schematic_pages',pages)
+    monkeypatch.setattr(render,'_sheets',lambda *a,**kw:converted.append(kw['pdf_pages']) or (b'png',))
+    with render.official_pdf_request():
+        digest,count=render.inspect_public_schematic(url,'pdf','LM2596')
+        source=VerifiedSchematicSource('','','미확인','TI',url,url,'lm2596.pdf','pdf',(),'lm2596.pdf',
+                    count,'manufacturer_official',2,'Texas Instruments','LM2596',source_sha256=digest)
+        if mismatch=='query':
+            assert render.render_public_schematic(replace(source,model='LM2596A'))==(b'png',)
+            assert converted==[(1,)] and queries==['LM2596','LM2596A']
+        else:
+            other=replace(source,source_sha256='0'*64) if mismatch=='hash' else replace(source,expected_sheets=2)
+            with pytest.raises(ExternalSchematicInvalidSource):render.render_public_schematic(other)
+            assert converted==[]
+    assert len(downloads)==2
+
+
+def test_request_pdf_is_released_after_conversion_error(monkeypatch):
+    data=b'%PDF-request-cleanup';url='https://www.ti.com/lit/ds/symlink/lm2596.pdf';downloads=[];inspections=[]
+    def download(*a,**kw):downloads.append(True);return data,'application/pdf'
+    monkeypatch.setattr(render,'_public_asset',download)
+    monkeypatch.setattr(render,'_bounded_official_pdf_schematic_pages',lambda *a:inspections.append(True) or (0,))
+    monkeypatch.setattr(render,'_sheets',lambda *a,**kw:(_ for _ in ()).throw(RuntimeError('conversion error')))
+    with pytest.raises(RuntimeError),render.official_pdf_request():
+        digest,count=render.inspect_public_schematic(url,'pdf','LM2596')
+        source=VerifiedSchematicSource('','','미확인','TI',url,url,'lm2596.pdf','pdf',(),'lm2596.pdf',
+                    count,'manufacturer_official',2,'Texas Instruments','LM2596',source_sha256=digest)
+        render.render_public_schematic(source)
+    monkeypatch.setattr(render,'_sheets',lambda *a,**kw:(b'png',))
+    assert render.render_public_schematic(source)==(b'png',)
+    assert len(downloads)==len(inspections)==2
+
+
+def test_request_pdf_rechecks_bytes_before_conversion(monkeypatch):
+    url='https://www.ti.com/lit/ds/symlink/lm2596.pdf';data=b'%PDF-checked';converted=[]
+    monkeypatch.setattr(render,'_public_asset',lambda *a,**kw:(data,'application/pdf'))
+    monkeypatch.setattr(render,'_bounded_official_pdf_schematic_pages',lambda *a:(0,))
+    monkeypatch.setattr(render,'_sheets',lambda *a,**kw:converted.append(True) or (b'png',))
+    with render.official_pdf_request():
+        digest,count=render.inspect_public_schematic(url,'pdf','LM2596')
+        source=VerifiedSchematicSource('','','미확인','TI',url,url,'lm2596.pdf','pdf',(),'lm2596.pdf',
+                    count,'manufacturer_official',2,'Texas Instruments','LM2596',source_sha256=digest)
+        state=render._PDF_REQUEST.get()
+        # prepared는 단일 항목(이전 구현) 또는 최대 2개 목록(병렬 구현)일 수 있다.
+        prepared = state['prepared']
+        if isinstance(prepared, list):
+            prepared[0] = replace(prepared[0], data=b'%PDF-modified')
+        else:
+            state['prepared'] = replace(prepared, data=b'%PDF-modified')
+        with pytest.raises(ExternalSchematicInvalidSource):render.render_public_schematic(source)
+    assert converted==[]
+    assert state=={} and render._PDF_REQUEST.get() is None
+
+
+def test_localized_official_url_cannot_bypass_search_language_filter(monkeypatch):
+    data = published_pdf('Texas Instruments LM2596 Typical Application Circuit R1 R2 C1')
+    monkeypatch.setattr(render, '_public_asset', lambda *args, **kwargs: (data, 'application/pdf'))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic('https://www.ti.com/cn/lit/ds/symlink/lm2596.pdf',
+                                       'pdf', 'TI LM2596')
+
+
+def test_long_pdf_rasterizes_only_selected_page_and_keeps_output_cap(tmp_path):
+    path=tmp_path/'long.pdf'
+    path.write_bytes(published_pdf(pages=21))
+    output=tmp_path/'output'
+    output.mkdir()
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._rasterize('pdf',path,output)
+    render._rasterize('pdf',path,output,'20')
+    files=list(output.glob('*.png'))
+    assert len(files)==1
+    with Image.open(files[0]) as png:
+        png.verify()

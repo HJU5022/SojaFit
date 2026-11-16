@@ -4,6 +4,7 @@ from __future__ import annotations
 import io
 import json
 import hashlib
+import logging
 import math
 import os
 import re
@@ -11,8 +12,13 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import zipfile
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from threading import BoundedSemaphore, RLock
 from typing import Callable
 from urllib.parse import quote, unquote, urlsplit
 from xml.etree import ElementTree as ET
@@ -36,6 +42,7 @@ MIB = 1024 * 1024
 MAX_IMAGE_BYTES = 10 * MIB
 MIN_SCHEMATIC_IMAGE_DIMENSION = 128
 MAX_PDF_BYTES = 20 * MIB
+MAX_PDF_PAGES = 200
 MAX_ARCHIVE_BYTES = 25 * MIB
 MAX_ARCHIVE_UNCOMPRESSED_BYTES = 100 * MIB
 MAX_TREE_ITEMS = 5000
@@ -49,6 +56,120 @@ MIME = {
     "pdf": {"application/pdf"}, "kicad": {"application/zip", "application/x-zip-compressed"},
 }
 SVG_ELEMENTS = set("svg g defs title desc metadata path rect line polyline polygon circle ellipse text tspan use clipPath linearGradient radialGradient stop".split())
+
+
+@dataclass(frozen=True)
+class _CheckedOfficialPDF:
+    url: str
+    query: str
+    manufacturer: str
+    digest: str
+    pages: tuple[int, ...]
+    data: bytes = field(repr=False)
+
+
+_PDF_REQUEST = ContextVar('schematic_pdf_request', default=None)
+_PDF_LOG = logging.getLogger(__name__)
+_PDF_INSPECTION_SLOTS = BoundedSemaphore(2)
+
+
+@contextmanager
+def official_pdf_request():
+    """Pass at most two checked PDFs to conversion within one request."""
+    if _PDF_REQUEST.get() is not None:
+        yield
+        return
+    state = {'prepared': [], 'work': {}, 'lock': RLock(), 'active': 0, 'peak': 0}
+    token = _PDF_REQUEST.set(state)
+    try:
+        yield
+    finally:
+        work = list(state['work'].values())
+        peak = state['peak']
+        state.clear()
+        _PDF_REQUEST.reset(token)
+        if work:
+            _PDF_LOG.info('schematic_pdf_request_work', extra={'pdf_work': work, 'pdf_inspection_peak': peak})
+
+
+@contextmanager
+def official_pdf_inspection_slot(url):
+    """Bound actual official candidate inspections across requests to two."""
+    with _PDF_INSPECTION_SLOTS:
+        state = _PDF_REQUEST.get()
+        if state is not None:
+            with state['lock']:
+                state['active'] += 1
+                state['peak'] = max(state['peak'], state['active'])
+        started = time.perf_counter()
+        try:
+            yield
+        finally:
+            finished = time.perf_counter()
+            if state is not None:
+                with state['lock']:
+                    state['active'] -= 1
+            _PDF_LOG.info('schematic_pdf_inspection_worker', extra={
+                'source_id': hashlib.sha256(url.encode()).hexdigest(),
+                'started_ms': round(started * 1000, 3), 'finished_ms': round(finished * 1000, 3),
+            })
+
+
+def clear_checked_pdfs():
+    state = _PDF_REQUEST.get()
+    if state is not None:
+        with state['lock']:
+            state['prepared'].clear()
+
+
+def _pdf_work(url, manufacturer):
+    state = _PDF_REQUEST.get()
+    if state is None:
+        return None
+    identity = hashlib.sha256(url.encode()).hexdigest()
+    with state['lock']:
+        return state['work'].setdefault(identity, {
+            'source_id': identity, 'manufacturer': manufacturer,
+            'downloads': 0, 'inspections': 0, 'reuses': 0,
+            'download_ms': 0.0, 'inspection_ms': 0.0, 'conversion_ms': 0.0,
+        })
+
+
+def _record_pdf_work(work, **increments):
+    if work is not None:
+        with _PDF_REQUEST.get()['lock']:
+            for key, value in increments.items():
+                work[key] += value
+
+
+def _official_pdf_download(url, manufacturer, client):
+    work = _pdf_work(url, manufacturer)
+    started = time.perf_counter()
+    try:
+        return _public_asset(url, 'pdf', client=client)
+    finally:
+        _record_pdf_work(work, downloads=1, download_ms=round((time.perf_counter() - started) * 1000, 3))
+
+
+def _official_pdf_pages(data, query, manufacturer, url):
+    work = _pdf_work(url, manufacturer)
+    started = time.perf_counter()
+    try:
+        return _bounded_official_pdf_schematic_pages(data, query, manufacturer)
+    finally:
+        _record_pdf_work(work, inspections=1, inspection_ms=round((time.perf_counter() - started) * 1000, 3))
+
+
+def _take_checked_pdf(source, manufacturer):
+    state = _PDF_REQUEST.get()
+    if state is not None:
+        with state['lock']:
+            for index, prepared in enumerate(state['prepared']):
+                if (prepared.url == source.source_url and prepared.query == source.model
+                        and prepared.manufacturer == manufacturer and prepared.digest == source.source_sha256
+                        and len(prepared.pages) == source.expected_sheets):
+                    return state['prepared'].pop(index)
+    return None
 
 
 def _invalid():
@@ -147,7 +268,9 @@ def _rasterize(kind: str, path: Path, output: Path, page_indices: str | None = N
     try:
         if _pdf_creator_is_pcbnew(document):
             raise _invalid()
-        if not 1 <= len(document) <= MAX_SHEETS:
+        if not 1 <= len(document) <= MAX_PDF_PAGES:
+            raise _invalid()
+        if page_indices is None and len(document) > MAX_SHEETS:
             raise _invalid()
         selected = list(range(len(document)))
         if page_indices is not None:
@@ -588,7 +711,7 @@ def _pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
     document = pdfium.PdfDocument(data)
     try:
         count = len(document)
-        if not 1 <= count <= MAX_SHEETS or _pdf_creator_is_pcbnew(document):
+        if not 1 <= count <= MAX_PDF_PAGES or _pdf_creator_is_pcbnew(document):
             raise _invalid()
         if count == 1:
             return (0,)
@@ -603,12 +726,424 @@ def _pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
                 page.close()
         if not selected:
             raise _invalid()
-        return tuple(selected)
+        return tuple(selected[:MAX_SHEETS])
     finally:
         document.close()
 
 
-def _bounded_pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
+def _is_tsc_datasheet(url: str) -> bool:
+    parsed = urlsplit(url)
+    return (parsed.scheme == 'https' and parsed.hostname == 'services.taiwansemi.com'
+            and parsed.username is None and parsed.password is None and parsed.port in (None, 443)
+            and not parsed.query and not parsed.fragment
+            and bool(re.fullmatch(r'/storage/resources/datasheet/[^/]+\.pdf', parsed.path, re.I)))
+
+
+def _tsc_circuit_wires(page, top: float) -> bool:
+    """Require real vector connections below the application heading, not a package photo."""
+    import ctypes
+    from collections import Counter
+    import pypdfium2 as pdfium
+    lines, segments = set(), 0
+    for count, obj in enumerate(page.get_objects(max_depth=5), 1):
+        if count > 10000:
+            return False
+        if obj.type != pdfium.raw.FPDF_PAGEOBJ_PATH:
+            continue
+        previous = None
+        matrix = obj.get_matrix()
+        for index in range(pdfium.raw.FPDFPath_CountSegments(obj)):
+            segments += 1
+            if segments > 50000:
+                return False
+            segment = pdfium.raw.FPDFPath_GetPathSegment(obj, index)
+            x, y = ctypes.c_float(), ctypes.c_float()
+            if not pdfium.raw.FPDFPathSegment_GetPoint(segment, x, y):
+                return False
+            point = matrix.on_point(x.value, y.value)
+            if not all(math.isfinite(v) for v in point):
+                return False
+            if previous and max(previous[1], point[1]) <= top + 2 and pdfium.raw.FPDFPathSegment_GetType(segment) == pdfium.raw.FPDF_SEGMENT_LINETO:
+                dx, dy = abs(point[0]-previous[0]), abs(point[1]-previous[1])
+                if (5 <= dx < page.get_width()*.8 and dy < .1) or (5 <= dy < page.get_height()*.8 and dx < .1):
+                    lines.add(tuple(sorted((tuple(round(v*2) for v in previous), tuple(round(v*2) for v in point)))))
+            previous = point
+    if len(lines) > 2000:
+        return False
+    ends = Counter(point for line in lines for point in line)
+    # CAD exporters frequently draw a T-junction as a wire ending on an
+    # uninterrupted bus. Count those connections as well as shared endpoints.
+    for point in tuple(ends):
+        for first, last in lines:
+            if point in (first, last):
+                continue
+            if (abs(first[1]-last[1]) <= 1 and abs(point[1]-first[1]) <= 1
+                    and min(first[0],last[0]) < point[0] < max(first[0],last[0])) or (
+                    abs(first[0]-last[0]) <= 1 and abs(point[0]-first[0]) <= 1
+                    and min(first[1],last[1]) < point[1] < max(first[1],last[1])):
+                ends[point] += 2
+    return len(lines) >= 8 and sum(count >= 3 for count in ends.values()) >= 2
+
+
+def _tsc_bitmap_has_connections(image) -> bool:
+    """Recognize thin orthogonal wiring and branches, not a lone IC/block photo."""
+    if image.mode == 'RGBA':
+        image = Image.alpha_composite(Image.new('RGBA', image.size, 'white'), image)
+    image = image.convert('L')
+    image.thumbnail((600, 600))
+    width, height = image.size
+    if width < 128 or height < 64:
+        return False
+    pixels = image.load()
+    if sum(image.histogram()[221:]) < width * height * .65:
+        return False
+    def runs(vertical=False):
+        found = []
+        across, along = (width, height) if vertical else (height, width)
+        for cross in range(across):
+            start = None
+            for index in range(along + 1):
+                dark = index < along and (pixels[cross,index] if vertical else pixels[index,cross]) < 100
+                if dark and start is None:
+                    start = index
+                if not dark and start is not None:
+                    if index - start >= 12:
+                        middle = (start + index) // 2
+                        neighbors = [pixels[c,middle] if vertical else pixels[middle,c]
+                                     for c in (max(0,cross-3), min(across-1,cross+3))]
+                        if max(neighbors) > 220 and not any(
+                                abs(cross-c) <= 3 and abs(start-a) <= 3 and abs(index-b) <= 3
+                                for a,b,c in found[-20:]):
+                            found.append((start,index,cross))
+                            if len(found) > 500:
+                                return []
+                    start = None
+        return found
+    horizontal, vertical = runs(), runs(True)
+    if len(horizontal) < 3 or len(vertical) < 3 or len(horizontal)+len(vertical) < 8:
+        return False
+    branches = set()
+    for left,right,y in horizontal:
+        for top,bottom,x in vertical:
+            if left-2 <= x <= right+2 and top-2 <= y <= bottom+2 and (
+                    left+3 < x < right-3 or top+3 < y < bottom-3):
+                branches.add((x//4,y//4))
+    return len(branches) >= 2
+
+
+def _tsc_circuit_bitmap(page, top: float) -> bool:
+    import pypdfium2 as pdfium
+    for count, obj in enumerate(page.get_objects(max_depth=5), 1):
+        if count > 10000:
+            return False
+        if obj.type != pdfium.raw.FPDF_PAGEOBJ_IMAGE or obj.get_bounds()[3] > top + 2:
+            continue
+        width,height = obj.get_px_size()
+        if width*height > MAX_PIXELS:
+            continue
+        # Render the image's alpha mask; raw stencil bitmaps have a black background.
+        bitmap = obj.get_bitmap(render=True)
+        if _tsc_bitmap_has_connections(bitmap.to_pil()):
+            return True
+    return False
+
+
+def _require_english_official_text(text: str) -> None:
+    """Require English introductory text, not just an English diagram caption.
+
+    This conservative lexical gate has no model/network dependency. Short
+    circuit-only documents use engineering labels; prose must also contain
+    English function words. Structured CAD sheets use English project/sheet
+    fields and component references instead. A few foreign brand names do not
+    reject English.
+    """
+    letters = [char for char in text if char.isalpha()]
+    words = set(re.findall(r'\b[a-z]+\b', text.casefold()))
+    english = {'the', 'and', 'for', 'with', 'this', 'from', 'is', 'are', 'of', 'to', 'in', 'as', 'by'}
+    labels = {'typical', 'application', 'circuit', 'schematic', 'diagram', 'power',
+              'supply', 'input', 'output', 'voltage', 'current', 'vin', 'gnd', 'vcc'}
+    cad_sheet = (re.search(r'(?i)\bproject\s*:', text)
+                 and re.search(r'(?i)\bsheet\s*:\s*o\s*f\b', text)
+                 and len(set(re.findall(r'\b(?:IC|R|C|D|Q|U|L|J)\s*\d{1,4}\b', text, re.I))) >= 6)
+    if (not letters or sum(char.isascii() for char in letters) / len(letters) < .9
+            or (not cad_sheet and len(words & english) < 3
+                and (len(letters) >= 400 or len(words & labels) < 3))):
+        raise _invalid()
+
+
+def _tsc_application_pages(data: bytes, query: str) -> tuple[int, ...]:
+    """Select connected application circuits only from an identified TSC datasheet."""
+    if not data.startswith(b'%PDF-') or len(data) > MAX_PDF_BYTES:
+        raise _invalid()
+    import pypdfium2 as pdfium
+    parts = re.findall(r'\b[a-z]+\d[a-z0-9]*\b', query.casefold())
+    if not parts:
+        raise _invalid()
+    document = pdfium.PdfDocument(data)
+    selected = []
+    try:
+        if not 1 <= len(document) <= MAX_PDF_PAGES or _pdf_creator_is_pcbnew(document):
+            raise _invalid()
+        identity_text = []
+        for page in document:
+            try:
+                textpage = page.get_textpage()
+                try:
+                    identity_text.append(textpage.get_text_range())
+                finally:
+                    textpage.close()
+            finally:
+                page.close()
+        identity = '\n'.join(identity_text)
+        if len(identity) > MAX_PDF_TEXT_BYTES or not all(re.search(
+                r'(?<![a-z0-9])'+re.escape(part)+r'(?![a-z0-9])',identity,re.I) for part in parts):
+            raise _invalid()
+        _require_english_official_text('\n'.join(identity_text[:3]))
+        for index in range(len(document)):
+            page = document[index]
+            try:
+                textpage = page.get_textpage()
+                try:
+                    text = identity_text[index]
+                    if 'taiwan semiconductor' not in ' '.join(text.casefold().split()):
+                        continue
+                    heading = re.search(r'(?i)(?:typical\s+)?applicati(?:on|n)\s+circuit(?:s)?\b|typical\s+circuit\b', text)
+                    if heading is None or 'table of contents' in text.casefold():
+                        continue
+                    try:
+                        _require_english_official_text(text)
+                    except ExternalSchematicInvalidSource:
+                        continue
+                    bottom = textpage.get_charbox(heading.start())[1]
+                    if _tsc_circuit_wires(page, bottom) or _tsc_circuit_bitmap(page, bottom):
+                        selected.append(index)
+                finally:
+                    textpage.close()
+            finally:
+                page.close()
+        if not selected:
+            raise _invalid()
+        return tuple(selected[:MAX_SHEETS])
+    finally:
+        document.close()
+
+
+_OFFICIAL_APPLICATION_HEADING = re.compile(
+    r"(?i)(?:typical\s+application(?:\s+circuit)?|application\s+circuit|"
+    r"circuit\s+design|reference\s+design|schematic(?:\s+diagram)?|"
+    r"pfc\s+circuit|diode\s+(?:detector|application))\b"
+)
+_OFFICIAL_NON_CIRCUIT_PAGE = re.compile(
+    r"(?i)\b(?:table\s+of\s+contents|block\s+diagram|pin\s*(?:out|configuration)|"
+    r"package\s+(?:outline|dimensions)|product\s+photo|ordering\s+information)\b"
+)
+_OFFICIAL_NON_CIRCUIT_CONTENT = re.compile(
+    r"(?i)\b(?:table\b|bom\b|bill\s+of\s+materials|selection\s+table|"
+    r"manufacturers?|measurement\s+results?|waveforms?|waveform|"
+    r"characteristics?|actual\s+iv\s+curve|power\s+losses?|"
+    r"nomograph|photo\s+of|layout\s+example|"
+    r"thermal\s+considerations?|device\s+support|disclaimer)\b"
+)
+_OFFICIAL_PAGE_HINT = re.compile(
+    r"(?i)\b(?:top\s*&\s*power|mcu|stlink|extension\s+connectors?|"
+    r"power\s+(?:stage|supply|converter)|application\s+information|"
+    r"pfc|detector|sheet\s*:\s*of|project\s*:|reference\s+design)\b"
+)
+_OFFICIAL_QUERY_STOPWORDS = {
+    "ti", "texas", "instruments", "st", "stmicroelectronics", "analog", "devices",
+    "adi", "onsemi", "semiconductor", "infineon", "vishay", "diode", "diodes", "rf",
+    "pfc", "application", "applications", "circuit", "circuits", "reference", "design",
+    "schematic", "datasheet", "data", "sheet", "note", "notes", "typical", "official",
+    "nucleo", "board", "module", "the", "and", "of", "for",
+}
+
+
+def _official_query_model_terms(query: str) -> tuple[str, ...]:
+    terms = []
+    for raw in re.findall(r"[A-Za-z0-9]+(?:[-_/][A-Za-z0-9]+)*", query or ""):
+        compact = re.sub(r"[^a-z0-9]", "", raw.casefold())
+        if len(compact) < 3 or compact in _OFFICIAL_QUERY_STOPWORDS:
+            continue
+        if any(char.isdigit() for char in compact) or raw.isupper():
+            if compact not in terms:
+                terms.append(compact)
+    return tuple(terms)
+
+
+def _semiconductor_official_manufacturer(url: str) -> str | None:
+    try:
+        from backend.projects.external_circuit_search import semiconductor_source_manufacturer
+        return semiconductor_source_manufacturer(url)
+    except (ImportError, TypeError, ValueError):
+        return None
+
+
+_OFFICIAL_MANUFACTURER_ALIASES = {
+    "texas instruments": ("texas", "instruments", "ti"),
+    "stmicroelectronics": ("stmicroelectronics", "st"),
+    "analog devices": ("analog", "devices", "adi"),
+    "onsemi": ("onsemi", "semiconductor"),
+    "infineon": ("infineon",),
+    "vishay": ("vishay",),
+}
+
+
+def _official_application_pages(data: bytes, query: str, manufacturer: str) -> tuple[int, ...]:
+    """Select connected application-circuit pages from an identified official PDF."""
+    if not data.startswith(b"%PDF-") or len(data) > MAX_PDF_BYTES or not manufacturer:
+        raise _invalid()
+    import pypdfium2 as pdfium
+    model_terms = _official_query_model_terms(query)
+    if not model_terms:
+        raise _invalid()
+    document = pdfium.PdfDocument(data)
+    selected = []
+    try:
+        if not 1 <= len(document) <= MAX_PDF_PAGES or _pdf_creator_is_pcbnew(document):
+            raise _invalid()
+        texts = []
+        for page in document:
+            try:
+                texts.append(page.get_textpage().get_text_range())
+            finally:
+                page.close()
+        identity = "\n".join(texts)
+        if len(identity) > MAX_PDF_TEXT_BYTES:
+            raise _invalid()
+        identity_compact = _identity_compact(identity)
+        if not all(term in identity_compact for term in model_terms):
+            raise _invalid()
+        from backend.projects.external_circuit_search import semiconductor_part_query, _part_identifiers
+        bare_part = semiconductor_part_query(query)
+        if bare_part and bare_part.replace('-', '').casefold() not in _part_identifiers(identity):
+            raise _invalid()
+        manufacturer_terms = [re.sub(r"[^a-z0-9]", "", token.casefold())
+                              for token in _OFFICIAL_MANUFACTURER_ALIASES.get(
+                                  manufacturer.casefold(), tuple(re.findall(r"[A-Za-z0-9]+", manufacturer)))
+                              if len(token) > 2 and token.casefold() not in {"inc", "ltd", "corp", "company"}]
+        if manufacturer.casefold() == "texas instruments":
+            manufacturer_terms.append("ti")
+        elif manufacturer.casefold() == "stmicroelectronics":
+            manufacturer_terms.append("st")
+        if manufacturer_terms and not any(term in identity_compact for term in manufacturer_terms):
+            raise _invalid()
+        _require_english_official_text('\n'.join(texts[:3]))
+        for index, text in enumerate(texts):
+            if (_OFFICIAL_NON_CIRCUIT_PAGE.search(text)
+                    and not re.search(r"(?i)\b(?:detailed\s+design|design\s+requirements)\b", text)):
+                continue
+            heading = _OFFICIAL_APPLICATION_HEADING.search(text)
+            refs = re.findall(r"\b(?:IC|R|C|D|Q|U|L|J)\s*\d{1,4}\b", text, re.I)
+            families = {re.sub(r"\s+", "", ref.casefold())[0] for ref in refs}
+            cad_title = re.search(r"(?i)\b(?:sheet\s*:\s*of|project\s*:|title\s*:)", text)
+            content_marker = _OFFICIAL_NON_CIRCUIT_CONTENT.search(text)
+            allow_rf_diagram = (content_marker and heading
+                                and len(families) < 2
+                                and re.search(r"(?i)(?:application|detector)", heading.group(0))
+                                and re.search(r"(?i)\bschematic\b", text))
+            allow_pfc_intro = (index == 0 and content_marker and heading
+                               and re.search(r"(?i)pfc\s+circuit", heading.group(0))
+                               and re.search(r"(?i)typical\s+active\s+pfc", text))
+            allow_component_design = (content_marker and content_marker.group(0).casefold() == "manufacturers"
+                                      and len(families) >= 3)
+            if content_marker and not (allow_rf_diagram or allow_pfc_intro or allow_component_design):
+                continue
+            if heading is None and len(families) < 2 and not cad_title:
+                continue
+            if heading and len(families) < 2 and not re.search(
+                    r"(?i)(?:application|detector|pfc)", heading.group(0)):
+                continue
+            unique_refs = {re.sub(r"\s+", "", ref.casefold()) for ref in refs}
+            if (len(families) >= 2 and len(unique_refs) < 3
+                    and not (index == 0 and re.search(r"(?i)pfc\s+circuit", text))):
+                continue
+            if heading is None and not (_OFFICIAL_PAGE_HINT.search(text) and (
+                    refs or re.search(r"(?i)\b(?:sheet\s*:\s*of|project\s*:|title\s*:)", text))):
+                continue
+            try:
+                _require_english_official_text(text)
+            except ExternalSchematicInvalidSource:
+                continue
+            page = document[index]
+            try:
+                textpage = page.get_textpage()
+                try:
+                    bottom = textpage.get_charbox(heading.start())[1] if heading else 0
+                finally:
+                    textpage.close()
+                connected = (_tsc_circuit_wires(page, bottom) or _tsc_circuit_bitmap(page, bottom)
+                             or _official_vector_connections(page, text))
+                if (not connected and heading and len(families) < 2
+                        and re.search(r"(?i)(?:application|detector|pfc)\s+circuit", heading.group(0))):
+                    try:
+                        connected = _official_page_raster_connections(page)
+                    except (OSError, RuntimeError, ValueError):
+                        connected = False
+                if connected:
+                    selected.append(index)
+            finally:
+                page.close()
+        if not selected:
+            raise _invalid()
+        return tuple(selected[:MAX_SHEETS])
+    finally:
+        document.close()
+
+
+def _official_page_raster_connections(page) -> bool:
+    """Check a rasterized page for thin orthogonal wires and branches."""
+    image = page.render(scale=0.8).to_pil()
+    return _tsc_bitmap_has_connections(image)
+
+
+def _official_vector_connections(page, text: str) -> bool:
+    """Fallback for CAD-exported official schematics whose wires are compound paths."""
+    import ctypes
+    from collections import Counter
+    import pypdfium2 as pdfium
+    if _OFFICIAL_NON_CIRCUIT_PAGE.search(text):
+        return False
+    lines, segments = set(), 0
+    for count, obj in enumerate(page.get_objects(max_depth=5), 1):
+        if count > 10000:
+            return False
+        if obj.type != pdfium.raw.FPDF_PAGEOBJ_PATH:
+            continue
+        previous = None
+        matrix = obj.get_matrix()
+        for index in range(pdfium.raw.FPDFPath_CountSegments(obj)):
+            segments += 1
+            if segments > 50000:
+                return False
+            segment = pdfium.raw.FPDFPath_GetPathSegment(obj, index)
+            x, y = ctypes.c_float(), ctypes.c_float()
+            if not pdfium.raw.FPDFPathSegment_GetPoint(segment, x, y):
+                return False
+            point = matrix.on_point(x.value, y.value)
+            kind = pdfium.raw.FPDFPathSegment_GetType(segment)
+            if previous and kind == pdfium.raw.FPDF_SEGMENT_LINETO:
+                dx, dy = abs(point[0] - previous[0]), abs(point[1] - previous[1])
+                if (5 <= dx < page.get_width() * .8 and dy < .1) or (
+                        5 <= dy < page.get_height() * .8 and dx < .1):
+                    lines.add(tuple(sorted((tuple(round(v * 2) for v in previous),
+                                            tuple(round(v * 2) for v in point)))))
+            previous = point
+    if len(lines) < 8:
+        return False
+    ends = Counter(point for line in lines for point in line)
+    for point in tuple(ends):
+        for first, last in lines:
+            if point in (first, last):
+                continue
+            if ((abs(first[1] - last[1]) <= 1 and abs(point[1] - first[1]) <= 1
+                 and min(first[0], last[0]) < point[0] < max(first[0], last[0])) or
+                (abs(first[0] - last[0]) <= 1 and abs(point[0] - first[0]) <= 1
+                 and min(first[1], last[1]) < point[1] < max(first[1], last[1]))):
+                ends[point] += 2
+    return sum(value >= 3 for value in ends.values()) >= 2
+
+
+def _bounded_pdf_schematic_pages(data: bytes, *, tsc_query: str | None = None) -> tuple[int, ...]:
     """Inspect untrusted PDF bytes in the bounded worker process."""
     if not isinstance(data, bytes) or len(data) > MAX_PDF_BYTES:
         raise _invalid()
@@ -617,7 +1152,8 @@ def _bounded_pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
         path.write_bytes(data)
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "backend.projects.schematic_render", "inspect-pdf", str(path)],
+                [sys.executable, "-m", "backend.projects.schematic_render",
+                 "inspect-tsc-pdf" if tsc_query else "inspect-pdf", str(path), *([tsc_query] if tsc_query else [])],
                 cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
                 capture_output=True, text=True,
                 env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
@@ -629,6 +1165,34 @@ def _bounded_pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
     raw = result.stdout.strip()
     try:
         pages = tuple(int(value) for value in raw.split(",") if value != "")
+    except ValueError:
+        raise _invalid() from None
+    if not pages or len(pages) > MAX_SHEETS or any(index < 0 for index in pages):
+        raise _invalid()
+    return pages
+
+
+def _bounded_official_pdf_schematic_pages(data: bytes, query: str, manufacturer: str) -> tuple[int, ...]:
+    """Run official-semiconductor PDF inspection under the same worker limits."""
+    if not isinstance(data, bytes) or len(data) > MAX_PDF_BYTES:
+        raise _invalid()
+    with tempfile.TemporaryDirectory(prefix="sojafit-official-pdf-inspect-") as temporary:
+        path = Path(temporary) / "input.pdf"
+        path.write_bytes(data)
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", "inspect-official-pdf",
+                 str(path), query, manufacturer],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                capture_output=True, text=True,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+            raise _invalid() from None
+        except (subprocess.TimeoutExpired, OSError):
+            raise ExternalSchematicUpstreamError("회로도 변환기를 사용할 수 없습니다.") from None
+    try:
+        pages = tuple(int(value) for value in result.stdout.strip().split(",") if value != "")
     except ValueError:
         raise _invalid() from None
     if not pages or len(pages) > MAX_SHEETS or any(index < 0 for index in pages):
@@ -857,6 +1421,27 @@ def inspect_public_schematic(url: str, kind: str, query: str, *, title: str = ""
                              page_url: str = "", source_file: str = "",
                              client: httpx.Client | None = None) -> tuple[str, int]:
     """Download, identify, and fingerprint one public schematic in one pass."""
+    from backend.projects.external_circuit_search import english_official_document_url
+    if english_official_document_url(url) != url:
+        raise _invalid()
+    if kind == 'pdf' and _is_tsc_datasheet(url):
+        if not _is_tsc_datasheet(page_url):
+            raise _invalid()
+        data, _ = _public_asset(url, kind, client=client)
+        pages = _bounded_pdf_schematic_pages(data, tsc_query=query)
+        return hashlib.sha256(data).hexdigest(), len(pages)
+    official_manufacturer = _semiconductor_official_manufacturer(url) if kind == "pdf" else None
+    if official_manufacturer:
+        state = _PDF_REQUEST.get()
+        data, _ = _official_pdf_download(url, official_manufacturer, client)
+        pages = _official_pdf_pages(data, query, official_manufacturer, url)
+        digest = hashlib.sha256(data).hexdigest()
+        if state is not None and len(data) <= MAX_PDF_BYTES:
+            with state['lock']:
+                if len(state['prepared']) == 2:
+                    state['prepared'].pop(0)
+                state['prepared'].append(_CheckedOfficialPDF(url, query, official_manufacturer, digest, pages, data))
+        return digest, len(pages)
     _verify_artifact_name(query, source_file, url, title)
     publisher_label = ''
     if kind in {"png", "svg"}:
@@ -979,6 +1564,9 @@ def inspect_published_pdf(url: str, query: str, *, page_url: str, source_file: s
 
 def render_public_schematic(source: VerifiedSchematicSource, *, client: httpx.Client | None = None) -> tuple[bytes, ...]:
     """Re-fetch a discovered public asset, verify its fingerprint, and rasterize it."""
+    from backend.projects.external_circuit_search import english_official_document_url
+    if english_official_document_url(source.source_url) != source.source_url:
+        raise _invalid()
     if (source.source_type not in {"manufacturer_official", "public_web"}
             or not isinstance(source.source_url, str)
             or not isinstance(source.source_sha256, str)
@@ -986,7 +1574,15 @@ def render_public_schematic(source: VerifiedSchematicSource, *, client: httpx.Cl
             or source.asset_kind not in {"png", "svg", "pdf"}
             or type(source.expected_sheets) is not int or not 1 <= source.expected_sheets <= MAX_SHEETS):
         raise _invalid()
-    data, _ = _public_asset(source.source_url, source.asset_kind, client=client)
+    manufacturer = (_semiconductor_official_manufacturer(source.source_url)
+                    if source.asset_kind == 'pdf' else None)
+    prepared = _take_checked_pdf(source, manufacturer) if manufacturer else None
+    if prepared is not None:
+        data = prepared.data
+    elif manufacturer:
+        data, _ = _official_pdf_download(source.source_url, manufacturer, client)
+    else:
+        data, _ = _public_asset(source.source_url, source.asset_kind, client=client)
     if hashlib.sha256(data).hexdigest() != source.source_sha256:
         raise _invalid()
     pages = None
@@ -995,21 +1591,48 @@ def render_public_schematic(source: VerifiedSchematicSource, *, client: httpx.Cl
     elif source.asset_kind == "svg":
         _svg(data)
     else:
-        pages = _bounded_pdf_schematic_pages(data)
+        if manufacturer:
+            if prepared is not None:
+                pages = prepared.pages
+                _record_pdf_work(_pdf_work(source.source_url, manufacturer), reuses=1)
+            else:
+                pages = _official_pdf_pages(data, source.model, manufacturer, source.source_url)
+        else:
+            pages = _bounded_pdf_schematic_pages(
+                data, tsc_query=source.model if _is_tsc_datasheet(source.source_url) else None)
         if len(pages) != source.expected_sheets:
             raise _invalid()
     with tempfile.TemporaryDirectory(prefix="sojafit-public-render-") as temporary:
         work = Path(temporary)
         path = work / (source.source_file or f"schematic.{source.asset_kind}")
         path.write_bytes(data)
-        sheets = _sheets(source.asset_kind, path, work / "pages", pdf_pages=pages if source.asset_kind == "pdf" else None)
+        activity = _pdf_work(source.source_url, manufacturer) if manufacturer else None
+        started = time.perf_counter()
+        try:
+            sheets = _sheets(source.asset_kind, path, work / "pages", pdf_pages=pages if source.asset_kind == "pdf" else None)
+        finally:
+            _record_pdf_work(activity, conversion_ms=round((time.perf_counter() - started) * 1000, 3))
     if len(sheets) != source.expected_sheets:
         raise _invalid()
     return sheets
 
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 3 and sys.argv[1] == "inspect-pdf":
+    if len(sys.argv) == 4 and sys.argv[1] == 'inspect-tsc-pdf':
+        if os.name == 'posix':
+            import resource
+            resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30))
+        try:
+            print(','.join(map(str, _tsc_application_pages(Path(sys.argv[2]).read_bytes(), sys.argv[3]))))
+        except (ExternalSchematicInvalidSource, OSError, ValueError, RuntimeError):
+            raise SystemExit(1)
+    elif len(sys.argv) == 5 and sys.argv[1] == "inspect-official-pdf":
+        try:
+            pages = _official_application_pages(Path(sys.argv[2]).read_bytes(), sys.argv[3], sys.argv[4])
+            print(",".join(str(index) for index in pages))
+        except (ExternalSchematicInvalidSource, OSError, ValueError, RuntimeError):
+            raise SystemExit(1)
+    elif len(sys.argv) >= 3 and sys.argv[1] == "inspect-pdf":
         try:
             pages = _pdf_schematic_pages(Path(sys.argv[2]).read_bytes())
             print(",".join(str(index) for index in pages))

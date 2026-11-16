@@ -24,7 +24,7 @@
 | `test_frontend.py` | SPA 직접 진입, assets, 미빌드 때 화면 주소도 공통 404, API JSON 404와 기존 라우트 우선 |
 | `test_prices.py` | `GET /api/prices`를 가짜 Mouser transport로: 로그인 필요, `no-store`, 화면 칸만 반환, 데모 모드·키 없음·호출 상한·Mouser 실패의 값 없음 모양, 품번 형식 오류 422, 로그에 키·요청 주소 없음 |
 | `test_projects.py` | 프로젝트 HTTP 계약: 세션·Origin·입력 검증·안전한 DB 오류·실제 DB CRUD와 관리자 포함 타 사용자 비공개 404, 업로드의 제한 수신·원본 즉시 close·오류 request ID. DB 시험은 `TEST_AUTH_DATABASE_URL`이 있을 때만 |
-| `test_external_circuits.py` | 완성 회로도 manifest·PNG 응답, 인증·`no-store`·`SCHEMATIC_NOT_FOUND` 경계 |
+| `test_external_circuits.py` | 완성 회로도 manifest·PNG 응답, 단일 버튼 자동 경로·제조사 없는 품번·빈 프로젝트·기존 명시 범위, 인증·`no-store`·`SCHEMATIC_NOT_FOUND` 및 복수 제조사 오류 경계 |
 | `test_conversations.py` | 대화 인증·스트림·삭제 경계(가짜 분석 서비스): thread 연결, 대상 변경 409, 재개, `failed` frame의 `error.code`, 서비스 없음 503, 토큰 상한 429, recover, 저장 기록 GET, 데모 질문 목록 |
 | `test_threads.py` | `Conversations`의 LED/표시기·다이오드 외 부품 분석 전 차단과 일반 다이오드 허용은 가짜 연결/그래프로 DB·모델 없이 검사. 소유권·체크포인트·재개·기억·토큰 상한·데모 조립의 PostgreSQL 통합 부분은 `TEST_THREAD_DATABASE_URL`일 때만 |
 | `test_deletion.py` | 격리 DB의 삭제 범위: 프로젝트 삭제와 단일 대화 삭제가 해당 React 행과 같은 UUID 분석 기록만 지움, 탈퇴가 그 사용자의 기록·Store namespace·계정을 지우고 다른 사용자는 남김, 진행 중 분석과 탈퇴의 409, 보관 기간 청소 |

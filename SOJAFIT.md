@@ -149,6 +149,7 @@ SojaFit (proj3-b)
 │   │   ├── external_circuit_search.py <- Exa 결과에서 안전한 GitHub 저장소 루트 후보만 정제
 │   │   ├── schematic_source.py <- 검증된 외부 회로도 source DTO
 │   │   ├── external_schematic.py <- 공개 저장소 출처·라이선스·commit 검증과 bounded cache
+│   │   ├── schematic_dialogue.py <- 검증된 다중 회로도 후보의 설명·선택 질문과 LLM 출력 검증
 │   │   ├── schematic.py <- shell 없는 KiCad PDF export 경계
 │   │   ├── schematic_render.py <- PDF/SVG/PNG를 제한된 해상도 PNG로 변환
 │   │   └── schematic_discovery.py <- EDA 원본에 대응하는 전체 회로도 자산 판정
@@ -206,6 +207,7 @@ SojaFit (proj3-b)
 │   │   ├── card_read.md    <- 카드 읽기 프롬프트(영어)
 │   │   ├── card_pick.md    <- 읽을 문서 고르기 프롬프트(영어)
 │   │   ├── docs_answer.md  <- 멀티 RAG 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
+│   │   ├── schematic_dialogue.md <- 회로도 후보의 차이 설명·선택 질문·전체 소개 프롬프트
 │   │   ├── synth.md        <- 멀티 종합: 할 일 2개 이상의 부분 답을 한 답으로(영어, 답은 한국어)
 │   │   └── supervisor.md   <- 멀티 에이전트 Supervisor(계획): 질문 종류 · 할 일 최대 3개 · 지시서 · 거절 사유. Langfuse `supervisor` v4까지 등록(11-06 계획형 본문은 등록 전)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
@@ -240,6 +242,7 @@ SojaFit (proj3-b)
 │   │   ├── mail.py         <- Gmail SMTP TLS 인증·재설정 메일 전송(로그·저장·재시도 없음)
 │   │   ├── exa.py <- 내부 근거가 부족할 때 공식 제조사 PDF를 찾는 요청당 1회 검색
 │   │   ├── datasheet_rows.py <- 공식 데이터시트 표에서 품번 열·페이지·행·단위를 확인
+│   │   ├── document_language.py <- 공식 PDF 본문에서 영어·한국어만 허용하는 언어 검사
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 빌드한 React 화면(frontend/dist)을 같은 출처로 연결하는 어댑터
 │   │   ├── WEB.md          <- 폴더 설명
@@ -546,6 +549,7 @@ SojaFit (proj3-b)
 │   │   ├── test_visuals.py <- 회로도 catalog 15종·원본/배포 해시·경로·라이선스 검증
 │   │   ├── test_external_circuit_search.py <- GitHub 저장소 URL·Exa 호출 상한
 │   │   ├── test_external_schematic.py <- 출처·전체 시트·cache·서명 token 경계
+│   │   ├── test_schematic_dialogue.py <- 후보 누락·추가·사실 변경 차단과 선택 질문·전체 소개 검증
 │   │   ├── test_official_schematic.py <- 등록 제조사 원본 URL·출처 등급·SHA-256 렌더 검증
 │   │   ├── test_schematic_discovery.py <- 완성 회로도 자산 판정
 │   │   └── test_schematic_render.py <- PDF/SVG/PNG 렌더링·픽셀 제한
@@ -604,6 +608,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_datasheet_rows.py <- 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
+│   │   ├── test_document_language.py <- 영어·한국어 허용과 다른 언어·판독 불가 본문 거절 검증
 │   │   ├── test_exa_prefetch.py <- 웹 근거 미리 출발: 기본 꺼짐, 받아 둔 같은 PDF 재사용, 실패 시 원래 경로
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
@@ -796,6 +801,7 @@ SojaFit (proj3-b)
     │   ├── RESEARCH.md     <- 폴더 설명
     │   ├── frontend-schematic-work-summary-2026-11-15.md <- 프런트 오류·회로도 검색 개선 17개 작업과 검증 범위 공유 보고서
     │   ├── schematic-search-verification-2026-11-15.md <- CDFER·다이오드 검색 실검증과 한도 소진 시점의 미검증 항목
+    │   ├── official-schematic-search-verification-2026-11-16.md <- 공식 회로도 검색 확대·자료 검증·PDF 중복 제거·병렬 처리 실측 보고서
     │   ├── resolved-issues-summary-2026-11-15.md <- 회로도 검색·입력·판정·대화 기억의 해결·검증 완료 항목 공유 보고서
     │   ├── docker-cold-start-measurements.md  <- G2 빌드·첫 기능·첫 회로도·운영 응답 실측 비교
     │   ├── d9-outside-evidence-2026-11-11.md <- D9 근거 자료: 저장소 안으로 옮긴 원시 목록

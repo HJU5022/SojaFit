@@ -466,6 +466,21 @@ def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, ski
         _node_model.reset(token)
 
 
+def schematic_dialogue_chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
+    """예산이 있는 회로도 후보 소개를 Haiku 5.5로 생성한다."""
+    if _evaluation_budget.get() is None:
+        raise RuntimeError('Schematic dialogue requires a request budget')
+    if LLM_PROVIDER != 'openrouter':
+        raise LLMFormatError('Schematic dialogue requires the OpenRouter provider')
+    token = _node_model.set('anthropic/claude-haiku-5.5')
+    image_token = _figure_image.set(None)
+    try:
+        return chat(system, user, schema)
+    finally:
+        _figure_image.reset(image_token)
+        _node_model.reset(token)
+
+
 def _cli_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     """구독 `claude -p`로 같은 모델을 불러 schema 객체로 돌려준다(개발 중 반복 테스트용, 최종 정리 때 지운다)."""
     # [왜] CLI에는 response_format이 없어 JSON Schema를 시스템 프롬프트 끝에 붙여 형식을 요구한다

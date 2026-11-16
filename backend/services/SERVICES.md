@@ -19,12 +19,13 @@
 |---|---|
 | `SERVICES.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
-| `llm.py` | LLM·임베딩 호출의 유일한 입구: `node_chat`·`chat`·`node_model`, `embed_texts`, `voyage_embed`·`voyage_rerank`, 평가 전용 `evaluation_*` |
+| `llm.py` | LLM·임베딩 호출의 유일한 입구: `node_chat`·`chat`·`node_model`, 예산 필수 Haiku 5.5 회로도 소개 `schematic_dialogue_chat`, `embed_texts`, `voyage_embed`·`voyage_rerank`, 평가 전용 `evaluation_*` |
 | `langfuse_prompts.py` | 노드별 모델 표 `NODE_MODELS`, 프롬프트·Skill 등록(`publish_nodes`, `publish_skill`)과 고정 버전 대조, 세션 추적, `CostCallbackHandler`, `timed_tool`·`AnalysisTimings` |
 | `service_trace.py` | 서비스 분석의 모델 호출별 Langfuse 추적. 키가 있으면 켜지고, 내보내기 직전 훅 `mask_otel_spans`가 허용 목록 밖의 칸을 지우고 입력·출력은 `[redacted]`로 바꿈. 평가(`evals/`)는 이 파일을 쓰지 않음 |
 | `demo.py` | 키 없는 데모의 LLM 응답 기록 `recorder`·재생 `replayer`(없으면 `ReplayMiss`), `enabled`, `service_chat`, 데모 질문 목록·대조 `questions`·`match`·`refusal`. 유료 모델 호출 없음 |
 | `mouser.py` | Mouser 품번 검색 클라이언트 `check_parts`·`search_parts`: 한 번만 보내고 프로세스당 호출 상한 `MAX_CALLS`. 실패는 `MouserError(kind)`. `/api/prices`만 부름 |
 | `exa.py` | 내부 근거가 부족할 때만 쓰는 Exa 외부 근거 검색(공식 제조사 PDF, 공개 참고 링크). 요청당 호출 예산 `SearchBudgetExhausted` |
 | `datasheet_rows.py` | 공식 데이터시트 PDF 표에서 품번 열·페이지·행·단위를 확인해 인용 후보를 만듦. PDF 파서는 별도 프로세스 |
+| `document_language.py` | 공식 PDF 전체 추출 본문의 영어·한국어 허용 여부를 검사. 다른 언어·불확실한 본문은 제외 |
 | `quote.py` | 완료 판정의 품번·verdict 쌍을 불변 승인 snapshot으로 저장하고 가격 없는 견적·승인 사례를 관리. 사례가 남은 활성 승인만 조회/새 견적에 사용하며(`list_approvals`는 승인별 견적 `quotes`와 `part_number`를 함께 반환) 삭제 후 새 승인 이력을 허용한다. 같은 run 행 잠금과 활성 사례 검사로 중복 승인을 막고, 기존 snapshot/견적은 보존한다. 가격·재고 키는 거절(`assert_no_price_data`) |
 | `mail.py` | Gmail SMTP TLS 인증 링크 발송 `send_link`. 설정은 `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_PORT`, `AUTH_ORIGIN`이고 미설정이면 발송하지 않음. 토큰·수신자·오류를 로그하지 않음 |

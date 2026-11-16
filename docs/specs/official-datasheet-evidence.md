@@ -1,8 +1,7 @@
 # 제조사 데이터시트 원문 인용
 
 - 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: 6707002
+- 기준일: 2026-11-16
 - 정본 여부: 정본(공식 데이터시트 행 인용과 참고 링크의 동작). 근거 등급 정의는 [SPEC.md](../../SPEC.md)
 - 관련 문서: [rag-pipeline.md](rag-pipeline.md), [judge-agent.md](judge-agent.md), [verified-circuit-and-datasheet-visuals.md](verified-circuit-and-datasheet-visuals.md)
 
@@ -14,18 +13,19 @@
 
 - 내부 코퍼스로 질문에 답할 수 있으면 Exa 호출은 0회다.
 - 공식 원문에서 검증한 행을 2등급 근거로 쓴다. 적합한 공식 행을 채택하지 못하면 같은 품번의 공개 참고 링크를 3등급으로 조회한다.
-- 문서 에이전트와 판정 에이전트는 요청당 공식 검색 1회, 참고 검색 1회의 예산을 공유한다(`backend/services/exa.py:129-131`).
-- 외부 검색 슬롯이 사용 중이거나 예산을 소진한 상태는 `no evidence`가 아니라 `budget_exhausted`다. 이를 빈 검색 결과로 보고 3등급으로 자동 전환하지 않는다(`backend/multi_agent/agents/docs.py:446-447,606-608,708`).
+- 2등급 공식 PDF의 제조사는 TSC·Texas Instruments(TI)·STMicroelectronics·Analog Devices·onsemi·Infineon·Vishay 일곱 곳으로 제한한다. Nexperia는 2등급에서 제외한다. TSC는 보유한 내부 코퍼스에서 1등급으로, 새로 검증한 외부 공식 PDF에서 2등급으로 각각 사용할 수 있다. 3등급 참고 링크 정책은 별개다. 영어·한국어 본문만 채택하고, 다른 언어·언어 미상·읽을 수 없는 본문은 제외한다.
+- 문서 에이전트와 판정 에이전트는 요청당 공식 검색 1회, 참고 검색 1회의 예산을 공유한다(`backend/services/exa.py`).
+- 외부 검색 슬롯이 사용 중이거나 예산을 소진한 상태는 `no evidence`가 아니라 `budget_exhausted`다. 이를 빈 검색 결과로 보고 3등급으로 자동 전환하지 않는다(`backend/multi_agent/agents/docs.py`).
 - 범위 밖: 3등급 웹 본문 다운로드와 페이지 문구를 이용한 수치 판정. PDF와 추출 원문의 DB 적재.
 
 ## What
 
 | 항목 | 내용 | 근거 |
 |---|---|---|
-| 2등급 인용 | 번호 `[W1]` 형식. `evidence`에 PDF 이름, 1부터 시작하는 페이지, 표 제목, 행 이름, 원문 페이지 링크, `evidence_grade=2`, 원본 바이트의 `source_sha256` | `backend/multi_agent/agents/judge.py:403,445`, `backend/services/datasheet_rows.py:370-374`, `backend/multi_agent/agents/docs.py:495` |
-| 3등급 인용 | 번호 `[R1]` 형식, `evidence_grade=3`, HTTPS 링크. 화면에서 미검증 참고 정보로 표시한다. 제목 또는 URL에서 요청 품번을 확인한다 | `backend/conversations/dto.py:155,178,238`, `backend/services/exa.py:281` |
-| 재조회 | 응답과 대화 재조회에 같은 인용 번호와 출처를 제공한다 | `backend/conversations/dto.py:173,178` |
-| 공식 행 없음 | 검색 결과에 공식 링크만 있거나 표의 품번·수치가 불명확하면 기존 부분 답변·근거 부족 처리로 돌아간다 | `backend/multi_agent/agents/docs.py:708-714` |
+| 2등급 인용 | 번호 `[W1]` 형식. `evidence`에 PDF 이름, 1부터 시작하는 페이지, 표 제목, 행 이름, 원문 페이지 링크, `evidence_grade=2`, 원본 바이트의 `source_sha256` | `backend/multi_agent/agents/judge.py`, `backend/services/datasheet_rows.py`, `backend/multi_agent/agents/docs.py` |
+| 3등급 인용 | 번호 `[R1]` 형식, `evidence_grade=3`, HTTPS 링크. 화면에서 미검증 참고 정보로 표시한다. 제목 또는 URL에서 요청 품번을 확인한다 | `backend/conversations/dto.py`, `backend/services/exa.py` |
+| 재조회 | 응답과 대화 재조회에 같은 인용 번호와 출처를 제공한다 | `backend/conversations/dto.py` |
+| 공식 행 없음 | 검색 결과에 공식 링크만 있거나 표의 품번·수치가 불명확하면 기존 부분 답변·근거 부족 처리로 돌아간다 | `backend/multi_agent/agents/docs.py` |
 
 ## How
 
@@ -34,21 +34,35 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | 활성 조건 | `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, 서버의 `EXA_API_KEY`, 기존 OpenRouter 설정 | `backend/services/exa.py` |
-| 검색 후보 | Exa 응답 후보 5개 | `backend/services/exa.py:21` |
-| 다운로드 | TSC·Infineon 공식 데이터시트 PDF 최대 2개 | `backend/services/exa.py:22` |
-| 허용 경로 | `services.taiwansemi.com/storage/resources/datasheet/`, `www.infineon.com/assets/row/public/documents/`. 같은 제조사의 허용 경로로 한 번 이동할 수 있다 | `backend/services/datasheet_rows.py:24-26` |
-| 파일 크기 | 12 MiB | `backend/services/datasheet_rows.py:29` |
-| 쪽 수 | 첫 32쪽 | `backend/services/datasheet_rows.py:30` |
-| 파서 실행 시간 | 12초(하위 프로세스, 디스크에 쓰지 않음) | `backend/services/datasheet_rows.py:365` |
+| 검색 후보 | Exa 응답 후보 5개 | `backend/services/exa.py` |
+| 다운로드 | 허용 제조사의 공식 데이터시트 PDF 최대 2개 | `backend/services/exa.py` |
+| 허용 경로 | TSC `services.taiwansemi.com/storage/resources/datasheet/`, TI `www.ti.com/lit/ds/symlink/`, ST `www.st.com/resource/en/datasheet/`, ADI `www.analog.com/media/en/technical-documentation/data-sheets/`, onsemi `www.onsemi.com/pdf/datasheet/`, Infineon `www.infineon.com/assets/row/public/documents/`, Vishay `www.vishay.com/docs/`. 등록된 HTTPS 호스트와 PDF 경로만 허용하며 같은 제조사의 허용 경로로 한 번 이동할 수 있다 | `backend/services/datasheet_rows.py` |
+| 파일 크기 | 12 MiB | `backend/services/datasheet_rows.py` |
+| 쪽 수 | 행 추출은 첫 32쪽, 언어 검사는 전체 PDF 추출 본문 | `backend/services/datasheet_rows.py` |
+| 파서 실행 시간 | 12초(하위 프로세스, 디스크에 쓰지 않음) | `backend/services/datasheet_rows.py` |
 
 ### 행 선택과 검증
 
 - 문서명과 제목의 정확 품번·계열 관련성으로 다운로드 순서를 정한다. 최종 채택은 원문 표의 정확 품번으로 검증한다. 품번이 데이터 행에 있는 표와 셀 범위가 여러 행을 덮는 병합 표도 지원한다. 공유 조건은 PDF 셀의 물리적 범위를 확인한 경우에만 연결한다.
 - 공식 제조사 표에 같은 계열의 두 품번이 있으면 요청한 품번 열의 값과 단위만 인용한다. 정확한 품번을 확인할 수 없으면 해당 값은 인용하지 않는다.
 - Infineon의 공통 역전압 행은 첫 쪽 품번 목록, 정격표 행, 심볼과 숫자 셀까지 확인한다. Infineon 공식 문서 경로의 데이터시트 이름 표시는 `datasheet`와 `ds`를 모두 인정한다.
+- Vishay의 단일 품번 PDF는 파일명과 첫 쪽의 정확 품번 제목을 대조하고, 해당 쪽의 표·수치 셀을 확인한다. `BAS16` 질문에 `BAS16-G` 등 형제 품번 문서의 값을 대신 쓰지 않는다. VRRM 요청에서는 명시적 VRRM 또는 원문이 직접 인쇄한 `VRRM = VRWM = VR` 동치 기호만 허용한다. 같은 표의 비반복 역전압 `VRM`은 제외한다. 이 원문 행에 한정된 동치 표기를 다른 제조사의 VR 행으로 일반화하지 않는다.
 - 외부 행은 모델이 인용 번호로 선택한다. 서버가 해당 행의 품번·값·단위와 시험 조건으로 답변 문장을 만들고, 최종 문장을 같은 행에서 만든 문장의 해시와 대조한다. 품번·값·단위를 바꾼 외부 근거 문장은 거절한다.
 - 문서 질문은 선택한 원문 행에서 수치·단위·품번을 그대로 답한다.
+- VRRM 질문에 정확한 VRRM 행이 없고 정확 품번의 VR 행만 검증되면, 그 행은 `requested_symbol=VRRM`, 실제 `symbol=V_R`를 보존한 설명용 근거다. 답변은 VR(역전압)의 원문 값과 VRRM(반복 피크 역전압)의 차이를 같은 W 인용 문장으로 설명한다. VR을 VRRM으로 재명명하거나 판정용 정격으로 사용하지 않는다. 뒤 페이지에 정확한 VRRM 행이 있으면 설명용 VR fallback보다 우선한다.
+- 사용자가 VRRM을 명시했으면 모델이 `none`/빈 PDF 선택을 내더라도 이미 검증된 차이 설명은 보존하고 VRRM 값은 미확인으로 둔다. 동일 PDF 해시·페이지·품번·행·셀·단위·측정 조건의 중복 인용은 하나만 표시한다.
+- Infineon 공식 PDF 주소는 허용 경로·파일명 검증 후 단일 `fileId` 또는 `folderId` 식별 쿼리(영문·숫자·`_`·`-`, 8~128자)만 정규화해 보존한다. 중복·빈 값·미등록 쿼리·fragment·다른 호스트와 임의 리디렉션은 허용하지 않는다.
+- 3등급에도 명시된 제조사 조건을 적용한다. 인식한 제조사의 허용 호스트로 검색을 제한하고 반환 URL의 호스트를 다시 검사한다. 명시된 Infineon 질문에 Vishay·Diodes·Nexperia의 동명 품번 링크를 대신 표시하지 않는다. 제조사 미지정 검색의 기존 공개 참고 링크 정책은 유지한다.
 - 사용자가 정확한 발주 품번을 요구하면 현재 질문의 품번을 내부 재검색과 외부 조회에도 유지한다. 사용 조건·이전 대화의 다른 품번이나 유사 품번의 정격으로 대신 답하지 않는다.
+- 허용 제조사의 표는 공식 PDF의 정확 품번 목록/주문표와 정격표 셀의 위치를 함께 확인한다. 파일명에 품번이 있다는 이유만으로 값이 적용된다고 간주하지 않는다. 특정 시험 품번이나 정답 수치를 코드에 고정하지 않는다.
+- 션트 전압 기준 소자의 공식 정격 조회는 외부 검색이 켜져 있을 때 `docs`의 `rating` 작업으로 처리한다. 일반 IC의 후보 추천·교체 판정은 계속 범위 밖이다.
+
+### 본문 언어
+
+- `document_language.py`에서 전체 PDF의 추출 텍스트를 검사한 뒤에만 2등급 행을 만든다. 영문 URL·파일명·첫 쪽만으로 허용하지 않는다.
+- 영어·한국어 자연어 본문을 긍정 판정한다. 한국어 본문의 영문 제조사명·품번·단위와 두 허용 언어의 조합은 허용한다. 다른 언어의 본문이 섞인 문서는 제외한다.
+- 중국어·일본어 등 금지 문자권과 프랑스어·독일어·스페인어 등 다른 라틴 문자 언어도 검사한다. 표의 짧은 단위·수치·도면 기호를 독립 자연어로 오인하지 않는다. 판독 불가·불확실한 문서는 근거로 승격하지 않는다.
+- 언어 판정은 통계적 텍스트 검사다. 스캔 이미지 속 문자를 번역하거나 OCR해 지원하는 기능은 추가하지 않는다. 이 경계는 기존 세 제조사에도 동일하게 적용한다.
 
 ### 판본
 
@@ -58,20 +72,22 @@
 ### 대체 후보 판정
 
 - 내부 사양에 빠진 반복 피크 역전압(VRRM)만 공식 최대정격 행에서 보충한다. 같은 품번의 다른 제조사 문서나 일반 역전압(VR)을 VRRM으로 쓰지 않는다.
+- Vishay의 공식 최대정격 표에서 정확 품번·행·VRRM 기호/동치·단위·값을 검증한 `VALUE` 셀도 VRRM 보충에 사용할 수 있다. 다른 사양이 확인됐다는 뜻은 아니며 전체 대체 가능 판정으로 승격하지 않는다.
 - 나머지 판정 조건이 부족하면 해당 조건은 확인할 수 없다고 표시한다.
 
 ### 슬롯 소진
 
-- 공식·참고 조회 슬롯이 소진되어 필수 보강을 완료하지 못하면, 유효한 내부 답변과 인용은 유지하고 문서 보고는 `partial`, 사유는 `limit_reached`로 남긴다(`backend/multi_agent/contracts.py:39`).
+- 공식·참고 조회 슬롯이 소진되어 필수 보강을 완료하지 못하면, 유효한 내부 답변과 인용은 유지하고 문서 보고는 `partial`, 사유는 `limit_reached`로 남긴다(`backend/multi_agent/contracts.py`).
 - 모델이 `enough`라고 답해도 코드가 확인한 trr 측정 조건(IF/IR/Irr) 누락은 완료로 표시하지 않는다. 최종 내부 보강으로 요구사항이 실제 충족되면 슬롯 제한만으로 미완료 안내를 추가하지 않는다.
 - 슬롯이 점유·소진되어 실행되지 않은 경우는 공식 문서 부재로 판정하지 않는다. 공식 검색의 실제 무결과·후보 탈락·행/품번 불일치처럼 근거가 없음을 확인한 경우에만 3등급 참고 검색으로 넘어간다.
 
 ### trr 측정조건과 그림
 
 - 상세 trr 측정조건 요청에서 내부 청크가 IF/IR/Irr를 모두 보존하지 못하면 공식 원문 행을 조회한다. 그 행을 채택하면 내부의 부정확한 조건 부재 문장을 대체하고 코드가 검증한 값·단위·조건 문장으로 인용한다.
-- 상세 역회복 측정 기준은 같은 PDF에서 해당 표와 연결되는 캡션 아래 원본 그림 1개를 추가로 읽을 수 있다. PNG는 메모리에서 최대 1600px, 512 KiB로 제한하고(`backend/services/datasheet_rows.py:297-301`) 기존 `node_chat`의 같은 모델에 전달한다. 원본 이미지는 대화·DB·프롬프트 추적에 저장하지 않는다.
+- 상세 역회복 측정 기준은 같은 PDF에서 해당 표와 연결되는 캡션 아래 원본 그림 1개를 추가로 읽을 수 있다. PNG는 메모리에서 최대 1600px, 512 KiB로 제한하고(`backend/services/datasheet_rows.py`) 기존 `node_chat`의 같은 모델에 전달한다. 원본 이미지는 대화·DB·프롬프트 추적에 저장하지 않는다.
 - 판독한 순방향 전류·역방향 피크·회복 전류와 측정 화살표의 끝점은 `backend/judge/pdf_claims.py`에서 표의 IF/IR/Irr와 대조한다. 판독 불가나 불일치이면 그림 설명을 채택하지 않는다. 표와 그림은 각자의 PDF 페이지에 별도 W 인용을 부여한다.
 - 이 해석은 실제 코일 실측이나 교체 적합성의 보장이 아니다.
+- 공식 행 선택은 반환 상한과 같은 W1~W5 범위에서 최대 5개다. 그림은 기존 행과 겹치지 않는 W4 이상의 첫 번호를 사용한다. 번호가 달라져도 원문 URL·쪽·행과 인용 결합/공개·저장·재조회 DTO의 대응은 유지한다.
 
 ## AC
 
@@ -82,17 +98,25 @@
 - 사용자가 판본을 지정했는데 맞는 문서를 확인하지 못하면 다른 판본의 정격값으로 대체하지 않는다.
 - 슬롯 소진으로 필수 보강을 못 하면 문서 보고는 `partial`/`limit_reached`다.
 - 품번·값·단위를 바꾼 외부 근거 문장은 거절한다.
+- VRRM 요청에서 VR만 확인되면 실제 항목·값과 그 차이를 공식 W 인용으로 설명하고 VRRM 값은 미확인으로 남긴다. 참고 링크도 명시 제조사와 일치해야 한다.
+- Vishay BAS16의 공식 원문 행에서 VRRM을 답하면 실제 Vishay 문서와 품번·페이지·표·행·수치·해시가 일치해야 한다. 기존 Infineon VR/VRRM 구분과 내부 TSC 코퍼스의 1등급 trr/조건 인용을 유지해야 한다.
+- 복수 PDF의 후반 W4·W5 행을 선택할 수 있고, 같은 응답에 그림을 인용해도 번호 충돌이 없어야 한다.
+- 허용된 일곱 제조사에서 정확한 제조사·품번·원문 행을 검증한 경우에만 2등급 W 인용으로 답하고, 공개/저장용 DTO에 같은 페이지·표·행·원문 해시를 유지한다.
+- Nexperia를 명시한 2등급 요청이면 외부 검색 슬롯을 쓰거나 API를 부르지 않는다. 제조사 미지정 검색과 prefetch가 Nexperia PDF 링크를 받아도 내려받지 않는다. 원문 파서와 판정용 행 검증도 해당 출처를 2등급으로 채택하지 않는다.
+- TSC의 등록된 공식 PDF는 다른 허용 제조사와 같은 검증을 거쳐야만 2등급으로 사용하며, 내부 TSC 1등급 근거도 계속 사용할 수 있다.
+- 영어·한국어 본문은 허용하고 다른 언어/미상/판독 불가 문서는 행을 반환하지 않는다. VR을 VRRM으로 바꾸거나 주문 접미사가 다른 품번의 값을 빌려 답하지 않는다.
 
-## 구현 상태
+## 검증
 
-| 영역 | 테스트 | 상태 |
-|---|---|---|
-| 행 추출, 병합 표, 판본, 크기·쪽·시간 상한, 그림 제한 | `tests/services/test_datasheet_rows.py` | 구현 |
-| 슬롯 소진, 3등급 전환, 인용 복구, trr 조건 | `tests/multi_agent/test_docs_agent.py`(예: `:854,:969,:998`) | 구현 |
-| 안전 인용 DTO | `tests/conversations/test_dto.py` | 구현 |
-| AC 문장별 대응 | | 대조하지 않음 |
+| 영역 | 회귀 시험 |
+|---|---|
+| 행 추출, 병합 표, 판본, 크기·쪽·시간 상한, 그림 제한 | `tests/services/test_datasheet_rows.py` |
+| 영어·한국어와 기술 기호 허용, 다른 언어·불확실 본문 거절 | `tests/services/test_document_language.py` |
+| 슬롯 소진, 3등급 전환, 인용 번호, trr 조건 | `tests/multi_agent/test_docs_agent.py` |
+| 공식 행의 VRRM 보강과 제조사 조건 | `tests/multi_agent/test_judge.py` |
+| 인용 DTO 저장·재조회 | `tests/conversations/test_dto.py` |
 
 ## 한계
 
-- 허용 제조사는 TSC와 Infineon 두 곳이다.
-- 실제 Exa·제조사 서버를 호출하는 통합 실행 결과는 이 문서에 기록하지 않았다(미확인).
+- 현행 2등급 허용 제조사는 TSC·TI·STMicroelectronics·Analog Devices·onsemi·Infineon·Vishay 일곱 곳이다. 등록된 표 구조와 정확 품번 적용 범위를 확인할 수 있는 PDF를 지원하며 모든 제조사의 모든 PDF 형식·품번·판본을 검증한 것으로 간주하지 않는다. 아래 기존 실측은 제조사 제한 변경 전 코드의 기록이며 이번 변경의 실모델 재검증 결과가 아니다.
+- 기존 실요청 기록에서 TI LM385-ADJ의 30mA/p3와 onsemi BAS16LT1G의 VR100V/p1 정격 행 인용을 확인했다. onsemi의 p4 주문표 위치는 최종 인용에 별도로 표시되지 않았다. ST·Analog Devices에는 공식 PDF 다운로드 시간 초과 기록이 있다. 이번 PR 정리 후 실제 모델·운영 HTTP·운영 부하 검증은 수행하지 않았다.

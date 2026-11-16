@@ -2,10 +2,11 @@
 import base64
 import hmac
 import json
+import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-from threading import Event
+from threading import Event, Lock
 
 import pytest
 import httpx
@@ -164,6 +165,50 @@ def test_default_community_prefers_a_compact_complete_circuit_without_hiding_oth
     result = worker.find('component circuit')
     assert result.source_url == sources[1].source_url
     assert {choice.source_url for choice in result.choices} == {source.source_url for source in sources}
+
+
+def test_choices_preserve_verified_identity_and_provenance_for_llm_dialogue(service):
+    worker, _, _, source = service
+    sources = tuple(replace(
+        source,
+        repository=f"maker/board-{index}",
+        repository_url=f"https://github.com/maker/board-{index}",
+        source_url=f"https://github.com/maker/board-{index}/tree/{'a' * 40}",
+        source_file=f"board-{index}.kicad_sch",
+        root_schematic=f"board-{index}.kicad_sch",
+        manufacturer=manufacturer,
+        model="Same Board",
+        revision=revision,
+        source_type="manufacturer_official",
+        source_sha256=str(index) * 64,
+        license="MIT",
+        attribution=f"{manufacturer} contributors",
+    ) for index, (manufacturer, revision) in enumerate(
+        (("Maker A", "Rev A"), ("Maker B", "Rev B")), start=1
+    ))
+    refs = tuple(WebSchematicRef(
+        f"https://maker.example/board-{index}.pdf",
+        f"https://maker.example/board-{index}",
+        f"board-{index}.pdf", "pdf", "Same Board", "Maker"
+    ) for index in (1, 2))
+    worker.search = lambda query, limit: refs
+    worker.inspect = lambda ref, **kwargs: (sources[refs.index(ref)],)
+    worker.render = lambda candidate: (b"sheet", b"sheet")
+
+    result = worker.find("same board")
+
+    actual = {(choice.title, choice.manufacturer, choice.model, choice.revision,
+               choice.source_file, choice.source_sha256, choice.commit,
+               choice.license, choice.attribution, choice.repository_url)
+              for choice in result.choices}
+    assert actual == {
+        ("Same Board · board-1.kicad_sch", "Maker A", "Same Board", "Rev A",
+         "board-1.kicad_sch", "1" * 64, "c" * 40, "MIT", "Maker A contributors",
+         "https://github.com/maker/board-1"),
+        ("Same Board · board-2.kicad_sch", "Maker B", "Same Board", "Rev B",
+         "board-2.kicad_sch", "2" * 64, "c" * 40, "MIT", "Maker B contributors",
+         "https://github.com/maker/board-2"),
+    }
 
 
 @pytest.mark.parametrize("query", [
@@ -913,6 +958,7 @@ def test_renderer_boundary_maps_source_and_upstream_errors(error, status, monkey
 
 def test_diode_component_search_does_not_reject_repository_by_its_name(monkeypatch):
     from backend.projects import external_circuit_search as search
+    monkeypatch.setattr(search, 'search_semiconductor_schematics', lambda *args: ())
     ref = search.github_repository_ref('https://github.com/owner/power-board')
     monkeypatch.setattr(search, 'search_component_repositories', lambda query, limit: (ref,))
     monkeypatch.setattr(search, 'search_public_schematics', lambda *args: ())
@@ -1024,6 +1070,7 @@ def test_public_choice_switch_keeps_all_verified_choices(service):
 @pytest.mark.parametrize("source_type", ["manufacturer_official", "public_web"])
 def test_diode_search_does_not_hide_verified_web_source_behind_repository_hits(service, monkeypatch, source_type):
     from backend.projects import external_circuit_search as search
+    monkeypatch.setattr(search, 'search_semiconductor_schematics', lambda *args: ())
     worker, _, _, source = service
     web = replace(_official_ref(), source_type=source_type,
                   title="SS33 diode application schematic", source_file="SS33-diode.pdf",
@@ -1099,6 +1146,7 @@ def test_render_failures_keep_retry_state_and_recover_after_deadline(service, fa
 @pytest.mark.parametrize("provider_failure", [False, True])
 def test_diode_web_failure_keeps_community_fallback(service, monkeypatch, provider_failure):
     from backend.projects import external_circuit_search as search
+    monkeypatch.setattr(search, 'search_semiconductor_schematics', lambda *args: ())
     worker, _, _, source = service
     web = replace(_official_ref(), title="SS33 diode schematic", source_file="SS33-diode.pdf")
     ref = GitHubRepositoryRef("group", "board", "https://github.com/group/board")
@@ -1124,3 +1172,475 @@ def test_diode_web_failure_keeps_community_fallback(service, monkeypatch, provid
     result = worker.find("SS33 diode")
     assert result.source_type == "community"
     assert calls == {"public": 1, "manufacturer": 1, "component": 1}
+
+
+@pytest.mark.parametrize('render_fails',[False,True])
+def test_bare_tsc_query_isolated_from_old_github_cache_and_never_falls_back(service,render_fails):
+    from backend.projects.schematic_source import provider_rate_key
+    worker,counts,clock,src=service
+    bare='ts19371cx6'
+    worker.queries.get(bare,lambda:api._SearchFailure('validation_failed'))
+    worker.candidates.get(bare,lambda:(GitHubRepositoryRef('old','unrelated','https://github.com/old/unrelated'),))
+    worker.retry_until[bare]=(clock[0]+600,('api.github.com','github_api',403,provider_rate_key('api.github.com')))
+    url='https://services.taiwansemi.com/storage/resources/datasheet/TS19371CX6_J1708.pdf'
+    source=replace(src,repository='',commit='',source_type='manufacturer_official',evidence_grade=2,
+        repository_url=url,source_url=url,source_file='TS19371CX6_J1708.pdf',asset_kind='pdf',
+        asset_paths=(),root_schematic='TS19371CX6_J1708.pdf',source_sha256='d'*64,model='TS19371CX6')
+    ref=WebSchematicRef(url,url,source.source_file,'pdf','TSC application','Taiwan Semiconductor',
+        source_type='manufacturer_official',evidence_grade=2,model=source.model)
+    def search(q,limit):
+        assert q=='tsc ts19371cx6'
+        return (ref,)
+    worker.search=search
+    worker.inspect=lambda *args,**kwargs:(source,)
+    def render(source):
+        counts['bare_render'] += 1
+        if render_fails:raise ExternalSchematicInvalidSource()
+        return (b'sheet0',b'sheet1')
+    worker.render=render
+    worker.fallback_search=lambda *args:pytest.fail('TSC validation failure must not fall back to GitHub')
+    if render_fails:
+        with pytest.raises(ExternalSchematicNotFound):worker.find('TS19371CX6')
+    else:
+        assert worker.find('TS19371CX6').source_url==url
+        assert worker.find('TSC TS19371CX6').source_url==url
+    assert counts['bare_render'] == 1
+
+
+@pytest.mark.parametrize('query', [
+    'TI TIDA-010197', 'ST NUCLEO MB1136', 'Analog Devices DC368B',
+    'onsemi NSVR351SDSA3 diode', 'Infineon BAT62-02V diode', 'Vishay SiC diode PFC',
+])
+def test_named_semiconductor_search_uses_only_official_provider(monkeypatch, query):
+    from backend.projects import external_circuit_search as search
+    ref = _official_ref()
+    seen = []
+    def official(q, limit):
+        seen.append((q, limit))
+        return (ref,)
+    monkeypatch.setattr(search, 'search_semiconductor_schematics', official, raising=False)
+    monkeypatch.setattr(search, 'search_public_schematics', lambda *a: pytest.fail('named manufacturer must stay official'))
+    monkeypatch.setattr(search, 'search_component_repositories', lambda *a: pytest.fail('named manufacturer must not use GitHub'))
+    assert api._search(query, 5) == (ref,)
+    assert seen == [(query, 5)]
+
+
+def test_rejected_official_semiconductor_never_falls_back_to_unrelated_github(service):
+    worker, _, _, _ = service
+    worker.search = lambda *a: (_official_ref(),)
+    worker.inspect = lambda *a, **kw: ()
+    worker.fallback_search = lambda *a: pytest.fail('official validation failure must stay a failure')
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find('NSVR351SDSA3 onsemi diode')
+
+
+@pytest.mark.parametrize('selected', [False, True])
+def test_bare_part_never_selects_first_manufacturer_even_with_explicit_source(service,selected):
+    worker,counts,_,source=service
+    refs=tuple(replace(_official_ref(),source_url=url,page_url=url,manufacturer=maker)
+               for url,maker in [('https://www.ti.com/lit/ds/symlink/lm2596.pdf','Texas Instruments'),
+                                ('https://www.onsemi.com/pdf/datasheet/lm2596-d.pdf','onsemi')])
+    sources={ref:replace(source,repository='',commit='',source_url=ref.source_url,repository_url=ref.page_url,
+                        asset_kind='pdf',asset_paths=(),expected_sheets=1,source_type='manufacturer_official',
+                        evidence_grade=2,manufacturer=ref.manufacturer,model='LM2596',source_sha256='a'*64) for ref in refs}
+    worker.search=lambda *a:counts.update(search_bare=1) or refs
+    worker.inspect=lambda candidate,**kw:(sources[candidate],)
+    worker.render=lambda s:(b'verified',)
+    worker.fallback_search=lambda *a:pytest.fail('ambiguity must not fall back')
+    for _ in range(2):
+        with pytest.raises(ExternalSchematicNotFound) as error:
+            worker.find('LM2596',refs[0].source_url if selected else None)
+        assert error.value.reason=='ambiguous_manufacturer'
+    assert counts['search_bare']==1
+
+
+def test_bare_part_does_not_treat_other_manufacturer_failure_as_unique(service):
+    worker,_,_,source=service
+    refs=tuple(replace(_official_ref(),source_url=url,page_url=url,manufacturer=maker)
+               for url,maker in [('https://www.ti.com/lit/ds/symlink/lm2596.pdf','Texas Instruments'),
+                                ('https://www.onsemi.com/pdf/datasheet/lm2596-d.pdf','onsemi')])
+    official=replace(source,repository='',commit='',source_url=refs[0].source_url,asset_kind='pdf',asset_paths=(),
+                     expected_sheets=1,source_type='manufacturer_official',evidence_grade=2,
+                     manufacturer='Texas Instruments',source_sha256='a'*64)
+    worker.search=lambda *a:refs
+    def inspect(candidate,**kw):
+        if candidate==refs[1]:raise ExternalSchematicUpstreamError()
+        return (official,)
+    worker.inspect=inspect
+    worker.render=lambda s:(b'verified',)
+    with pytest.raises(ExternalSchematicUpstreamError):worker.find('LM2596')
+
+
+def test_bare_part_ambiguity_includes_sixth_official_manufacturer(service):
+    worker,_,_,source=service
+    urls=['https://www.ti.com/lm2596.pdf','https://www.st.com/lm2596.pdf',
+          'https://www.analog.com/lm2596.pdf','https://www.onsemi.com/lm2596.pdf',
+          'https://www.infineon.com/lm2596.pdf','https://www.vishay.com/lm2596.pdf']
+    refs=tuple(replace(_official_ref(),source_url=url,page_url=url) for url in urls)
+    worker.search=lambda *a:refs
+    def inspect(ref,**kw):
+        if ref not in (refs[0],refs[5]):return ()
+        return (replace(source,repository='',commit='',source_url=ref.source_url,asset_kind='pdf',asset_paths=(),
+                        expected_sheets=1,source_type='manufacturer_official',evidence_grade=2,
+                        source_sha256='a'*64),)
+    worker.inspect=inspect;worker.render=lambda s:(b'verified',)
+    with pytest.raises(ExternalSchematicNotFound) as error:worker.find('LM2596')
+    assert error.value.reason=='ambiguous_manufacturer'
+
+
+def test_bare_part_invalid_application_note_gets_one_official_datasheet_search(service):
+    worker,counts,_,source=service
+    note=replace(_official_ref(),source_url='https://www.st.com/resource/en/application_note/an290.pdf')
+    data=replace(_official_ref(),source_url='https://www.st.com/resource/en/datasheet/l78.pdf')
+    official=replace(source,repository='',commit='',source_url=data.source_url,asset_kind='pdf',asset_paths=(),
+                     expected_sheets=1,source_type='manufacturer_official',evidence_grade=2,
+                     manufacturer='STMicroelectronics',source_sha256='a'*64)
+    worker.search=lambda *a:(note,)
+    worker.official_search=lambda q,limit:counts.update(datasheet_search=1) or (data,)
+    worker.inspect=lambda ref,**kw:(official,) if ref==data else ()
+    worker.render=lambda s:(b'verified',)
+    worker.fallback_search=lambda *a:pytest.fail('official retry must not use GitHub')
+    assert worker.find('L7805').source_url==data.source_url
+    assert worker.find('L7805').source_url==data.source_url
+    assert counts['datasheet_search']==1
+
+
+def test_first_official_pdf_request_downloads_and_inspects_once(monkeypatch, caplog):
+    """A fake PDF/HTTP boundary exercises the current first-request pipeline only."""
+    from backend.projects import schematic_render as render
+    monkeypatch.setenv('AUTH_SECRET','pdf-request-test-padding'.ljust(32,'x'))
+    url='https://www.ti.com/lit/ds/symlink/lm2596.pdf'
+    ref=WebSchematicRef(url,url,'lm2596.pdf','pdf','LM2596','Texas Instruments',
+                        source_type='manufacturer_official',evidence_grade=2,manufacturer='Texas Instruments')
+    calls=Counter();data=b'%PDF-DO_NOT_LOG_OR_SIGN_THESE_BYTES'
+    def download(*args,**kwargs):calls.update(download=1);return data,'application/pdf'
+    def inspect(*args,**kwargs):calls.update(inspect=1);return (0,2)
+    def convert(kind,path,output,*,pdf_pages):
+        assert path.read_bytes()==data and pdf_pages==(0,2)
+        calls.update(convert=1);return (b'png-one',b'png-two')
+    monkeypatch.setattr(render,'_public_asset',download)
+    monkeypatch.setattr(render,'_bounded_official_pdf_schematic_pages',inspect)
+    monkeypatch.setattr(render,'_sheets',convert)
+    worker=api.ExternalSchematicService(lambda *a:(ref,),api._inspect,api._render)
+    with caplog.at_level('INFO'):
+        result=worker.find('TI LM2596 datasheet')
+    assert result.sheet_count==2
+    assert calls=={'download':1,'inspect':1,'convert':1}
+    payload=base64.urlsafe_b64decode(result.token.split('.')[0]+'==').decode()
+    assert 'DO_NOT_LOG_OR_SIGN' not in payload
+    assert 'DO_NOT_LOG_OR_SIGN' not in str([vars(record) for record in caplog.records])
+
+
+def test_pdf_reuse_does_not_cross_new_requests(monkeypatch):
+    from backend.projects import schematic_render as render
+    monkeypatch.setenv('AUTH_SECRET','pdf-request-test-padding'.ljust(32,'x'))
+    url='https://www.ti.com/lit/ds/symlink/lm2596.pdf'
+    ref=WebSchematicRef(url,url,'lm2596.pdf','pdf','LM2596','Texas Instruments',
+                        source_type='manufacturer_official',evidence_grade=2,manufacturer='Texas Instruments')
+    calls=Counter();data=b'%PDF-request-local-only'
+    def download(*args,**kwargs):calls.update(download=1);return data,'application/pdf'
+    def inspect(*args,**kwargs):calls.update(inspect=1);return (0,)
+    monkeypatch.setattr(render,'_public_asset',download)
+    monkeypatch.setattr(render,'_bounded_official_pdf_schematic_pages',inspect)
+    monkeypatch.setattr(render,'_sheets',lambda *a,**kw:(b'png',))
+    for _ in range(2):
+        worker=api.ExternalSchematicService(lambda *a:(ref,),api._inspect,api._render)
+        assert worker.find('TI LM2596').sheet_count==1
+    assert calls=={'download':2,'inspect':2}
+
+
+def test_concurrent_pdf_requests_keep_checked_bytes_separate(monkeypatch):
+    from threading import Barrier
+    from backend.projects import schematic_render as render
+    monkeypatch.setenv('AUTH_SECRET','pdf-request-test-padding'.ljust(32,'x'))
+    barrier=Barrier(2);downloads=Counter()
+    urls=[f'https://www.ti.com/lit/ds/symlink/lm2596-{suffix}.pdf' for suffix in ['a','b']]
+    data={url:f'%PDF-{i}'.encode() for i,url in enumerate(urls)}
+    def download(url,*a,**kw):downloads[url]+=1;return data[url],'application/pdf'
+    monkeypatch.setattr(render,'_public_asset',download)
+    monkeypatch.setattr(render,'_bounded_official_pdf_schematic_pages',lambda *a:(0,))
+    monkeypatch.setattr(render,'_sheets',lambda kind,path,*a,**kw:(path.read_bytes(),))
+    def run(url):
+        ref=WebSchematicRef(url,url,url.rsplit('/',1)[-1],'pdf','LM2596','Texas Instruments',
+                           source_type='manufacturer_official',evidence_grade=2,manufacturer='Texas Instruments')
+        def inspect(ref,**kw):
+            result=api._inspect(ref,**kw);barrier.wait(timeout=5);return result
+        worker=api.ExternalSchematicService(lambda *a:(ref,),inspect,api._render)
+        result=worker.find('TI LM2596')
+        assert worker.load(result.token,0)==data[url]
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(run,urls))
+    assert downloads=={url:1 for url in urls}
+
+
+def test_first_request_inspects_two_official_pdf_candidates_in_parallel(monkeypatch):
+    """첫 요청에서도 연속된 공식 PDF 후보 두 개의 검사 슬롯을 동시에 사용한다."""
+    from backend.projects import schematic_render as render
+
+    monkeypatch.setenv('AUTH_SECRET', 'pdf-parallel-test-padding'.ljust(32, 'x'))
+    refs = tuple(WebSchematicRef(
+        url, url, f'{maker.lower()}.pdf', 'pdf', 'LM2596', maker,
+        source_type='manufacturer_official', evidence_grade=2, manufacturer=maker,
+    ) for maker, url in (
+        ('Texas Instruments', 'https://www.ti.com/lit/ds/symlink/lm2596.pdf'),
+        ('STMicroelectronics', 'https://www.st.com/resource/en/datasheet/lm2596.pdf'),
+    ))
+    active = 0
+    peak = 0
+    lock = Lock()
+
+    def inspect(candidate, **kwargs):
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+        try:
+            # 순차 구현에서는 이 지연 동안 다음 후보가 시작되지 않는다.
+            time.sleep(0.12)
+            return (VerifiedSchematicSource(
+                '', '', '미확인', candidate.manufacturer, candidate.source_url,
+                candidate.source_url, candidate.source_file, 'pdf', (),
+                candidate.source_file, 1, 'manufacturer_official', 2,
+                candidate.manufacturer, 'LM2596', source_sha256='a' * 64,
+            ),)
+        finally:
+            with lock:
+                active -= 1
+
+    monkeypatch.setattr(render, '_sheets', lambda *args, **kwargs: (b'png',))
+    worker = api.ExternalSchematicService(lambda query, limit: refs, inspect, lambda source: (b'png',))
+
+    with pytest.raises(ExternalSchematicNotFound) as error:
+        worker.find('LM2596')
+
+    assert error.value.reason == 'ambiguous_manufacturer'
+    assert peak == 2
+
+
+def test_parallel_inspection_keeps_candidate_order_and_selected_pdf_bytes(monkeypatch):
+    """후보 2가 먼저 끝나도 후보 1을 선택하고 각 원문 바이트를 유지한다."""
+    from backend.projects import schematic_render as render
+
+    monkeypatch.setenv('AUTH_SECRET', 'pdf-parallel-order-test'.ljust(32, 'x'))
+    refs = tuple(WebSchematicRef(
+        url, url, f'lm2596-{index}.pdf', 'pdf', 'LM2596', 'Texas Instruments',
+        source_type='manufacturer_official', evidence_grade=2,
+        manufacturer='Texas Instruments',
+    ) for index, url in enumerate((
+        'https://www.ti.com/lit/ds/symlink/lm2596-first.pdf',
+        'https://www.ti.com/lit/ds/symlink/lm2596-second.pdf',
+    ), 1))
+    completion = []
+    rendered = []
+
+    def inspect(candidate, **kwargs):
+        if candidate is refs[0]:
+            time.sleep(0.08)
+        completion.append(candidate.source_url)
+        return (VerifiedSchematicSource(
+            '', '', '미확인', candidate.manufacturer, candidate.source_url,
+            candidate.source_url, candidate.source_file, 'pdf', (),
+            candidate.source_file, 1, 'manufacturer_official', 2,
+            candidate.manufacturer, 'LM2596',
+            source_sha256=('1' if candidate is refs[0] else '2') * 64,
+        ),)
+
+    def render_source(source):
+        payload = b'first-pdf' if source.source_url == refs[0].source_url else b'second-pdf'
+        rendered.append((source.source_url, payload))
+        return (payload,)
+
+    monkeypatch.setattr(render, '_sheets', lambda *args, **kwargs: (b'png',))
+    worker = api.ExternalSchematicService(lambda query, limit: refs, inspect, render_source)
+    result = worker.find('TI LM2596')
+
+    assert completion == [refs[1].source_url, refs[0].source_url]
+    assert [url for url, _ in rendered] == [refs[0].source_url, refs[1].source_url]
+    assert result.source_url == refs[0].source_url
+
+
+def test_parallel_real_pdf_boundary_keeps_each_checked_bytes_for_conversion(monkeypatch):
+    """실제 inspect/render 진입점에서도 병렬 후보별 PDF 바이트와 1회 재사용을 분리한다."""
+    from backend.projects import schematic_render as render
+
+    monkeypatch.setenv('AUTH_SECRET', 'pdf-parallel-bytes-test'.ljust(32, 'x'))
+    refs = tuple(WebSchematicRef(
+        url, url, f'lm2596-{suffix}.pdf', 'pdf', 'LM2596', 'Texas Instruments',
+        source_type='manufacturer_official', evidence_grade=2,
+        manufacturer='Texas Instruments',
+    ) for suffix, url in (
+        ('a', 'https://www.ti.com/lit/ds/symlink/lm2596-a.pdf'),
+        ('b', 'https://www.ti.com/lit/ds/symlink/lm2596-b.pdf'),
+    ))
+    payloads = {refs[0].source_url: b'%PDF-A', refs[1].source_url: b'%PDF-B'}
+    downloads = Counter()
+    converted = []
+
+    # _public_asset does not receive the source URL in _sheets, so retain the
+    # downloaded bytes in the temporary PDF path and verify those exact bytes.
+    def download(url, *args, **kwargs):
+        downloads[url] += 1
+        return payloads[url], 'application/pdf'
+
+    def pages(data, query, manufacturer, *args):
+        return (0,)
+
+    def sheets(kind, path, output, *, pdf_pages):
+        converted.append(path.read_bytes())
+        return (b'png',)
+
+    monkeypatch.setattr(render, '_public_asset', download)
+    monkeypatch.setattr(render, '_bounded_official_pdf_schematic_pages', pages)
+    monkeypatch.setattr(render, '_sheets', sheets)
+    worker = api.ExternalSchematicService(lambda query, limit: refs, api._inspect, api._render)
+
+    result = worker.find('TI LM2596')
+
+    assert result.source_url == refs[0].source_url
+    assert downloads == Counter({refs[0].source_url: 1, refs[1].source_url: 1})
+    assert converted == [payloads[refs[0].source_url], payloads[refs[1].source_url]]
+
+
+def test_four_official_pdf_candidates_use_no_more_than_two_inspection_slots(monkeypatch):
+    """후보가 네 개여도 한 요청의 PDF 다운로드·검사 동시성은 2로 제한한다."""
+    monkeypatch.setenv('AUTH_SECRET', 'pdf-parallel-four-test'.ljust(32, 'x'))
+    refs = tuple(WebSchematicRef(
+        f'https://www.{maker}.com/lm2596.pdf', f'https://www.{maker}.com/lm2596.pdf',
+        f'{maker}.pdf', 'pdf', 'LM2596', maker,
+        source_type='manufacturer_official', evidence_grade=2, manufacturer=maker,
+    ) for maker in ('ti', 'st', 'onsemi', 'infineon'))
+    active = 0
+    peak = 0
+    lock = Lock()
+
+    def inspect(candidate, **kwargs):
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+        try:
+            time.sleep(0.05)
+            return (VerifiedSchematicSource(
+                '', '', '미확인', candidate.manufacturer, candidate.source_url,
+                candidate.source_url, candidate.source_file, 'pdf', (),
+                candidate.source_file, 1, 'manufacturer_official', 2,
+                candidate.manufacturer, 'LM2596', source_sha256='a' * 64,
+            ),)
+        finally:
+            with lock:
+                active -= 1
+
+    worker = api.ExternalSchematicService(lambda query, limit: refs, inspect,
+                                          lambda source: (b'png',))
+    with pytest.raises(ExternalSchematicNotFound) as error:
+        worker.find('LM2596')
+
+    assert error.value.reason == 'ambiguous_manufacturer'
+    assert peak == 2
+
+
+def test_parallel_inspection_shares_one_upstream_retry_budget(monkeypatch):
+    """두 병렬 검사 모두 실패해도 요청 전체의 검사 재시도는 한 번만 허용한다."""
+    monkeypatch.setenv('AUTH_SECRET', 'pdf-parallel-retry-test'.ljust(32, 'x'))
+    refs = tuple(WebSchematicRef(
+        url, url, 'lm2596.pdf', 'pdf', 'LM2596', maker,
+        source_type='manufacturer_official', evidence_grade=2, manufacturer=maker,
+    ) for maker, url in (
+        ('Texas Instruments', 'https://www.ti.com/lm2596.pdf'),
+        ('STMicroelectronics', 'https://www.st.com/lm2596.pdf'),
+    ))
+    calls = Counter()
+
+    def inspect(candidate, **kwargs):
+        calls[candidate.source_url] += 1
+        raise ExternalSchematicUpstreamError()
+
+    worker = api.ExternalSchematicService(lambda query, limit: refs, inspect,
+                                          lambda source: (b'png',))
+    with pytest.raises(ExternalSchematicUpstreamError):
+        worker.find('LM2596')
+
+    assert sum(calls.values()) == 3
+    assert all(value >= 1 for value in calls.values())
+
+
+def test_parallel_requests_share_process_pdf_inspection_cap(monkeypatch):
+    """서로 다른 두 요청의 공식 PDF 검사도 프로세스 전체 peak 2를 넘지 않는다."""
+    from backend.projects import schematic_render as render
+
+    monkeypatch.setenv('AUTH_SECRET', 'pdf-global-cap-test'.ljust(32, 'x'))
+    groups = []
+    for group in ('a', 'b'):
+        groups.append(tuple(WebSchematicRef(
+            f'https://www.ti.com/lit/ds/symlink/lm2596-{group}-{suffix}.pdf',
+            f'https://www.ti.com/lit/ds/symlink/lm2596-{group}-{suffix}.pdf',
+            f'lm2596-{group}-{suffix}.pdf', 'pdf', 'LM2596', 'Texas Instruments',
+            source_type='manufacturer_official', evidence_grade=2,
+            manufacturer='Texas Instruments',
+        ) for suffix in ('a', 'b')))
+    payloads = {ref.source_url: f'%PDF-{ref.source_url[-6:]}'.encode()
+                for refs in groups for ref in refs}
+    active = 0
+    peak = 0
+    lock = Lock()
+
+    def download(url, *args, **kwargs):
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+        try:
+            time.sleep(0.06)
+            return payloads[url], 'application/pdf'
+        finally:
+            with lock:
+                active -= 1
+
+    monkeypatch.setattr(render, '_public_asset', download)
+    monkeypatch.setattr(render, '_bounded_official_pdf_schematic_pages', lambda *args: (0,))
+    monkeypatch.setattr(render, '_sheets', lambda *args, **kwargs: (b'png',))
+
+    def run(refs):
+        worker = api.ExternalSchematicService(lambda query, limit: refs, api._inspect, api._render)
+        return worker.find('TI LM2596').source_url
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(run, groups))
+
+    assert results == [groups[0][0].source_url, groups[1][0].source_url]
+    assert peak == 2
+
+
+def test_parallel_worker_error_waits_for_sibling_and_clears_request_state(monkeypatch):
+    """한 worker가 실패해도 sibling join 후 ContextVar와 준비 원문을 정리한다."""
+    from backend.projects import schematic_render as render
+
+    monkeypatch.setenv('AUTH_SECRET', 'pdf-worker-cleanup-test'.ljust(32, 'x'))
+    refs = tuple(WebSchematicRef(
+        url, url, 'lm2596.pdf', 'pdf', 'LM2596', maker,
+        source_type='manufacturer_official', evidence_grade=2, manufacturer=maker,
+    ) for maker, url in (
+        ('Texas Instruments', 'https://www.ti.com/lm2596-error.pdf'),
+        ('STMicroelectronics', 'https://www.st.com/lm2596-sibling.pdf'),
+    ))
+    sibling_done = Event()
+    state_ref = []
+
+    def inspect(candidate, **kwargs):
+        state = render._PDF_REQUEST.get()
+        state_ref.append(state)
+        if candidate is refs[0]:
+            assert sibling_done.wait(timeout=1)
+            raise RuntimeError('synthetic inspection error')
+        state['prepared'].append(object())
+        sibling_done.set()
+        return ()
+
+    worker = api.ExternalSchematicService(lambda query, limit: refs, inspect,
+                                          lambda source: (b'png',))
+    with pytest.raises(RuntimeError, match='synthetic inspection error'):
+        worker.find('LM2596')
+
+    assert sibling_done.is_set()
+    assert state_ref and all(state == {} for state in state_ref)
+    assert render._PDF_REQUEST.get() is None
