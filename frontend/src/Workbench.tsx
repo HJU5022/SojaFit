@@ -551,7 +551,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       setPendingQuestion('');
     } catch (e) {
       if (localScope !== scope.current) return;
-      setStopped(true);
+      // [왜] 실행을 시작하기 전에 거절된 요청(422 · 409 · 429 · 503)은 오류만 보인다. '수신 멈춤'은 시작된 실행의 스트림이 끊겼을 때만이다(#69)
+      if (liveRun) setStopped(true);
       if ((e as Error).name !== 'AbortError') setError(e as Error);
     } finally {
       if (localScope === scope.current) setBusy(false);
