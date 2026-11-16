@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Check,
   CornerDownLeft,
+  ListChecks,
   LoaderCircle,
   PanelRight,
   Paperclip,
@@ -32,6 +33,7 @@ import { NEEDS_CIRCUIT, partsOf, unsupportedPartNote, unsupportedPartReason } fr
 import { addStep, isSendKey, seconds, stepMs, type Step } from './display';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply, TargetChoice } from './Reply';
+import { PartsDialog } from './Parts';
 import { SchematicSection } from './Schematic';
 import type {
   Candidate,
@@ -338,6 +340,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [progress, setProgress] = useState<Progress | null>(null),
     [selected, setSelected] = useState<{ c: Candidate; r: Run } | null>(null),
     [showQuotes, setShowQuotes] = useState(false),
+    [showParts, setShowParts] = useState(false),
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
     [rename, setRename] = useState(false),
     [reload, setReload] = useState(0),
@@ -684,6 +687,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             <span className="desktop-only">회로 보기</span>
           </button>
           <button onClick={() => setShowQuotes(true)}>견적 목록</button>
+          <button aria-label="부품 점검표" title="부품 점검표" onClick={() => setShowParts(true)}>
+            <ListChecks size={16} />
+            <span className="desktop-only">부품 점검표</span>
+          </button>
           <RowMenu
             label="프로젝트 메뉴"
             items={[
@@ -1033,6 +1040,26 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             <p>아직 저장한 견적이 없습니다. 후보를 승인한 뒤 수량을 입력해 저장하세요.</p>
           )}
         </Modal>
+      )}
+      {showParts && project.data && (
+        <PartsDialog
+          projectId={projectId}
+          version={project.data.circuit_version}
+          close={() => setShowParts(false)}
+          onReview={(text) => {
+            // [왜] openWithQuestion은 새 대화를 만들고 바로 보낸다. 새 대화 화면 입력창에 써 두기만 하고 보내기는 사용자가 누른다(#68).
+            //      작업대는 프로젝트마다 한 번 그려져(App의 key) 대화를 옮겨도 입력 글이 남는다
+            setShowParts(false);
+            setQuestion(text);
+            if (threadId) navigate('/app?project=' + projectId);
+            requestAnimationFrame(() => document.getElementById('question')?.focus());
+          }}
+          onAttach={() => {
+            setShowParts(false);
+            // [왜] 모달 창이 열려 있으면 바깥 파일 입력이 inert라 창이 닫힌 다음 프레임에 연다
+            requestAnimationFrame(() => attach.input.current?.click());
+          }}
+        />
       )}
       {rename && (
         <Modal title="프로젝트 이름 변경" close={() => setRename(false)}>

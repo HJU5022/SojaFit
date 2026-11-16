@@ -4,10 +4,12 @@ import assert from 'node:assert/strict';
 import {
   acceptsFile,
   duplicateAction,
+  filterParts,
   isSchematicFile,
   partsOf,
   pinsOf,
   projectNameFromQuestion,
+  reviewQuestion,
   unsupportedPartNote,
   unsupportedPartReason,
 } from '../src/circuit.ts';
@@ -133,4 +135,22 @@ test('첨부 파일 종류: .kicad_sch는 회로도, 받는 확장자 밖은 거
   assert.equal(isSchematicFile('board.KICAD_SCH'), true);
   assert.equal(isSchematicFile('board.net'), false);
   assert.equal(isSchematicFile('board.sch'), false); // KiCad 5 옛 형식은 받지 않는다
+});
+test('부품 점검표의 "이 부품 검토" 질문은 ref를 읽은 받침으로 을/를을 고른다(#68)', () => {
+  assert.equal(reviewQuestion('D1'), 'D1을 다른 부품으로 바꿔도 될까?');
+  assert.equal(reviewQuestion('D2'), 'D2를 다른 부품으로 바꿔도 될까?'); // 이: 받침 없음
+  assert.equal(reviewQuestion('D10'), 'D10을 다른 부품으로 바꿔도 될까?'); // 영
+  assert.equal(reviewQuestion('D9'), 'D9를 다른 부품으로 바꿔도 될까?');
+});
+test('부품 점검표는 종류(빈 값이면 전체)와 판정 지원 부품만으로 거른다(#68)', () => {
+  const parts = [
+    { ref: 'D1', kind: 'diode', judge_supported: true },
+    { ref: 'D2', kind: 'led', judge_supported: false },
+    { ref: 'R1', kind: 'resistor', judge_supported: false },
+  ];
+  const refs = (kind: string, only: boolean) => filterParts(parts, kind, only).map((p) => p.ref);
+  assert.deepEqual(refs('', false), ['D1', 'D2', 'R1']);
+  assert.deepEqual(refs('led', false), ['D2']);
+  assert.deepEqual(refs('', true), ['D1']);
+  assert.deepEqual(refs('led', true), []);
 });

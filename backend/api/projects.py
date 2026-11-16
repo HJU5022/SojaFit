@@ -1,5 +1,6 @@
 """기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API. 삭제는 같은 UUID의 분석 기록 · checkpoint까지 지운다."""
 import hashlib
+import re
 from dataclasses import replace
 
 import psycopg
@@ -273,6 +274,67 @@ def uploaded_schematic(project_id: int, circuit_version: int = Query(ge=1), user
         raise HTTPException(503, "회로도 그림 서버에 연결하지 못했어요. 잠시 뒤 다시 열어 주세요.") from None
     return Response(content=png, media_type="image/png", headers={
         "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline"})
+
+
+class PartCheck(BaseModel):
+    ref: str
+    value: str
+    footprint: str
+    symbol: str
+    kind: str
+    kind_name: str
+    judge_supported: bool
+    judge_reason: str | None
+    """판정이 이 부품을 대상으로 받지 않는 이유 구절("LED라서" · "다이오드가 아니라서"). 받으면 None."""
+    datasheet: str | None
+    """값에서 뽑은 품번 중 코퍼스에 데이터시트가 있는 첫 품번. 없으면 None."""
+
+
+class KindCount(BaseModel):
+    kind: str
+    name: str
+    count: int
+
+
+class PartsCheck(BaseModel):
+    circuit_version: int
+    parts: list[PartCheck]
+    counts: list[KindCount]
+    """종류별 개수. 많은 순, 같으면 부품 목록 답의 "종류별:" 줄과 같은 순서."""
+
+
+@router.get("/projects/{project_id}/parts", response_model=PartsCheck)
+def parts_check(project_id: int, circuit_version: int = Query(ge=0), user_id: int = Depends(auth.current_user_id),
+                repo: ProjectRepository = Depends(repository)):
+    """회로 부품 점검표(#68): 부품마다 종류 · 판정 지원 · 데이터시트 유무. 소유자만 받고 없으면 404.
+
+    [왜] 규칙을 새로 만들지 않는다. 종류는 부품 목록 답의 `part_kind`, 판정 지원은 판정이 대상을 거르는 `_require_supported_target`,
+         데이터시트는 사실 확인(`check_corpus`)과 같은 `find_parts` → `corpus_known` 대조라 화면과 에이전트가 같은 답을 낸다.
+    """
+    from collections import Counter
+    from backend.conversations.memory_service import _require_supported_target
+    from backend.graph.nodes import KIND_NAMES, circuit_parts, find_parts, part_kind
+    from backend.rag.retrieve import corpus_known
+    connections = repo.circuit_connections(user_id, project_id, circuit_version)
+    # 부품 목록 답과 같은 자연 정렬: D1 · D2 · D10 · R1
+    parts = sorted(circuit_parts({"connections": connections}), key=lambda p: re.sub(r"\d+", lambda m: m[0].zfill(10), str(p.get("ref", ""))))
+    known = corpus_known()[0] if parts else set()  # [주의] 색인이 아직 없으면 첫 호출이 검색 색인을 만든다(서버 시작 때 미리 만든다)
+    refs = {str(p.get("ref") or "") for p in parts}
+    rows = []
+    for part in parts:
+        ref, value = str(part.get("ref") or ""), str(part.get("value") or "")
+        try:
+            _require_supported_target(connections, ref)
+            reason = None
+        except HTTPException as exc:
+            reason = str(exc.detail).split(" 아직")[0].split(" ", 1)[-1]  # "U1은 다이오드가 아니라서 아직 …" → "다이오드가 아니라서"
+        kind = part_kind(part)
+        rows.append({"ref": ref, "value": value, "footprint": str(part.get("footprint") or ""), "symbol": str(part.get("symbol") or ""),
+                     "kind": kind, "kind_name": KIND_NAMES[kind], "judge_supported": reason is None, "judge_reason": reason,
+                     "datasheet": next((name for name in find_parts(value, refs) if name.strip().lower() in known), None)})
+    counts = Counter(row["kind"] for row in rows)
+    return {"circuit_version": circuit_version, "parts": rows,
+            "counts": [{"kind": k, "name": KIND_NAMES[k], "count": counts[k]} for k in sorted((k for k in KIND_NAMES if counts[k]), key=lambda k: -counts[k])]}
 
 
 @router.get("/projects/{project_id}", response_model=Project)
