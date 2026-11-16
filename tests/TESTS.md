@@ -13,7 +13,7 @@
 
 | 환경변수 | 쓰는 시험 |
 |---|---|
-| `TEST_AUTH_DATABASE_URL` | `tests/api`(`test_auth.py`, `test_projects.py`, `test_email_auth.py`, `test_google_users.py`, `test_public_grants.py`, `test_full_service_flow.py`, `test_datasheets.py`), `tests/conversations/test_repository.py`, `tests/projects/test_project_repository.py`, `tests/projects/test_service_schema.py`, `tests/db/test_schema_docs.py` |
+| `TEST_AUTH_DATABASE_URL` | `tests/api`(`test_auth.py`, `test_admin.py`, `test_projects.py`, `test_quotes.py`, `test_email_auth.py`, `test_google_users.py`, `test_public_grants.py`, `test_full_service_flow.py`, `test_datasheets.py`), `tests/conversations/test_repository.py`, `tests/projects/test_project_repository.py`, `tests/projects/test_service_schema.py`, `tests/db/test_schema_docs.py` |
 | `TEST_THREAD_DATABASE_URL` | `tests/api/test_threads.py`, `tests/api/test_deletion.py`, `tests/conversations/test_profile.py`, `tests/evals/test_approval_wait_report.py` |
 | `TEST_DATABASE_URL` | `tests/rag/test_rag_retrieve.py`, `tests/rag/test_rag_storage.py`, `tests/rag/test_rag_ingest.py`, `tests/graph/test_graph_mcp_stdio.py` |
 | `TEST_GOOGLE_DATABASE_URL` | `tests/api/test_google_users.py`(없으면 `TEST_AUTH_DATABASE_URL`을 씀) |

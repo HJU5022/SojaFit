@@ -12,7 +12,7 @@
 | 파일 | 확인하는 것 |
 |---|---|
 | `API.md` | 이 문서 |
-| `test_auth.py` | 인증 단위·DB 통합: 비밀번호 해시·강도, 세션 만료, 로그인 잠금, 데모 로그인, 자기 가입·IP 한도, 관리자 권한, 비활성 계정, 쿠키·출처. DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만 |
+| `test_auth.py` | 인증 단위·DB 통합: 비밀번호 해시·강도, 세션 만료, 로그인 잠금, 데모 로그인, 자기 가입·IP 한도, 관리자 권한, 비활성 계정, 쿠키·출처, Google OAuth(state 브라우저 묶음 · PKCE · ID 토큰 검증 · 승인 CLI · 연결 해제). DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만 |
 | `test_admin.py` | 관리자 계정 관리 DB 통합: 관리자 아님 401·403, 가림 해제 사유 5~500자(아니면 422, 이력 없음)·이력을 먼저 쓰고 원문·로그에 원문 없음, 작업 이력 목록, 정지가 세션 폐기, 탈퇴 처리가 관리자·자기 자신을 기록 삭제 전에 거절. `TEST_AUTH_DATABASE_URL`일 때만 |
 | `test_local_live_config.py` | 로컬 실제 API Compose의 DB·Origin 격리, 별도 볼륨, loopback 포트, live 설정, KiCad 빌드·renderer 제외, 키 없는 기본 데모를 검사. 가짜 비밀값과 Compose 해석만 사용 |
 | `test_email_auth.py` | 메일 인증 가입·비밀번호 재설정: 가짜 SMTP와 격리 DB로 인증 전 계정 없음, 토큰 만료·재발급·재사용·경합, 발송 한도, 재설정 뒤 세션 폐기, TLS 검증 |
