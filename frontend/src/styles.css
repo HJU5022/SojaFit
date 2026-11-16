@@ -1542,10 +1542,13 @@ form {
   border-top: 1px solid #edf0f1;
 }
 /* 펼침 표시(▶)는 앱의 다른 접힘(사용 조건 · 문서 근거)과 같게 기본 모양을 둔다. */
-.progress-summary summary {
-  cursor: pointer;
+.progress-summary {
   color: var(--muted);
 }
+.progress-summary summary {
+  cursor: pointer;
+}
+.progress-summary > svg,
 .progress-summary summary svg {
   vertical-align: -2px;
   margin: 0 6px 0 4px;

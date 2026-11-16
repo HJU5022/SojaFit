@@ -158,6 +158,14 @@ function RunProgress({
   const total = progress && timed && (
     <p className="progress-total">총 {seconds(now - progress.start)}</p>
   );
+  // 새로고침한 끝난 실행: 단계 · 시간 기록이 없어 상태만 한 줄로 보인다
+  if (status && !steps.length)
+    return (
+      <div className="progress progress-summary">
+        <Check size={14} />
+        {status}
+      </div>
+    );
   if (status)
     return (
       <details className="progress progress-summary">
@@ -767,7 +775,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                       }}
                     />
                   )}
-                  {active && !running && !stopped && !!progress?.steps.length && (
+                  {active && !running && !stopped && (
                     <RunProgress
                       progress={progress}
                       stage=""
