@@ -17,7 +17,7 @@
 - `d5-frontend-service.md` — React·Vite 화면과 서비스 API 연결 계약(기능 계약 현행, 화면 구현 행은 새 화면 기준)
 - `dummy-full-flow.md` — (폐기·이력) 옛 화면의 개발 전용 더미 모드 흐름. 새 화면에 더미 모드가 없다
 - `evaluator-demo-readiness.md` — 키 없는 Compose 데모: DEMO_REPLAY 기록 응답 재생
-- `external-complete-schematics.md` — 공개 저장소 완성 회로도 시트의 백엔드 제공 계약과 자원 상한
+- `external-complete-schematics.md` — TSC와 영어 공식 제조사 참고 회로도, 공개 저장소 완성 회로도 시트의 백엔드 제공 계약, 자원 상한, 공식 PDF 최대 2개 병렬 검사 범위
 - `frontend-screen-redesign.md` — (이력) 11-16 교체 전 화면의 경로와 화면 계약
 - `netlist-conversation-versions.md` — 빈 프로젝트 생성, 채팅 넷리스트 접수와 대화별 회로 버전 고정
 - `google-admin-login.md` — Google 관리자 최초 연결·운영자 승인과 OIDC 검증
