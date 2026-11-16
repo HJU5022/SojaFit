@@ -36,7 +36,7 @@
 
 | 분류 | 위치 | 어떻게 실행되나 | 파일 수 |
 |---|---|---|---:|
-| 자동 | `db/*.sql` (이 폴더 바로 아래) | `docker-compose.yml`의 `db` 서비스가 `./db`를 `/docker-entrypoint-initdb.d`(읽기 전용)로 마운트한다(`docker-compose.yml:66-67`). Postgres 이미지는 데이터 폴더가 비어 있을 때 첫 기동에만 이 폴더 바로 아래의 `.sql`을 파일 이름순으로 실행한다 | 16 |
+| 자동 | `db/*.sql` (이 폴더 바로 아래) | `docker-compose.yml`의 `db` 서비스가 `./db`를 `/docker-entrypoint-initdb.d`(읽기 전용)로 마운트한다(`docker-compose.yml`의 `db` 서비스 `volumes`). Postgres 이미지는 데이터 폴더가 비어 있을 때 첫 기동에만 이 폴더 바로 아래의 `.sql`을 파일 이름순으로 실행한다 | 16 |
 | 수동(운영 이전) | `db/migrations/` | `psql`로 사람이 단계마다 직접 실행. 새 DB는 쓰지 않는다 | 10 |
 | 수동(기타) | `db/manual/` | `.sql`(1)은 사람이 직접 실행, `.draft`·`.manual`(2)은 실행하지 않는 이력 | 3 |
 | 이력 | `db/legacy/` | 실행하지 않는다. `scripts/db/verify_chain/verify_chain.sh`와 `migrate_prod_4_rollback.sql`이 읽는다 | 21 |
@@ -55,14 +55,10 @@
 
 ## 실행과 주의
 
-- 승인 재선택032는 새 QuoteService 코드를 먼저 반영한 뒤 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/032_approval_reselection.sql`로 적용한다. 행은 보존되며 재실행 가능하다. 이미 여러 승인 이력을 만든 메시지가 있으면 옛 UNIQUE를 무조건 복원할 수 없다. 기준선의 승인 제약은032 이후 상태를 포함한다.
-
-- 대화 이름033은 칸 하나를 더하는 추가 변경이라 코드보다 먼저 적용해도 된다. 기존 DB에는 `psql -1 -v ON_ERROR_STOP=1 -f db/033_thread_titles.sql`로 적용하고, 되돌릴 때는 `ALTER TABLE threads DROP COLUMN IF EXISTS title;`(고친 이름만 사라진다). 새 코드는 이 칸이 없는 DB에서 대화 목록·상세를 읽지 못하므로 코드 배포 전에 적용한다.
-
-- 관리자 작업 이력034는 새 표 하나를 더하는 추가 변경이다. 새 코드(활성 상태 변경 · 가림 해제 · 탈퇴 처리가 이 표에 쓴다)보다 먼저 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/034_admin_audit.sql`로 적용한다. 되돌릴 때는 `DROP TABLE IF EXISTS admin_audit; DELETE FROM app_migrations WHERE version='034-admin-audit';`(관리자 작업 이력이 사라진다).
-
-- 업로드 회로도035는 새 표 하나를 더하는 추가 변경이다. 새 코드(프로젝트 응답의 `schematic_file`이 이 표를 읽는다)보다 먼저 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/035_circuit_schematics.sql`로 적용한다. 되돌릴 때는 `DROP TABLE IF EXISTS circuit_schematics; DELETE FROM app_migrations WHERE version='035-circuit-schematics';`(올린 회로도 원문이 사라지고 원본 회로도 창은 웹 검색으로 돌아간다). 새 코드는 이 표가 없는 DB에서 프로젝트를 읽지 못한다.
-
+- 승인 재선택(`032`)은 새 QuoteService 코드를 먼저 반영한 뒤 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/032_approval_reselection.sql`로 적용한다. 행은 보존되며 재실행 가능하다. 이미 여러 승인 이력을 만든 메시지가 있으면 옛 UNIQUE를 무조건 복원할 수 없다. 기준선의 승인 제약은 `032` 이후 상태를 포함한다.
+- 대화 이름(`033`)은 칸 하나를 더하는 추가 변경이라 코드보다 먼저 적용해도 된다. 기존 DB에는 `psql -1 -v ON_ERROR_STOP=1 -f db/033_thread_titles.sql`로 적용하고, 되돌릴 때는 `ALTER TABLE threads DROP COLUMN IF EXISTS title;`(고친 이름만 사라진다). 새 코드는 이 칸이 없는 DB에서 대화 목록·상세를 읽지 못하므로 코드 배포 전에 적용한다.
+- 관리자 작업 이력(`034`)은 새 표 하나를 더하는 추가 변경이다. 새 코드(활성 상태 변경 · 가림 해제 · 탈퇴 처리가 이 표에 쓴다)보다 먼저 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/034_admin_audit.sql`로 적용한다. 되돌릴 때는 `DROP TABLE IF EXISTS admin_audit; DELETE FROM app_migrations WHERE version='034-admin-audit';`(관리자 작업 이력이 사라진다).
+- 업로드 회로도(`035`)는 새 표 하나를 더하는 추가 변경이다. 새 코드(프로젝트 응답의 `schematic_file`이 이 표를 읽는다)보다 먼저 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/035_circuit_schematics.sql`로 적용한다. 되돌릴 때는 `DROP TABLE IF EXISTS circuit_schematics; DELETE FROM app_migrations WHERE version='035-circuit-schematics';`(올린 회로도 원문이 사라지고 원본 회로도 창은 웹 검색으로 돌아간다). 새 코드는 이 표가 없는 DB에서 프로젝트를 읽지 못한다.
 - 새 DB의 서비스 표는 증분 파일이 아니라 기준선 한 파일(`020_service_baseline.sql`)이 만든다. 기준선은 옛 체인에 운영 이전 SQL을 적용한 결과와 구조가 같다(`scripts/db/verify_chain/verify_chain.sh`가 차이 0줄을 확인). [결정] 11-11 재설계 M 단계.
 - `020_service_baseline.sql` 80행의 주석("`auth_google_pending`은 만들지 않는다")은 `030_google_onboarding.sql` 적용 전의 상태다. 새 DB는 `030`이 `auth_google_pending`을 만든다.
 - 기존 DB에는 기준선이나 `legacy/` SQL을 다시 실행하지 않는다. 추가 인증 SQL(`027`·`029`·`030`)과 회로 버전 SQL(`031`)의 적용은 따로 검토한다. `031`만 기존 DB에 추가할 때는 한 트랜잭션(`psql -1 -v ON_ERROR_STOP=1 -f db/031_circuit_versions.sql`)으로 적용한다. 기존 데이터·해시·연결을 삭제하거나 재작성하지 않는다.
