@@ -435,6 +435,43 @@ def test_manufacturer_search_scopes_exa_to_known_domains(monkeypatch):
     assert any(request.method == "POST" for request in requests)
 
 
+def test_tsc_search_is_datasheet_only_and_matches_exact_model_family(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_tsc_schematics
+    good = "https://services.taiwansemi.com/storage/resources/datasheet/TSCR420_421CX6_B1708.pdf"
+    unrelated = "https://services.taiwansemi.com/storage/resources/datasheet/TS19605CA20H_A2108.pdf"
+    requests = []
+
+    def handle(request):
+        requests.append(request)
+        assert request.method == "GET"
+        assert request.url.host == "services.taiwansemi.com"
+        assert request.url.path == "/api/products_v2"
+        assert request.url.params["keyword"] == "TSCR420CX6"
+        return httpx.Response(200, json={"data": {"records": [
+            {"name": "TSCR420CX6", "status": "Active", "datasheet": good},
+            {"name": "TS19605CA20H", "status": "Active", "datasheet": unrelated},
+        ]}})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_tsc_schematics("TSC TSCR420CX6", client=client)
+
+    assert [item.source_url for item in result] == [good]
+    assert result[0].source_type == "manufacturer_official"
+    assert result[0].manufacturer == "Taiwan Semiconductor"
+
+
+def test_tsc_query_does_not_use_github_fallback(monkeypatch):
+    _enabled(monkeypatch)
+    import backend.projects.external_schematic as schematic
+    import backend.projects.external_circuit_search as search
+    calls = []
+    monkeypatch.setattr(search, "search_tsc_schematics", lambda *args, **kwargs: ())
+    monkeypatch.setattr(search, "search_github_repositories", lambda *args, **kwargs: calls.append("github") or ())
+    assert schematic._search("Taiwan Semiconductor TS19503CB10H", 5) == ()
+    assert calls == []
+
+
 def test_official_downloads_page_uses_model_in_url_when_search_title_is_generic(monkeypatch):
     _enabled(monkeypatch)
     from backend.projects.external_circuit_search import search_manufacturer_schematics
@@ -674,3 +711,320 @@ def test_public_search_prefers_exact_model_name_over_partial_match(monkeypatch):
 
     assert result
     assert result[0].source_url == exact
+
+
+def test_tsc_legacy_part_uses_only_official_pdf_search_when_catalogue_is_empty(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_tsc_schematics
+    calls = []
+    good = 'https://services.taiwansemi.com/storage/resources/datasheet/TS19371CX6_J1708.pdf'
+    def handle(request):
+        calls.append(request)
+        if request.method == 'GET':
+            return httpx.Response(200, json={'data':{'records':[]}})
+        assert request.url.host == 'api.exa.ai'
+        body = json.loads(request.content)
+        assert body['includeDomains'] == ['services.taiwansemi.com/storage/resources/datasheet/']
+        return httpx.Response(200, json={'results':[{'url':good},
+            {'url':'https://services.taiwansemi.com/storage/resources/datasheet/TS19605CA20H_A2108.pdf'},
+            {'url':'https://evil.test/TS19371CX6_J1708.pdf'}]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_tsc_schematics('TSC TS19371CX6',client=client)
+    assert [r.source_url for r in result] == [good]
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize('url', [
+    'https://services.taiwansemi.com@evil.test/storage/resources/datasheet/TS19503CB10H.pdf',
+    'https://services.taiwansemi.com:8443/storage/resources/datasheet/TS19503CB10H.pdf',
+    'https://services.taiwansemi.com/storage/resources/datasheet/TS19503CB10H-htmlpdf',
+])
+def test_tsc_catalogue_rejects_unsafe_pdf_links(monkeypatch,url):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_tsc_schematics
+    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(200,json={
+            'data':{'records':[{'name':'TS19503CB10H','datasheet':url}]}}))) as client:
+        assert search_tsc_schematics('TSC TS19503CB10H',client=client) == ()
+
+
+@pytest.mark.parametrize('part', [
+    'TS19503CB10H', 'TS19371CX6', 'TSCR420CX6', 'TSCR400CX6', 'TS19605CA20H',
+    'TS34063CS', 'TS2596', 'TS2596S', 'TSL9A12V', 'TQL821CSV50',
+])
+def test_bare_tsc_parts_use_official_lookup_without_generic_or_github_search(monkeypatch,part):
+    _enabled(monkeypatch)
+    from backend.projects import external_circuit_search as search, external_schematic as schematic
+    calls=[]
+    monkeypatch.setattr(search,'search_tsc_schematics',lambda q,limit: calls.append(q) or ())
+    def unexpected(*args,**kwargs):
+        pytest.fail('TSC part must not reach generic/community search')
+    for name in ('search_public_schematics','search_manufacturer_schematics','search_github_repositories','search_component_repositories'):
+        monkeypatch.setattr(search,name,unexpected)
+    assert schematic._search(part,5) == ()
+    assert calls == [part]
+    assert schematic._search_community(part,5) == ()
+
+
+@pytest.mark.parametrize('query',['SS33','1N4148','BAT54','TS100','Raspberry Pi Pico','My TS19371CX6 board','https://example.org/TS19371CX6.pdf'])
+def test_bare_tsc_recognition_preserves_other_search_intents(query):
+    from backend.projects.external_circuit_search import is_tsc_query
+    assert not is_tsc_query(query)
+
+
+def test_tsc_route_diagnostic_records_provider_without_part_or_url(monkeypatch,caplog):
+    from backend.projects import external_circuit_search as search, external_schematic as schematic
+    monkeypatch.setattr(search,'search_tsc_schematics',lambda *args:())
+    with caplog.at_level('INFO',logger=schematic.__name__):
+        assert schematic._search('TS19371CX6',5)==()
+    record=next(record for record in caplog.records if record.message=='schematic_search_route')
+    assert record.phase=='tsc_official' and record.candidate_count==0
+    assert 'TS19371' not in str(vars(record)) and 'https://' not in str(vars(record))
+
+
+@pytest.mark.parametrize("query,manufacturer", [
+    ("TI LM2596", "Texas Instruments"),
+    ("ST L7805", "STMicroelectronics"),
+    ("Analog Devices LT1763", "Analog Devices"),
+    ("onsemi NSVR351SDSA3 diode", "onsemi"),
+    ("Infineon BAT62-02V diode", "Infineon"),
+    ("Vishay SiC diode PFC", "Vishay"),
+])
+def test_semiconductor_manufacturer_queries_are_official_reference_scope(query, manufacturer):
+    from backend.projects.external_circuit_search import automatic_schematic_context, semiconductor_manufacturer
+    assert automatic_schematic_context(query) == "reference"
+    assert semiconductor_manufacturer(query) == manufacturer
+
+
+def test_semiconductor_search_accepts_long_datasheet_reference(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    def handle(request):
+        payload = json.loads(request.content)
+        assert "TI" in payload["query"] and "LM2596" in payload["query"]
+        return httpx.Response(200, json={"results": [{
+            "title": "LM2596 datasheet typical application schematic",
+            "url": "https://www.ti.com/lit/ds/symlink/lm2596.pdf",
+        }]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_semiconductor_schematics("TI LM2596", client=client)
+    assert len(result) == 1
+    assert result[0].source_type == "manufacturer_official"
+    assert result[0].manufacturer == "Texas Instruments"
+    assert result[0].asset_kind == "pdf"
+
+
+def test_rf_diode_evidence_does_not_reject_official_application_note():
+    from backend.projects.external_circuit_search import component_evidence_matches
+    text = "Infineon BAT62-02V RF power detection application note schematic"
+    assert component_evidence_matches("BAT62-02V diode", text)
+    assert not component_evidence_matches("SS33 diode", "Ranger SS33 radio transceiver schematic")
+
+
+def test_rf_diode_exception_requires_the_requested_part_in_the_source():
+    from backend.projects.external_circuit_search import component_evidence_matches
+    assert not component_evidence_matches(
+        "SS33 diode", "BAT54 radio application note diode detector schematic",
+    )
+    assert not component_evidence_matches(
+        "NSVR351SDSA3 diode", "NSVR351SDSA4 radio application note diode detector schematic",
+    )
+
+
+def test_semiconductor_search_propagates_provider_failure(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import ExternalCircuitSearchError, search_semiconductor_schematics
+    with httpx.Client(transport=httpx.MockTransport(
+        lambda request: httpx.Response(429, headers={"Retry-After": "77"}),
+    )) as client:
+        with pytest.raises(ExternalCircuitSearchError):
+            search_semiconductor_schematics("TI LM2596", client=client)
+
+
+def test_radio_product_with_incidental_diode_is_not_an_rf_application():
+    from backend.projects.external_circuit_search import component_evidence_matches
+    assert not component_evidence_matches('SS33 diode', 'Ranger SS33 radio transceiver schematic with diode D1')
+    assert component_evidence_matches('NSVR351SDSA3 diode', 'onsemi NSVR351SDSA3 diode detector circuit radio APPLICATION NOTE')
+
+
+def test_semiconductor_pdf_urls_do_not_require_schematic_words_in_the_title():
+    from backend.projects.external_circuit_search import _asset_kind
+    assert _asset_kind('https://www.ti.com/lit/pdf/TIDM908', 'Schematic') == 'pdf'
+    assert _asset_kind('https://www.ti.com/lit/ds/symlink/lm2596.pdf', 'LM2596 datasheet') == 'pdf'
+    assert _asset_kind('https://www.onsemi.com/download/application-notes/pdf/and9482-d.pdf', 'Diode Detector Circuit') == 'pdf'
+    assert _asset_kind('https://untrusted.example/lm2596.pdf', 'LM2596 datasheet') is None
+
+
+def test_named_official_search_uses_direct_pdf_before_crawling_product_pages(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    def handle(request):
+        if request.method == 'POST':
+            return httpx.Response(200,json={'results':[
+                {'url':'https://www.st.com/en/evaluation-tools/nucleo-mb1136.html','title':'NUCLEO MB1136 C05 schematic'},
+                {'url':'https://www.st.com/resource/en/schematic_pack/mb1136-default-c05_schematic.pdf','title':'NUCLEO MB1136 C05 schematic'},
+            ]})
+        pytest.fail('direct official PDF makes product-page crawling unnecessary')
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        found=search_semiconductor_schematics('ST NUCLEO MB1136 C05',client=client)
+    assert len(found)==1 and found[0].asset_kind=='pdf'
+
+
+def test_official_application_note_can_identify_its_part_in_pdf_body(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    def handle(request):
+        return httpx.Response(200,json={'results':[{
+            'url':'https://www.onsemi.com/download/application-notes/pdf/and9482-d.pdf',
+            'title':'Diode Detector Circuit',
+        }]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        refs=search_semiconductor_schematics('onsemi NSVR351SDSA3 diode',client=client)
+    assert len(refs)==1 and refs[0].source_file=='and9482-d.pdf'
+
+
+def test_explicit_datasheet_query_prefers_datasheet_over_application_note(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    def handle(request):
+        return httpx.Response(200,json={'results':[
+            {'url':'https://www.ti.com/lit/an/snva003b/snva003b.pdf','title':'LM2596 application note schematic'},
+            {'url':'https://www.ti.com/lit/ds/symlink/lm2596.pdf','title':'LM2596 datasheet'},
+        ]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        refs=search_semiconductor_schematics('TI LM2596 datasheet',client=client)
+    assert refs[0].source_url=='https://www.ti.com/lit/ds/symlink/lm2596.pdf'
+
+
+def test_datasheet_search_does_not_mix_application_note_intent(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    def handle(request):
+        query=json.loads(request.content)['query'].casefold()
+        assert 'application note' not in query and 'reference design' not in query
+        assert 'l7805' in query and 'datasheet' in query
+        return httpx.Response(200,json={'results':[{'url':'https://www.st.com/resource/en/datasheet/l78.pdf','title':'Datasheet - L78'}]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        refs=search_semiconductor_schematics('ST L7805 datasheet',client=client)
+    assert refs[0].source_file=='l78.pdf'
+
+
+@pytest.mark.parametrize('suffix', ['', '?language=zh', '?locale=zh-CN#page=23'])
+def test_ti_translated_part_symlink_selects_english_original(monkeypatch, suffix):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    requests = []
+    def handle(request):
+        requests.append(request)
+        return httpx.Response(200, json={'results': [{
+            'url': 'https://www.ti.com/cn/lit/ds/symlink/lm2596.pdf' + suffix,
+            'title': 'LM2596 电源转换器 降压稳压器 datasheet (Rev. G)',
+        }]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        refs = search_semiconductor_schematics('TI LM2596 datasheet', client=client)
+    assert len(refs) == 1
+    assert refs[0].source_url == 'https://www.ti.com/lit/ds/symlink/lm2596.pdf'
+    assert refs[0].page_url == refs[0].source_url
+    assert refs[0].manufacturer == 'Texas Instruments' and refs[0].evidence_grade == 2
+    assert len(requests) == 1
+    assert 'english' in json.loads(requests[0].content)['query'].casefold()
+
+
+@pytest.mark.parametrize('query,foreign,english', [
+    ('TI LM2596 datasheet', 'https://www.ti.com/cn/lit/ds/zhcsku0g/zhcsku0g.pdf',
+     'https://www.ti.com/lit/ds/symlink/lm2596.pdf'),
+    ('ST L7805 datasheet', 'https://www.st.com/resource/zh/datasheet/l78.pdf',
+     'https://www.st.com/resource/en/datasheet/l78.pdf'),
+    ('Analog Devices LT1763', 'https://www.analog.com/media/jp/technical-documentation/data-sheets/LT1763.pdf',
+     'https://www.analog.com/media/en/technical-documentation/data-sheets/LT1763.pdf'),
+    ('onsemi NSVR351SDSA3 diode', 'https://www.onsemi.com/download/application-notes/pdf/and9482-d.pdf?lang=zh',
+     'https://www.onsemi.com/download/application-notes/pdf/and9482-d.pdf'),
+    ('Infineon BAT62-02V diode', 'https://www.infineon.com/dgdl/an1807.pdf?language=de',
+     'https://www.infineon.com/dgdl/an1807.pdf'),
+    ('Vishay SiC diode PFC', 'https://www.vishay.com/docs/86537/pfc.pdf?locale=zh-CN',
+     'https://www.vishay.com/docs/86537/pfc.pdf'),
+])
+def test_official_search_keeps_english_provider_but_not_translated_document(monkeypatch, query, foreign, english):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    def handle(request):
+        return httpx.Response(200, json={'results': [
+            {'url': foreign, 'title': query}, {'url': english, 'title': query},
+        ]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        refs = search_semiconductor_schematics(query, client=client)
+    assert [ref.source_url for ref in refs] == [english]
+
+
+def test_translated_only_document_does_not_gain_official_reference_grade(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={
+        'results': [{'url': 'https://www.ti.com/cn/lit/an/zhca123/zhca123.pdf',
+                     'title': 'TI LM2596 application circuit'}],
+    }))) as client:
+        assert search_semiconductor_schematics('TI LM2596', client=client) == ()
+
+
+def test_bare_part_search_checks_official_hosts_without_guessing_a_manufacturer(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    calls = []
+    def handle(request):
+        payload = json.loads(request.content)
+        calls.append(payload)
+        assert set(payload['includeDomains']) == {'ti.com', 'st.com', 'analog.com', 'onsemi.com', 'infineon.com', 'vishay.com'}
+        assert 'english' in payload['query'].casefold()
+        return httpx.Response(200, json={'results': [
+            {'url': 'https://www.ti.com/cn/lit/ds/symlink/lm2596.pdf', 'title': 'LM2596 datasheet'},
+            {'url': 'https://www.onsemi.com/pdf/datasheet/lm2596-d.pdf', 'title': 'LM2596 datasheet'},
+            {'url': 'https://example.org/LM2596-schematic.pdf', 'title': 'LM2596 schematic'},
+        ]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        refs = search_semiconductor_schematics('LM2596', client=client)
+    assert len(calls) == 1
+    assert {ref.manufacturer for ref in refs} == {'Texas Instruments', 'onsemi'}
+    assert refs[0].source_url == 'https://www.ti.com/lit/ds/symlink/lm2596.pdf'
+
+
+def test_bare_part_does_not_hide_second_manufacturer_behind_duplicate_provider_docs(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    rows=[{'url':f'https://www.ti.com/lit/an/doc{i}/lm2596-{i}.pdf','title':'LM2596 schematic'} for i in range(5)]
+    rows.append({'url':'https://www.onsemi.com/pdf/datasheet/lm2596-d.pdf','title':'LM2596 schematic'})
+    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(200,json={'results':rows}))) as client:
+        refs=search_semiconductor_schematics('LM2596',client=client)
+    assert {ref.manufacturer for ref in refs}=={'Texas Instruments','onsemi'}
+
+
+def test_bare_part_discovery_keeps_one_candidate_from_each_of_six_official_providers(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    hosts=['ti.com','st.com','analog.com','onsemi.com','infineon.com','vishay.com']
+    rows=[{'url':f'https://www.{host}/lm2596.pdf','title':'LM2596 schematic'} for host in hosts]
+    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(200,json={'results':rows}))) as client:
+        refs=search_semiconductor_schematics('LM2596',client=client)
+    assert len({ref.manufacturer for ref in refs})==6
+
+
+def test_bare_part_provider_query_preserves_identifier_casing_after_cache_normalization(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    sent=[]
+    def handle(request):
+        sent.append(json.loads(request.content)['query'])
+        return httpx.Response(200,json={'results':[]})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        search_semiconductor_schematics('l7805 datasheet',client=client)
+    assert sent==['L7805 datasheet English PDF']
+
+
+@pytest.mark.parametrize('query', ['LM2596', 'L7805', 'LT1763', 'NSVR351SDSA3', 'BAT62-02V', 'VEML7700'])
+def test_bare_parts_do_not_require_model_prefix_in_search_metadata(monkeypatch, query):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_semiconductor_schematics
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200,json={
+        'results': [{'url': 'https://www.onsemi.com/download/application-notes/pdf/and9482-d.pdf',
+                     'title': 'Diode Detector Circuit'}],
+    }))) as client:
+        refs = search_semiconductor_schematics(query,client=client)
+    assert len(refs)==1  # The body, not discovery metadata, must prove the exact part.

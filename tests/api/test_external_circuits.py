@@ -16,6 +16,7 @@ def isolated_provider_limits(monkeypatch):
 
 @pytest.mark.parametrize('reason,message', [
     ('no_candidates', '검색 결과가 없습니다'), ('validation_failed', '후보를 찾았지만'),
+    ('ambiguous_manufacturer', '여러 제조사'),
 ])
 def test_schematic_failure_reason_keeps_error_contract(client, schematic_boundary, reason, message):
     from backend.projects.schematic_source import ExternalSchematicNotFound
@@ -131,6 +132,94 @@ def test_legacy_unscoped_requests_cannot_display_a_project_original(client,schem
     assert client.get('/api/external-circuits/schematics?q=Board').status_code==422
     assert client.get('/api/external-circuits/schematics/signed-token/0').status_code==422
     assert schematic_boundary.queries==[] and schematic_boundary.sheet_calls==[]
+
+
+@pytest.mark.parametrize('query,context', [
+    ('TS19371CX6', 'reference'), ('TSC TS19503CB10H', 'reference'),
+    ('TSCR420CX6', 'reference'), ('TSCR400CX6', 'reference'),
+    ('TS19605CA20H', 'reference'), ('TS34063CS', 'reference'),
+    ('TS2596', 'reference'), ('TS2596S', 'reference'),
+    ('TSL9A12V', 'reference'), ('TQL821CSV50', 'reference'),
+    ('SS33', 'diode'), ('SS34', 'diode'), ('1N4148', 'diode'),
+    ('1N4007', 'diode'), ('BAT54', 'diode'),
+    ('SS33 diode', 'reference'), ('SS33 다이오드', 'reference'),
+    ('Arduino UNO Rev3', 'reference'), ('Raspberry Pi Pico', 'reference'),
+    ('Adafruit MOSFET Driver STEMMA', 'reference'),
+    ('TI TIDA-010197', 'reference'), ('ST NUCLEO MB1136', 'reference'),
+    ('Analog Devices DC368B', 'reference'), ('onsemi NSVR351SDSA3 diode', 'reference'),
+    ('Infineon BAT62-02V diode', 'reference'), ('Vishay SiC diode PFC', 'reference'),
+    ('LM2596', 'reference'), ('L7805', 'reference'), ('LT1763', 'reference'),
+    ('NSVR351SDSA3', 'reference'), ('BAT62-02V', 'diode'), ('VEML7700', 'reference'),
+    ('Board', 'original'), ('Ranger SS33 radio', 'original'), ('TS100', 'original'),
+])
+def test_one_button_search_routes_after_ownership_check(client, schematic_boundary, monkeypatch, query, context):
+    client.params = {}
+    api = import_module('backend.api.external_circuits')
+    connections = {'parts': [{'ref': 'D1', 'value': 'SS34'}],
+                   'nets': [{'nodes': [{'ref': 'D1', 'pin': '1'}]}]}
+    owned, calls = [], []
+    def get(user, project, thread):
+        owned.append((user, project, thread))
+        return SimpleNamespace(connections=connections, circuit_version=2)
+    def find(q, source=None, component=None, **kwargs):
+        assert owned == [(1, 12, None)]
+        calls.append((q, component, kwargs))
+        return schematic_boundary.manifest
+    monkeypatch.setattr(api, 'ProjectRepository', lambda: SimpleNamespace(get_owned=get))
+    monkeypatch.setattr(api, 'find_external_schematic', find)
+    response = client.get('/api/external-circuits/schematics', params={
+        'q': query, 'project_id': 12, 'circuit_version': 2, 'auto_search': True,
+    })
+    assert response.status_code == 200
+    assert calls == [(query, 'diode' if context == 'diode' else None,
+                      {'connections': connections} if context == 'original' else {})]
+    result = response.json()
+    assert result['circuit_version'] == (2 if context == 'original' else None)
+    for image in result['images']:
+        assert image['url'].endswith('?project_id=12&circuit_version=2' if context == 'original'
+                                     else '?reference_only=true')
+
+
+@pytest.mark.parametrize('project,version,status', [(13, 2, 404), (12, 1, 409)])
+def test_one_button_tsc_search_never_bypasses_project_boundary(client, schematic_boundary, monkeypatch, project, version, status):
+    client.params = {}
+    api = import_module('backend.api.external_circuits')
+    def get(user, project_id, thread):
+        if project_id != 12:
+            raise api.ProjectNotFound()
+        return SimpleNamespace(circuit_version=2)
+    monkeypatch.setattr(api, 'ProjectRepository', lambda: SimpleNamespace(get_owned=get))
+    response = client.get('/api/external-circuits/schematics', params={
+        'q': 'TS19371CX6', 'project_id': project, 'circuit_version': version, 'auto_search': True,
+    })
+    assert response.status_code == status
+    assert schematic_boundary.queries == []
+
+
+@pytest.mark.parametrize('query,status', [('TS19371CX6', 200), ('Board', 404)])
+def test_one_button_reference_can_search_owned_empty_project(client, schematic_boundary, monkeypatch, query, status):
+    client.params = {}
+    api = import_module('backend.api.external_circuits')
+    monkeypatch.setattr(api, 'ProjectRepository', lambda: SimpleNamespace(
+        get_owned=lambda *args: SimpleNamespace(connections={}, circuit_version=1)))
+    response = client.get('/api/external-circuits/schematics', params={
+        'q': query, 'project_id': 12, 'circuit_version': 1, 'auto_search': True,
+    })
+    assert response.status_code == status
+    assert schematic_boundary.queries == ([query] if status == 200 else [])
+
+
+@pytest.mark.parametrize('extras', [{'reference_only': True}, {'component_type': 'diode'}])
+def test_one_button_search_rejects_conflicting_explicit_scope(client, schematic_boundary, monkeypatch, extras):
+    client.params = {}
+    api = import_module('backend.api.external_circuits')
+    monkeypatch.setattr(api, 'ProjectRepository', lambda: SimpleNamespace(
+        get_owned=lambda *args: SimpleNamespace(connections={}, circuit_version=1)))
+    response = client.get('/api/external-circuits/schematics', params={
+        'q': 'TS19371CX6', 'project_id': 12, 'circuit_version': 1, 'auto_search': True, **extras,
+    })
+    assert response.status_code == 422
+    assert schematic_boundary.queries == []
 
 
 @pytest.mark.parametrize("query", ["ab", "x" * 200, " " + "x" * 200 + " "])
