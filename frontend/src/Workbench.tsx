@@ -346,7 +346,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     runId = useRef<string | null>(null),
     scope = useRef(0),
     end = useRef<HTMLDivElement>(null);
-  const attach = useNetlistAttach('.net,.txt', setAttachment);
+  const attach = useNetlistAttach('.net,.txt,.kicad_sch', setAttachment);
   const parts = partsOf(project.data),
     usable = parts.filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p)),
     // [왜] 과거 LED 대화처럼 지원하지 않는 부품이 대상이면 보내기 전에 이유를 보인다(서버도 422)
@@ -561,7 +561,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     try {
       let tid = threadId;
       if (attachment) {
-        if (attachment.size > 5 * 1024 * 1024) throw new Error('넷리스트는 5 MiB 이하여야 합니다.');
+        if (attachment.size > 5 * 1024 * 1024)
+          throw new Error('넷리스트·회로도는 5 MiB 이하여야 합니다.');
         const body = new FormData();
         body.set('file', attachment);
         // [왜] 회로 없이 시작한 대화면 같은 대화에 회로를 붙인다(서버가 조건을 다시 본다, SPEC 4절). 아니면 새 버전 · 새 대화

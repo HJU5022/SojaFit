@@ -71,6 +71,8 @@ export type Project = {
   /** 회로가 있는지(circuit_version > 0). 사이드바가 회로 없는 대화를 프로젝트 나무 밖에 모은다(#31) */
   has_circuit: boolean;
   connections: { components?: Component[]; nets?: any[]; [key: string]: any };
+  /** 이 회로 버전에 올린 회로도(.kicad_sch) 파일 이름. 있으면 원본 회로도 창이 웹 검색 대신 이 그림을 보인다(#52) */
+  schematic_file?: string | null;
 };
 type Component = {
   value?: string;

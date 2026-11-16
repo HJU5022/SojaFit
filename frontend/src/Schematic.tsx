@@ -1,5 +1,6 @@
 /**
- * 원본 회로도 구역(작업대 왼쪽 "회로" 구역 안): 예제(데모) 프로젝트는 저장된 원본 그림을, 넷리스트가 있는 그 밖의 프로젝트는
+ * 원본 회로도 구역(작업대 왼쪽 "회로" 구역 안): 회로도(.kicad_sch)를 올린 회로 버전은 그 그림(GET /api/projects/{id}/schematic, #52)을,
+ * 예제(데모) 프로젝트는 저장된 원본 그림을, 넷리스트가 있는 그 밖의 프로젝트는
  * 열 때 한 번 공개 웹 검색(GET /api/external-circuits/schematics)한 결과를 바로 보인다. 그림을 누르면 큰 창으로 본다.
  * 하지 않는 일: 회로 일치 판단(서버가 부품·핀 연결 대조로 승인한 도면만 돌려준다), 검색 결과를 서버·브라우저 저장소에 저장.
  * [왜] 검색은 유료 외부 검색과 3~20초 렌더를 거치므로 같은 (프로젝트, 회로 버전)은 다시 보내지 않는다(`schematicSearch.ts`).
@@ -24,7 +25,8 @@ type FigureProps = {
   name: string;
   images: string[];
   attribution: string;
-  license: string;
+  /** 없으면(올린 회로도) 라이선스 줄을 두지 않는다 */
+  license?: string;
   originalUrl?: string | null;
   note?: string;
 };
@@ -71,9 +73,11 @@ function Figure({
       <figcaption>
         {onOpen && images.length > 1 && <span>전체 {images.length}쪽 · 누르면 모두 봅니다</span>}
         <span>출처: {attribution || '미제공'}</span>
-        <span>
-          라이선스: {!license || license === '미확인' ? '이용·재배포 조건 미확인' : license}
-        </span>
+        {license !== undefined && (
+          <span>
+            라이선스: {!license || license === '미확인' ? '이용·재배포 조건 미확인' : license}
+          </span>
+        )}
         {note && <span>{note}</span>}
         {link && (
           <a href={link} target="_blank" rel="noreferrer noopener">
@@ -97,6 +101,12 @@ export function SchematicSection({
   const saved = demos.data?.find((d) => d.id === project.demo_id)?.schematic;
   const savedImage = sameOriginImage(saved?.image_url);
   const hasNetlist = partsOf(project).length > 0;
+  // [왜] 회로도를 올린 버전은 그 그림이 원본이다. 유료 웹 검색을 자동으로 부르지 않는다(#52)
+  const uploaded = project.schematic_file
+    ? sameOriginImage(
+        `/api/projects/${project.id}/schematic?circuit_version=${project.circuit_version}`,
+      )
+    : undefined;
   const key = `${project.id}:${project.circuit_version}`;
   // [주의] 늦게 끝난 검색이 회로 버전이 바뀐 뒤의 화면을 덮지 않도록 지금 보이는 키를 둔다.
   const shown = useRef(key);
@@ -131,7 +141,8 @@ export function SchematicSection({
   }
   // [왜] 데모 목록을 다 받은 뒤에 판단해야 저장된 그림이 있는 예제 프로젝트가 유료 검색을 부르지 않는다.
   // 프로젝트 이름이 2자 미만이면 서버가 422로 거절하므로 자동으로 보내지 않고 검색 칸만 보인다.
-  const auto = !demos.loading && !savedImage && hasNetlist && project.name.trim().length >= 2;
+  const auto =
+    !uploaded && !demos.loading && !savedImage && hasNetlist && project.name.trim().length >= 2;
   useEffect(() => {
     setResult(null);
     setError(null);
@@ -141,8 +152,14 @@ export function SchematicSection({
   }, [key, auto]);
   const images = (result?.images.map((i) => sameOriginImage(i.url)).filter(Boolean) ??
     []) as string[];
-  const figure: FigureProps | null =
-    saved && savedImage
+  const figure: FigureProps | null = uploaded
+    ? {
+        name: project.name,
+        images: [uploaded],
+        attribution: '업로드한 회로도',
+        note: project.schematic_file ?? undefined,
+      }
+    : saved && savedImage
       ? {
           name: project.name,
           images: [savedImage],
