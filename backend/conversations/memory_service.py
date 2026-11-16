@@ -570,8 +570,8 @@ class Conversations:
                       # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
                       'approved_memories': []}
             with _reporting(progress):
-                self._invoke(conn, thread, inputs, budget, request_id)
-        return self.detail(user, thread, hints)
+                web_unavailable = self._invoke(conn, thread, inputs, budget, request_id)
+        return {**self.detail(user, thread, hints), 'web_search_unavailable': web_unavailable}
 
     def _profile_hints(self, user, question):
         """질문 글로 사용자 사실을 찾아 화면 참고용 칸(kind · value · text)만 돌려준다. 실패해도 분석은 계속한다."""
@@ -616,10 +616,11 @@ class Conversations:
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
             hints = self._profile_hints(user, record.get('question'))
             with _reporting(progress):
-                self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
-        return self.detail(user, thread, hints)
+                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
+        return {**self.detail(user, thread, hints), 'web_search_unavailable': web_unavailable}
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
+        """그래프를 한 번 돌리고 결과를 저장한다. 돌려주는 값: 이 실행에서 Exa 웹 검색 호출이 실패했는지(#28, 화면 안내 한 줄)."""
         from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
         from backend.services import langfuse_prompts, service_trace
         from backend.services.demo import ReplayMiss
@@ -631,13 +632,14 @@ class Conversations:
         try:
             user = conn.execute('SELECT user_id FROM threads WHERE id=%s', (thread,)).fetchone()['user_id']
             from backend.services.exa import request_scope
-            with request_scope(), evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
+            with request_scope() as web, evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
                 budget.remaining()
                 self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings, *traces], 'metadata': trace_metadata})
                 budget.remaining()
             saved = time.monotonic()
             self._finish(conn, thread, self.graph.get_state(self.config(thread)))
             timings.stages.append({'stage':'save_result','status':'ok','elapsed_ms':int((time.monotonic()-saved)*1000)})
+            return web['web_search_unavailable']
         except Exception as error:
             conn.execute("UPDATE threads SET status='FAILED' WHERE id=%s", (thread,))
             if isinstance(error, EvaluationLimitError) or (isinstance(error,HTTPException) and error.status_code==429):

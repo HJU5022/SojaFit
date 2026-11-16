@@ -599,6 +599,55 @@ def test_completed_frame_carries_profile_hints_but_run_record_does_not(web):
     assert 'profile_hints' not in repo.result and recovered['profile_hints'] == []
 
 
+@pytest.mark.parametrize('status, unavailable', [(402, True), (429, True), (200, False)])
+def test_exa_failure_flags_the_run_and_the_notice_survives_reload(web, monkeypatch, status, unavailable):
+    """#28: Exa가 402 · 429면 검색은 예전처럼 빈 목록이지만, 분석 서비스(_invoke)가 그 실행에 표시를 남기고
+    결과 frame · run 기록 · 다시 읽기에 web_search_unavailable이 실린다(화면 Reply.tsx가 이 칸으로 안내 한 줄을 붙인다).
+    정상 응답(0건)은 '못 찾음'이라 표시하지 않는다."""
+    from typing import TypedDict
+    import httpx
+    from langgraph.checkpoint.memory import InMemorySaver
+    from langgraph.graph import END, START, StateGraph
+    from backend.conversations.memory_service import Conversations
+    from backend.conversations.models import SafeResult
+    from backend.services import exa
+    from backend.services.llm import EvaluationBudget
+    for key, value in {'DEMO_MODE': '0', 'EXA_WEB_SEARCH_ENABLED': '1', 'EXA_API_KEY': 'unit-test'}.items():
+        monkeypatch.setenv(key, value)
+    for key in ('LANGFUSE_PUBLIC_KEY', 'LANGFUSE_SECRET_KEY'):
+        monkeypatch.delenv(key, raising=False)
+    transport = httpx.MockTransport(lambda request: httpx.Response(status, json={'results': []}))
+
+    class State(TypedDict, total=False):
+        answer: str
+
+    def search(state):
+        assert exa.search_grade2_evidence(['SS34'], 'reverse voltage', transport=transport) == []  # 결과는 예전처럼 빈 목록
+        return {'answer': '이 부품 자료를 찾지 못했어요.'}
+    graph = StateGraph(State)
+    graph.add_node('search', search)
+    graph.add_edge(START, 'search')
+    graph.add_edge('search', END)
+    service = object.__new__(Conversations)
+    service.graph, service.mode = graph.compile(checkpointer=InMemorySaver()), 'live'
+    service._finish = service._record_event = lambda *args, **kwargs: None
+    conn = SimpleNamespace(execute=lambda *args: SimpleNamespace(fetchone=lambda: {'user_id': 1}))
+    budget = EvaluationBudget(max_calls=1, max_usd=1.0, max_seconds=30, prompt_rate=0.000001, completion_rate=0.000001)
+    thread, run = str(uuid4()), str(uuid4())
+    assert service._invoke(conn, thread, {'answer': ''}, budget) is unavailable
+    monkeypatch.setenv('DEMO_MODE', '1')  # 아래 API는 다른 시험처럼 데모 설정으로 연다(AUTH_SECRET 없이)
+
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
+    detail = analysis._run  # 실제 message()처럼 detail에 _invoke가 본 값을 더한다
+    analysis._run = lambda *call: {**detail(*call), 'web_search_unavailable': unavailable}
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/threads/{thread}/runs', json={'question': 'SS34 역전압', 'target_ref': 'D1'}, headers=ORIGIN)
+        reloaded = client.get(f'/api/runs/{run}').json()['result']
+    completed = json.loads(response.text.split('event: completed\ndata: ', 1)[1].split('\n', 1)[0])
+    assert completed['web_search_unavailable'] is unavailable and reloaded['web_search_unavailable'] is unavailable
+    assert SafeResult.model_validate(repo.result).web_search_unavailable is unavailable  # 실제 저장소의 검사(extra 금지)를 통과한다
+
+
 def test_changed_target_is_409_before_a_run_is_created(web):
     thread = str(uuid4())
     analysis, repo = FakeAnalysis(), FakeRepo(thread, str(uuid4()))

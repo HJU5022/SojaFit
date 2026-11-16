@@ -287,7 +287,9 @@ def outcome(analysis, thread_id, detail, request_id):
         return 'requires_input', result_dto({}, request_id=request_id, status='requires_input', stage=STAGES['judge'], interrupt=detail['interrupt'])
     state = analysis.graph.get_state(analysis.config(thread_id)).values or {}
     kind = 'refused' if state.get('refusal') else 'completed'
-    return kind, result_dto(public_state(state), request_id=request_id, status=kind, stage=STAGES['finished'],
+    # [왜] 웹 검색 장애 표시(#28)는 그래프 상태가 아니라 분석 서비스가 이번 실행에서 본 값이다(memory_service._invoke)
+    public = {**public_state(state), 'web_search_unavailable': detail.get('web_search_unavailable') is True}
+    return kind, result_dto(public, request_id=request_id, status=kind, stage=STAGES['finished'],
                             profile_hints=detail.get('profile_hints') or [],
                             input_conditions=(state.get('judgement') or {}).get('input_conditions', []))
 
@@ -331,7 +333,8 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resu
         try:
             kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(progress), request_id))
             # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
-            saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement), **(keep or {})}
+            saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement),
+                     'web_search_unavailable': safe.web_search_unavailable, **(keep or {})}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
             await queue.put(frame(kind, safe.model_dump()))
         except Exception as exc:

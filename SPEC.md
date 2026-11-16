@@ -252,7 +252,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | `INTERNAL_ERROR` | 500 | 예상 못 한 오류, 내용은 로그에만. 표에 없는 5xx도 이 코드 |
 
   분석 거절(SSE `refused`)은 요청 실패가 아니라 분석 결과라 이 표 밖입니다. 서버 로그는 stdout에 JSON 한 줄씩(`severity` · `time` · `logger` · `message`, 요청 안의 줄은 `request_id`)이고, 오류 응답 · `failed` 이벤트마다 `code` · `status`를 담은 줄 하나를 남깁니다. 4xx는 INFO(문구 · 본문 없이), 5xx와 예상 못 한 예외는 ERROR에 traceback(프레임과 예외 이름만, 예외 메시지는 빼고)입니다. 질문 글 · 조건 · 넷리스트 · 이메일 · 비밀번호 · 토큰 · 키는 로그에 적지 않습니다(`backend/logs.py`).
-- run · 재개의 SSE 이벤트(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, `text/event-stream`, `/docs`에도 같은 설명): frame마다 `event: 이름`과 `data: JSON` 한 줄입니다. 순서는 `run_started` → `status` 하나 이상 → 마지막 하나이고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`). 공개 결과는 허용 목록 `BrowserResult`(`backend/conversations/dto.py`)의 칸 `answer · status · stage · question_type · evidence · judgement · price_parts · refusal · interrupt · request_id · profile_hints`만 담고, `GET /api/runs/{id}`의 `result`와 같은 모양입니다(저장하지 않는 `profile_hints`는 거기서 빈 목록).
+- run · 재개의 SSE 이벤트(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, `text/event-stream`, `/docs`에도 같은 설명): frame마다 `event: 이름`과 `data: JSON` 한 줄입니다. 순서는 `run_started` → `status` 하나 이상 → 마지막 하나이고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`). 공개 결과는 허용 목록 `BrowserResult`(`backend/conversations/dto.py`)의 칸 `answer · status · stage · question_type · evidence · judgement · price_parts · refusal · interrupt · request_id · profile_hints · web_search_unavailable`만 담고, `GET /api/runs/{id}`의 `result`와 같은 모양입니다(저장하지 않는 `profile_hints`는 거기서 빈 목록).
 
   | 이벤트 | 언제 | data 칸 |
   |---|---|---|
@@ -478,6 +478,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 데모 모드 또는 외부 검색 미허용, WHEN 웹 후보 검색을 요청하면, THEN 외부 호출 없이 disabled를 반환한다.
 - GIVEN 실시간 검색 명시 허용과 EXA_API_KEY, WHEN Exa 검색이 성공하면, THEN HTTPS TSC 공식 도메인 URL만 미검증 후보로 반환한다.
 - GIVEN 키 누락 또는 외부 검색 실패, WHEN 웹 후보 검색을 요청하면, THEN 키·오류 본문을 노출하지 않고 각각 missing_key 또는 unavailable을 반환하며 재시도하지 않는다.
+- GIVEN 분석 중 Exa 검색 호출 실패(402 · 429 · 시간 초과 · HTTP 오류, #28 11-16), WHEN 답을 돌려주면, THEN 검색 결과는 예전처럼 빈 목록이고(재시도 · 재계획 그대로) 그 실행의 공개 결과에 `web_search_unavailable: true`를 실어 화면이 답 위에 "웹 검색을 잠시 쓸 수 없어 등록된 자료로만 답했어요."를 보인다. run 기록에도 저장해 다시 읽어도 보인다. 공식 PDF 받기 · 미리 받기 실패는 넣지 않는다(`backend/services/exa.py` `request_scope`).
 - GIVEN 공개 TSC 목록의 출처와 문서명이 확인되지 않는 문서 ID, WHEN 웹 검색하면, THEN 외부 호출 없이 unverified를 반환한다. 사용자 자유 문장은 전송하지 않는다.
 - GIVEN 로컬 TSC 표본 PDF의 문서 ID, WHEN MCP 무결성 도구를 호출하면, THEN PDF 서명·바이트 크기·SHA-256을 manifest와 대조하고 내용 검증은 완료하지 않았다고 표시한다.
 - GIVEN 공개 예제 회로 ID와 부품 기호, WHEN MCP 회로 정보 도구를 호출하면, THEN 고정 카탈로그의 connections.json에서 해당 부품 주변 정보를 반환한다. 임의 파일 경로는 받지 않는다.

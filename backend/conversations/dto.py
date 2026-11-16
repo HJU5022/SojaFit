@@ -21,6 +21,7 @@ class BrowserResult(BaseModel):
                                                     '대상 부품을 물으면 {target_choices: [{ref, value}], question}(SPEC 4절 · 8.9)')
     request_id: str = ''
     profile_hints: list = []  # 참고(내 설정): 이번 질문으로 찾은 사용자 사실. 판정 근거가 아니며 저장하지 않는다
+    web_search_unavailable: bool = False  # 이 실행에서 Exa 웹 검색이 실패해 등록된 자료로만 답했다(#28). 화면이 안내 한 줄을 붙인다
     error: SafeRunError | None = None
 
 
@@ -287,4 +288,5 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
                          question_type=question_type if isinstance(question_type, str) and question_type in question_types else '',
                          price_parts=[p for p in state.get('price_parts', []) if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(state.get('price_parts', []), list) else [],
                          interrupt=safe_interrupt, error=error, judgement=judgement, request_id=request_id,
+                         web_search_unavailable=state.get('web_search_unavailable') is True,
                          profile_hints=[{key: str(hint.get(key, '')) for key in ('kind', 'value', 'text')} for hint in profile_hints][:3])

@@ -20,7 +20,7 @@ def test_browser_dto_excludes_internal_state():
     assert importlib.util.find_spec('backend.conversations.dto') is not None
     from backend.conversations.dto import result_dto
     body = result_dto({'answer': 'ok', 'facts': 'secret', 'plan': 'secret', 'reports': 'secret', 'counters': 1, 'check': 'secret'}, request_id='req-1').model_dump()
-    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints','error'}
+    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints','web_search_unavailable','error'}
     assert 'secret' not in str(body)
 
 

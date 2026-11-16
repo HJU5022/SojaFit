@@ -123,6 +123,7 @@ class SafeResult(SafeModel):
     interrupt: SafeInterrupt = Field(default_factory=SafeInterrupt)
     judgement: SafeJudgement | None = None
     error: SafeRunError | None = None
+    web_search_unavailable: bool = False  # 웹 검색 장애 안내(#28). 다시 읽어도 같은 안내가 보이게 저장한다
     # [왜] 대상을 고르기 전에는 분석 thread가 없어 사용 조건을 둘 곳이 이 run 기록뿐이다. result_dto는 이 칸을 고르지 않는다
     pending_start: SafePendingStart | None = None
 

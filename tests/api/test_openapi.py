@@ -143,7 +143,7 @@ AUDIT = {'id', 'actor_id', 'actor_email', 'target_id', 'target_email', 'action',
 SNAPSHOT = {'answer': '대체할 수 있습니다.', 'question_type': 'candidate_judge', 'evidence': [],
             'candidate': {'part': '1N5819', 'verdict': 'SPEC_EQUIVALENT', 'checks': [], 'part_number': '1N5819'}}
 RESULT = {'answer', 'status', 'stage', 'question_type', 'evidence', 'judgement', 'price_parts', 'refusal', 'interrupt',
-          'request_id', 'profile_hints', 'error'}
+          'request_id', 'profile_hints', 'web_search_unavailable', 'error'}
 FACT = {'kind', 'value', 'text', 'version', 'updated_at', 'source'}
 THREAD_ITEM = {'id', 'project_id', 'project_name', 'title', 'created_at', 'last_activity_at'}
 
