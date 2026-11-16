@@ -35,7 +35,7 @@
 | 제출 체크리스트 | 최종 제출 때 확인 | 초안 있음: [submission_checklist.md](submission_checklist.md)(2026-11-13). 가이드 원문 사본이 저장소에 없어 `GATES.md` · 이 문서의 요구만 담음 | D12 11/17 |
 | `failure_analysis.md` 보강 | 코드로 되돌린 결정 1건과 이유, 미채택 실험, 판정자 한계 | 11-13 채움: 되돌린 결정(#46), 미채택 실험 4건, 판정자·도구 한계. 11-16 채움: 인젝션 사례 1건(C2 수정 전)과 Luna 한계(파일 9절, 판정을 사람과 대조한 기록은 없음). 11-17 정리: 정답 초안 작성자 서술(파일 8절). 현재 서술은 모두 "초안 Codex(하정운 검수) · 1차 심태현 · 최종 하정운"이고, 심태현을 초안 작성자로 적은 줄은 없다. ADR 0015만 "2차 판정"으로 적었다(같은 뜻). 근거가 조장 진술의 사후 기록뿐인 한계는 남음 | D12 11/17 |
 | `ai_tools_log.md` 보강 | 팀의 AI 코딩 도구 사용 기록 | 11-13 Claude 행. 11-17 추가: 심태현 행(Codex), 오세창 행(도구 이름이 기록에 없음), 하정운 11-17 Claude Code 행. 남음: 두 조원 본인 확인, 김재훈 행 없음(11-06 탈퇴), citation-check 브랜치 확인(후보 커밋 `bfdb77ab`), 채택 판정자(파일 4절) | D12 11/17 |
-| 개인정보·비밀값 점검 | 포트폴리오와 스크린샷에 개인정보나 비밀값이 없는지 | 2026-11-13 1차 점검: `docs/deliverables/**` 마크다운 · 스크린샷 3장(이미지로 열어 확인) · 11-13 새 파일(`evals/results/d10/` 새 파일, TALLY 폴더, `v3_judging_record.md`, 스크립트 2개)에서 개인 이메일 · 전화번호 · API 키/토큰 형식 · 절대 경로를 검색. 이메일 · 전화번호 · 키 0건. 절대 경로 1건: `evals/results/d10/pytest_full_2026-11-13.txt` 9행(로컬 사용자 이름이 든 저장소 경로, 로그 원본이라 고치지 않음, 제출 전 삭제 또는 마스킹 판단 필요). 스크린샷 왼쪽 아래에 계정 표시명 `DNS`가 보임, 사용자별 비용 칸에 숫자 사용자 ID 1 · 2 · 4 · 16, 입출력은 `[redacted]`. 포트폴리오 최종본은 점검 전. 11-17: 새 포트폴리오 2장과 `ai_tools_log.md` 새 행은 이름 · GitHub id · 역할만 쓰고 이메일 · 로컬 경로 · Langfuse 프로젝트 ID · 트레이스 주소를 넣지 않았다(문자열 검색으로 확인). 11-17 스크린샷 4장과 영상은 점검 전 | D12 11/17 |
+| 개인정보·비밀값 점검 | 포트폴리오와 스크린샷에 개인정보나 비밀값이 없는지 | 2026-11-13 1차 점검: `docs/deliverables/**` 마크다운 · 스크린샷 3장(이미지로 열어 확인) · 11-13 새 파일(`evals/results/d10/` 새 파일, TALLY 폴더, `v3_judging_record.md`, 스크립트 2개)에서 개인 이메일 · 전화번호 · API 키/토큰 형식 · 절대 경로를 검색. 이메일 · 전화번호 · 키 0건. 절대 경로 1건: `evals/results/d10/pytest_full_2026-11-13.txt` 9행(로컬 사용자 이름이 든 저장소 경로, 로그 원본이라 고치지 않음, 제출 전 삭제 또는 마스킹 판단 필요). 스크린샷 왼쪽 아래에 계정 표시명 `DNS`가 보임, 사용자별 비용 칸에 숫자 사용자 ID 1 · 2 · 4 · 16, 입출력은 `[redacted]`. 포트폴리오 최종본은 점검 전. 11-17: 새 포트폴리오 2장과 `ai_tools_log.md` 새 행은 이름 · GitHub id · 역할만 쓰고 이메일 · 로컬 경로 · Langfuse 프로젝트 ID · 트레이스 주소를 넣지 않았다(문자열 검색으로 확인). 11-17 스크린샷 4장은 이미지로 열어 확인: 비밀값 없음, 왼쪽 아래 계정 표시명 `DNS`, `04`에 동결 v3 문항 글이 마스킹 없이 보임(평가 문항, 개인정보 아님). 영상은 점검 전 | D12 11/17 |
 | 배포 유지 | 발표일까지 배포 유지, 제출 링크·경로·발표 시각 | 확인 기록 없음 | 발표 11/18 |
 | 배포본 25단계 실행(평가용 계정) | 제출 직전 배포본에서 평가용 계정 A · B로 승인 · 견적 · 계정 격리 확인 | 하지 않음. 평가용 계정 비밀번호가 필요해 사람만 한다(지난 통과 기록은 `GATES.md` G1, 리비전 `574de79-rs`) | D12 11/17 |
 | 평가용 계정 제출 | 평가용 계정을 비공개로 제출 | 하지 않음. 사람만 한다. 저장소 · 문서에 계정과 비밀번호를 적지 않는다 | D12 11/17 |
@@ -49,11 +49,11 @@
 | [`langfuse/01-trace-list.jpg`](langfuse/01-trace-list.jpg) | 트레이스 목록(루트 관측, 환경 `default`) | 11-13 09:38~10:10 배포본 요청이 트레이스로 들어옴(최근 1일 루트 관측 약 101건, `LangGraph`와 `analysis-metadata` 포함), 입출력 마스킹 |
 | [`langfuse/02-model-call-detail.jpg`](langfuse/02-model-call-detail.jpg) | 트레이스 `ce5f5ad0…` 타임라인과 모델 호출 상세 | Spec 에이전트(대체 부품 판정, LLM 2회) → Supervisor 재계획 → RAG 에이전트(LLM 1회)가 나뉘어 보이고, 선택한 RAG 호출의 모델 `anthropic/claude-haiku-5.5`, 4.76초, 5k 토큰, 0.001달러 |
 | [`langfuse/03-cost-dashboard.jpg`](langfuse/03-cost-dashboard.jpg) | Langfuse Cost Dashboard(환경 `default`+`eval`) | 최근 1일 트레이스 151건, 비용 합계 0.118649달러, 모델별·환경별·사용자별 비용 |
-| [`langfuse/04-trace-detail-scores-header.jpg`](langfuse/04-trace-detail-scores-header.jpg) | 트레이스 상세(11-17) | 머리에 평가 점수 칩이 붙은 트레이스 |
-| [`langfuse/05-trace-scores-tab.jpg`](langfuse/05-trace-scores-tab.jpg) | 트레이스 점수 탭(11-17) | 한 트레이스에 붙은 점수 13개 |
-| [`langfuse/06-scores-list.jpg`](langfuse/06-scores-list.jpg) | 점수 목록(11-17) | 프로젝트의 점수 목록 |
-| [`langfuse/07-home-dashboard-2026-11-17.jpg`](langfuse/07-home-dashboard-2026-11-17.jpg) | 홈 대시보드(11-17) | 트레이스 1.68K, 점수 22.25K, 비용 $1.17 |
+| [`langfuse/04-trace-detail-scores-header.jpg`](langfuse/04-trace-detail-scores-header.jpg) | 트레이스 `gate v3-47` 상세(11-17, 화면 시각 03:33:45, 10.44초) | 머리에 점수 칩(passed_cards · latency_s · tries · question_type · refusal_code · cost_usd 외 10개), 노드 트리(입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 → 답 모으기 → 거절), 평가 문항 입력 · 출력(마스킹 없음) |
+| [`langfuse/05-trace-scores-tab.jpg`](langfuse/05-trace-scores-tab.jpg) | 같은 트레이스의 Scores 탭(11-17) | 점수 13개: refusal_code, latency_s, docs_found, pass, question_type, cost_usd, tries, path, answer_metric, llm_calls, hops, not_found, passed_cards |
+| [`langfuse/06-scores-list.jpg`](langfuse/06-scores-list.jpg) | Scores 목록(11-17, 최근 1일) | gate 실행 트레이스마다 붙은 점수 행(화면 시각 03:34), 446쪽(쪽당 50행) |
+| [`langfuse/07-home-dashboard-2026-11-17.jpg`](langfuse/07-home-dashboard-2026-11-17.jpg) | 홈 대시보드(11-17, 환경 `eval` · `default`, 최근 1일) | 트레이스 1.68K, 비용 $1.17(모두 `anthropic/claude-haiku-5.5`, 26.25M 토큰), 점수 22.25K, 관측 30.76K |
 
 - `02`의 트레이스는 마지막 노드가 `거절`이다. 판정 근거가 모자라 거절로 끝난 질문이고, 이 장은 에이전트 구조와 호출 기록을 보이려고 골랐다.
 - 403 원인과 해소 기록은 [evals/results/d10/langfuse_403_2026-11-13.md](../../evals/results/d10/langfuse_403_2026-11-13.md).
-- `04` ~ `07`은 2026-11-17에 캡처했다. 파일은 다른 작업이 이 폴더에 넣는다(이 커밋에는 아직 없음). 캡처 시각 · 조회 범위 · 환경은 이 문서에 아직 적지 않았다.
+- `04` ~ `07`은 2026-11-17에 캡처했다(프로젝트 `SojaFit_v2`). 파일은 다른 작업이 이 폴더에 넣는다(이 커밋에는 아직 없음). 위 칸은 작업 폴더의 같은 이름 파일을 열어 옮겼다. 트레이스를 보낸 실행의 소스 커밋은 화면에 없다.

@@ -19,7 +19,7 @@
 ## 숫자로 보이는 결과
 
 - 검색·청킹: 현재 서비스 청커는 PR #70의 `tsc-v4h-2026-11-08`이다(EVAL 1장 맨 위 표 "현재 청킹 구현"). v1 청커와 바꿔 잰 v3 검색 21문항 Recall@5는 v1 · v4h 모두 **0.8095**로 같았다(EVAL 12장 표, `evals/results/chunking/v1-vs-v4h-2026-11-13/`). 개선 수치로 쓰지 않는다.
-- 멀티 에이전트(Supervisor 모델 비교, EVAL 밖): 동결 v2 70문항, 후보 6종 × 3차. 3차는 420행 · 855호출 · 보고 비용 US$0.239. 질문 유형 정답(35문항)은 Luna · Jev **33/35**, Haiku 23/35. 최종 후보 3종(순위 없음)만 남겼다(`docs/research/supervisor-stage3-results.md`, `evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json`). 서비스 Supervisor의 Haiku 채택은 이 비교가 아니라 ADR 0017의 결정이다.
+- 멀티 에이전트(Supervisor 모델 비교, EVAL 밖): 동결 v2 70문항, 후보 6종 × 3차. 3차는 420행 · 855호출 · 예산 집계 비용 US$0.239(청구액 대조 안 함). 질문 유형 정답(35문항)은 Luna · Jev **33/35**, Haiku 23/35. 최종 후보 3종(순위 없음)만 남겼다(`docs/research/supervisor-stage3-results.md`, `evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json`). 서비스 Supervisor의 Haiku 채택은 이 비교가 아니라 ADR 0017의 결정이다.
 - 관측(Langfuse, EVAL 밖): Supervisor 프롬프트 V0 13문항 × 후보 3종 결과를 모델 재호출 없이 Dataset **13항목 · Experiment 3개 · 점수 273개**로 적재하고, API 재조회 합계가 로컬 결과와 같음을 확인했다(`docs/worklog/osc.md` 182 ~ 189행, `evals/results/supervisor/2026-11-06-prompt-v0-v1/langfuse_import.json`).
 - LangGraph 중단·재개(EVAL 밖): 재개 실행 1건에서 Exa 2회 · 공식 PDF 2건 · 노드 응답 5회(Supervisor 2 · 판정 조건 읽기 1 · 문서 답변 2)로, 품번별 PDF 행(W1 50 V, W2 40 V)이 저장 답변과 재조회에서 같게 남았다(`docs/worklog/osc.md` 723 ~ 728행).
 - 기동(EVAL 밖, `docs/research/docker-cold-start-measurements.md`): 빈 Docker에서 `docker compose up` → 첫 `/health` 3회 중앙값 **114.159초**(600초 이내). Cloud Run 최소 인스턴스 0 → 1에서 유휴 뒤 첫 응답 **14.498 → 0.324초**(각 1회). 비용 때문에 0대로 되돌렸다.
