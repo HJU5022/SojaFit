@@ -86,6 +86,7 @@ SojaFit (proj3-b)
 │   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄 시험
 │   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
 │   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기, LED·표시기·비다이오드 판정 대상 제외 시험
+│   │   ├── schematicSearch.test.ts <- 원본 회로도 검색 재사용(14분·못 찾음 유지·오류 재시도·직접 찾기) 시험
 │   │   ├── approval.test.ts <- 승인 목록에서 후보의 승인 상태(own·other)와 사례 삭제 뒤 재승인 시험
 │   │   ├── demo.spec.ts    <- Playwright: 데모 로그인부터 승인·견적·설정까지의 브라우저 흐름(키 없는 데모 서버 필요)
 │   │   └── account.spec.ts <- Playwright: 설정 저장·A/B 격리·관리자 차단·첨부 넷리스트의 회로 버전
@@ -107,7 +108,8 @@ SojaFit (proj3-b)
 │       ├── Projects.tsx    <- 프로젝트 목록과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 링크)
 │       ├── Workbench.tsx   <- 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전
 │       ├── Reply.tsx       <- 검토 결과 답과 조건 입력 카드
-│       ├── Schematic.tsx   <- 원본 회로도 구역: 예제 프로젝트의 저장된 도면과, 누를 때만 하는 공개 웹 검색(external-circuits)
+│       ├── Schematic.tsx   <- 원본 회로도 구역: 예제 프로젝트의 저장된 도면, 그 밖의 프로젝트는 열 때 한 번 하는 공개 웹 검색(external-circuits), 눌러 큰 창
+│       ├── schematicSearch.ts <- 원본 회로도 검색을 (프로젝트, 회로 버전)마다 한 번만 보내는 탭 메모리
 │       ├── Candidate.tsx   <- 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회
 │       ├── styles.css      <- 전체 스타일
 │       └── vite-env.d.ts   <- Vite 환경 타입

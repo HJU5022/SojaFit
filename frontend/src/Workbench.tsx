@@ -365,8 +365,12 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                         : '회로를 먼저 가져오세요.'}
               </p>
             </div>
-            <Circuit project={project.data} target={target} />
-            {project.data && <SchematicSection project={project.data} threadId={threadId} />}
+            {/* [왜] 연결 개념도와 원본 회로도를 한 구역에 펼쳐 두어 넷리스트를 올리면 둘을 바로 같이 본다. 누르면 큰 창. */}
+            <section className="circuit-section">
+              <h2>회로</h2>
+              <Circuit project={project.data} target={target} zoomable />
+              {project.data && <SchematicSection project={project.data} threadId={threadId} />}
+            </section>
             <div className="review-nav">
               <div>
                 <h2>검토 기록</h2>
