@@ -73,7 +73,7 @@
 | `results/grader/` | 채점기 기준선(`grader_baseline_*`) | `eval_grader.py` | 사전 등록 #34·#36 |
 | `results/skill/` | Skill·도구 판단 검증 요약 | `run_skill_pair.py` | 사전 등록 #17 |
 | `results/supervisor/` | Supervisor 후보 비교 단계별 `<날짜>-<이름>/`(manifest, 문항별 행, summary, 호출 증거). V0 프롬프트 비교와 Langfuse 가져오기 영수증 포함 | `run_supervisor_*.py`, `report_supervisor_stage3.py`, `import_supervisor_prompt_v0_langfuse.py` | 각 하위 폴더 `*summary*.json`, [supervisor-prompt-v0.md](guides/supervisor-prompt-v0.md) |
-| `results/threads/` | thread 기억·입력 경로·신뢰 경계·판정 묶음 확인과 인젝션 실측 원시(`injection_*`) | `run_thread_validation.py`, `run_trust_boundary.py`, `run_claim_consistency.py`, `run_input_surfaces.py`, `run_judgement_bundle.py`, `run_injection_baseline.py` | 아래 "인젝션 파일" |
+| `results/threads/` | thread 기억·입력 경로·신뢰 경계·판정 묶음 확인과 인젝션 실측 원시(`injection_*`) | `run_thread_validation.py`, `run_trust_boundary.py`, `run_claim_consistency.py`, `run_input_surfaces.py`, `run_judgement_bundle.py`, `run_injection_baseline.py`, `run_supervisor_guard_injection.py` | 아래 "인젝션 파일" |
 
 ### 인젝션 파일 (`results/threads/`)
 
@@ -86,6 +86,7 @@
 | `injection_t3_smoke_live_2026-11-11_07.jsonl`, 동명 `.meta.json`·`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json` | T3 스모크07의 원시·메타·예산·승인 |
 | `injection_remaining_review_queue_2026-11-11.json` | 실측03·스모크08의 원시 SHA·행·정상 짝·검토 대기 목록 |
 | `injection_baseline_review_2026-11-10.json`, `injection_baseline_checks_2026-11-10.json`, `injection_exposure_simulated_v3_2026-11-10.jsonl`, `injection_baseline_artifact_index_2026-11-10.json` | 준비 산출물 통합본: 계획·모의 실행 메타, 무료 검사 기록, 모의 실행 원시, 경로·해시 인덱스 |
+| `supervisor_guard_injection_2026-11-16.json` | Supervisor 답 가드 켬/끔 짝 실측 22작업 원시(호출별 카나리 노출, 계획 · reply, 보고, 켬/끔 답, 공급자 사용량). 해석은 [supervisor-guard-injection-recheck.md](../docs/experiments/supervisor-guard-injection-recheck.md) |
 
 - 실행별 파일은 서로 덮어쓰지 않고 합산하지 않는다.
 - 실측01·02와 스모크01~06의 원시는 저장소 밖 백업에 있다. 크기·SHA256·복원 방법은 `injection_baseline_artifact_index_2026-11-10.json`의 `measured_runs_archive`.

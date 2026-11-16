@@ -56,6 +56,7 @@
 | `test_injection_preflight.py` | 공급자·DB·socket 연결을 기본 차단하고 원격/기존 DB 거부, 본문 해시, 여섯 노드·형식 재시도 관찰, 공유 예산, 스레드 전달, 캐시 격리, 사양 오염/누락/미도달/사람 미검토 채점 |
 | `test_check_injection_result.py` | 저장한 실측 결과가 기준을 통과하고, 작업 수·상태·판정 기준·노출 전제를 깬 변이는 실패로 바뀜 |
 | `test_input_surfaces.py` | 무료 계획, 덮어쓰기 거부, 이름 필드 무시/ref 거부, 청크·값·질문의 모델 입력 노출, 위험 응답 기록과 최종 차단(가짜 모델) |
+| `test_supervisor_guard_injection.py` | 가드 실측 실행기: 코퍼스 글이 재계획 Supervisor 입력에만 닿고 reply가 답이 되지 않음, 첫 계획 reply에서 가드 켬/끔이 갈림, 이력 숫자 통과 · 새 숫자 차단, 무호출 계획 · 덮어쓰기 거부(가짜 모델) |
 | `test_claim_consistency.py` | 유료 기준선 실행기의 호출 없는 계획, 결과 덮어쓰기 거부, 상한 뒤 후속 미실행/부분 raw 보존, 거짓 가짜 응답의 원시 보존/최종 차단 |
 | `test_trust_boundary.py` | D7 실행기의 dry-run 외부 호출 0, 기존 결과 보존, 정상 대조군, 공격 노출·canary 유출 탐지, 타 사용자 참조의 코드 차단, 오류 후 not_run 보존 |
 | `test_judgement_bundle.py` | 원격/서비스 DB·덮어쓰기 거부, 단일 예산 차단, 위험 문서 답이 판정 답에서 차단됨. loopback DB 왕복 시험은 `TEST_INJECTION_DATABASE_URL`이 없으면 건너뛰며 사양 표 제거(ADR 0016) 뒤 현재 코드와의 일치는 확인되지 않음 |
