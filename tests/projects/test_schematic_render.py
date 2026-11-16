@@ -4,6 +4,7 @@ import base64
 import subprocess
 import zipfile
 from dataclasses import replace
+from pathlib import Path
 
 import httpx
 import pytest
@@ -1058,3 +1059,90 @@ def test_remote_renderer_checks_candidate_connections_without_sending_upload(mon
             with pytest.raises(ExternalSchematicInvalidSource):
                 schematic.render_remote_kicad(source,connections=uploaded,client=client)
     assert len(bodies)==1
+
+
+UPLOAD = Path(__file__).parents[1] / 'fixtures/netlists/minimal.kicad_sch'
+EXPORTED = Path(__file__).parents[1] / 'fixtures/netlists/minimal.net'
+
+
+def upload_exports(pages=('white',), seen=None):
+    """KiCad 대신 쓰는 가짜 변환(#52): 넷리스트는 합성 표본, PDF는 pages 쪽."""
+    def netlist(root, output):
+        (seen if seen is not None else []).append(('netlist', root.name, output.name))
+        path = output / 'n.net'; path.write_bytes(EXPORTED.read_bytes()); return path
+    def pdf(root, output):
+        (seen if seen is not None else []).append(('pdf', root.name, output.name))
+        path = output / 'o.pdf'; path.write_bytes(picture('PDF', list(pages))); return 'fixture', path
+    return {'kicad_netlist_export': netlist, 'kicad_export': pdf}
+
+
+def test_uploaded_schematic_exports_netlist_and_one_sheet_from_a_fixed_file_name():
+    seen = []
+    netlist, sheets = render.render_uploaded_schematic(UPLOAD.read_text(), **upload_exports(seen=seen))
+    assert netlist == EXPORTED.read_bytes() and len(sheets) == 1
+    # 사용자 파일 이름은 명령에 들어가지 않고, 두 변환은 출력 폴더를 따로 쓴다
+    assert seen == [('netlist', 'upload.kicad_sch', 'netlist'), ('pdf', 'upload.kicad_sch', 'export')]
+    with pytest.raises(ExternalSchematicInvalidSource):  # 한 장이어야 한다
+        render.render_uploaded_schematic(UPLOAD.read_text(), **upload_exports(pages=('white', 'red')))
+
+
+@pytest.mark.parametrize('raw,error', [
+    (UPLOAD.read_bytes().replace(b'(sheet_instances', b'(sheet (property "Sheetfile" "child.kicad_sch")) (sheet_instances', 1),
+     'HierarchicalSchematic'),
+    (b'(export (components))', 'invalid'), (b'\xff', 'invalid'), (b'', 'invalid'), (b'(kicad_sch', 'invalid'),
+    (b'(kicad_sch (symbol (lib_id "Device:D")))', 'invalid'),  # 내장 라이브러리에 없는 부품
+    (b'(kicad_sch (title_block (comment 1 "line one\nline two")))', None),  # 따옴표 안 줄바꿈은 정상
+])
+def test_uploaded_schematic_text_checks_the_root_before_kicad(raw, error):
+    if error is None:
+        assert render.uploaded_schematic_text(raw) == raw.decode()
+        return
+    with pytest.raises(render.HierarchicalSchematic if error == 'HierarchicalSchematic' else ExternalSchematicInvalidSource):
+        render.uploaded_schematic_text(raw)
+
+
+@pytest.mark.parametrize('case', ['ok', 'hierarchical', 'kicad_fails', 'kicad_missing'])
+def test_upload_client_and_renderer_agree_on_the_schematic_contract(monkeypatch, case):
+    """API 쪽 export_uploaded_kicad가 렌더러 앱(/render {schematic})과 주고받는 모양: 422는 읽기 실패, 503은 서버 문제."""
+    import json
+    from fastapi.testclient import TestClient
+    from backend.projects import schematic
+    exports = upload_exports()
+    if case == 'kicad_fails':
+        exports['kicad_export'] = lambda root, output: (_ for _ in ()).throw(schematic.InvalidKicadProject())
+    if case == 'kicad_missing':
+        exports['kicad_netlist_export'] = lambda root, output: (_ for _ in ()).throw(schematic.KicadServiceUnavailable())
+    real = render.render_uploaded_schematic
+    monkeypatch.setattr(render, 'render_uploaded_schematic', lambda text: real(text, **exports))
+    monkeypatch.setenv('KICAD_RENDERER_URL', 'http://renderer')
+    monkeypatch.delenv('K_SERVICE', raising=False)
+    server, bodies = TestClient(schematic.app), []
+    def transport(request):
+        bodies.append(json.loads(request.content))
+        response = server.post('/render', json=bodies[-1])
+        return httpx.Response(response.status_code, content=response.content, headers=dict(response.headers))
+    text = UPLOAD.read_text()
+    if case == 'hierarchical':  # API가 먼저 막지만 렌더러도 같은 검사를 한다
+        text = text.replace('(sheet_instances', '(sheet (property "Sheetfile" "child.kicad_sch")) (sheet_instances', 1)
+    with httpx.Client(transport=httpx.MockTransport(transport)) as client:
+        if case == 'ok':
+            netlist, sheets = schematic.export_uploaded_kicad(text, client=client)
+            assert netlist == EXPORTED.read_bytes() and len(sheets) == 1 and sheets[0].startswith(render.PNG_MAGIC)
+        else:
+            error = schematic.KicadServiceUnavailable if case == 'kicad_missing' else schematic.InvalidKicadProject
+            with pytest.raises(error):
+                schematic.export_uploaded_kicad(text, client=client)
+    assert bodies == [{'schematic': text}]
+
+
+def test_upload_client_bounds_the_call_and_needs_a_configured_renderer(monkeypatch):
+    from backend.projects import schematic
+    monkeypatch.delenv('KICAD_RENDERER_URL', raising=False)
+    with pytest.raises(schematic.KicadServiceUnavailable):
+        schematic.export_uploaded_kicad('(kicad_sch)')
+    monkeypatch.setenv('KICAD_RENDERER_URL', 'http://renderer')
+    for respond in (lambda request: (_ for _ in ()).throw(httpx.ReadTimeout('slow')),
+                    lambda request: httpx.Response(200, json={'sheets': [], 'netlist': ''}),
+                    lambda request: httpx.Response(500)):
+        with httpx.Client(transport=httpx.MockTransport(respond)) as client, pytest.raises(schematic.KicadServiceUnavailable):
+            schematic.export_uploaded_kicad('(kicad_sch)', client=client)

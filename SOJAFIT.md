@@ -665,6 +665,7 @@ SojaFit (proj3-b)
 │   └── fixtures/           <- 단위 테스트용 가공 데이터
 │       └── netlists/        <- 외부 원본을 쓰지 않은 합성 KiCad 업로드 표본
 │           ├── minimal.net <- 연결 정보와 버릴 원본 marker가 있는 최소 정상 표본
+│           ├── minimal.kicad_sch <- D1 · R1을 선 하나로 이은 합성 KiCad 회로도 한 장(KiCad 10 kicad-cli 변환 확인, #52)
 │           └── invalid.net <- 괄호가 닫히지 않은 잘못된 표본
 │
 ├── scripts/                <- 서비스 코드 밖에서 손으로 돌리는 일회성 측정·점검 스크립트, 주제별 하위 폴더
