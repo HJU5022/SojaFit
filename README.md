@@ -305,7 +305,7 @@ KiCad 원본 회로도를 그림(PNG)으로 바꾸는 일만 하는 별도 서�
 | 회로도 업로드(#52) | `.kicad_sch`를 올리면 API가 원문을 `POST /render` `{schematic}`로 보내 넷리스트와 그림을 받는다(`backend/api/projects.py` `read_schematic`, SPEC 8.10). 이 경로는 API 안 `kicad-cli`로 대신하지 않아 렌더러가 없으면 503이다 | `backend/projects/schematic.py` `export_uploaded_kicad` |
 | 렌더러 없이 | `INCLUDE_KICAD=1`로 API 이미지를 빌드해 `kicad-cli`를 넣고 `KICAD_RENDERER_URL`을 비워 두면 API 프로세스가 직접 부른다(실행 파일은 `KICAD_CLI`로 지정). compose의 api는 위 기본 주소가 있어 이 방식은 compose 밖에서 쓴다 | [`Dockerfile`](Dockerfile), `backend/projects/external_schematic.py` |
 
-렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)와 회로도 업로드(아래 표 줄)뿐이다. 분석 그래프 · `.net` 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 다만 분리(`renderer` target 추가) 뒤의 코드로 키 없는 새 clone 기동과 스모크를 다시 재지는 않았다([GATES](docs/GATES.md) G2).
+렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)와 회로도 업로드(아래 표 줄)뿐이다. 분석 그래프 · `.net` 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 분리(`renderer` target 추가) 뒤의 코드(`799ae636`)로 키 없는 새 clone 기동과 스모크를 11-17에 6회 다시 쟀다: `/health` 200 중앙값 239.4초, 스모크 6회 모두 28/28(profile 없이 기본 `docker compose up --build`, [GATES](docs/GATES.md) G2).
 
 ### 화면 개발 서버
 
@@ -325,7 +325,7 @@ uv run python evals/runners/freeze.py --check                                 # 
 uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json> 5 hybrid  # 검색 지표(코퍼스 DB와 임베딩 키 필요)
 ```
 
-- `freeze.py --check`는 2026-11-16에 실행했고 "동결 이후 바뀐 파일: 없음"(종료 코드 0)이었다. 동결 해시 v1 · v2 · v3의 기록은 [`evals/FROZEN.json`](evals/FROZEN.json), v3의 재동결 이력은 [EVAL_REPORT.md](EVAL_REPORT.md) 2절 표와 [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md)에 있다.
+- `freeze.py --check`는 2026-11-17 `799ae636`에서 다시 실행했고 "동결 이후 바뀐 파일: 없음"(종료 코드 0)이었다([d12/checks/freeze_check.txt](evals/results/d12/checks/freeze_check.txt)). 동결 해시 v1 · v2 · v3의 기록은 [`evals/FROZEN.json`](evals/FROZEN.json), v3의 재동결 이력은 [EVAL_REPORT.md](EVAL_REPORT.md) 2절 표와 [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md)에 있다.
 - **v3 기준 게이트(유료, 키 필요).** 평가자가 다시 돌리려면 `.env`에 `OPENROUTER_API_KEY`, `VOYAGE_API_KEY`, 코퍼스를 적재한 `DATABASE_URL`, `LANGFUSE_*` 키가 있어야 하고, 서비스와 같은 검색 설정으로 재려면 `DEMO_MODE=0`을 **명시**한다(안 쓰면 코드 기본값 1 = BM25만이라 위 응답 시간 표의 "미기록" 행처럼 조건이 달라진다). 명령 앞에 붙인 `DEMO_MODE=0`이 `.env`의 값보다 우선한다(`.env`에 `DEMO_MODE=1`을 넣고 uv 0.13.7에서 `0`이 나오는 것을 확인했다). 웹 근거까지 재려면 `EVAL_WEB=1`과 `EXA_WEB_SEARCH_ENABLED=1` · `EXA_API_KEY`가 더 필요하고 Exa 검색 요금이 따로 든다.
 
   ```bash
@@ -334,8 +334,8 @@ uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json
   uv run python -m evals.runners.gate_report evals/dataset_v3.jsonl eval-out   # 무료. 기준 미달이면 종료 코드 1
   ```
 
-  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 이 명령 자체는 이번에 다시 실행하지 않았다(유료). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
-- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡을 당시 순서 `npm ci && npm run test:run && npm run build`로, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md). 지금 `frontend` 잡은 `npm ci` → `npm test` → `npm run format:check` → `npm run build`이고, 새 화면으로 바꾸며 `test:run`은 없어졌다). 동결 직전에 `pytest` · `freeze.py --check` · `gitleaks`를 다시 돌려야 한다. Actions에서의 실제 실행 결과는 확인하지 못했다.
+  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 11-17에 `799ae636`을 운영 설정(`DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 EXA_WEB_SEARCH_ENABLED=1`)으로 이 실행기에 다시 넣었다: 1세트 LLM $0.036, 결과는 4절 첫 행([evals/results/d12/](evals/results/d12/README.md)). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
+- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡을 당시 순서 `npm ci && npm run test:run && npm run build`로, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md). 지금 `frontend` 잡은 `npm ci` → `npm test` → `npm run format:check` → `npm run build`이고, 새 화면으로 바꾸며 `test:run`은 없어졌다). 11-17 `799ae636`에서 셋을 로컬로 다시 돌렸다: Linux 컨테이너 pytest는 한 프로세스 전체 실행이 3회 모두 `tests/rag/test_card_find.py` · `test_card_read.py`의 새 스레드 시작에서 멈췄고(11-16 `4c5afc1e`은 67초에 2,495 통과), `tests/` 폴더마다 따로 돌리면 2,997 통과 · 0 실패 · 205 건너뜀이다. `freeze.py --check` 바뀐 파일 없음, gitleaks 이력 1,250 커밋 발견 0([d12 README](evals/results/d12/README.md) 「동결 직전 pytest · freeze · gitleaks」). Actions에서의 실제 실행 결과는 확인하지 못했다.
 
 ---
 
