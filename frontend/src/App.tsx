@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { Brand, ErrorBox, followLink, Loading, navigate, useLocation } from './ui';
+import { Brand, ErrorBox, followLink, Loading, navigate, ResizeHandle, useLocation } from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
 import { Settings } from './Account';
@@ -126,6 +126,13 @@ function Shell({
           <ErrorBox error={error} />
           <Footer compact />
         </div>
+        <ResizeHandle
+          name="sidebar-w"
+          label="사이드바 너비 조절"
+          min={200}
+          max={420}
+          edge="right"
+        />
       </aside>
       <div className="app-frame">
         <div className="app-topbar">

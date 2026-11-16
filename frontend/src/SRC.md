@@ -22,7 +22,7 @@
 - `approval.ts` — 한 검토 결과의 승인 목록에서 후보 하나의 승인 상태(이 후보 승인, 다른 후보 승인)를 가르는 순수 함수. 서버는 사례가 남은 활성 승인만 돌려주므로 사례를 지우면 다시 승인할 수 있다. 시험 `../tests/approval.test.ts`.
 - `display.ts` — 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수: 긴 소수는 유효숫자 3자리로(받은 값은 마우스를 올리면 보임), 판정 기준식(`v_in_max * kV`)은 한국어로, 답변 속 등록된 말뭉치 인용 번호(`[79]`)는 숨기고, 링크는 http(s)만, 수량별 가격 조회 경로(`/prices?parts=…&quantity=…`)와 예상 금액 줄(적용 구간·단가·금액, 계산을 보류한 경우 안내). 시험 `../tests/display.test.ts`.
 - `inputLabels.ts` — 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내(`inputPlaceholder`). 이름과 뜻은 `backend/judge/rules/roles.yaml` 머리말과 짝이다.
-- `ui.tsx` — 경로 이동(`navigate` · `useLocation`)·자원 훅(`useResource`)·공통 조각(로고·불러오는 중·오류·빈 상태·판정 배지·면책 문구·창·⋯ 메뉴 `RowMenu`(사이드바 대화 줄·작업대 상단이 같이 씀, Esc·바깥 클릭으로 닫힘)·근거 출처)·회로 도식(`Circuit`, `zoomable`이면 눌러 큰 창). `Markdown`은 서버 답을 그리되 그림과 http(s) 아닌 링크는 글자로만 보인다.
+- `ui.tsx` — 경로 이동(`navigate` · `useLocation`)·자원 훅(`useResource`)·공통 조각(로고·불러오는 중·오류·빈 상태·판정 배지·면책 문구·창·⋯ 메뉴 `RowMenu`(사이드바 대화 줄·작업대 상단이 같이 씀, Esc·바깥 클릭으로 닫힘)·근거 출처)·세로 경계선 너비 조절(`ResizeHandle`, 사이드바·오른쪽 창·작업대 회로 패널, CSS 변수와 localStorage, #35)·회로 도식(`Circuit`, `zoomable`이면 눌러 큰 창). `Markdown`은 서버 답을 그리되 그림과 http(s) 아닌 링크는 글자로만 보인다.
 - `Landing.tsx` — 공개 랜딩.
 - `Auth.tsx` — 로그인·가입·비밀번호 재설정·Google 계정 연결.
 - `Account.tsx` — 내 설정·개인정보처리방침 본문(`PrivacyText`)과 운영자 연락 메일(`contactEmail`).

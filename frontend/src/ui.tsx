@@ -168,6 +168,9 @@ export function Modal({
         if (e.target === e.currentTarget) close();
       }}
     >
+      {wide && (
+        <ResizeHandle name="drawer-w" label="창 너비 조절" min={440} max={1100} edge="left" />
+      )}
       <div className="dialog-head">
         <h2>{title}</h2>
         <button aria-label="닫기" title="닫기" className="icon-button" onClick={close}>
@@ -176,6 +179,81 @@ export function Modal({
       </div>
       <div className="dialog-body">{children}</div>
     </dialog>
+  );
+}
+/**
+ * 옆 패널의 세로 경계선(#35): 끌거나 포커스 뒤 ←/→로 너비를 바꾼다. 너비는 문서 루트의 `--{name}` CSS 변수와 localStorage에 둔다.
+ * edge="right"는 패널 오른쪽 경계(사이드바), "left"는 왼쪽 경계(오른쪽 패널·창)라 끄는 방향이 반대다. 760px 이하에서는 CSS가 숨긴다.
+ */
+export function ResizeHandle({
+  name,
+  label,
+  min,
+  max,
+  edge,
+}: {
+  name: string;
+  label: string;
+  min: number;
+  max: number;
+  edge: 'left' | 'right';
+}) {
+  const ref = useRef<HTMLDivElement>(null),
+    drag = useRef<{ x: number; w: number } | null>(null),
+    key = 'sojafit.' + name;
+  // [왜] 사용자가 바꾸기 전에는 null로 두어 CSS 기본 너비(화면 폭마다 다름)를 그대로 쓴다
+  const [width, setWidth] = useState<number | null>(() => {
+      try {
+        const v = Number(localStorage.getItem(key));
+        return v >= min && v <= max ? v : null;
+      } catch {
+        return null;
+      }
+    }),
+    [seen, setSeen] = useState(min);
+  useEffect(() => {
+    if (width === null) return;
+    document.documentElement.style.setProperty('--' + name, width + 'px');
+    try {
+      localStorage.setItem(key, String(width));
+    } catch {
+      // 저장소를 못 써도(사생활 보호 창 등) 이번 화면에는 적용된다
+    }
+  }, [width]);
+  const current = () => width ?? ref.current?.parentElement?.offsetWidth ?? min,
+    resize = (w: number) => setWidth(Math.round(Math.min(max, Math.max(min, w)))),
+    sign = edge === 'right' ? 1 : -1;
+  return (
+    <div
+      ref={ref}
+      className={'resize-handle ' + edge}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={width ?? seen}
+      tabIndex={0}
+      onFocus={() => setSeen(current())}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        e.preventDefault(); // 끄는 동안 글자가 선택되지 않게
+        // [왜] 포인터를 잡아 두어야 창 바깥(배경)에서 놓아도 그 클릭이 창을 닫지 않는다(Modal의 배경 클릭 닫기)
+        e.currentTarget.setPointerCapture(e.pointerId);
+        drag.current = { x: e.clientX, w: current() };
+      }}
+      onPointerMove={(e) => {
+        if (drag.current) resize(drag.current.w + sign * (e.clientX - drag.current.x));
+      }}
+      onPointerUp={() => (drag.current = null)}
+      onPointerCancel={() => (drag.current = null)}
+      onKeyDown={(e) => {
+        const step = e.key === 'ArrowRight' ? 16 : e.key === 'ArrowLeft' ? -16 : 0;
+        if (!step) return;
+        e.preventDefault();
+        resize(current() + sign * step);
+      }}
+    />
   );
 }
 /** ⋯ 버튼 아래 작은 메뉴(사이드바 대화 줄 · 작업대 상단이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. */

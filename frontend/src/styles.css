@@ -817,14 +817,14 @@ form {
   background: var(--surface);
   font-weight: 600;
 }
-/* 224px 탐색 + 남은 너비. 검토는 270px 문맥 + 가변 대화. */
+/* 224px 탐색 + 남은 너비. 탐색 너비는 경계선을 끌어 바꾼다(--sidebar-w, ui.tsx ResizeHandle). */
 .app-shell {
   display: flex;
   min-height: 100vh;
   background: var(--surface);
 }
 .sidebar {
-  width: 224px;
+  width: var(--sidebar-w, 224px);
   flex-shrink: 0;
   position: fixed;
   inset: 0 auto 0 0;
@@ -993,7 +993,7 @@ form {
   font-weight: 600;
 }
 .app-frame {
-  margin-left: 224px;
+  margin-left: var(--sidebar-w, 224px);
   flex: 1;
   min-width: 0;
   padding: 0 8px 8px 0;
@@ -1706,13 +1706,43 @@ form {
 .side-dialog {
   height: 100dvh;
   max-height: 100dvh;
-  width: 680px;
+  width: var(--drawer-w, 680px);
   max-width: calc(100% - 24px);
   margin: 0 0 0 auto;
   border-radius: 12px 0 0 12px;
 }
+/* [왜] 창 대신 본문이 스크롤해야 왼쪽 경계선(너비 조절)이 내용과 함께 밀려 올라가지 않는다 */
+.side-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .side-dialog .dialog-body {
   padding: 24px 28px 40px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+/* 세로 경계선(ui.tsx ResizeHandle, #35): 끌거나 ←/→로 너비를 바꾼다 */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  z-index: 6;
+  cursor: col-resize;
+  touch-action: none;
+}
+.resize-handle.right {
+  right: -4px;
+}
+.resize-handle.left {
+  left: 0;
+}
+.resize-handle:hover,
+.resize-handle:focus-visible {
+  outline: none;
+  background: linear-gradient(90deg, transparent 3px, #508a99 3px 5px, transparent 5px);
 }
 .candidate-heading {
   padding-bottom: 20px;
@@ -2043,11 +2073,11 @@ form {
 }
 @media (max-width: 1100px) {
   .sidebar {
-    width: 190px;
+    width: var(--sidebar-w, 190px);
     padding: 22px 12px;
   }
   .app-frame {
-    margin-left: 190px;
+    margin-left: var(--sidebar-w, 190px);
   }
   .workbench-grid {
     grid-template-columns: 225px minmax(0, 1fr);
@@ -2273,6 +2303,9 @@ form {
   }
   .sidebar.open {
     transform: translateX(0);
+  }
+  .resize-handle {
+    display: none;
   }
   .sidebar-brand {
     display: flex;
