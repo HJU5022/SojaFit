@@ -41,11 +41,16 @@ function Shell({
   return (
     <div className="app-shell">
       <header className="mobile-header">
-        <button aria-label="메뉴 열기" className="icon-button" onClick={() => setOpen(true)}>
+        <button
+          aria-label="메뉴 열기"
+          title="메뉴 열기"
+          className="icon-button"
+          onClick={() => setOpen(true)}
+        >
           <Menu size={21} />
         </button>
         <Brand />
-        <a href="/settings" aria-label="내 설정">
+        <a href="/settings" className="icon-button" aria-label="내 설정" title="내 설정">
           <SettingsIcon size={19} />
         </a>
       </header>
@@ -58,6 +63,7 @@ function Shell({
           <button
             className="mobile-only icon-button"
             aria-label="메뉴 닫기"
+            title="메뉴 닫기"
             onClick={() => setOpen(false)}
           >
             <X size={20} />
@@ -104,6 +110,7 @@ function Shell({
             <button
               className="icon-button"
               aria-label="로그아웃"
+              title="로그아웃"
               onClick={async () => {
                 try {
                   await api('/auth/logout', 'POST');

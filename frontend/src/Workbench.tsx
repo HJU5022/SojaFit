@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   Check,
+  CornerDownLeft,
   LoaderCircle,
   Paperclip,
   Pencil,
-  Send,
   Square,
   Trash2,
   X,
@@ -415,6 +415,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 <button
                   className="icon-button"
                   aria-label="이 검토 삭제"
+                  title="이 검토 삭제"
                   disabled={!!running}
                   onClick={() => setRemove('thread')}
                 >
@@ -494,15 +495,16 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                           ),
                         )}
                       </ol>
+                      {/* [왜] 멈춤은 통용되는 ■ 모양으로 보인다(#14). 이름은 aria-label로 남긴다 */}
                       <button
+                        aria-label="수신 중지"
+                        title="수신 중지"
                         onClick={() => {
                           controller.current?.abort();
                           setStopped(true);
                         }}
                       >
-                        {' '}
-                        <Square size={13} />
-                        수신 중지
+                        <Square size={16} fill="currentColor" />
                       </button>
                     </div>
                   )}
@@ -579,6 +581,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     <button
                       type="button"
                       aria-label="첨부 제거"
+                      title="첨부 제거"
                       onClick={() => setAttachment(null)}
                     >
                       <X size={14} />
@@ -640,9 +643,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                         (!!waiting || !!running || !!targetReason || !question.trim()))
                     }
                     aria-label={attachment ? '넷리스트 보내기' : '질문 보내기'}
+                    title={attachment ? '넷리스트 보내기' : '질문 보내기'}
                   >
-                    <Send size={17} />
-                    <span>보내기</span>
+                    <CornerDownLeft size={17} />
                   </button>
                 </div>
               </form>

@@ -912,8 +912,8 @@ form {
   position: relative;
 }
 .row-menu > button {
-  min-width: 30px;
-  min-height: 30px;
+  min-width: 32px;
+  min-height: 32px;
   padding: 4px;
   color: var(--muted);
 }
@@ -1593,7 +1593,8 @@ form {
 }
 .attachment button {
   padding: 0;
-  min-height: 24px;
+  min-width: 32px;
+  min-height: 32px;
 }
 .attachment small {
   flex-basis: 100%;
@@ -2254,6 +2255,12 @@ form {
   }
   .mobile-header .brand svg {
     width: 23px;
+  }
+  /* [왜] 아이콘 링크(내 설정)도 버튼처럼 누르는 영역을 34px로 둔다(#14) */
+  .mobile-header > .icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .sidebar {
     transform: translateX(-100%);
