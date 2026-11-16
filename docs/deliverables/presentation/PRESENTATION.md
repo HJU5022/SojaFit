@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-17
-- 기준 커밋: `799ae636`(`main`, PR #147 병합). 11-17 재측정 수치는 `clean-meas` 브랜치(병합 전)의 `evals/results/d12/`, 시연 영상은 `live-local` 브랜치 커밋 `fec4c01c`(병합 전)에 있다
+- 기준 커밋: `799ae636`(`main`, PR #147 병합). 11-17 재측정 수치는 `clean-meas` 브랜치 커밋 `8bd2e681`(병합 전)의 `evals/results/d12/`, 시연 영상은 `live-local` 브랜치 커밋 `fec4c01c`(병합 전)에 있다
 - 정본 여부: 비정본(발표용 요약). 수치의 정본은 [README.md](../../../README.md), [EVAL_REPORT.md](../../../EVAL_REPORT.md), [docs/GATES.md](../../GATES.md), [data/DATA.md](../../../data/DATA.md)
 - 관련 문서: [DELIVERABLES.md](../DELIVERABLES.md), [demo_script.md](../demo_script.md), [SPEC.md](../../../SPEC.md)
 
@@ -77,4 +77,5 @@
 | 시연 영상 | `main` README 18행 · GATES G7 · DELIVERABLES: 영상 없음(11-16). `live-local` `fec4c01c`: 영상 있음(11-17) | 영상 있음(경로만, 덱에 넣지 않음) |
 | v3 헤드라인 | 50/50 · p95 10.0초(`DEMO_MODE` 미기록) 대 `DEMO_MODE=0` 측정 47 ~ 50/50, 11-17 49/50 | 11-17 값을 먼저, 헤드라인은 조건과 함께 |
 | v3 정답 초안 작성자 | DELIVERABLES "남은 일": 서술 불일치. EVAL_REPORT 2절(정본): Codex 초안 · 1차 심태현 · 최종 하정운 | EVAL_REPORT 2절 |
+| 검색 지표 Recall@5 1.0 · 쪽 MRR 0.9762 | 11-13 `citecheck-v3` 실행은 `DEMO_MODE` 미기록(11-14 기록은 BM25만) | 값과 함께 그 조건을 적음(11장) |
 | 청크 수 | 45,898 · 52,244(v1 청킹) 대 51,967(v4h) | 지금 코퍼스 51,967(data/DATA.md가 둘을 나눠 적음, 충돌 아님) |
