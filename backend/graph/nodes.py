@@ -1,7 +1,7 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
 - 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 11개).
-  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다. 부품 목록(`parts_list_answer`, #55) · 견적 안내(`quote_answer`, #60)는 멀티 그래프만 붙인다.
+  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다. 부품 목록(`parts_list_answer`, #55) · 견적 안내(`quote_answer`, #60) · 대상 확인(`target_choice`, #62)은 멀티 그래프만 붙인다.
   사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
@@ -18,6 +18,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Literal
 
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field, model_validator
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
@@ -299,6 +300,28 @@ def quote_answer(state: dict) -> dict:
     승인 기록은 그래프에 넘기지 않아(`approved_memories`는 늘 빈 목록) 승인 여부로 가르지 않는다.
     """
     return {"answer": QUOTE_GUIDE, "check": {}, "path": ["견적 안내"]}
+
+
+TARGET_KINDS = {"role", "candidate_judge", "candidate_find"}  # 대상 부품의 회로 · 값을 읽는 할 일
+
+
+def target_choice(state: dict) -> dict:
+    """대상 확인 노드: 대상이 빈 대화(지원 다이오드가 여럿)에서 계획의 할 일이 대상 부품을 써야 할 때만 고를 부품을 묻는다. LLM을 부르지 않는다(#62).
+
+    [왜] 계획보다 먼저 물으면 일상 대화 · 부품 목록 · 품번 정격까지 부품 선택 카드에 막혔다. 계획 뒤에 묻고, 재개하면 이 노드만 다시 돌아 Supervisor를 다시 부르지 않는다.
+    대상이 필요한 할 일: 역할 · 대체 판정 · 후보 찾기, 그리고 품번 · 정격 없이 "이 다이오드"의 정격을 묻는 정격 할 일.
+    """
+    plan, choices = state.get("plan") or {}, state.get("target_choices") or []
+    if state.get("target") or not choices or state.get("refusal_reason") or plan.get("next") != "tasks":
+        return {}
+    numbers = (state.get("facts") or {}).get("parts")  # 질문에 적힌 품번
+    if not any(t["kind"] in TARGET_KINDS or (t["kind"] == "rating" and not (numbers or t.get("parts") or t.get("specs"))) for t in plan["tasks"]):
+        return {}
+    # [주의] 재개 값은 서비스가 고정한 대상을 담은 {'answers', 'role', 'target'}이다(memory_service.resume). 질문 문장은 화면 DTO가 후보로 다시 만든다
+    ref = (interrupt({"target_choices": choices, "question": "어떤 부품을 바꿀까요?"}) or {}).get("target")
+    if ref not in {c["ref"] for c in choices}:
+        raise ValueError("제시하지 않은 대상 부품으로 재개했습니다")
+    return {"target": ref, "target_part": circuit_around(state["connections"], ref), "path": ["대상 확인"]}
 
 
 def search(state: AgentState, retriever) -> dict:

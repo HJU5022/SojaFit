@@ -1,7 +1,7 @@
 """인증된 React 대화의 HTTP 경계. run·재개는 사용자 분석 서비스(`memory_service.Conversations`)를 거친다.
 
 - 첫 run에 같은 UUID의 분석 회로·thread를 만들고 대상 부품을 고정한다(바꾸면 409). 대상을 안 보내면 서버가 정하고,
-  못 정하면 그래프를 돌리지 않고 `requires_input`(target_choices)으로 묻는다. 고른 부품은 재개(`ResumeRun.target`)로 받는다(SPEC 8.9).
+  못 정하면 대상 없이 그래프를 돌려 계획이 대상을 써야 할 때만 `requires_input`(target_choices)으로 묻는다. 고른 부품은 재개(`ResumeRun.target`)로 받는다(SPEC 8.9).
 - 결과는 그래프 상태에서 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 SSE로 보낸다.
 - 완료 · 거절 결과에는 그 질문으로 찾은 사용자 사실(`profile_hints`, 참고(내 설정))을 붙여 보낸다. run 기록에는 저장하지 않는다.
 - 분석 서비스가 없으면(THREADS_ENABLED≠1) 스트림을 열기 전에 503, 하루 토큰 상한이 찼으면 스트림을 열기 전에 429 `LIMIT_EXCEEDED`다(`admission`).
@@ -27,6 +27,7 @@ from backend import auth
 from backend.errors import code_for, log_error
 from backend.conversations.dto import BrowserResult, public_state, result_dto, safe_judgement, stored_evidence
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
+from backend.conversations.memory_service import other_targets_note
 from backend.conversations.models import RunStatus
 from backend.judge import conditions as judge_conditions
 from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST
@@ -46,7 +47,7 @@ class StartRun(BaseModel):
     model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [
         {'question': 'D1을 1N5819로 바꿔도 되나요?', 'target_ref': 'D1', 'conditions': '입력 최대 12 V, 부하 전류 0.5 A'}]})
     question: str = Field(min_length=1, max_length=4000)
-    # [왜] 없으면 서버가 정한다: 질문에 적힌 지원 다이오드 → 회로의 유일한 지원 다이오드 → 둘 이상이면 requires_input으로 묻는다(SPEC 8.9)
+    # [왜] 없으면 서버가 정한다: 질문에 적힌 지원 다이오드 → 회로의 유일한 지원 다이오드 → 둘 이상이면 계획이 대상을 써야 할 때만 requires_input으로 묻는다(SPEC 8.9)
     target_ref: str | None = Field(default=None, max_length=100)
     conditions: str = Field(default='', max_length=2000)
 
@@ -159,7 +160,7 @@ SSE_RESPONSE = {200: {'description': (
     '진행 단계가 바뀔 때마다 `status` 0개 이상 (같은 모양, stage=품번 확인 · 질문 분석 · 문서 검색 · 회로 역할 읽기 · 후보 판정 · 답 작성 중 하나. '
     '그래프 노드가 시작할 때 보내며, 동시 실행 · 재계획이면 순서가 섞이거나 같은 이름이 다시 올 수 있다) → 마지막 하나: '
     '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`, 대상 부품을 물으면 interrupt `{target_choices: [{ref, value}], question}` '
-    '(그래프를 돌리지 않고 status 하나 뒤에 바로 온다. 고른 ref를 ResumeRun.target으로 보낸다), 수정 가능한 재개 오류면 선택 error `{code, message}`) · '
+    '(질문 분석 뒤 대상이 필요한 질문에만 온다. 고른 ref를 ResumeRun.target으로 보낸다), 수정 가능한 재개 오류면 선택 error `{code, message}`) · '
     '`completed` · `refused` (stage=완료, answer · evidence · judgement · refusal · profile_hints) · '
     '`failed` (stage=오류, 공개 결과에 `error: {code, message}`, code는 공통 오류 표). '
     '저장 가능한 공개 결과 칸은 GET /api/runs/{run_id}의 result와 같다(BrowserResult). '
@@ -291,6 +292,9 @@ def outcome(analysis, thread_id, detail, request_id):
     kind = 'refused' if state.get('refusal') else 'completed'
     # [왜] 웹 검색 장애 표시(#28)는 그래프 상태가 아니라 분석 서비스가 이번 실행에서 본 값이다(memory_service._invoke)
     public = {**public_state(state), 'web_search_unavailable': detail.get('web_search_unavailable') is True}
+    if kind == 'completed' and state.get('connections'):
+        # [왜] 대상은 대화마다 하나다. 질문에 적은 다른 지원 다이오드('D1 D2 둘 다'의 D2)는 보지 않았다고 답 끝에 알린다(#62)
+        public['answer'] += other_targets_note(state['connections'], state.get('question'), state.get('target'))
     return kind, result_dto(public, request_id=request_id, status=kind, stage=STAGES['finished'],
                             profile_hints=detail.get('profile_hints') or [],
                             input_conditions=(state.get('judgement') or {}).get('input_conditions', []))
@@ -311,10 +315,8 @@ def public_error(exc, request_id, run_id):
     return error
 
 
-def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resuming=False, keep=None):
-    """분석 서비스 호출 call(progress)을 스레드에서 돌리며 진행 단계를 보내고, 결과를 저장한 뒤 마지막 상태 하나를 보낸다.
-
-    keep: 마지막 상태와 함께 run 기록에만 저장할 칸(브라우저로 보내지 않음). 대상 부품을 물은 run의 `pending_start`다."""
+def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resuming=False):
+    """분석 서비스 호출 call(progress)을 스레드에서 돌리며 진행 단계를 보내고, 결과를 저장한 뒤 마지막 상태 하나를 보낸다."""
     queue = asyncio.Queue()
     loop, stage = asyncio.get_running_loop(), STAGES['running']
 
@@ -336,7 +338,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resu
             kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(progress), request_id))
             # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
             saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement),
-                     'web_search_unavailable': safe.web_search_unavailable, **(keep or {})}
+                     'web_search_unavailable': safe.web_search_unavailable}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
             await queue.put(frame(kind, safe.model_dump()))
         except Exception as exc:
@@ -386,14 +388,12 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
         run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
         needs = {'answer': NEED_NETLIST, 'refusal': {'code': CIRCUIT_MISSING, 'message': NEED_NETLIST}}
         return stream(repo, user_id, thread, run_id, request_id, analysis, lambda progress: {'state': needs})
-    choices = await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
-                                      question=body.question, conditions=body.conditions)
+    reply = await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
+                                    question=body.question, conditions=body.conditions)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
-    if choices:
-        # [왜] 대상 부품을 정하지 못했다(지원 다이오드가 여럿이고 질문에 없음). 그래프를 돌리지 않고 고를 부품을 묻는다(SPEC 8.9).
-        #      분석 thread는 고른 뒤 재개에서 만든다. 그때 같은 질문 · 사용 조건을 보내려고 run 기록에 둔다
-        return stream(repo, user_id, thread, run_id, request_id, analysis, lambda progress: {'interrupt': {'target_choices': choices}},
-                      keep={'pending_start': {'question': body.question, 'conditions': body.conditions}})
+    if reply:
+        # [왜] 질문이 회로에 없는 다이오드 기호(D9)만 적었다. 코드가 그 사실과 회로의 다이오드를 답하고 그래프는 돌리지 않는다(LLM이 지어내지 않게, SPEC 8.9 · #62)
+        return stream(repo, user_id, thread, run_id, request_id, analysis, lambda progress: {'state': {'answer': reply}})
     call = lambda progress: analysis.message(user_id, thread, body.question, body.conditions, request_id=request_id, progress=progress)
     return stream(repo, user_id, thread, run_id, request_id, analysis, call)
 
@@ -423,15 +423,17 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
                                     {'code': code_for(exc.status_code, exc), 'message': str(exc.detail)})
         raise
     if targets:
-        # [왜] 고른 부품으로 분석 thread를 만들고(대상 확인 · 데모 질문 확인 422는 run을 그대로 두고 스트림 전에 끝난다),
-        #      그래프는 아직 돈 적이 없으니 재개가 아니라 처음 질문으로 돌린다
-        pending = run['safe_result']['pending_start']
+        # [왜] 고른 부품을 분석 thread의 대상으로 고정한다(대상 확인 · 데모 질문 확인 422는 run을 그대로 두고 스트림 전에 끝난다).
+        #      그 뒤 그래프의 '대상 확인'에서 멈춘 질문을 아래에서 재개한다(Supervisor를 다시 부르지 않는다, #62)
+        pending = run['safe_result'].get('pending_start')
         _, _, connections, name = await run_in_threadpool(repo.get_thread, user_id, thread)
         await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target,
-                                question=pending['question'], conditions=pending['conditions'])
-        await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
-        call = lambda progress: analysis.message(user_id, thread, pending['question'], pending['conditions'], request_id=request_id, progress=progress)
-        return stream(repo, user_id, thread, str(run_id), request_id, analysis, call)
+                                question=(pending or {}).get('question'), conditions=(pending or {}).get('conditions', ''))
+        if pending:
+            # [왜] #62 전에 그래프 없이 물은 run이다. 그래프가 돈 적이 없으니 재개가 아니라 처음 질문으로 돌린다
+            await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
+            call = lambda progress: analysis.message(user_id, thread, pending['question'], pending['conditions'], request_id=request_id, progress=progress)
+            return stream(repo, user_id, thread, str(run_id), request_id, analysis, call)
     await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
     # [왜] 분석 서비스는 현재 결과 버전의 조건 질문만 재개한다. React run은 버전을 모르므로 지금 버전을 읽어 넘긴다
     call = lambda progress: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'],

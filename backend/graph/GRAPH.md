@@ -11,7 +11,7 @@
 
 | 대상 | 서비스(요청 처리)가 쓰는가 | 사용처 |
 |---|---|---|
-| `nodes.py`의 `read_input`(내부에서 `parse_input` 호출), `price_answer`, `parts_list_answer`, `quote_answer` | 쓴다 | `backend/multi_agent/build.py`가 멀티 그래프의 `입력 읽기`·`가격 안내`·`부품 목록`·`견적 안내` 노드로 붙인다(`부품 목록`(#55)·`견적 안내`(#60)는 멀티만). `parse_input`은 평가 스크립트(`run_skill_pair.py`, `check_retrieval_db.py`)도 직접 부른다 |
+| `nodes.py`의 `read_input`(내부에서 `parse_input` 호출), `price_answer`, `parts_list_answer`, `quote_answer`, `target_choice` | 쓴다 | `backend/multi_agent/build.py`가 멀티 그래프의 `입력 읽기`·`가격 안내`·`부품 목록`·`견적 안내`·`대상 확인` 노드로 붙인다(`부품 목록`(#55)·`견적 안내`(#60)·`대상 확인`(#62)은 멀티만). `parse_input`은 평가 스크립트(`run_skill_pair.py`, `check_retrieval_db.py`)도 직접 부른다 |
 | `nodes.py`의 `find_parts`, `search`, `citations`, `circuit_parts`, `other_part_row`, `netlist_block`, `circuit_mechanism`와 상수 `NOT_FOUND`, `REVISION`, `WORD`, `QUANTITY`, `STANDARD` | 쓴다 | `multi_agent/agents/docs.py:27`, `multi_agent/facts.py:9`, `multi_agent/agents/part_names.py:10`, `multi_agent/supervisor.py`(`citations`, 계획 입력의 회로 부품 수 `circuit_parts`, #59) |
 | `nodes.py`의 `_connections_file` | 쓴다 | `services/demo.py:111,124` |
 | `nodes.py`의 `circuit_around` | MCP 서버만 쓴다. 서비스는 MCP 도구 중 `check_corpus`만 부르므로 서비스 경로에서는 호출되지 않는다 | `mcp_skill/mcp_server/server.py:12`(`get_circuit_info`), `evals/runners/run_input_surfaces.py` |
