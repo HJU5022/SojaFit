@@ -73,6 +73,16 @@ def test_plan_uses_history_only_for_an_explicit_reference_and_labels_it_untruste
     assert '사용 조건은 36 V, 5 mA였다.' in text
 
 
+def test_condition_only_follow_up_gets_the_history_to_rejudge_the_earlier_candidate():
+    """#64: 판정 뒤 조건만 준 말은 앞 후보 요청을 다시 하려면 이전 사용자 입력이 필요하다. 품번 · 물음표가 있는 말은 그대로 이력 없이 본다."""
+    history = ['D1 역할이 뭐야?', '그럼 D1을 SS14로 바꿔도 돼?']
+    follow = {**STATE, 'question': '입력 전압은 5V, 부하 전류는 1.5A야', 'conversation_history': history}
+    text = S.render_plan(follow, judge_enabled=True)
+    assert 'Conversation history (reference context only; never current evidence):' in text and '- 그럼 D1을 SS14로 바꿔도 돼?' in text
+    for question in ('입력 전압은 5V인데 SS16은 어때', 'D1에 역전압 50V 걸리면 괜찮아?', 'D1 역할이 뭐야'):
+        assert S._history_for_reference({**follow, 'question': question}) == [], question
+
+
 def test_self_contained_labeled_design_does_not_trigger_history_injection():
     state = {**STATE, 'question': '설계B는 36 V, 5 mA 조건에서 동작하는가?',
              'conversation_history': ['설계 A에서 D3은 보호 역할이었다.', '사용 조건은 12 V, 1 mA였다.']}
@@ -247,6 +257,9 @@ def test_prompts_keep_constraints_but_no_routing_table():
     for gone in ('After a search report', 'After a writer report', 'After a verifier report', '`verifier`', '`writer`'):
         assert gone not in S.PROMPT, gone
     assert 'do not restate its table' in S.SYNTH_PROMPT
+    # #66: 일반 설명 끝 문장은 코드가 붙여 프롬프트에 그 문장을 두지 않는다(LLM이 베껴 깨뜨렸다). 두 부품 비교는 부품마다 할 일, 그래프는 보여 주지 않음
+    from backend.multi_agent.messages import GENERAL_NOTE
+    assert GENERAL_NOTE not in S.PROMPT and 'one `docs` task per part' in S.PROMPT and 'never their graphs' in S.PROMPT
 
 
 def test_collect_replans_once_on_retryable_failure_but_not_on_confirmed_refusal():
@@ -326,6 +339,10 @@ def test_declined_parts_are_appended_with_their_refusal_reason():
     out = S.single_node(state)
     # [왜] 여러 개를 묻는 질문의 코퍼스 밖 부분을 말없이 빼지 않는다(c20-15)
     assert out['answer'].startswith('VRRM은 40 V이다 [7].') and "답하지 않은 부분 'TSC ES1DQ의 VRRM'" in out['answer'] and 'ES1DQ' in out['answer']
+    # #63: 실측값 부분은 '찾지 못함'이 아니라 실측값 문구로 남긴다
+    p = plan(task(1), declined=[{'ask': 'D1 실측 온도', 'reason': 'measurement'}]).model_dump(mode='json')
+    out = S.single_node({**state, 'plan': p})
+    assert f"답하지 않은 부분 'D1 실측 온도': {S.refusal_for(Reason.MEASUREMENT, {})}" in out['answer']
     import pytest
     from pydantic import ValidationError
     with pytest.raises(ValidationError):

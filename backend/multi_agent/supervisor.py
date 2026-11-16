@@ -65,11 +65,22 @@ _REFERENCE_WORDS = re.compile(
 )
 
 
+def _conditions_only(state: dict) -> bool:
+    """회로 조건 값만 준 말인가: 숫자+단위가 있고 품번 · 물음표가 없다("입력 전압은 5V, 부하 전류는 1.5A야")."""
+    from backend.graph.nodes import QUANTITY_CLAIM, find_parts  # [왜] nodes.py가 이 파일을 import해 함수 안에서 가져온다
+    from backend.multi_agent.facts import refs_of
+    question = str(state.get('question') or '')
+    return (bool(QUANTITY_CLAIM.search(question)) and not re.search(r'[?？]', question)
+            and not find_parts(question, refs_of(state.get('target_part') or {})))
+
+
 def _history_for_reference(state: dict) -> list[str]:
     """Resolve explicit deictic references without making history current evidence."""
     question = str(state.get('question') or '')
     history = state.get('conversation_history') or []
-    if not history or not _REFERENCE_WORDS.search(question):
+    # [왜] 판정 뒤 조건만 준 말이 후보 없는 candidate_judge로 가 "자료를 찾지 못했어요"로 거절됐다(#64).
+    #      앞 후보 요청을 이 조건으로 다시 하려면 이전 사용자 입력이 있어야 한다. 무엇을 할지는 계획(LLM)이 정한다
+    if not history or not (_REFERENCE_WORDS.search(question) or _conditions_only(state)):
         return []
     # The conversation service already applies the shared 20,000-character
     # bound. Do not add a message-count cutoff here: early user corrections

@@ -616,7 +616,7 @@ def refuse(state: AgentState) -> dict:
     """거절 노드: 이유 코드(`refusal`)와 안내문, 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절).
 
     이유 코드는 멀티 그래프와 같은 `contracts.Reason` 값이다: 라우팅이 정한 사유(out_of_scope · part_missing · revision_missing ·
-    not_found), 판정이 코퍼스 밖 요구로 정한 사유(part_missing · revision_missing · not_found), 검색 장애(search_error),
+    not_found), 판정이 코퍼스 밖 요구로 정한 사유(part_missing · maker_missing · revision_missing · not_found), 검색 장애(search_error),
     검색 고리에서 못 찾음(not_found). 평가 실행기가 이 코드로 거절 종류를 센다.
     """
     skill_info = {"enabled": False, "applied": False, "sha256": None}  # 이전 턴의 Skill 적용 정보도 비운다

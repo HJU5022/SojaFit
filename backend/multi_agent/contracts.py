@@ -39,7 +39,11 @@ class Reason(str, Enum):
     OUT_OF_SCOPE = 'out_of_scope'            # 서비스 대상이 아님(전자부품이 아님 등)
     PART_MISSING = 'part_missing'            # 품번이 코퍼스 목록에 없음(확정: 목록 대조)
     REVISION_MISSING = 'revision_missing'    # 요청한 개정판이 없음(확정: 목록 대조)
-    NOT_FOUND = 'not_found'                  # 두 번 찾았는데 못 찾음(추정: 정말 없다고 단정하지 않는다)
+    NOT_FOUND = 'not_found'                  # 두 번 찾았는데 못 찾음(추정: 정말 없다고 단정하지 않는다) · 다이오드가 아닌 부품
+    # [왜] 셋은 not_found로 묶여 "이 부품 자료를 찾지 못했어요"를 받았다. 사용자가 대신 물을 것이 달라 사유를 나눈다(#63)
+    MEASUREMENT = 'measurement'              # 사용자 보드 · 로트를 잰 값(데이터시트에 없음)
+    CIRCUIT_VALUE = 'circuit_value'          # 효율 · 소비 전력 · 바꾼 뒤 출력 전압 같은 회로 전체 값(데이터시트가 싣지 않음)
+    MAKER_MISSING = 'maker_missing'          # 품번 없이 TSC가 아닌 제조사 · 브랜드로 고르라는 요구(후보 찾기는 TSC 데이터시트만)
     LIMIT_REACHED = 'limit_reached'          # 질문당 상한 초과 · 계획 형식 실패
     VERIFY_FAILED = 'verify_failed'          # 답 검사(인용 · 숫자)에 걸림
     SEARCH_ERROR = 'search_error'            # 검색 장애(오류이며 정상 거절이 아니다)
@@ -50,7 +54,7 @@ class Reason(str, Enum):
 
 
 REFUSAL_REASONS = frozenset({Reason.OUT_OF_SCOPE, Reason.PART_MISSING, Reason.REVISION_MISSING, Reason.NOT_FOUND,
-                             Reason.LIMIT_REACHED, Reason.VERIFY_FAILED, Reason.SEARCH_ERROR})
+                             Reason.MEASUREMENT, Reason.CIRCUIT_VALUE, Reason.MAKER_MISSING, Reason.LIMIT_REACHED, Reason.VERIFY_FAILED, Reason.SEARCH_ERROR})
 RETRY_REASONS = frozenset({Reason.NO_RESULT, Reason.ALL_REJECTED, Reason.PARTIAL})
 
 
@@ -111,17 +115,26 @@ class Plan(BaseModel):
     keep_earlier: bool = Field(default=False, description='replan only: true to keep the earlier ok answers in the final answer (e.g. the found candidates when the user asked for them)')
     part_kinds: list[PartKind] = Field(default_factory=list,
                                        description='next=parts_list only: the part kinds the user asks to list or count; empty = every part')
+    # [왜] 앞 답 · 근거를 다시 보여 달라는 말에 Supervisor가 "다시 조회하지 않고 말씀드리지 않겠습니다"라고 썼다(#64).
+    #      그래프는 앞 답을 갖고 있지 않으므로 화면에 남은 답의 근거 단추를 코드가 고정 문구로 알려 준다
+    # [왜] 일반 설명 끝 고정 문장을 LLM이 '데이tásheet 근거가 아닌…'으로 깨뜨려 썼다(#66). 표시만 받고 문장은 코드가 붙인다
+    reply_kind: Literal['', 'general', 'earlier_answer'] = Field(
+        default='', description="next=finish only: 'general' for a general electronics explanation (the code appends a fixed note), "
+                                "'earlier_answer' when the user asks to see an earlier answer or its evidence again "
+                                "(the code replies with a fixed pointer to it); empty otherwise")
 
     @model_validator(mode='after')
     def consistent(self):
         if self.next != 'parts_list':
             self.part_kinds = []  # [왜] 종류는 부품 목록 길만 쓴다. 다른 길에 채워 와도 형식 재시도(유료)로 다시 부르지 않고 비운다(#59)
+        if self.next != 'finish':
+            self.reply_kind = ''  # 같은 이유: 끝내기 길만 쓴다
         # [왜] 형식이 틀린 계획은 llm.chat이 다시 부르게 ValidationError로 낸다(MULTI_AGENT.md "구조 결정": 형식이 틀리면 다시 부름)
         if self.next == 'refuse' and self.reason not in REFUSAL_REASONS:
             raise ValueError('refuse needs a refusal reason')
         if any(d.reason not in REFUSAL_REASONS for d in self.declined):
             raise ValueError('a declined part needs a refusal reason')
-        if self.next == 'finish' and not self.reply.strip():
+        if self.next == 'finish' and not self.reply.strip() and self.reply_kind != 'earlier_answer':
             raise ValueError('finish needs a reply')  # [왜] 이 길은 서브에이전트를 거치지 않아 Supervisor의 reply가 곧 답이다
         if self.next == 'tasks':
             if not 1 <= len(self.tasks) <= MAX_TASKS:
