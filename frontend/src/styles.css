@@ -1106,6 +1106,12 @@ form {
   border-radius: 0;
   font-size: 13px;
   font-weight: 400;
+  text-align: left;
+}
+.start-options small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.4;
 }
 .start-options button + button {
   border-top: 1px solid var(--line);
