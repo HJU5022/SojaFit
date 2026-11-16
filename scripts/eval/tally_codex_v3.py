@@ -1,7 +1,7 @@
 """Codex v3 50문항 답을 동결 정답과 규칙으로 대조해 tally.jsonl을 쓴다. LLM·네트워크 호출 없음.
 
 실행(저장소 루트): .venv/bin/python scripts/eval/tally_codex_v3.py [결과 폴더]
-결과 폴더를 주면 그 폴더의 codex_answers.md를 채점한다(기본은 11-12 폴더). 답이 없는 문항은 not_run으로 센다.
+결과 폴더를 주면 그 폴더의 codex_answers.md(없으면 answers.md)를 채점한다(기본은 11-12 폴더). 답이 없는 문항은 not_run으로 센다.
 규칙으로 못 정하는 항목은 needs_human=true, codex_verdict="사람 판정 필요"로 남긴다.
 """
 import json
@@ -16,7 +16,9 @@ gold = {json.loads(l)["id"]: json.loads(l) for l in (ROOT / "evals/dataset_v3.js
 svc = {r["id"]: r for r in json.loads((ROOT / "evals/results/graph/2026-11-12-d9-improve2/set1.json").read_text(encoding="utf-8"))["rows"]}
 
 ans = {}
-for m in re.finditer(r"^## (v3-\d+)\n- 결론: (.*)\n- 근거: (.*)$", (OUT / "codex_answers.md").read_text(encoding="utf-8"), re.M):
+# [왜] 11-16 Terra 기준선(심태현 실행, OpenRouter API) 결과 폴더는 답 파일 이름이 answers.md다(CRLF는 read_text가 \n으로 읽는다)
+SRC = OUT / "codex_answers.md" if (OUT / "codex_answers.md").exists() else OUT / "answers.md"
+for m in re.finditer(r"^## (v3-\d+)\n- 결론: (.*)\n- 근거: (.*)$", SRC.read_text(encoding="utf-8"), re.M):
     ans[m[1]] = {"c": m[2], "e": m[3]}
 assert set(ans) <= set(gold) and (OUT != DEFAULT or len(ans) == 50)  # [왜] 11-16 격리 실행은 사용량 한도로 답 없는 문항이 있을 수 있다
 
