@@ -6,7 +6,7 @@
 
 | 수치 | 이전 → 지금 | 원시 | 비용 |
 |---|---|---|---|
-| 동결 v3 게이트 1세트(운영 설정 `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`) | 마지막 채택 구성 R1(11-14 `b790004`) set1 50/50 · p50 6.8 · p95 10.5초, set2 48/50 · 5.9 · 12.1초 → **49/50 · p50 5.5 · p95 16.7초**(실패 v3-16 `wrong_citation`) | [gate/set1.json](gate/set1.json), [gate_report.txt](gate/gate_report.txt), [run_gate.log.txt](gate/run_gate.log.txt) | LLM $0.0361(실행기 `cost_usd` 합) |
+| 동결 v3 게이트 2세트(운영 설정 `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`, 따로 실행한 1세트 × 2) | 마지막 채택 구성 R1(11-14 `b790004`) set1 50/50 · p50 6.8 · p95 10.5초, set2 48/50 · 5.9 · 12.1초 → **A 49/50 · p50 5.5 · p95 16.7초, B 49/50 · 4.8 · 9.1초**(두 세트 모두 실패 v3-16 `wrong_citation`, 무관 거절 25/25, 지어낸 답 0). `gate_report` 기준 미달: A는 p95, B는 없음 | A [gate/set1.json](gate/set1.json) · [gate_report.txt](gate/gate_report.txt), B [gate/set_b/set1.json](gate/set_b/set1.json) · [gate_report.txt](gate/set_b/gate_report.txt) | LLM $0.0361 · $0.0355(실행기 `cost_usd` 합) |
 | 서비스 검색(`run_retrieval_service`, R1 84 + v2 19) | 11-04 #26: 고르기용 46 0.8587 · 확인용 38 0.9079 · v2 19 0.8246 · `retrieve()` p50 1.22 · p95 2.04초 → **0.8152 · 0.9079 · 0.7939 · 0.53 · 0.87초** | [retrieval/service_r1_2026-11-17.json](retrieval/service_r1_2026-11-17.json), [run.log.txt](retrieval/run.log.txt) | OpenRouter $0.0005 + Voyage(미측정) |
 | 새 clone 키 없는 기동(빈 `docker:dind`, `docker compose up --build`) | 11-16 `3ce5abdc` 1회 242.8초 → **6회 중앙값 239.4초(148.9 ~ 296.0)**, 모두 600초 안 | [boot/](boot/) | 0 |
 | 키 없는 데모 스모크(`--demo --refusal`) | 28/28 → **6회 모두 28 통과 · 0 실패 · 0 건너뜀** | `boot/run*/smoke_cold.json` | 0 |
@@ -17,10 +17,10 @@
 | API 동작 · 경로 수 | SPEC 4절 동작 60 · 경로 49(문서 53 · 42) → **60 · 49(문서 53 · 42)**, 운영 `/openapi.json`도 53 · 42 | [checks/routes.txt](checks/routes.txt), [prod_unauth/unauth_checks.txt](prod_unauth/unauth_checks.txt) | 0 |
 | 데모 코퍼스(compose `corpus-load`) | 42문서 · 1,556청크 → **42 · 1,556** | `boot/run1/compose_up_cold.log` | 0 |
 | 로컬 DB 코퍼스(`sojafit-live-db`, 게이트 · 검색이 읽은 DB) | (운영 DB 11-16: 51,967) → **문서 1,360 · 청크 51,967 · 임베딩 51,967**, 저장 해시 목록 sha256 `82dff159…` = 저장소 목록 | [checks/local_db_counts.txt](checks/local_db_counts.txt) | 0 |
-| Langfuse 점수(운영 프로젝트, v3 API) | 11-16: 트레이스 1개에 점수 15개 확인 → **점수 40,826 + 범주 16,372개가 트레이스 4,109개에 붙어 있음(11-10 ~ 11-16 UTC), 11-17 게이트 50개 트레이스에 700개** | [langfuse/](langfuse/) | 0 |
+| Langfuse 점수(운영 프로젝트, v3 API) | 11-16: 트레이스 1개에 점수 15개 확인 → **숫자 · 참거짓 점수 40,826개 + 범주 점수 16,372개가 트레이스 4,109개에 붙어 있음(11-10 ~ 11-16 UTC), 11-17 게이트 50개 트레이스에 700개** | [langfuse/](langfuse/) | 0 |
 | 경보(Cloud Monitoring, 읽기만) | 11-16 설정 → **가동 확인 1 · 경보 정책 1 · 메일 채널 1, 11-16 09:41 ~ 11-17 04:55 실패 0** | [monitoring/](monitoring/) | 0 |
 
-유료 실행의 실행 전 어림과 실제 값: [cost_log.md](cost_log.md). 합계 SPEND_TOTAL.
+유료 실행의 실행 전 어림과 실제 값: [cost_log.md](cost_log.md). 합계: LLM $0.0721(실행기 기록, OpenRouter 키 사용액 차 $0.0803은 다른 작업 포함 가능) + Voyage · Exa 미측정(어림 ≤ $0.6). 상한 $8 안.
 
 ## 강사 코멘트별
 
@@ -130,9 +130,38 @@ CI 재생 검사(`.github/workflows/ci.yml` `eval-replay`와 같은 명령, 기�
 
 원시: [uptime_configs.json](monitoring/uptime_configs.json), [alert_policies.json](monitoring/alert_policies.json), [notification_channels.json](monitoring/notification_channels.json), [uptime_check_passed_24h.json](monitoring/uptime_check_passed_24h.json)(메일 주소 지움). 이 기간에 경보가 열린 기록은 이 API로 보지 못했다(사건 목록 API는 쓰지 않았다). 11-16 시험 경보는 [d10/alerting_2026-11-16.md](../d10/alerting_2026-11-16.md).
 
+### 지금 코드의 v3 게이트(유료)
+
+`evals/runners/run_gate.py evals/dataset_v3.jsonl --sets 1 --keep-going`을 두 번 따로 돌렸다(A 04:57:55 ~ 05:03:31, B 05:32:51 ~ 05:36:52). 환경 `DEMO_MODE=0 DEMO_REPLAY=0 EVAL_WEB=1 WEB_PREFETCH=1 EXA_WEB_SEARCH_ENABLED=1 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 LLM_PROVIDER=openrouter`, DB는 위 로컬 DB, 코드는 `799ae636` 깨끗한 clone(결과 파일 `git` = `799ae636`). 집계는 `gate_report.py`.
+
+| 세트 | 통과 | p50 · p95 | 가장 느린 문항 | 세션 | 같은 시간 호스트 |
+|---|---|---|---|---|---|
+| A | 49/50(cited_gold 24 · correct_refusal 25 · wrong_citation 1) | 5.5 · **16.7초** | v3-15 29.5초 · v3-16 18.3초 | `gate-dataset_v3-1117-0457-set1` | 기동 1회차 빌드와 겹침, 1분 부하 12 ~ 16 |
+| B | 49/50(같은 분포) | 4.8 · **9.1초** | v3-16 12.8초 · v3-15 9.9초 | `gate-dataset_v3-1117-0532-set1` | 시작 때 1분 부하 12.3 |
+
+- 두 세트 모두 v3-16(UF4007 trr)만 `wrong_citation`이다. EVAL_REPORT 11-2절 8행(웹 켬 Docker 9회 모두 실패)과 같은 문항이다.
+- 같은 코드 두 세트의 p95가 7.6초 다르다. A는 같은 호스트의 docker 빌드와 겹쳤다. p95 10초 목표 충족 여부를 한 세트로 말할 수 없다.
+- LLM은 OpenRouter 경유다(`claude_direct` false). 11-14 R1 등 이전 행은 `claude_direct` true(Anthropic 직통)라 시간 비교 조건이 다르다.
+
 ## 다시 못 잰 것
 
-NOT_DONE
+예전 값과 날짜를 그대로 둔 수치다(README · EVAL_REPORT · GATES의 해당 행).
+
+| 수치 | 그대로 둔 값(측정일) | 이유 |
+|---|---|---|
+| 운영 리비전에서 평가용 계정 25단계 | 25 통과(11-13 `574de79-rs`) | 운영에 계정 비밀번호를 넣지 않는다. 위 명령을 조장이 돌린다 |
+| 운영 DB 청크 본문 sha256 재계산(G3) | 51,967/51,967(11-16) | 운영 DB에 접속하지 않았다. 로컬 DB의 저장 해시 목록만 대조했다 |
+| 재시작 뒤 재개 · 계정 격리 52점검(G4, `g4.py`) | 52/52(11-13 로컬) · 배포 25단계(11-13) | 다시 돌리지 않았다. 키 없는 스모크 28단계(6회)가 계정 B의 404 확인을 포함한다 |
+| 온(캐시 있음) 재기동 | 11.7초(11-13) | 다시 재지 않았다 |
+| v3 4세트 50/50 · 무관 거절 25/25(#50, `93a497c`), 동결 병합 뒤 2세트, 단일 그래프 48/50 | 11-10 ~ 11-12 | 지금 코드로는 멀티 그래프 운영 설정만 쟀다 |
+| 웹 끔 v3 게이트 | 11-15 B3 50/50 · p95 9.7초 | 시간 안에 운영 설정(웹 켬)을 먼저 쟀다 |
+| v1 검색 기준선(Recall@5 0.737 등), R1 격자(#25), v3 검색 21문항 | 11-03 · 11-13 | 서비스 경로 실행기(#26)만 다시 돌렸다 |
+| 인젝션 · 신뢰 경계(EVAL_REPORT 6장), 변이 28건 | 11-11 ~ 11-16 | 다시 돌리지 않았다 |
+| 대체재 비교(Codex 45/50, Terra 41/50) | 11-12 · 11-16 | 다시 돌리지 않았다 |
+| Voyage · Exa 실제 청구액 | - | 키 사용액 API를 보지 않았다(어림만, cost_log) |
+| pytest 멈춤의 원인 | - | 찾지 않았다(측정만). 코드는 고치지 않았다 |
+| Langfuse 화면 캡처 | 없음 | 다른 사람이 맡는다. 캡처할 트레이스 id는 위에 있다 |
+| `docs/research/docker-cold-start-measurements.md` 7절에 이 측정 링크 | - | 이 작업의 수정 범위(README · EVAL_REPORT · GATES) 밖이다 |
 
 ## 파일
 
