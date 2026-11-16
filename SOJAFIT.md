@@ -135,6 +135,7 @@ SojaFit (proj3-b)
 │   │   ├── auth.py         <- 로그인·이메일 가입·비밀번호 재설정·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 가입·로그인 경로
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(GET /api/demo-questions). run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── health.py       <- 서비스 생존 확인 GET /health
+│   │   ├── datasheets.py   <- 데이터시트 서재 API(GET /api/datasheets, 품번·제목·제조사 검색·분류·쪽 나눔, 읽기만, #67)
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory, 탈퇴 DELETE /api/me
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
@@ -541,6 +542,7 @@ SojaFit (proj3-b)
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
 │   │   ├── test_injection_http.py  <- 배포 HTTP 인젝션 시험 스크립트를 가짜 서버로: 정상 통과, 공격에서 판정이 바뀌면 실패 · 정상 실패는 결론 못 냄 · 하루 한도에서 멈춤, 결과 파일에 비밀번호 · 답 글 · 공격문 없음
 │   │   ├── test_http_smoke.py  <- HTTP 점검 스크립트(scripts/smoke/)를 가짜 서버로: 전체 통과 · 두 번째 승인 409 통과, requires_input 없으면 실패 · 뒤 단계 건너뜀, 결과 파일에 비밀번호 · 쿠키 · 이메일 없음
+│   │   ├── test_datasheets.py <- 데이터시트 서재 API: 로그인 필요, 표지 품번·제목·제조사 검색, 분류, 쪽 나눔, 폐기 문서 숨김(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   │   └── test_external_circuits.py <- 완성 회로도 manifest·PNG API
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
