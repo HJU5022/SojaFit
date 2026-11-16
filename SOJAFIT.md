@@ -264,7 +264,7 @@ SojaFit (proj3-b)
 │
 ├── data/                   <- 서비스·평가가 읽는 고정 데이터. Dockerfile이 이미지에 복사 (고정)
 │   ├── DATA.md             <- 폴더 설명과 manifest 형식
-│   ├── manifest.jsonl      <- 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256)
+│   ├── manifest.jsonl      <- 이전 버전(v1) 청킹 당시의 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256). 현재 코퍼스는 v4h(data/DATA.md "코퍼스 수치")
 │   ├── package-outline-pages.json <- 공식 PDF basename별 패키지 외형 페이지 색인 1,360건
 │   ├── corpus/             <- 코퍼스 원본 문서. 출처별 하위 폴더, 원본은 고치지 않음
 │   │   ├── CORPUS.md       <- 폴더 설명, 출처별 폴더와 재배포 조건
@@ -383,7 +383,7 @@ SojaFit (proj3-b)
 │   │   └── supervisor-prompt-v0.md  <- Supervisor Prompt V0의 API 없는 plan·smoke·본 실행·집계 절차
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
-│   │   ├── score_ragas.py <- 저장 응답의 Ragas 채점 실행기
+│   │   ├── score_ragas.py <- 저장 응답의 Ragas 채점 모듈. run_gate가 불러 같은 trace에 점수로 붙인다(단독 실행 없음)
 │   │   ├── run_thread_validation.py <- 호출 없는 준비 확인과 상한 있는 품질·보고 비용 평가
 │   │   ├── run_trust_boundary.py <- 합성 코퍼스 공격 3건의 호출 없는 계획과 명시적 유료 문서 에이전트 검사
 │   │   ├── run_judgement_bundle.py <- 로컬 합성 적재·BM25/MCP·가짜모델 판정과 묶음 예산 검사(DB 단계는 ADR 0016 뒤 현재 코드와 안 맞음)
@@ -480,14 +480,14 @@ SojaFit (proj3-b)
 │           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
 │           ├── 2026-11-04-routing-fix-smoke-v1/  <- Haiku·Luna 수정 후 smoke 증거
 │           ├── 2026-11-04-stage1-v1/  <- 후보 5종 70문항 1회 비교
-│               ├── manifest.json  <- 동결 입력·prompt·code hash와 작업 계획
-│               ├── rows_anthropic__claude-haiku-5.5.json  <- Haiku 문항별 판정·오류·usage·latency
-│               ├── rows_openai__gpt-6-luna.json  <- Luna 문항별 판정·오류·usage·latency
-│               ├── rows_deepseek__deepseek-v4.1-flash.json  <- DeepSeek 중단 전 문항별 기록
-│               ├── rows_meta__muse-glimmer-30b.json  <- Muse 문항별 판정·오류·usage·latency
-│               ├── rows_cohere__command-a-plus.json  <- Cohere 문항별 판정·오류·usage·latency
-│               ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
-│               └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
+│           │   ├── manifest.json  <- 동결 입력·prompt·code hash와 작업 계획
+│           │   ├── rows_anthropic__claude-haiku-5.5.json  <- Haiku 문항별 판정·오류·usage·latency
+│           │   ├── rows_openai__gpt-6-luna.json  <- Luna 문항별 판정·오류·usage·latency
+│           │   ├── rows_deepseek__deepseek-v4.1-flash.json  <- DeepSeek 중단 전 문항별 기록
+│           │   ├── rows_meta__muse-glimmer-30b.json  <- Muse 문항별 판정·오류·usage·latency
+│           │   ├── rows_cohere__command-a-plus.json  <- Cohere 문항별 판정·오류·usage·latency
+│           │   ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
+│           │   └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
 │           ├── 2026-11-04-jev-stage1-ready-v1/  <- Jev 1차 70문항 원시 행·집계
 │           ├── 2026-11-05-stage2-five-v1/  <- 기존 5종 2차 manifest·smoke·원시 행
 │           ├── 2026-11-05-jev-stage2-v1/  <- Jev 2차 manifest·smoke·원시 행·집계
@@ -696,7 +696,7 @@ SojaFit (proj3-b)
 │   ├── demo/               <- 키 없는 데모가 재생할 LLM 응답 기록과 키 없는 재생 대조
 │   │   ├── DEMO.md         <- 폴더 설명
 │   │   └── record_demo.py  <- 서비스와 같은 멀티 그래프로 데모 질문 10개를 돌려 LLM 응답을 기록(record), 키 없이 재생해 대조(replay)
-│   ├── eval/               <- 사람 채점 시트를 평가 JSONL로 되돌리는 변환과, 평가 결과 파일 · 서비스 DB 시각에서 단계별 시간 · 비용 · 승인 대기를 모으는 집계 스크립트(D8)
+│   ├── eval/               <- 사람 채점 시트를 평가 JSONL로 되돌리는 변환, 평가 결과 파일 · 서비스 DB 시각에서 단계별 시간 · 비용 · 승인 대기를 모으는 집계(D8), 청크와 원본 PDF 대조(D10), 격리한 Codex v3 기준선 실행 · 집계 스크립트
 │   │   ├── EVAL.md         <- 폴더 설명
 │   │   ├── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
 │   │   ├── stage_report.py  <- run_gate 결과의 단계별 p50 · p95 · 호출당 · 문항당 비용 집계(진짜 중앙값 · 가장 가까운 순위 p95)
