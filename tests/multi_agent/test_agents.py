@@ -13,8 +13,17 @@ from backend.multi_agent import messages as M
 from backend.multi_agent import messages as Msg
 from backend.multi_agent.agents import docs as D
 from backend.multi_agent.contracts import Reason
+from backend.multi_agent import supervisor as S
 
 PART = {'ref': 'D1', 'value': 'SS14', 'footprint': 'SMA', 'nets': [{'name': '+5V', 'nodes': ['D1.1', 'U1.3'], 'more': 0}]}
+
+
+def test_supervisor_external_fallback_contract_limits_new_grade2_scope_to_rating_queries():
+    """외부 fallback은 다이오드·션트 기준소자 정격 확인만 허용하고 일반 IC 대체는 금지한다."""
+    prompt = S.PROMPT.casefold()
+    assert 'shunt-voltage-reference' in prompt
+    assert 'diode' in prompt
+    assert 'general ic' in prompt or '일반 ic' in prompt
 
 
 def doc(cid, content='VRRM 40 V', table=None, parts=()):
@@ -283,18 +292,25 @@ def test_partial_answer_searches_once_more_for_what_is_missing_and_keeps_the_fir
     assert worse['status'] == 'partial' and worse['answer'] == 'VRRM은 40 V이다 [3].' and worse['llm_calls'] == 2
 
 
-def test_grade2_search_preserves_explicit_manufacturer_in_user_question():
+@pytest.mark.parametrize(('question', 'canonical'), [
+    ('인피니언 BAT54의 역전압은?', 'Infineon'),
+    ('Vishay BAT54의 역전압은?', 'Vishay'),
+    ('Nexperia BAT54의 역전압은?', 'Nexperia'),
+    ('TI LM385-ADJ의 정격은?', 'Texas Instruments'),
+    ('온세미 BAS16의 정격은?', 'onsemi'),
+    ('ST BAS16의 정격은?', 'STMicroelectronics'),
+    ('ADI AD1580의 정격은?', 'Analog Devices'),
+])
+def test_grade2_search_preserves_explicit_manufacturer_in_user_question(question, canonical):
     queries = []
     task_input = task(parts=['BAT54'], query='BAT54 diode reverse voltage')
     def official(parts, terms):
         queries.append((parts, terms))
         return []
-    report = D.docs_agent({'task': task_input, 'question': '인피니언 BAT54의 역전압은?'},
-                          retriever=lambda *args, **kwargs: [doc(1, parts=['BAT54'])], chat=llm(),
+    report = D.docs_agent({'task': task_input, 'question': question},
+                          retriever=lambda *args, **kwargs: [doc(1, parts=['BAT54'])],
+                          chat=llm(D.DocsAnswer(grade='none', next_query='retry'),
+                                   D.DocsAnswer(grade='none')),
                           web_search=official)['reports'][0]
-    assert queries == [(['BAT54'], 'BAT54 diode reverse voltage Infineon')]
-    assert report['evidence_ids'] == []
-    report = D.docs_agent({'task': task_input, 'question': 'Vishay BAT54의 역전압은?'},
-                          retriever=lambda *a, **k: [doc(1, parts=['BAT54'])], chat=llm(),
-                          web_search=lambda *a: pytest.fail('wrong manufacturer'))['reports'][0]
+    assert queries and canonical in queries[0][1]
     assert report['evidence_ids'] == []

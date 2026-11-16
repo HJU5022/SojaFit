@@ -33,9 +33,31 @@ def _failure(stage: str, error: BaseException) -> None:
 PART = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._+/-]{1,39}$')
 TOKEN = re.compile(r'[A-Za-z][A-Za-z0-9_-]{0,30}')
 OTHER_MANUFACTURER = re.compile(
-    r'비셰이|비쉐이|온세미|넥스페리아|텍사스\s*인스트루먼트|'
+    r'비셰이|비쉐이|온세미|넥스페리아|텍사스\s*인스트루먼트|에스티(?:마이크로일렉트로닉스)?|'
+    r'아날로그\s*디바이시스|'
     r'\b(?:vishay|onsemi|nexperia|diodes inc|rohm|stmicroelectronics|toshiba|'
-    r'texas instruments|microchip|analog devices|TI)(?![A-Za-z])', re.I)
+    r'texas instruments|microchip|analog devices|TI|ADI|ST)(?![A-Za-z])', re.I)
+UNSUPPORTED_GRADE2_MANUFACTURER = re.compile(
+    r'\b(?:diodes inc|rohm|toshiba|microchip)(?![A-Za-z])', re.I)
+
+_MANUFACTURER_ALIASES = {
+    'infineon': (r'\binfineon\b|인피니언', ('www.infineon.com',)),
+    'tsc': (r'\btsc\b|taiwan\s+semiconductor|대만\s*반도체|타이완\s*세미', ('services.taiwansemi.com',)),
+    'vishay': (r'\bvishay\b|비셰이|비쉐이', ('www.vishay.com',)),
+    'onsemi': (r'\bonsemi\b|온세미', ('www.onsemi.com',)),
+    'nexperia': (r'\bnexperia\b|넥스페리아', ('assets.nexperia.com',)),
+    'stmicroelectronics': (r'\bstmicroelectronics\b|(?<![A-Za-z])ST(?![A-Za-z])|에스티(?:마이크로일렉트로닉스)?', ('www.st.com',)),
+    'texas instruments': (r'\btexas\s+instruments\b|(?<![A-Za-z])TI(?![A-Za-z])|텍사스\s*인스트루먼트', ('www.ti.com',)),
+    'analog devices': (r'\banalog\s+devices\b|(?<![A-Za-z])ADI(?![A-Za-z])|아날로그\s*디바이시스', ('www.analog.com',)),
+}
+
+
+def _requested_manufacturer_hosts(terms: str) -> tuple[str, ...]:
+    hosts = []
+    for pattern, maker_hosts in _MANUFACTURER_ALIASES.values():
+        if re.search(pattern, terms or '', re.I):
+            hosts.extend(maker_hosts)
+    return tuple(dict.fromkeys(hosts))
 SAFE_TERMS = {
     'absolute', 'application', 'average', 'breakdown', 'capacitance', 'characteristics', 'circuit', 'current',
     'supply', 'output', 'input', 'operating', 'standby', 'datasheet', 'diode', 'electrical', 'equivalent', 'forward', 'frequency', 'if', 'ifsm', 'ir', 'junction',
@@ -245,13 +267,9 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
     paths = GRADE2_PDF_PATHS if grade == 2 else PDF_PATHS
     raw_terms = terms or ''
     if grade == 2:
-        # Preserve an explicitly requested manufacturer.  The host name is not
-        # enough for aliases such as “Taiwan Semiconductor” or Korean names.
-        makers = []
-        if re.search(r'(?:\btsc\b|\btaiwan\s+semiconductor\b|\uB300\uB9CC\s*\uBC18\uB3C4\uCCB4|\uD0C0\uC774\uC644\s*\uC138\uBBF8)', raw_terms, re.I):
-            makers.append('services.taiwansemi.com')
-        if re.search(r'(?:\binfineon\b|\uC778\uD53C\uB2C8\uC5B8)', raw_terms, re.I):
-            makers.append('www.infineon.com')
+        # search_evidence rejects excluded manufacturers before claiming a
+        # lookup slot. Keep their aliases for grade-3 manufacturer filtering.
+        makers = list(_requested_manufacturer_hosts(raw_terms))
     else:
         tokens = {t.lower() for t in TOKEN.findall(raw_terms)}
         makers = [host for host in paths if host.split('.')[-2] in tokens]
@@ -308,6 +326,11 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
 
 
 def search_evidence(parts: list[str], terms: str, *, grade=None, transport=None) -> list[dict]:
+    if grade == 2:
+        requested_hosts = _requested_manufacturer_hosts(terms or '')
+        if (UNSUPPORTED_GRADE2_MANUFACTURER.search(terms or '') or len(requested_hosts) > 1
+                or any(host not in GRADE2_PDF_PATHS for host in requested_hosts)):
+            return []
     query = _query(parts, terms)
     words = sorted({t.lower() for t in TOKEN.findall(terms or '') if t.lower() in SAFE_TERMS}
                    - {'datasheet', 'official', 'circuit', 'diode', 'replacement'})
@@ -319,8 +342,6 @@ def search_evidence(parts: list[str], terms: str, *, grade=None, transport=None)
 
 def search_grade2_evidence(parts: list[str], terms: str, *, transport=None) -> list[dict]:
     """Search only validated manufacturer PDFs for evidence grade 2."""
-    if OTHER_MANUFACTURER.search(terms or ''):
-        return []
     return search_evidence(parts, terms, grade=2, transport=transport)
 
 
@@ -332,11 +353,13 @@ def _search_grade3_reference(parts: list[str], terms: str, *, transport=None) ->
     query = _query(parts, terms)
     if not wanted or not query:
         return []
+    manufacturer_hosts = _requested_manufacturer_hosts(terms)
     try:
         with httpx.Client(transport=transport, timeout=10, trust_env=False, follow_redirects=False) as client:
             body, _ = _body(client, 'POST', 'https://api.exa.ai/search', 256 * 1024,
                             headers={'x-api-key': os.environ['EXA_API_KEY']},
-                            json={'query': query, 'numResults': MAX_RESULTS, 'type': 'auto'})
+                            json={'query': query, 'numResults': MAX_RESULTS, 'type': 'auto',
+                                  **({'includeDomains': list(manufacturer_hosts)} if manufacturer_hosts else {})})
         payload = json.loads(body)
     except (httpx.HTTPError, ValueError, TypeError, KeyError) as error:
         _failure('search_grade3', error)
@@ -352,7 +375,7 @@ def _search_grade3_reference(parts: list[str], terms: str, *, transport=None) ->
         title = str(hit.get('title') or '').strip()[:240]
         haystack = f'{title} {url}'.upper()
         matched = [p for p in wanted if re.search(r'(?<![A-Z0-9])' + re.escape(p) + r'(?![A-Z0-9])', haystack)]
-        if not url or not matched:
+        if not url or not matched or (manufacturer_hosts and urlsplit(url).hostname not in manufacturer_hosts):
             continue
         found.append({'source_type': 'external_web_reference', 'source_url': url,
                       'title': title or url, 'file': title or url, 'doc_parts': matched,

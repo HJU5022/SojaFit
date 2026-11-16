@@ -9,8 +9,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit
-from urllib.parse import quote, unquote
+from urllib.parse import parse_qsl, quote, unquote, urlsplit, urlunsplit
 
 LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +25,11 @@ PDF_PATHS = {
 GRADE2_PDF_PATHS = {
     'services.taiwansemi.com': '/storage/resources/datasheet/',
     'www.infineon.com': '/assets/row/public/documents/',
+    'www.vishay.com': '/docs/',
+    'www.ti.com': '/lit/ds/symlink/',
+    'www.onsemi.com': '/pdf/datasheet/',
+    'www.st.com': '/resource/en/datasheet/',
+    'www.analog.com': '/media/en/technical-documentation/data-sheets/',
 }
 _GRADE2_EXCLUDED = re.compile(r'(?:application[-_ ]?note|app[-_ ]?note|reference[-_ ]?manual|user[-_ ]?guide)', re.I)
 MAX_BYTES = 12 * 1024 * 1024
@@ -47,8 +51,22 @@ def official_pdf(url, *, grade=None):
         parsed = urlsplit(url)
         host = parsed.hostname
         paths = _pdf_paths(grade)
-        if parsed.scheme != 'https' or parsed.netloc.lower() != host or host not in paths or parsed.query:
+        if (parsed.scheme != 'https' or parsed.netloc.lower() != host or host not in paths
+                or parsed.fragment):
             return ''
+        query = ''
+        if parsed.query:
+            # Infineon document links commonly carry one opaque CMS locator.
+            # Keep only the two documented locator names; never accept a
+            # duplicate/unknown parameter or arbitrary query text.
+            if not (grade == 2 and host == 'www.infineon.com'):
+                return ''
+            pairs = parse_qsl(parsed.query, keep_blank_values=True, strict_parsing=True)
+            if len(pairs) != 1 or pairs[0][0] not in {'fileId', 'folderId'}:
+                return ''
+            if not re.fullmatch(r'[A-Za-z0-9_-]{8,128}', pairs[0][1]):
+                return ''
+            query = quote(pairs[0][0], safe='') + '=' + quote(pairs[0][1], safe='')
         decoded_path = unquote(parsed.path)
         prefix = paths[host]
         remaining = decoded_path[len(prefix):] if decoded_path.lower().startswith(prefix.lower()) else ''
@@ -63,7 +81,7 @@ def official_pdf(url, *, grade=None):
                 return ''
         if (remaining and not (grade == 2 and _GRADE2_EXCLUDED.search(remaining))
                 and re.fullmatch(filename, remaining, re.I | re.ASCII)):
-            return f'https://{host}{quote(decoded_path, safe="/%()+-._")}'
+            return urlunsplit(('https', host, quote(decoded_path, safe='/%()+-._'), query, ''))
     except ValueError:
         pass
     return ''
@@ -76,6 +94,78 @@ def grade2_pdf(url):
 
 def clean(text):
     return ' '.join((text or '').split())
+
+
+def _language_for_pages(texts):
+    """Use the trusted document-language contract and fail closed if unavailable."""
+    try:
+        repo_root = Path(__file__).resolve().parents[2]
+        if str(repo_root) not in sys.path:
+            sys.path.insert(0, str(repo_root))
+        from backend.services.document_language import language_for_pages
+        return language_for_pages(texts)
+    except (ImportError, AttributeError):
+        return None
+
+
+def _text_rows(page, parts, terms):
+    """Extract an unruled text row using label/value/unit geometry, not part values."""
+    text = page.extract_text(x_tolerance=1) or ''
+    if not text or not any(_strict_part_mention(text, part) for part in parts):
+        return []
+    lines = text.splitlines()
+    rows = []
+    term_set = {re.sub(r'[^a-z0-9]', '', str(term).lower()) for term in terms}
+    for index, line in enumerate(lines):
+        normalized = clean(line)
+        match = re.search(r'(?P<label>[A-Za-z][A-Za-z _/-]{3,})(?:\s+|=)+(?P<value>[+−–-]?(?:\d+(?:\.\d+)?|\.\d+))\s*(?P<unit>mA|µA|uA|V|mV|A|Ω|ohm|%)\b', normalized, re.I)
+        if not match:
+            continue
+        label = clean(match.group('label'))
+        label_words = set(re.findall(r'[a-z0-9]+', label.lower()))
+        if not term_set or not any(term in label_words or term in re.sub(r'[^a-z0-9]', '', label.lower()) for term in term_set):
+            continue
+        bbox = None
+        try:
+            hits = page.search(re.escape(normalized), regex=True, return_chars=False)
+            if hits:
+                hit = hits[0]
+                bbox = [hit.get(key) for key in ('x0', 'top', 'x1', 'bottom')]
+        except (AttributeError, TypeError, ValueError):
+            pass
+        caption = next((clean(previous) for previous in reversed(lines[:index])
+                        if CAPTION.match(clean(previous))), '')
+        if not caption:
+            continue
+        rows.append((1, {'page': page.page_number, 'table': caption,
+                         'row': label, 'doc_parts': [parts[0]],
+                         'content': f'{parts[0]} | {caption} | {label} | {match.group("value")} {match.group("unit")}',
+                         'cells': [('VALUE', match.group('value'))],
+                         'unit': match.group('unit'), 'conditions': '', 'symbol': '',
+                         **({'bbox': bbox} if bbox else {})}))
+    return rows
+
+
+def _covered_part(parts, page_texts):
+    """Require exact part evidence in a title or ordering/type table, not prose."""
+    scope = re.compile(r'(?:ordering(?:\s+information)?|order\s+code|type\s+number|device\s+specific|part\s+number)', re.I)
+    for index, text in enumerate(page_texts):
+        for part in parts:
+            if not _strict_part_mention(text, part):
+                continue
+            if scope.search(text):
+                return part
+            if index == 0:
+                title_lines = [line.strip() for line in text.splitlines()[:8]]
+                part_positions = [position for position, line in enumerate(title_lines)
+                                  if _strict_part_mention(line, part)]
+                nearby_title = [title_lines[line_position]
+                                for part_position in part_positions
+                                for line_position in range(max(0, part_position - 1), min(len(title_lines), part_position + 3))]
+                if any(re.search(r'\b(?:datasheet|reference|diode|voltage|regulator|micropower)\b', line, re.I)
+                       and not re.search(r'\bdevice\b', line, re.I) for line in nearby_title):
+                    return part
+    return ''
 
 
 def _header(row):
@@ -128,6 +218,19 @@ def _merged_cell_text(page, table, row_index, column_index):
 def _row_has_part(row_text, part):
     """Match a data-row ordering code without accepting a suffixed sibling."""
     return bool(re.search(r'(?<![A-Z0-9])' + re.escape(part.upper()) + r'(?![A-Z0-9])', row_text.upper()))
+
+
+def _strict_part_mention(text, part):
+    """Match an exact order identity, including punctuation suffix boundaries."""
+    return bool(re.search(r'(?<![A-Z0-9])' + re.escape(part.upper()) + r'(?![A-Z0-9._+\-/])', text.upper()))
+
+
+def _is_vishay_vrrm_symbol(symbol):
+    """Accept only the documented VRRM symbol or its PDF subscript layout."""
+    raw = str(symbol or '').upper()
+    # pdfplumber can expose Vishay's subscripted ``VRRM = VRWM = VR`` as
+    # ``V = V = V RRM RWM R``. Keep this one known layout, not arbitrary prose.
+    return re.sub(r'\s+', '', raw) in {'VRRM', 'VRRM=VRWM=VR', 'V=V=VRRMRWMR'}
 
 
 def _read_table(page, table, parts, single, terms):
@@ -222,12 +325,21 @@ def _read_table(page, table, parts, single, terms):
             content = ' | '.join(filter(None, (part, caption, label, symbol, conditions, *values)))
             yield hits, {'page': page.page_number, 'table': caption, 'row': label,
                          'doc_parts': [part], 'content': content, 'cells': cells,
-                         'unit': unit, 'conditions': conditions, 'symbol': symbol}
+                         'unit': unit, 'conditions': conditions, 'symbol': symbol,
+                         'bbox': list(table.rows[row_index].bbox)}
 
 
 def _infineon_reverse_voltage(page, parts, terms, applicable_parts):
     """Extract only the explicit BAT54-family reverse-voltage row."""
-    if not {'reverse', 'voltage'} <= set(terms) or set(terms) & {'vrrm', 'repetitive', 'peak', 'breakdown'}:
+    terms = set(terms)
+    # A VRRM question may use either the bare symbol or the full natural
+    # language phrase. This fallback is reached only after the table parser
+    # found no exact VRRM row; the returned row remains marked as VR.
+    if 'vrrm' in terms:
+        terms.update(('reverse', 'voltage'))
+        terms.difference_update(('repetitive', 'peak', 'breakdown'))
+    elif (not {'reverse', 'voltage'} <= terms
+          or terms & {'repetitive', 'peak', 'breakdown'}):
         return []
     text = page.extract_text(x_tolerance=1) or ''
     caption = re.search(r'(?im)^Maximum Ratings\b[^\n]*', text)
@@ -261,9 +373,11 @@ def _infineon_reverse_voltage(page, parts, terms, applicable_parts):
                 break
     if cell_value is None:
         return []
+    requested_symbol = 'VRRM' if 'vrrm' in set(terms) else None
     return [{'page': page.page_number, 'table': table_name, 'row': label,
              'doc_parts': [part], 'content': f'{part} | {table_name} | {label} | {part} = {value} V',
-             'cells': [(part, value)], 'unit': 'V', 'conditions': '', 'symbol': 'V_R'} for part in matched]
+             'cells': [(part, value)], 'unit': 'V', 'conditions': '', 'symbol': 'V_R',
+             **({'requested_symbol': requested_symbol} if requested_symbol else {})} for part in matched]
 
 
 def _figure_png(page, caption):
@@ -316,12 +430,23 @@ def extract(raw, url, parts, terms, *, grade=None):
     parts = [p.upper() for p in parts]
     found = []
     with pdfplumber.open(io.BytesIO(raw)) as pdf:
+        all_pages = list(pdf.pages)
+        all_texts = [page.extract_text(x_tolerance=1) or '' for page in all_pages]
+        if grade == 2 and _language_for_pages(all_texts) not in {'en', 'ko', 'en-ko'}:
+            return []
+        pages = all_pages[:MAX_PAGES]
         slug = Path(urlsplit(url).path).stem.upper()
         def named_sheet(page):
             heading = page.crop((0, 0, page.width, min(page.height, 165))).extract_text(x_tolerance=1) or ''
             return slug in {line.strip().upper() for line in heading.splitlines()}
 
-        single = slug if (urlsplit(url).hostname == 'www.ti.com' and slug in parts and named_sheet(pdf.pages[0])) else ''
+        host = urlsplit(url).hostname
+        document_part = _covered_part(parts, all_texts) if grade == 2 else ''
+        # A family PDF is allowed to answer a single part only when its first
+        # page names that exact part. This is used by TI and Vishay PDFs whose
+        # filename is the product identity; never infer a related suffix.
+        single = slug if (host in {'www.ti.com', 'www.vishay.com'}
+                          and slug in parts and named_sheet(pdf.pages[0])) else ''
         applicable_parts = set()
         if urlsplit(url).hostname == 'www.infineon.com':
             cover = pdf.pages[0].extract_text(x_tolerance=1) or ''
@@ -331,12 +456,22 @@ def extract(raw, url, parts, terms, *, grade=None):
                 applicable_parts = set(re.findall(r'(?m)^([A-Z0-9-]+)\*? +(?:SOT|SOD|TSLP|SC)\d?[-\w]* +', part_table))
         figure_terms = set(terms) & {'trr', 'recovery', 'measurement', 'measure', 'test', 'waveform', 'figure'}
         figure = None
-        for page in pdf.pages[:MAX_PAGES]:
-            page_part = single if single and named_sheet(page) else ''
+        infineon_vr_fallback = []
+        for page in pages:
+            page_part = single if single and named_sheet(page) else document_part
             before_page = len(found)
             page_rows = []
             for table in page.find_tables():
                 page_rows.extend(_read_table(page, table, parts, page_part, terms))
+            if not page_rows and document_part:
+                page_rows.extend(_text_rows(page, [document_part], terms))
+            if (grade == 2 and host == 'www.vishay.com'
+                    and 'vrrm' in {str(term).lower() for term in terms}):
+                # Vishay BAS16 lists both VRM (non-repetitive) and
+                # ``VRRM = VRWM = VR``. A VRRM request must never be satisfied
+                # by the former row, even when both rows share the same table.
+                page_rows = [item for item in page_rows
+                             if _is_vishay_vrrm_symbol(item[1].get('symbol', ''))]
             if (grade == 2 and urlsplit(url).hostname == 'services.taiwansemi.com'
                     and set(terms) & {'vrrm', 'repetitive'}):
                 vrrm = [item for item in page_rows if re.sub(r'\s+', '', item[1].get('symbol', '')).upper() == 'VRRM']
@@ -344,12 +479,16 @@ def extract(raw, url, parts, terms, *, grade=None):
                     page_rows = vrrm
             found.extend(page_rows)
             if grade == 2 and len(found) == before_page and urlsplit(url).hostname == 'www.infineon.com':
-                found.extend((1, row) for row in _infineon_reverse_voltage(page, parts, terms, applicable_parts))
+                infineon_vr_fallback.extend(_infineon_reverse_voltage(page, parts, terms, applicable_parts))
             if figure_terms and figure is None:
                 page_text = page.extract_text(x_tolerance=1) or ''
                 if caption := FIGURE_CAPTION.search(page_text):
                     figure = _figure_png(page, caption.group(0))
             page.close()
+        if infineon_vr_fallback and not any(
+                re.sub(r'\s+', '', row.get('symbol', '')).upper() == 'VRRM'
+                for _, row in found):
+            found.extend((1, row) for row in infineon_vr_fallback)
         if figure:
             for _, row in found:
                 if re.search(r'reverse recovery|recovery time', row.get('row', ''), re.I) or \

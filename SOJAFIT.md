@@ -234,6 +234,7 @@ SojaFit (proj3-b)
 │   │   ├── mail.py         <- Gmail SMTP TLS 인증·재설정 메일 전송(로그·저장·재시도 없음)
 │   │   ├── exa.py <- 내부 근거가 부족할 때 공식 제조사 PDF를 찾는 요청당 1회 검색
 │   │   ├── datasheet_rows.py <- 공식 데이터시트 표에서 품번 열·페이지·행·단위를 확인
+│   │   ├── document_language.py <- 공식 PDF 본문에서 영어·한국어만 허용하는 언어 검사
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 빌드한 React 화면(frontend/dist)을 같은 출처로 연결하는 어댑터
 │   │   ├── WEB.md          <- 폴더 설명
@@ -593,6 +594,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_datasheet_rows.py <- 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
+│   │   ├── test_document_language.py <- 영어·한국어 허용과 다른 언어·판독 불가 본문 거절 검증
 │   │   ├── test_exa_prefetch.py <- 웹 근거 미리 출발: 기본 꺼짐, 받아 둔 같은 PDF 재사용, 실패 시 원래 경로
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)

@@ -3,9 +3,86 @@ import base64
 from pathlib import Path
 
 import pytest
+import httpx
 
 from backend.multi_agent.agents import docs as D
 from backend.multi_agent.revisions import revision_matches, revisions_for_part
+from backend.services import exa
+
+
+def test_pdf_answer_accepts_external_rows_w4_and_w5_without_changing_cap():
+    answer = D.PdfAnswer(grade='enough', pdf_rows=['W1', 'W2', 'W3', 'W4', 'W5'])
+    assert answer.pdf_rows == ['W1', 'W2', 'W3', 'W4', 'W5']
+    with pytest.raises(Exception):
+        D.PdfAnswer(grade='enough', pdf_rows=['W1', 'W2', 'W3', 'W4', 'W5', 'W1'])
+
+
+@pytest.mark.parametrize(('used', 'expected'), [
+    ({'W1'}, 'W4'),
+    ({'W1', 'W4'}, 'W5'),
+    ({'W1', 'W2', 'W3', 'W4', 'W5'}, 'W6'),
+])
+def test_recovery_figure_locator_uses_unused_w_identifier(used, expected):
+    assert D._next_figure_chunk_id([{'chunk_id': value} for value in used]) == expected
+
+
+def test_recovery_figure_does_not_collide_with_external_w4_row():
+    image = base64.b64encode(b'official-raster').decode('ascii')
+    official_url = 'https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat54series-datasheet-en.pdf'
+    rows = [
+        {'chunk_id': 'W1', 'file': 'UF4001.pdf', 'source_type': 'external_web',
+         'source_url': official_url, 'source_sha256': 'a' * 64,
+         'retrieved_at': '2026-11-12T00:00:00+00:00', 'evidence_grade': 2, 'page': 2,
+         'table': 'Electrical characteristics', 'row': 'Reverse recovery time trr',
+         'content': 'UF4007 trr MAX 75 ns', 'doc_parts': ['UF4007'],
+         'cells': [('UF4007', '75')], 'unit': 'ns',
+         'conditions': 'IF = 0.5 A, IR = 1.0 A, Irr = 0.25 A',
+         'figure': {'page': 4, 'caption': 'Reverse recovery characteristic',
+                    'image_base64': image}},
+        {'chunk_id': 'W4', 'file': 'UF4001.pdf', 'source_type': 'external_web',
+         'source_url': official_url, 'source_sha256': 'a' * 64,
+         'retrieved_at': '2026-11-12T00:00:00+00:00', 'evidence_grade': 2, 'page': 2,
+             'table': 'Electrical characteristics', 'row': 'Reverse recovery time trr',
+             'content': 'UF4007 trr MAX 1.0 A', 'doc_parts': ['UF4007'],
+             'cells': [('UF4007', '1.0')], 'unit': 'A',
+         'conditions': 'IF = 0.5 A, IR = 1.0 A, Irr = 0.25 A'},
+    ]
+    def chat(node, system, user, schema, **kwargs):
+        if schema is D.RecoveryFigure:
+            return schema(labels=['+0.5 A', '-1.0 A', '-0.25 A'], forward_current=0.5,
+                          reverse_peak=-1.0, recovery_end=-0.25, arrow_start=0.0,
+                          arrow_end=-0.25, unit='A', start_on_zero_crossing=True,
+                          end_on_recovery=True, readable=True)
+        return schema(grade='enough', pdf_rows=['W1', 'W4'])
+    result = D.docs_agent(
+        {'question': 'UF4007의 trr 시험 파형과 측정 조건을 알려 줘.',
+         'task': {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['UF4007'],
+                  'goal': 'reverse recovery waveform', 'query': 'UF4007 trr'}},
+        retriever=lambda *args, **kwargs: [], chat=chat,
+        web_search=lambda *args: rows)['reports'][0]
+    assert D.citations(result['answer']) == {'W1', 'W4', 'W5'}
+    assert {doc['chunk_id'] for doc in result['docs']} == {'W1', 'W4', 'W5'}
+    from backend.conversations.dto import public_state, result_dto, stored_evidence
+    from backend.judge.pdf_claims import bind_run_citations
+    from backend.multi_agent.contracts import TaskReport
+    report = TaskReport.model_validate(result)
+    assert bind_run_citations([report])
+    assert set(report.evidence_ids) == {'W1', 'W4', 'W5'}
+    state = {'answer': report.answer, 'question_type': 'rating',
+             'final_reports': [report.model_dump()], 'docs': report.docs}
+    browser = result_dto(public_state(state), request_id='figure-id-gate', status='completed')
+    assert {(item['citation_number'], item['page'], item['table'], item['row'])
+            for item in browser.evidence} == {
+                ('W1', 2, 'Electrical characteristics', 'Reverse recovery time trr'),
+                ('W4', 2, 'Electrical characteristics', 'Reverse recovery time trr'),
+                ('W5', 4, 'Reverse recovery characteristic', 'Reverse recovery waveform'),
+            }
+    reopened = result_dto({'answer': browser.answer,
+                           'evidence': stored_evidence(browser.evidence)},
+                          request_id='figure-id-replay', status='completed')
+    assert {(item['citation_number'], item['page'], item['table'], item['row'])
+            for item in reopened.evidence} == {(item['citation_number'], item['page'], item['table'], item['row'])
+                                               for item in browser.evidence}
 
 
 @pytest.fixture(autouse=True)
@@ -27,6 +104,164 @@ def test_docs_prompt_requires_complete_requested_checklist_and_bounded_role_inte
     assert 'every separate item requested' in D.PROMPT
     assert 'conventional circuit-mechanism explanation' in D.PROMPT
     assert 'never omit a supported item' in D.PROMPT
+
+
+def test_grade2_vishay_alias_is_restricted_to_vishay_official_domain(monkeypatch):
+    """Vishay 명시 질의는 다른 제조사 공식 문서로 조용히 대체하지 않는다."""
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+    domains = []
+
+    def handle(request):
+        if request.method == 'POST':
+            domains.extend(json.loads(request.content)['includeDomains'])
+            return httpx.Response(200, json={'results': []})
+        raise AssertionError('Vishay search should not download without a result')
+
+    exa.search_grade2_evidence(['BAS16'], 'Vishay BAS16 VRRM',
+                               transport=httpx.MockTransport(handle))
+    assert domains == ['www.vishay.com/docs/']
+
+
+def test_grade2_vishay_does_not_mix_another_explicit_manufacturer(monkeypatch):
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+    called = False
+
+    def handle(request):
+        nonlocal called
+        called = True
+        return httpx.Response(200, json={'results': []})
+
+    assert exa.search_grade2_evidence(
+        ['BAS16'], 'Vishay Infineon BAS16 VRRM',
+        transport=httpx.MockTransport(handle),
+    ) == []
+    assert not called
+
+
+@pytest.mark.parametrize('terms', [
+    'Nexperia BAS16 official datasheet VRRM',
+    '넥스페리아 BAS16 공식 데이터시트 VRRM',
+])
+def test_grade2_rejects_nexperia_without_external_call(monkeypatch, terms):
+    """허용되지 않은 제조사는 검색 요청 자체를 만들지 않는다."""
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+
+    def handle(request):
+        pytest.fail(f'blocked manufacturer must not call Exa: {request.url}')
+
+    parts = ['BAS16']
+    assert exa.search_grade2_evidence(parts, terms, transport=httpx.MockTransport(handle)) == []
+
+
+def test_grade2_unspecified_manufacturer_search_uses_only_the_seven_registered_domains(monkeypatch):
+    """제조사 미지정 등급2 검색도 허용된 7개 공식 경로로만 제한한다."""
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+    domains = []
+
+    def handle(request):
+        if request.method == 'POST':
+            domains.extend(json.loads(request.content).get('includeDomains', []))
+            return httpx.Response(200, json={'results': []})
+        pytest.fail('No PDF download is expected when Exa returns no result')
+
+    exa.search_grade2_evidence(['LM385-ADJ'], 'LM385-ADJ reverse voltage official datasheet VRRM',
+                               transport=httpx.MockTransport(handle))
+    assert {domain.split('/')[0] for domain in domains} == {
+        'www.ti.com', 'www.st.com', 'www.analog.com',
+        'www.onsemi.com', 'www.infineon.com', 'www.vishay.com',
+        'services.taiwansemi.com',
+    }
+
+
+@pytest.mark.parametrize(('maker', 'alias'), [
+    ('Texas Instruments', 'TI'),
+    ('onsemi', '온세미'),
+    ('STMicroelectronics', 'ST'),
+    ('Analog Devices', 'ADI'),
+    ('Infineon', '인피니언'),
+    ('Vishay', '비셰이'),
+    ('TSC', 'Taiwan Semiconductor'),
+])
+def test_grade2_target_manufacturer_alias_is_restricted_to_its_official_domain(monkeypatch, maker, alias):
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+    domains = []
+
+    def handle(request):
+        if request.method == 'POST':
+            domains.extend(json.loads(request.content)['includeDomains'])
+            return httpx.Response(200, json={'results': []})
+        raise AssertionError('Grade 2 search should not download without a result')
+
+    exa.search_grade2_evidence(['LM385-ADJ'], f'{maker} {alias} LM385-ADJ VRRM',
+                               transport=httpx.MockTransport(handle))
+    assert len(domains) == 1
+    assert domains[0].split('/')[0] in {
+        'www.ti.com', 'www.onsemi.com', 'www.st.com', 'www.analog.com',
+        'www.infineon.com', 'www.vishay.com',
+        'services.taiwansemi.com',
+    }
+
+
+def test_grade2_supported_manufacturers_still_fail_closed_when_two_are_named(monkeypatch):
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+    called = False
+
+    def handle(request):
+        nonlocal called
+        called = True
+        return httpx.Response(200, json={'results': []})
+
+    assert exa.search_grade2_evidence(
+        ['BAS16'], 'TI Vishay BAS16 VRRM', transport=httpx.MockTransport(handle)
+    ) == []
+    assert not called
+
+
+def test_grade2_unsupported_manufacturer_remains_blocked(monkeypatch):
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'test')
+    called = False
+
+    def handle(request):
+        nonlocal called
+        called = True
+        return httpx.Response(200, json={'results': []})
+
+    assert exa.search_grade2_evidence(
+        ['BH1750'], 'Rohm BH1750 official datasheet', transport=httpx.MockTransport(handle)
+    ) == []
+    assert not called
+
+
+def test_docs_agent_keeps_vishay_manufacturer_in_grade2_query():
+    calls = []
+    task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['BAS16'],
+            'goal': 'official VRRM', 'query': 'BAS16 diode reverse voltage'}
+
+    def official(parts, terms):
+        calls.append((parts, terms))
+        return []
+
+    report = D.docs_agent(
+        {'task': task, 'question': 'Vishay BAS16의 VRRM은? 정확한 공식 문서 근거를 보여 줘.'},
+        retriever=lambda *args, **kwargs: [], chat=lambda node, system, user, schema: schema(
+            grade='none', answer='', missing=['VRRM']), web_search=official,
+    )['reports'][0]
+    assert calls and 'Vishay' in calls[0][1]
+    assert report['evidence_ids'] == []
 
 
 @pytest.mark.parametrize(
@@ -1096,3 +1331,60 @@ def test_per_part_searches_run_together_and_keep_part_order():
 
     rows = D.retrieve_with_k(retriever, 'q', parts=['SS14', 'SS14H'], k=20)
     assert [r['chunk_id'] for r in rows][:2] == ['SS14-0', 'SS14-1'] and rows[10]['chunk_id'] == 'SS14H-0'
+
+
+def test_official_vr_explanation_is_canonical_and_cannot_be_relabelled_vrrm():
+    from backend.judge.pdf_claims import row_sentence, sentence_digest, check_pdf_lines
+    doc = {'chunk_id': 'W1', 'source_type': 'external_web', 'doc_parts': ['BAS16'],
+           'row': 'Diode reverse voltage', 'symbol': 'V_R', 'cells': [('BAS16', '80')],
+           'unit': 'V', 'requested_symbol': 'VRRM'}
+    sentence = row_sentence(doc)
+    assert 'VR(역전압)' in sentence and 'VRRM(반복 피크 역전압)' in sentence
+    assert '대신' in sentence and '80 V' in sentence and sentence.endswith('[W1].')
+    doc['sentence_sha256'] = sentence_digest(sentence)
+    assert check_pdf_lines(sentence, [doc]) == sentence
+    assert check_pdf_lines('BAS16의 VRRM은 80 V입니다 [W1].', [doc]) is None
+
+
+def test_official_parameter_difference_is_visible_to_the_answer_model():
+    doc = {'chunk_id': 'W1', 'source_type': 'external_web', 'doc_parts': ['BAS16'],
+           'file': 'bas16-datasheet.pdf', 'page': 2, 'table': 'Maximum Ratings',
+           'source_url': 'https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas16series-datasheet-en.pdf',
+           'row': 'Diode reverse voltage', 'symbol': 'V_R', 'cells': [('BAS16', '80')],
+           'unit': 'V', 'requested_symbol': 'VRRM', 'content': 'BAS16 | Diode reverse voltage | 80 V'}
+    task = D.Task(id=1, agent='docs', kind='rating', query='Infineon BAS16 VRRM', goal='VRRM')
+    prompt = D.render('Infineon BAS16 VRRM은?', task, [doc], {})
+    assert 'VRRM' in prompt and 'VR(역전압)' in prompt and '대신' in prompt
+
+
+@pytest.mark.parametrize('model_grade', ['enough', 'none'])
+@pytest.mark.parametrize('duplicate', [False, True])
+def test_parameter_difference_survives_docs_reporting_and_is_not_a_verdict_rating(model_grade, duplicate):
+    from backend.multi_agent.agents.judge import _grade2_rows
+    from backend.judge.pdf_claims import row_sentence, check_pdf_lines
+    doc = {'chunk_id': 'W1', 'source_type': 'external_web', 'evidence_grade': 2,
+           'source_sha256': 'a' * 64, 'doc_parts': ['BAS16'], 'file': 'infineon-bas16series-ds-en.pdf',
+           'source_url': 'https://www.infineon.com/assets/row/public/documents/24/49/infineon-bas16series-ds-en.pdf',
+           'page': 2, 'table': 'Maximum Ratings', 'row': 'Diode reverse voltage',
+           'symbol': 'V_R', 'cells': [('BAS16', '80')], 'unit': 'V', 'conditions': '',
+           'requested_symbol': 'VRRM', 'content': 'BAS16 | Diode reverse voltage | V_R | 80 V'}
+    def chat(node, system, user, schema):
+        return schema(grade=model_grade, pdf_rows=(['W1', 'W2'] if duplicate else ['W1']) if model_grade == 'enough' else [],
+                      missing=['VRRM'] if model_grade == 'none' else [])
+    rows = [doc, {**doc, 'chunk_id': 'W2'}] if duplicate else [doc]
+    report = D.docs_agent(
+        {'question': 'Infineon BAS16의 VRRM을 공식 표로 알려주세요.',
+         'task': {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['BAS16'],
+                  'goal': 'VRRM', 'query': 'Infineon BAS16 VRRM'}},
+        retriever=lambda *a, **k: [], chat=chat, web_search=lambda *a, **k: rows,
+    )['reports'][0]
+    assert report['answer'] == row_sentence(doc) and report['evidence_ids'] == ['W1']
+    assert check_pdf_lines(report['answer'], report['docs']) == report['answer']
+    assert _grade2_rows(lambda *a, **k: [doc], 'BAS16', {'VRRM'}, 'Infineon') == []
+    from backend.conversations.dto import public_state, result_dto
+    public = public_state({'answer': report['answer'], 'question_type': 'rating',
+                           'reports': [report], 'docs': report['docs']})
+    response = result_dto(public, request_id='parameter-difference', status='completed')
+    assert response.answer == report['answer']
+    assert len(response.evidence) == 1 and response.evidence[0]['citation_number'] == 'W1'
+    assert response.evidence[0]['page'] == 2 and response.evidence[0]['evidence_grade'] == 2

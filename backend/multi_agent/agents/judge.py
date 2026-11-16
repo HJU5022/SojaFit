@@ -589,7 +589,12 @@ def _grade2_rows(web_search, part: str, codes: set[str], maker: str = '') -> lis
     if web_search is None or not part or not codes or 'VRRM' not in {str(code).upper() for code in codes}:
         return []
     hosts = {'tsc': 'services.taiwansemi.com', 'taiwansemiconductor': 'services.taiwansemi.com',
-             'infineon': 'www.infineon.com'}
+             'infineon': 'www.infineon.com', 'vishay': 'www.vishay.com',
+             'vishaysemiconductors': 'www.vishay.com',
+             'ti': 'www.ti.com', 'texasinstruments': 'www.ti.com',
+             'onsemi': 'www.onsemi.com',
+             'st': 'www.st.com', 'stmicroelectronics': 'www.st.com',
+             'adi': 'www.analog.com', 'analogdevices': 'www.analog.com'}
     maker_key = re.sub(r'[^a-z]', '', maker.casefold())
     if maker and maker_key not in hosts:
         return []
@@ -619,12 +624,21 @@ def _grade2_rows(web_search, part: str, codes: set[str], maker: str = '') -> lis
         if document['doc_parts'][0].casefold() != part.casefold():
             continue
         raw_row = str(document.get('row') or '').strip()
-        code = 'VRRM' if raw_row.upper() == 'VRRM' or _VRRM_ROW.fullmatch(raw_row) else ''
+        vishay_vrrm = (host == 'www.vishay.com'
+                       and re.sub(r'\s+', '', str(document.get('symbol') or '')).upper()
+                       in {'VRRM', 'VRRM=VRWM=VR', 'V=V=VRRMRWMR'}
+                       and re.sub(r'\s+', ' ', raw_row).casefold() in {
+                           'vrrm', 'repetitive peak reverse voltage',
+                           'repetitive peak reverse voltage = working peak reverse voltage = dc blocking voltage'})
+        if host == 'www.vishay.com' and not vishay_vrrm:
+            continue  # Only an explicit original VRRM symbol/equality is authoritative.
+        code = 'VRRM' if vishay_vrrm or raw_row.upper() == 'VRRM' or _VRRM_ROW.fullmatch(raw_row) else ''
         if not code or str(document.get('unit') or '').strip().upper() != 'V':
             continue
         content = str(document.get('content') or '')
         caption = str(document.get('table') or '')
-        if not re.search(r'\bV\s*RRM\b', content, re.I) or not re.search(r'\bMAX(?:IMUM)?\s+RATINGS?\b', caption, re.I):
+        if ((not re.search(r'\bV\s*RRM\b', content, re.I) and not vishay_vrrm)
+                or not re.search(r'\bMAX(?:IMUM)?\s+RATINGS?\b', caption, re.I)):
             continue
         if document.get('conditions'):
             continue
@@ -632,7 +646,7 @@ def _grade2_rows(web_search, part: str, codes: set[str], maker: str = '') -> lis
         if len(cells) != 1:
             continue
         column, raw = cells[0]
-        if str(column).upper() not in {'MAX', part.upper()}:
+        if str(column).upper() not in {'MAX', part.upper()} and not (vishay_vrrm and str(column).upper() == 'VALUE'):
             continue
         value = str(raw).strip()
         if not _EXTERNAL_NUMBER.fullmatch(value):
@@ -879,7 +893,14 @@ def _original_from_text(read: JudgeRead, text: str) -> str:
 def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason, str] | None:
     """사용자가 꼭 요구한 것이 코퍼스 밖이면 (거절 사유, 요약). 이름 · 항목만 대조한다(숫자 판단 없음, SPEC 8.3)."""
     maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
-    if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON'):
+    supported_makers = {
+        # TSC is supported by the internal corpus and verified official PDFs.
+        'TSC', 'VISHAY', 'VISHAYSEMICONDUCTORS', 'INFINEON',
+        'TI', 'TEXASINSTRUMENTS', 'ONSEMI',
+        'ST', 'STMICROELECTRONICS', 'ADI', 'ANALOGDEVICES',
+    }
+    if (maker and maker not in supported_makers
+            and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON')):
         return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not a supported Grade 2 manufacturer'
     # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
     #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)

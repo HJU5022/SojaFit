@@ -107,7 +107,7 @@ def test_grade2_official_pdf_row_is_converted_with_provenance():
     """등급2는 정확한 품번·행·수치·공식 PDF 해시가 모두 있을 때만 판정 행이 된다."""
     docs = [{
         'evidence_grade': 2, 'source_sha256': 'a' * 64,
-        'source_url': 'https://services.taiwansemi.com/storage/resources/datasheet/SS14.pdf',
+        'source_url': 'https://www.ti.com/lit/ds/symlink/SS14.pdf',
         'doc_parts': ['SS14'], 'row': 'VRRM', 'unit': 'V',
         'cells': [('MAX', '40')], 'file': 'SS14.pdf', 'page': 2,
         'table': 'Absolute Maximum Ratings', 'content': 'VRRM 40 V',
@@ -119,6 +119,72 @@ def test_grade2_official_pdf_row_is_converted_with_provenance():
         'row': 'VRRM', 'source_url': docs[0]['source_url'],
         'source_sha256': 'a' * 64, 'evidence_grade': 2,
     }
+
+
+@pytest.mark.parametrize('maker', [
+    'Vishay', 'Vishay Semiconductors',
+])
+@pytest.mark.parametrize('symbol', ['VRRM = VRWM = VR', 'V = V = V RRM RWM R'])
+def test_vishay_vrrm_equality_row_is_verified_without_borrowing_vrm(maker, symbol):
+    doc = {
+        'evidence_grade': 2, 'source_sha256': 'a' * 64,
+        'source_url': 'https://www.vishay.com/docs/86366/bas16.pdf',
+        'doc_parts': ['BAS16'], 'file': 'bas16.pdf', 'page': 1,
+        'table': 'ABSOLUTE MAXIMUM RATINGS (Tamb = 25 °C, unless otherwise specified)',
+        'row': 'Repetitive peak reverse voltage = working peak reverse voltage = DC blocking voltage',
+        'symbol': symbol, 'cells': [('VALUE', '75')], 'unit': 'V', 'conditions': '',
+        'content': f'BAS16 | Repetitive peak reverse voltage | {symbol} | VALUE = 75 V',
+    }
+    rows = J._grade2_rows(lambda *a: [doc], 'BAS16', {'VRRM'}, maker)
+    assert len(rows) == 1 and rows[0]['max'] == 75.0
+    assert rows[0]['citation']['source_url'] == doc['source_url']
+    for symbol in ('VR', 'VRM', 'VRM = VR', 'VRRM or VR', 'VRRM / VRWM / VR', 'VRRM VRWM VR'):
+        assert J._grade2_rows(lambda *a: [{**doc, 'symbol': symbol}], 'BAS16', {'VRRM'}, maker) == []
+    assert J.outside_corpus(J.JudgeRead(role='R01', maker_wanted=maker), {}) is None
+
+
+@pytest.mark.parametrize(('maker', 'host'), [
+    ('TI', 'www.ti.com'), ('Texas Instruments', 'www.ti.com'),
+    ('onsemi', 'www.onsemi.com'),
+    ('ST', 'www.st.com'), ('STMicroelectronics', 'www.st.com'),
+    ('ADI', 'www.analog.com'), ('Analog Devices', 'www.analog.com'),
+    ('Infineon', 'www.infineon.com'), ('Vishay', 'www.vishay.com'),
+    ('TSC', 'services.taiwansemi.com'), ('Taiwan Semiconductor', 'services.taiwansemi.com'),
+])
+def test_grade2_rows_accepts_target_manufacturer_official_host(maker, host):
+    paths = {
+        'www.ti.com': '/lit/ds/symlink/part.pdf',
+        'www.onsemi.com': '/pdf/datasheet/part.pdf',
+        'www.st.com': '/resource/en/datasheet/part.pdf',
+        'www.analog.com': '/media/en/technical-documentation/data-sheets/part.pdf',
+        'www.infineon.com': '/assets/row/public/documents/1/2/infineon-part-datasheet-en.pdf',
+        'www.vishay.com': '/docs/86366/part.pdf',
+        'services.taiwansemi.com': '/storage/resources/datasheet/part.pdf',
+    }
+    doc = {
+        'evidence_grade': 2, 'source_sha256': 'a' * 64,
+        'source_url': f'https://{host}{paths[host]}', 'doc_parts': ['LM385-ADJ'],
+        'file': 'part.pdf', 'page': 1, 'table': 'MAXIMUM RATINGS', 'row': 'VRRM',
+        'symbol': 'VRRM', 'cells': [('MAX', '40')], 'unit': 'V', 'conditions': '',
+        'content': 'LM385-ADJ VRRM 40 V',
+    }
+    rows = J._grade2_rows(lambda *a: [doc], 'LM385-ADJ', {'VRRM'}, maker)
+    assert len(rows) == 1 and rows[0]['max'] == 40.0
+
+
+@pytest.mark.parametrize(('maker', 'host', 'path'), [
+    ('Nexperia', 'assets.nexperia.com', '/documents/data-sheet/part.pdf'),
+])
+def test_grade2_rows_rejects_non_registered_manufacturer_rows(maker, host, path):
+    """등급2 행 어댑터도 Nexperia의 공식 PDF를 등급2로 승격하지 않는다."""
+    doc = {
+        'evidence_grade': 2, 'source_sha256': 'a' * 64,
+        'source_url': f'https://{host}{path}', 'doc_parts': ['LM385-ADJ'],
+        'file': 'part.pdf', 'page': 1, 'table': 'MAXIMUM RATINGS', 'row': 'VRRM',
+        'symbol': 'VRRM', 'cells': [('MAX', '40')], 'unit': 'V', 'conditions': '',
+        'content': 'LM385-ADJ VRRM 40 V',
+    }
+    assert J._grade2_rows(lambda *a: [doc], 'LM385-ADJ', {'VRRM'}, maker) == []
 
 
 def test_grade2_budget_boundary_is_not_swallowed_by_row_adapter():
@@ -193,7 +259,7 @@ def test_grade2_row_flows_through_judge_check(monkeypatch):
     monkeypatch.setattr(J, 'interrupt', unknown)
     doc = {
         'evidence_grade': 2, 'source_sha256': 'c' * 64, 'chunk_id': 'W1',
-        'source_url': 'https://services.taiwansemi.com/storage/resources/datasheet/1N5817.pdf',
+        'source_url': 'https://www.ti.com/lit/ds/symlink/1N5817.pdf',
         'doc_parts': ['1N5817'], 'row': 'Repetitive peak reverse voltage', 'unit': 'V',
         'cells': [('MAX', '20')], 'file': '1N5817.pdf', 'page': 1,
         'table': 'ABSOLUTE MAXIMUM RATINGS', 'content': '1N5817 ABSOLUTE MAXIMUM RATINGS VRRM Repetitive peak reverse voltage MAX = 20 V',
@@ -229,7 +295,7 @@ def test_grade2_rejects_unverified_or_mismatched_rows(change):
 
 def test_grade2_rejects_conflicting_official_values():
     base = {
-        'evidence_grade': 2, 'source_url': 'https://services.taiwansemi.com/storage/resources/datasheet/SS14.pdf',
+        'evidence_grade': 2, 'source_url': 'https://www.ti.com/lit/ds/symlink/SS14.pdf',
         'doc_parts': ['SS14'], 'row': 'VRRM', 'unit': 'V', 'file': 'SS14.pdf', 'page': 1,
         'table': 'Maximum ratings', 'content': 'SS14 VRRM', 'conditions': '',
     }
@@ -249,7 +315,7 @@ def test_grade2_passes_maker_to_search_and_accepts_spaced_vrrm():
     }
     rows = J._grade2_rows(lambda parts, terms: (seen.append(terms) or [doc]), 'IR', {'VRRM'}, 'Infineon')
     assert rows and 'Infineon' in seen[0]
-    assert not J._grade2_rows(lambda *a: pytest.fail('unsupported manufacturer lookup'), 'IR', {'VRRM'}, 'Vishay')
+    assert not J._grade2_rows(lambda *a: pytest.fail('unsupported manufacturer lookup'), 'IR', {'VRRM'}, 'Rohm')
 
 
 def test_ac02_number_not_in_question_is_dropped_and_asked(monkeypatch):

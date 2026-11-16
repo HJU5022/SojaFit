@@ -14,6 +14,7 @@
 """
 import base64
 import contextvars
+import json
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
@@ -25,7 +26,10 @@ from pydantic import BaseModel, Field
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import memory_context, memory_sources
 from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_digest
-from backend.services.exa import OTHER_MANUFACTURER, SearchBudgetExhausted, slot_in_use
+from backend.services.exa import (
+    OTHER_MANUFACTURER, UNSUPPORTED_GRADE2_MANUFACTURER,
+    SearchBudgetExhausted, slot_in_use,
+)
 from backend.graph.nodes import NOT_FOUND, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search, unsupported_numbers
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.multi_agent.revisions import requested_revisions, revision_matches, revisions_for_part
@@ -47,8 +51,8 @@ class DocsAnswer(BaseModel):
 
 
 class PdfAnswer(DocsAnswer):
-    pdf_rows: list[Literal['W1', 'W2', 'W3']] = Field(
-        description='Select only the PDF rows answering this task. The server renders their exact part, values and units.')
+    pdf_rows: list[Literal['W1', 'W2', 'W3', 'W4', 'W5']] = Field(max_length=5,
+        description='Select PDF rows answering this task, including verified rows explaining a requested/actual parameter difference. The server renders exact values and the distinction; never relabel VR as VRRM.')
     answer: str = Field(default='', description='Only sentences supported by internal numeric citations. Leave empty for PDF facts.')
 
 
@@ -224,7 +228,9 @@ def render(question: str, task: Task, docs: list[dict], part: dict) -> str:
     for d in docs:
         if d.get('source_type') == 'external_web':
             blocks.append(f"[{d['chunk_id']}] Manufacturer PDF: {d['source_url']} · PDF p.{d['page']}\n"
-                          f"Table: {d['table']}\nRow: {d.get('row', '')}\nExtracted cells: {d['content']}")
+                          f"Table: {d['table']}\nRow: {d.get('row', '')}\nExtracted cells: {d['content']}"
+                          + (f"\nVerified parameter distinction (select this row to explain it): {row_sentence(d)}"
+                             if d.get('requested_symbol') else ''))
         else:
             blocks.append(f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}")
     if part:
@@ -447,6 +453,15 @@ def assembly_polarity_gap(question: str, task, answer: str) -> bool:
     return bool(ASSEMBLY.search(brief)) and not POLARITY.search(answer or '')
 
 
+def _next_figure_chunk_id(docs: list[dict]) -> str:
+    """Allocate a figure locator without colliding with verified PDF rows."""
+    used = {str(doc.get('chunk_id')) for doc in docs}
+    candidate = 4
+    while f'W{candidate}' in used:
+        candidate += 1
+    return f'W{candidate}'
+
+
 def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, web_search_fallback=None) -> dict:
     """그래프 노드(Send 대상): 할 일 하나를 끝까지 하고 보고서 하나를 메모장 `reports`에 이어 붙인다."""
     task = Task.model_validate(payload['task'])
@@ -494,7 +509,10 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
     # 현재 내부 코퍼스의 제조사는 TSC다. 동명 품번이 있어도 Infineon 질의에 그 값을 쓰지 않는다.
     maker_text = ' '.join((question, task.query))
     infineon = bool(re.search(r'인피니언|\binfineon(?![A-Za-z])', maker_text, re.I))
-    other_maker = bool(OTHER_MANUFACTURER.search(question))
+    # Vishay is a supported grade-2 source; keep the negative guard for all
+    # other explicitly named manufacturers so they cannot fall through to a
+    # different manufacturer's document.
+    other_maker = bool(UNSUPPORTED_GRADE2_MANUFACTURER.search(question))
     foreign_rating = web_search is not None and task.kind != 'role' and (infineon or OTHER_MANUFACTURER.search(maker_text))
     carry, first = [], None  # 일부만 답한 근거와 그 답(다시 찾을 때 근거를 함께 보이고, 못 늘리면 그 답을 쓴다)
     search_k = rating_search_k(current_question, task)
@@ -605,8 +623,16 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             and task.kind != 'role' and needs_web and (not other_maker or web_search_fallback is not None)):
         terms = (result.next_query.strip() if result and result.next_query.strip() else query or task.query)
         # Keep a user's manufacturer constraint even if the Supervisor abbreviates the task.
-        for maker, pattern in (('Infineon', r'인피니언|\binfineon(?![A-Za-z])'),
-                               ('TSC', r'대만반도체|타이완\s*세미|대만\s*세미|대만\s*반도체|\btsc\b|taiwan\s*semi')):
+        for maker, pattern in (
+                ('Infineon', r'인피니언|\binfineon(?![A-Za-z])'),
+                ('TSC', r'대만반도체|타이완\s*세미|대만\s*세미|대만\s*반도체|\btsc\b|taiwan\s*semi'),
+                ('Vishay', r'비셰이|비쉐이|\bvishay(?![A-Za-z])'),
+                ('Texas Instruments', r'텍사스\s*인스트루먼트|\btexas\s+instruments\b|(?<![A-Za-z])TI(?![A-Za-z])'),
+                ('onsemi', r'온세미|\bonsemi(?![A-Za-z])'),
+                ('Nexperia', r'넥스페리아|\bnexperia(?![A-Za-z])'),
+                ('STMicroelectronics', r'에스티(?:마이크로일렉트로닉스)?|\bstmicroelectronics(?![A-Za-z])|(?<![A-Za-z])ST(?![A-Za-z])'),
+                ('Analog Devices', r'아날로그\s*디바이시스|\banalog\s+devices\b|(?<![A-Za-z])ADI(?![A-Za-z])'),
+        ):
             if re.search(pattern, question, re.I) and maker.casefold() not in terms.casefold():
                 terms += ' ' + maker
         requested = {p.upper() for p in web_parts}
@@ -669,7 +695,28 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                               + memory_context(payload.get('approved_memories') or []),
                               PdfAnswer if cited_internal else PdfOnlyAnswer)
             available = {doc['chunk_id'] for doc in external}
-            selected = [f'[{cid}]' for cid in dict.fromkeys(web_result.pdf_rows) if cid in available]
+            selected_ids = list(dict.fromkeys(cid for cid in web_result.pdf_rows if cid in available))
+            distinctions = [doc['chunk_id'] for doc in external
+                            if doc.get('requested_symbol') == 'VRRM'
+                            and re.sub(r'[^A-Z]', '', str(doc.get('symbol', '')).upper()) == 'VR'
+                            and doc.get('row') == 'Diode reverse voltage']
+            if distinctions and re.search(r'(?<![A-Za-z0-9])VRRM(?![A-Za-z0-9])', current_question, re.I):
+                # The absence of VRRM does not erase the verified explanation
+                # of the actual VR row, even if the model selects no PDF rows.
+                selected_ids.extend(cid for cid in distinctions if cid not in selected_ids)
+                if web_result.grade == 'none':
+                    web_result.grade = 'partial'
+                    web_result.missing = list(dict.fromkeys([*web_result.missing, '요청한 VRRM 값은 원문 행으로 미확인']))
+            selected, seen_rows = [], set()
+            for cid in selected_ids:
+                doc = next(doc for doc in external if doc['chunk_id'] == cid)
+                identity = (doc.get('source_sha256') or doc.get('source_url'), doc.get('page'),
+                            doc.get('row'), json.dumps(doc.get('cells'), sort_keys=True),
+                            tuple(doc.get('doc_parts') or []), doc.get('symbol'), doc.get('requested_symbol'),
+                            doc.get('table'), doc.get('unit'), doc.get('conditions'))
+                if identity not in seen_rows:
+                    selected.append(f'[{cid}]')
+                    seen_rows.add(identity)
             selected_answer = '\n'.join(filter(None, [web_result.answer, *selected]))
             canonical = check_pdf_lines(selected_answer, combined, expand=True)
             if canonical is None:
@@ -703,7 +750,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                                               figure_user, RecoveryFigure, image=image)
                         calls += 1
                         figure_doc = recovery_figure_doc(
-                            figure_parent, figure_reading.model_dump(), 'W4')
+                            figure_parent, figure_reading.model_dump(), _next_figure_chunk_id(external))
                         if figure_doc is not None:
                             break
                         figure_user += ('\nThe previous reading did not match the independently extracted table conditions. '
