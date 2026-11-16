@@ -197,21 +197,24 @@ export function ApprovedCases() {
             승인을 취소하고 사례를 삭제합니다. 기존 견적은 이력으로 남고, 같은 검토에서 후보를 다시
             승인할 수 있습니다.
           </p>
-          <button
-            className="primary"
-            onClick={async () => {
-              try {
-                await api('/approved-cases/' + remove, 'DELETE');
-                setRemove(null);
-                data.reload();
-              } catch (e) {
-                setError(e as Error);
-                setRemove(null);
-              }
-            }}
-          >
-            사례 삭제
-          </button>
+          <div className="dialog-actions">
+            <button onClick={() => setRemove(null)}>취소</button>
+            <button
+              className="primary"
+              onClick={async () => {
+                try {
+                  await api('/approved-cases/' + remove, 'DELETE');
+                  setRemove(null);
+                  data.reload();
+                } catch (e) {
+                  setError(e as Error);
+                  setRemove(null);
+                }
+              }}
+            >
+              사례 삭제
+            </button>
+          </div>
         </Modal>
       )}
     </div>

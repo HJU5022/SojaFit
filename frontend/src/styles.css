@@ -1680,6 +1680,37 @@ form {
   color: var(--muted);
   font-size: 13px;
 }
+/* 창 본문 리듬(#33): 문단 · 목록 사이 간격을 같게 하고, 목록은 본문 글자선에 맞춰 조금만 들인다 */
+.dialog-body > p,
+.dialog-body > ul,
+.dialog-body > form > p {
+  margin: 0 0 14px;
+}
+.dialog-body > ul {
+  padding-left: 20px;
+}
+.dialog-body > ul > li + li {
+  margin-top: 4px;
+}
+/* 칸 아래 도움말(형식 · 샘플 링크)은 그 칸에 붙이고 다음 칸과는 띄운다 */
+.dialog-body form > small {
+  display: block;
+  margin: -8px 0 16px;
+}
+/* 창 맨 아래 버튼 줄: 주 동작은 오른쪽 끝, 취소는 그 왼쪽. 버튼만 덩그러니 있는 창도 오른쪽으로 보낸다 */
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.dialog-body > button:last-child,
+.dialog-body > form > button:last-child {
+  display: flex;
+  width: fit-content;
+  margin: 22px 0 0 auto;
+}
 .side-dialog {
   height: 100dvh;
   max-height: 100dvh;

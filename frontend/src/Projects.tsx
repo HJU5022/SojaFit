@@ -150,10 +150,15 @@ export function NewProject({
             같은 회로로 새 프로젝트 만들기
           </label>
         )}
-        <button className="primary" disabled={busy || (mode === 'demo' && !demo)}>
-          {busy ? '만드는 중…' : '프로젝트 만들기'}
-          <ArrowRight size={16} />
-        </button>
+        <div className="dialog-actions">
+          <button type="button" onClick={close}>
+            취소
+          </button>
+          <button className="primary" disabled={busy || (mode === 'demo' && !demo)}>
+            {busy ? '만드는 중…' : '프로젝트 만들기'}
+            <ArrowRight size={16} />
+          </button>
+        </div>
       </form>
     </Modal>
   );

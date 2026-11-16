@@ -224,23 +224,28 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
         <Modal title="계정을 삭제할까요?" close={() => setDeleting(false)}>
           <p>내 프로젝트와 모든 기록이 삭제됩니다. 복구할 수 없습니다.</p>
           <ErrorBox error={error} />
-          <button
-            className="primary"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await api('/me', 'DELETE');
-                onLogout();
-              } catch (e) {
-                setError(e as Error);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            모든 기록과 계정 삭제
-          </button>
+          <div className="dialog-actions">
+            <button disabled={busy} onClick={() => setDeleting(false)}>
+              취소
+            </button>
+            <button
+              className="primary"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await api('/me', 'DELETE');
+                  onLogout();
+                } catch (e) {
+                  setError(e as Error);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              모든 기록과 계정 삭제
+            </button>
+          </div>
         </Modal>
       )}
     </div>
