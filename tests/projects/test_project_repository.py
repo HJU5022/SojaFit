@@ -167,6 +167,8 @@ def test_empty_project_imports_versions_and_preserves_old_threads(storage):
     conversations = ConversationRepository()
     empty = repo.create_empty(owner, "빈 회로")
     assert empty.circuit_version == 0 and empty.connections == {"parts": [], "nets": []}
+    # 사이드바가 회로 없는 대화를 따로 모으는 기준(#31): 목록의 has_circuit은 회로 버전이 있을 때만 참이다
+    assert [(p.id, p.has_circuit) for p in repo.list_owned(owner)] == [(empty.id, False)]
     empty_thread = conversations.create_thread(owner, empty.id)
     raw = Path("tests/fixtures/netlists/minimal.net").read_bytes()
     first = normalize_netlist(raw)
@@ -175,6 +177,7 @@ def test_empty_project_imports_versions_and_preserves_old_threads(storage):
                                    source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
     project, thread1 = import_file(first)
     assert project.id == empty.id and project.circuit_version == 1
+    assert [(p.id, p.has_circuit) for p in repo.list_owned(owner)] == [(empty.id, True)]
     run, circuit = conversations.start(owner, thread1, {"question": "D1 질문"})
     conversations.finish(owner, thread1, run, "requires_input")
     second = normalize_netlist(raw.replace(b"D1", b"D9"))

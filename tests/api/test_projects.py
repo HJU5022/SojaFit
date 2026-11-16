@@ -87,6 +87,7 @@ def test_empty_creation_works_outside_demo_mode(client, monkeypatch):
     response = client.post("/api/projects", json={"name": "빈 프로젝트"}, headers={"origin": "http://testserver"})
     assert response.status_code == 201, response.text
     assert response.json()["circuit_version"] == 0 and response.json()["connections"]["parts"] == []
+    assert response.json()["has_circuit"] is False
 
 
 @pytest.mark.parametrize('kind', ['empty', 'demo', 'upload'])
