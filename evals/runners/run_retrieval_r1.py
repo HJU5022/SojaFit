@@ -402,8 +402,9 @@ def cands(args):
            'rerank_tokens_per_call': {a: {'calls': len(v), 'p50': pct(v, 50), 'p95': pct(v, 95), 'max': max(v)} for a, v in toks.items()},
            'changes': changes, 'rows': {a: both[a]['rows'] for a in arms}, 'pool_rows': pool}
     D3.jdump(out, args.out)
-    with open(Path(args.out).parent / f'rerank_new_{time.strftime("%Y-%m-%d")}.jsonl', 'w') as f:  # 바꾼 팔을 API 없이 다시 재게 새 리랭크 기록을 남긴다
-        f.writelines(json.dumps(r) + '\n' for r in new)
+    if new:  # [주의] 캐시만으로 다시 돌리면 new가 비어 있다. 빈 파일로 이전 기록을 덮지 않는다
+        with open(Path(args.out).parent / f'rerank_new_{time.strftime("%Y-%m-%d")}.jsonl', 'w') as f:  # 바꾼 팔을 API 없이 다시 재게 새 리랭크 기록을 남긴다
+            f.writelines(json.dumps(r) + '\n' for r in new)
     for s in ('all', 'dev', 'test'):
         r = compare[s]['page_recall@5']
         print(f"{s}: 회수율@5 {summary['before'][s]['page_recall@5']} → {summary['after'][s]['page_recall@5']} {r['W']}승 {r['L']}패 {r['T']}동 "

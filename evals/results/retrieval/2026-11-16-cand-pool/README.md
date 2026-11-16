@@ -8,7 +8,7 @@
 
 방식마다(dense · BM25) RRF로 합치기 전에 가져오는 후보 수 `n`(서비스 `backend/rag/retrieve.py`의 `N_CAND`)을 50 → 200으로 바꿨다. 나머지는 R1 서비스 설정(#28 S4 = #25 1위 칸)과 같다. 서비스 기본값은 바꾸지 않았다.
 
-고른 이유: 서비스는 하이브리드에서 합친 후보 **전부**를 rerank-3에 넣는다(`top = fused if rerank`). 그래서 리랭크 앞에서 상위 5를 바꿀 수 있는 것은 "어떤 청크가 후보에 드는가"뿐이고, RRF 상수나 dense · BM25 가중치는 리랭크가 순서를 다시 세워 결과를 바꾸지 못한다. 남은 실패 9건 중 7건이 후보 밖(`outside_candidates`)이다(EVAL_REPORT 5절 4행). #24 E8의 "후보 100"은 리랭커 없이 잰 것이라 이번과 다르다.
+고른 이유: 서비스는 하이브리드에서 합친 후보 **전부**를 rerank-3에 넣는다(`top = fused if rerank`). 그래서 리랭크 앞에서 상위 5를 바꿀 수 있는 것은 "어떤 청크가 후보에 드는가"뿐이고, RRF 상수나 dense · BM25 가중치는 리랭크가 순서를 다시 세워 상위 k의 구성과 순서를 바꾸지 못한다(돌려주는 `score`는 RRF 점수라 그 값은 바뀐다). 남은 실패 9건 중 7건이 후보 밖(`outside_candidates`)이다(EVAL_REPORT 5절 4행). #24 E8의 "후보 100"은 리랭커 없이 잰 것이라 이번과 다르다.
 
 ## 설정
 
@@ -31,7 +31,8 @@ EXA_WEB_SEARCH_ENABLED=0 EXA_API_KEY= EVAL_WEB=0 WEB_PREFETCH=0 OPENROUTER_API_K
 ```
 
 - 실행 전 점검: 기준 팔(n=50)을 Voyage 키를 비운 채 캐시만으로 돌려 `r1_steps_2026-11-04.json` S4와 문항별로 같음을 확인했다(새 호출 0).
-- 실행 뒤 점검: 같은 명령을 Voyage 키를 비운 채 다시 돌려 결과(`summary` · `compare` · `pool` · `rows` · `changes`)가 모두 같음을 확인했다(새 호출 0). 바꾼 팔의 리랭크 기록 25건은 `rerank_new_2026-11-16.jsonl`에 있다.
+- 실행 뒤 점검: 같은 명령을 Voyage 키를 비운 채 다른 `--out`으로 다시 돌려 결과(`summary` · `compare` · `pool` · `rows` · `changes`)가 모두 같음을 확인했다(새 호출 0).
+- 다시 잴 때: 이 폴더의 결과를 덮지 않게 `--out`을 다른 경로로 준다. 바꾼 팔의 리랭크 기록 25건은 `rerank_new_2026-11-16.jsonl`에 있고, 실행기는 이 파일을 직접 읽지 않는다. 저장소 밖 캐시가 없는 곳에서는 이 파일의 줄을 `--rerank-cache`로 넘길 파일에 덧붙이면 바꾼 팔 25건은 API 없이 재현된다. 기준 팔의 리랭크 기록은 저장소 밖 `전자_데이터시트/evidence/r1/rerank_cache.jsonl`에만 있다.
 
 ## 결과 (84문항 합침)
 
