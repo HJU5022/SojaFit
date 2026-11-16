@@ -27,17 +27,9 @@ function topic(ref: string) {
     code >= 0xac00 && code <= 0xd7a3 ? (code - 0xac00) % 28 > 0 : '013678LMNR'.includes(last);
   return ref + (final ? '은' : '는');
 }
-/**
- * 판정 대상으로 고를 수 없는 부품의 이유(고를 수 있으면 빈 문자열). LED·표시기(7세그)·다이오드가 아닌 부품이다.
- * 서버(backend/conversations/memory_service.py의 _require_supported_target)와 같은 규칙·같은 문구라
- * 화면이 미리 막은 부품도 서버가 같은 이유로 422를 준다. 서버가 최종 판단이고 이 함수는 안내용이다.
- */
-export function unsupportedPartReason(part: {
-  ref: string;
-  value?: string;
-  footprint?: string;
-  description?: string;
-}): string {
+type PartLike = { ref: string; value?: string; footprint?: string; description?: string };
+/** 판정 대상으로 고를 수 없는 부품의 종류('LED' · '표시기' · '다이오드가 아닌 부품'). 고를 수 있으면 빈 문자열. */
+function unsupportedKind(part: PartLike): string {
   const identifiers = `${part.value ?? ''} ${part.footprint ?? ''}`;
   const description = (part.description ?? '').trim();
   const ledDescription =
@@ -49,12 +41,29 @@ export function unsupportedPartReason(part: {
     ledDescription ||
     /^LED\d/i.test(part.ref)
   )
-    return `${topic(part.ref)} LED라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
-  if (/(^|[^a-z0-9])(?:7|seven)[\s_-]*seg(?:ment)?/i.test(identifiers))
-    return `${topic(part.ref)} 표시기라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
-  if (!/^D\d/i.test(part.ref))
-    return `${topic(part.ref)} 다이오드가 아니라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
+    return 'LED';
+  if (/(^|[^a-z0-9])(?:7|seven)[\s_-]*seg(?:ment)?/i.test(identifiers)) return '표시기';
+  if (!/^D\d/i.test(part.ref)) return '다이오드가 아닌 부품';
   return '';
+}
+/**
+ * 판정 대상으로 고를 수 없는 부품의 이유(고를 수 있으면 빈 문자열). LED·표시기(7세그)·다이오드가 아닌 부품이다.
+ * 서버(backend/conversations/memory_service.py의 _require_supported_target)와 같은 규칙·같은 문구라
+ * 화면이 미리 막은 부품도 서버가 같은 이유로 422를 준다. 서버가 최종 판단이고 이 함수는 안내용이다.
+ */
+export function unsupportedPartReason(part: PartLike): string {
+  const kind = unsupportedKind(part);
+  if (!kind) return '';
+  const why = kind === '다이오드가 아닌 부품' ? '다이오드가 아니라서' : kind + '라서';
+  return `${topic(part.ref)} ${why} 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
+}
+/** 회로 패널에 보일 사실 한 줄(#50). 고르는 칸이 없으므로 고르라는 말은 넣지 않는다. 지원하면 빈 문자열. */
+export function unsupportedPartNote(part: PartLike): string {
+  const kind = unsupportedKind(part);
+  // [왜] 은/는은 괄호 앞 ref를 따른다(D2(LED)는)
+  return kind
+    ? `이 회로의 ${part.ref}(${kind})${topic(part.ref).slice(part.ref.length)} 아직 교체 검토를 지원하지 않아요.`
+    : '';
 }
 /** 회로 없는 대화에서 회로가 필요한 질문의 서버 답(SPEC 8.9). 이 답이면 화면이 넷리스트 첨부 · 기존 회로 고르기 카드를 붙인다. backend/multi_agent/messages.py NEED_NETLIST와 같은 글자다. */
 export const NEEDS_CIRCUIT = '이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요.';

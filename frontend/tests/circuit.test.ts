@@ -6,6 +6,7 @@ import {
   partsOf,
   pinsOf,
   projectNameFromQuestion,
+  unsupportedPartNote,
   unsupportedPartReason,
 } from '../src/circuit.ts';
 test('공개 components 배열에서 D1과 핀 이름을 보존한다', () => {
@@ -56,6 +57,21 @@ test('LED·표시기·다이오드가 아닌 부품은 판정 대상에서 이�
   assert.match(unsupportedPartReason({ ref: 'D1', value: 'LED' }), /^D1은 /);
   assert.match(unsupportedPartReason({ ref: 'Q1A', value: 'X' }), /^Q1A는 /);
   assert.match(unsupportedPartReason({ ref: 'CN', value: 'X' }), /^CN은 /);
+});
+test('회로 패널 한 줄은 사실만 말하고 고르라고 하지 않는다(#50)', () => {
+  assert.equal(
+    unsupportedPartNote({ ref: 'D2', value: 'LED', footprint: 'LED_THT:LED_D5.0mm' }),
+    '이 회로의 D2(LED)는 아직 교체 검토를 지원하지 않아요.',
+  );
+  assert.equal(
+    unsupportedPartNote({ ref: 'D5', value: '7-Segment' }),
+    '이 회로의 D5(표시기)는 아직 교체 검토를 지원하지 않아요.',
+  );
+  assert.equal(
+    unsupportedPartNote({ ref: 'R1', value: '10k' }),
+    '이 회로의 R1(다이오드가 아닌 부품)은 아직 교체 검토를 지원하지 않아요.',
+  );
+  assert.equal(unsupportedPartNote({ ref: 'D1', value: '1N4007RLG' }), '');
 });
 test('정류 다이오드는 LED 용도 설명이 있어도 대상으로 남는다', () => {
   assert.equal(

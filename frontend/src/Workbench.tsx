@@ -28,7 +28,7 @@ import {
   useResource,
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
-import { NEEDS_CIRCUIT, partsOf, unsupportedPartReason } from './circuit';
+import { NEEDS_CIRCUIT, partsOf, unsupportedPartNote, unsupportedPartReason } from './circuit';
 import { addStep, isSendKey, seconds, stepMs, type Step } from './display';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply, TargetChoice } from './Reply';
@@ -100,14 +100,15 @@ export function TargetInfo({
       ) : (
         <p>회로에 판정할 수 있는 다이오드가 없습니다. 넷리스트를 첨부해 주세요.</p>
       )}
-      {/* [왜] LED·표시기는 대체 판정을 지원하지 않는다(서버가 422). 이유를 미리 보인다 */}
-      {diodes
-        .filter((p) => unsupportedPartReason(p))
-        .map((p) => (
-          <p className="muted" key={p.ref}>
-            {unsupportedPartReason(p)}
-          </p>
-        ))}
+      {/* [왜] LED·표시기는 대체 판정을 지원하지 않는다(서버가 422). 대상이 정해지기 전에만 사실 한 줄로 알린다(#50) */}
+      {!target &&
+        diodes
+          .filter((p) => unsupportedPartNote(p))
+          .map((p) => (
+            <p className="muted" key={p.ref}>
+              {unsupportedPartNote(p)}
+            </p>
+          ))}
       <p className="part-status" role={alert ? 'alert' : undefined}>
         {status}
       </p>
@@ -720,8 +721,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               target={target}
               alert={!!targetReason}
               status={
-                targetReason
-                  ? targetReason
+                // [왜] 패널에는 고르는 칸이 없어 422 문구("골라 주세요") 대신 사실 한 줄을 보인다(#50)
+                targetReason && part
+                  ? unsupportedPartNote(part)
                   : waiting
                     ? choosing
                       ? '바꿀 부품을 고르면 이어서 검토합니다.'
