@@ -1,0 +1,7 @@
+﻿metric,included,split,split_minus_included,difference_pct
+api_bytes,1793629178,1044507446,-749121732,-41.77
+up_health_s,109.3665,110.5804,1.2139,1.11
+up_png_s,110.5267,111.9782,1.4515,1.31
+health_png_s,1.1602,1.3978,0.2376,20.48
+up_built_s,99.271,100.63,1.359,1.37
+built_health_s,10.0955,9.9504,-0.1451,-1.44

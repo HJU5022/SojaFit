@@ -47,6 +47,7 @@
 | `results/parser/` | `parser_accuracy_2026-11-01.json`, `parser_truth_2026-11-01.json`, `parser_speed_2026-11-01.jsonl` | 저장소 밖 | 도구별 행 적중, 정답표, 속도 |
 | `results/parser/` | `parse_gpu_log_2026-11-01.jsonl`, `parse_gpu_recall_2026-11-01.json`, `parse_gpu_witness_unmatched_2026-11-01.json` | 저장소 밖 | 1,360건 GPU 파싱 로그, 표 숫자 재현율, 대조 못 한 값 목록 |
 | `results/bit_search/` | `bit_search_2026-11-03.json`, `bit_search_final_2026-11-03.json`, `bit_search_warm_2026-11-03.json` | `bit_search/bit_search_exp.py` | 후보 수 N별 시간·recall@50, v1 관련 19문항 최종 점수 확인, 비트 검색만 이어서 잰 시간. 해석: [bit-search-measurement-2026-11-03.md](../docs/research/bit-search-measurement-2026-11-03.md) |
+| `results/cold_start/` | `main_kicad_ab_{rounds,summary}_2026-11-14.csv`, `g2_profile_stages_2026-11-14.csv`, `g2_install_{stages,summary}_2026-11-14.csv`, `g2_{before,after}_timing_2026-11-13.json` | 저장소 밖 OSC 로컬 측정 스크립트 | 원본 바이트를 보존한 G2·KiCad 비교 7개 파일. 해석: [Docker 콜드스타트 실측](../docs/research/docker-cold-start-measurements.md) |
 | `results/smoke/` | `smoke_*.json` 15개, `injection_http_*.json` 7개 | `smoke/http_smoke.py`, `smoke/injection_http.py` | HTTP 점검 단계 기록. 아래 표 |
 
 ### `results/smoke/` 파일
