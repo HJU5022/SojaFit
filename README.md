@@ -344,9 +344,9 @@ uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json
 
 ```
 SojaFit/
-├── frontend/       React · Vite 화면(랜딩 · 로그인 · 가입 · 작업대 · 승인 사례 · 내 설정 · 사용자 관리) → frontend/FRONTEND.md
+├── frontend/       React · Vite 화면(랜딩 · 로그인 · 가입 · 새 대화 · 작업대 · 승인 사례와 보고서 · 데이터시트 서재 · 내 설정 · 사용자 관리) → frontend/FRONTEND.md
 ├── backend/        서비스 코드 → backend/BACKEND.md
-│   ├── api/          인증 · 프로젝트 · 대화와 실행(SSE) · 승인 · 견적 · 가격 · 외부 회로도 · 내 설정 · 관리자 HTTP 라우터
+│   ├── api/          인증 · 프로젝트 · 대화와 실행(SSE) · 승인 · 견적 · 가격 · 데이터시트 서재 · 외부 회로도 · 내 설정 · 관리자 HTTP 라우터
 │   ├── projects/     사용자 프로젝트와 정규화 회로 저장, 넷리스트 정규화
 │   ├── conversations/  대화 · 실행 저장, 사용자 분석 서비스(체크포인트 · Store 기억 · 하루 상한)
 │   ├── graph/        D4 단일 그래프: 상태 · 노드 · 조립
