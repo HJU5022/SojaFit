@@ -205,6 +205,18 @@ def fetch_variant_notes(parts: list[str], retriever) -> list[dict]:
         return []  # 주석은 보탬이라 도구가 실패해도 본 검색 결과로 답한다
 
 
+def revisions_all_absent(revision_text: str, facts: dict | None) -> bool:
+    """요청한 개정 코드가 전부 코퍼스에 없다고 사실 확인이 알려 줬는가(하나라도 모르면 False).
+
+    [왜] 개정판을 요구하면 revision_matches는 파일 이름 끝 개정 코드가 요청한 코드일 때만 문서를 통과시킨다. 그 코드가 코퍼스 파일 이름에
+         하나도 없으면 품번 필터를 푼 전체 코퍼스 재검색도 keep_docs에서 전부 떨어져, 2.3~5.4초만 쓰고 0건이 된다(v3-45~50)
+    [주의] 코퍼스 목록(corpus_known)은 `_글자+숫자 4자리.pdf` 꼴만 안다. 그 꼴이 아닌 요청(REV_B · YEAR_2026 · F16)은 '없음'을 믿을 수 없어 False다
+    """
+    requested = requested_revisions(revision_text)
+    known = (facts or {}).get('revisions') or {}
+    return bool(requested) and all(re.fullmatch(r'[A-Z]\d{4}', r) and known.get(r) is False for r in requested)
+
+
 def variant_notes(parts: list[str], docs: list[dict], retriever, found: list[dict] | None = None) -> list[dict]:
     """물은 품번이 양방향 · H 품번이면 그 문서의 품번 규칙 주석('특성은 양방향 모두 적용' · 'IR 한도 2배' · 'H는 AEC-Q101')을 더 찾는다.
 
@@ -498,6 +510,13 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
     foreign_rating = web_search is not None and task.kind != 'role' and (infineon or OTHER_MANUFACTURER.search(maker_text))
     carry, first = [], None  # 일부만 답한 근거와 그 답(다시 찾을 때 근거를 함께 보이고, 못 늘리면 그 답을 쓴다)
     search_k = rating_search_k(current_question, task)
+    notes_cache = {}  # [왜] 필터를 푼 재검색 · partial 재검색이 같은 품번의 주석 검색을 되풀이했다(v3-49: 검색 4번 중 2번). 한 호출 안에서 한 번만 한다
+
+    def cached_notes(parts: list[str]) -> list[dict]:
+        key = tuple(parts)
+        if key not in notes_cache:
+            notes_cache[key] = fetch_variant_notes(list(parts), retriever)
+        return notes_cache[key]
 
     def report(status: str, summary: str, **kw) -> dict:
         # Only source locators cross into the persisted graph state.
@@ -539,7 +558,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             if filter_parts and not relax and not foreign_rating and any(VARIANT.search(p.strip()) for p in filter_parts):
                 # [왜] 품번이 이미 정해졌으면 주석 검색은 본 검색 결과를 기다릴 필요가 없다. 본 검색과 동시에 출발시킨다
                 notes_pool = ThreadPoolExecutor(max_workers=1)
-                early_notes = notes_pool.submit(contextvars.copy_context().run, fetch_variant_notes, list(filter_parts), retriever)
+                early_notes = notes_pool.submit(contextvars.copy_context().run, cached_notes, list(filter_parts))
                 notes_pool.shutdown(wait=False)
             out = search({'question': question, 'target_part': part, 'query': search_query}, find)
             if out['retrieval_error']:
@@ -557,7 +576,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 docs = keep_docs(out['docs'], used_parts, revision_text, exact_parts)
                 # Variant notes are a second retrieval and must obey the same
                 # exact part/revision boundary as the primary result.
-                docs = keep_docs(docs + variant_notes(used_parts, docs, retriever, found=early_notes.result() if early_notes else None),
+                docs = keep_docs(docs + variant_notes(used_parts, docs, retriever, found=early_notes.result() if early_notes else cached_notes(used_parts)),
                                  used_parts, revision_text, exact_parts)
         if carry:
             seen = {d['chunk_id'] for d in carry}
@@ -567,6 +586,8 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 break
         if not docs and not (part and task.kind == 'role'):
             if query and not relax:
+                if revisions_all_absent(revision_text, payload.get('facts')):
+                    break  # [왜] 요청한 개정판이 코퍼스에 없다고 확인됐다. 필터를 푼 재검색도 0건이라 건너뛴다(끝난 뒤 흐름은 0건 재검색과 같다)
                 relax = True  # [왜] 품번 필터 안에서 0건이면 필터를 풀어 한 번 더 찾는다(예전 검색 에이전트의 no_result 재시도와 같음)
                 continue
             break  # 보여 줄 근거가 하나도 없으면 LLM을 부르지 않는다
@@ -668,6 +689,29 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 prior, prior_docs = None, []
             cited_internal = citations(prior.answer) if prior else set()
             combined = external + [d for d in prior_docs if str(d['chunk_id']) in cited_internal]
+            # [왜] 그림 읽기 첫 시도는 PdfAnswer 결과와 무관하다(figure_parent는 external에서 이미 정해졌다). PdfAnswer와 동시에 출발시킨다.
+            #      PdfAnswer가 검증 실패로 일찍 끝나면 그림 결과는 버린다
+            # [주의] 컨텍스트 복사는 node_chat 밖(여기)에서 한다. node_chat은 중첩 호출을 막는 contextvar를 쓴다
+            figure_parent = next((doc for doc in external
+                                  if isinstance(doc.get('figure'), dict)
+                                  and doc['figure'].get('image_base64')), None)
+            image, first_figure = None, None
+            if figure_parent is not None:
+                try:
+                    image = base64.b64decode(figure_parent['figure']['image_base64'], validate=True)
+                except (TypeError, ValueError):
+                    image = None
+            if image:
+                figure_user = (
+                    FIGURE_PROMPT + '\nOfficial figure evidence for the same PDF row follows. '
+                    'Read the current levels aligned with the arrow markers, not numeric time-axis coordinates. '
+                    'Return the signed current values and marker booleans required by the schema. '
+                    'Do not infer an unlabelled value.\n\n' + row_sentence(figure_parent)
+                )
+                figure_pool = ThreadPoolExecutor(max_workers=1)
+                first_figure = figure_pool.submit(contextvars.copy_context().run, chat, 'docs_answer', PROMPT,
+                                                  figure_user, RecoveryFigure, image=image)
+                figure_pool.shutdown(wait=False)
             web_result = chat('docs_answer', PROMPT, render(question, task, combined, part)
                               + memory_context(payload.get('approved_memories') or []),
                               PdfAnswer if cited_internal else PdfOnlyAnswer)
@@ -682,28 +726,13 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             # is read once with the image bytes and accepted only after the
             # table IF/IR/Irr conditions are cross-checked in code.  The image
             # itself is removed by report() before checkpoint persistence.
-            figure_parent = next((doc for doc in external
-                                  if isinstance(doc.get('figure'), dict)
-                                  and doc['figure'].get('image_base64')), None)
             figure_doc = None
             if figure_parent is not None:
-                figure = figure_parent['figure']
-                try:
-                    image = base64.b64decode(figure['image_base64'], validate=True)
-                except (TypeError, ValueError):
-                    image = None
-                figure_doc = None
                 if image:
-                    figure_user = (
-                        FIGURE_PROMPT + '\nOfficial figure evidence for the same PDF row follows. '
-                        'Read the current levels aligned with the arrow markers, not numeric time-axis coordinates. '
-                        'Return the signed current values and marker booleans required by the schema. '
-                        'Do not infer an unlabelled value.\n\n' + row_sentence(figure_parent)
-                    )
                     from backend.judge.pdf_claims import recovery_figure_doc
                     for attempt in range(2):
-                        figure_reading = chat('docs_answer', PROMPT,
-                                              figure_user, RecoveryFigure, image=image)
+                        figure_reading = first_figure.result() if attempt == 0 else chat(
+                            'docs_answer', PROMPT, figure_user, RecoveryFigure, image=image)
                         calls += 1
                         figure_doc = recovery_figure_doc(
                             figure_parent, figure_reading.model_dump(), 'W4')
