@@ -1895,6 +1895,53 @@ form {
 .case-list button {
   font-size: 13px;
 }
+.case-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.case-quotes {
+  padding-left: 20px;
+  font-size: 13px;
+}
+.admin-kicker {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9f352f;
+  margin-bottom: 6px;
+}
+.admin-page .case-list .danger {
+  color: #9f352f;
+}
+.admin-audit {
+  margin-top: 40px;
+}
+.admin-audit h2 {
+  font-size: 19px;
+  margin-bottom: 8px;
+}
+.audit-scroll {
+  overflow-x: auto;
+  margin-top: 14px;
+}
+.audit-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.audit-table th,
+.audit-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 9px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.audit-table th {
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
 .nav-scrim {
   display: none;
 }

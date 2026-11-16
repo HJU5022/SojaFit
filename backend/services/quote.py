@@ -5,6 +5,8 @@ from copy import deepcopy
 from psycopg.types.json import Jsonb
 
 from backend import auth
+from backend.conversations.dto import result_dto
+from backend.conversations.repository import thread_title
 
 FORBIDDEN = {'price', 'price_breaks', 'stock', 'availability', 'product_url', 'fetched_at'}
 APPROVABLE = {'IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'}
@@ -136,6 +138,37 @@ class QuoteService:
             rows = conn.execute("""SELECT c.id,c.approval_id,COALESCE(a.candidate_part,a.snapshot #>> '{candidate,part}'),COALESCE(a.verdict,a.snapshot #>> '{candidate,verdict}'),c.created_at FROM approved_cases c
                 JOIN approvals a ON a.id=c.approval_id WHERE c.user_id=%s ORDER BY c.id DESC""", (user_id,)).fetchall()
             return [{'id': r[0], 'approval_id': r[1], 'candidate_part': r[2], 'verdict': r[3], 'created_at': r[4]} for r in rows]
+
+    def get_case(self, user_id: int, case_id: int):
+        """승인 사례 하나의 기록: 원래 대화 · 질문 · 대상 부품, 승인 때 저장한 후보 판정 · 근거, 그 승인의 견적. 다시 판정하지 않는다."""
+        with auth.connection() as conn:
+            row = conn.execute("""SELECT c.id,c.approval_id,COALESCE(a.candidate_part,a.snapshot #>> '{candidate,part}'),COALESCE(a.verdict,a.snapshot #>> '{candidate,verdict}'),
+                    c.created_at,a.snapshot,a.message_id,t.id,t.title,p.id,p.name,cv.connections,
+                    (SELECT q.content FROM messages q WHERE q.run_id=m.run_id AND q.role='user' ORDER BY q.id LIMIT 1),
+                    (SELECT q.content FROM messages q WHERE q.thread_id=t.id AND q.role='user' ORDER BY q.id LIMIT 1),
+                    to_regclass('sojafit_agent.threads') IS NOT NULL
+                FROM approved_cases c JOIN approvals a ON a.id=c.approval_id AND a.user_id=c.user_id
+                JOIN messages m ON m.id=a.message_id JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id
+                LEFT JOIN project_circuit_versions cv ON cv.project_id=t.project_id AND cv.version=t.circuit_version
+                WHERE c.id=%(c)s AND c.user_id=%(u)s AND p.user_id=%(u)s""", {'c': case_id, 'u': user_id}).fetchone()
+            if row is None:
+                raise QuoteNotFound
+            quotes = conn.execute('SELECT id,approval_id,part_number,quantity,created_at FROM quotes WHERE approval_id=%s AND user_id=%s ORDER BY id',
+                                  (row[1], user_id)).fetchall()
+            # 바꿀 부품(D1 등)은 분석 thread에만 있다. 분석 스키마가 없는 DB면 비운다(대화 상세 thread_detail과 같은 확인)
+            target = row[14] and conn.execute('SELECT target FROM sojafit_agent.threads WHERE id=%s AND user_id=%s', (row[7], user_id)).fetchone()
+        snapshot, target = row[5] or {}, target[0] if target else None
+        # [왜] 저장된 후보 · 근거를 화면 결과와 같은 허용 목록(result_dto)에 통과시킨다. 승인 스냅샷에만 있는 칸(part_number 등)은 나가지 않는다
+        public = result_dto({'answer': snapshot.get('answer', ''), 'evidence': snapshot.get('evidence') or [],
+                             'judgement': {'kind': 'judge', 'results': [snapshot['candidate']] if isinstance(snapshot.get('candidate'), dict) else []}},
+                            request_id='', status='completed')
+        parts = (row[11] or {}).get('components', (row[11] or {}).get('parts', []))
+        part = next((p for p in parts if isinstance(p, dict) and p.get('ref') == target), {}) if target else {}
+        return {'id': row[0], 'approval_id': row[1], 'candidate_part': row[2], 'verdict': row[3], 'created_at': row[4],
+                'message_id': row[6], 'thread_id': str(row[7]), 'thread_title': row[8] or thread_title(row[13]), 'project_id': row[9], 'project_name': row[10],
+                'question': row[12] or '', 'target_ref': target, 'target_value': part.get('value'),
+                'answer': public.answer, 'candidate': (public.judgement.get('results') or [None])[0], 'evidence': public.evidence,
+                'quotes': [{'id': q[0], 'approval_id': q[1], 'part_number': q[2], 'quantity': q[3], 'created_at': q[4]} for q in quotes]}
 
     def delete_case(self, user_id: int, case_id: int):
         with auth.connection() as conn:

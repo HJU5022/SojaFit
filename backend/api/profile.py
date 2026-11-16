@@ -105,10 +105,16 @@ def delete_me(request: Request, response: Response, user: tuple[int, str] = Depe
     auth.check_origin(request)
     if user[1] != "user":
         raise HTTPException(status_code=409, detail="관리자 계정은 이 기능으로 삭제할 수 없습니다.")
-    try:
-        with conversation_service(request).account_deletion(user[0]) as deleted:
-            deleted.update(auth.delete_account(user[0]))  # 계정은 마지막: 앞에서 실패하면 계정이 남아 다시 요청할 수 있다
-    except (psycopg.Error, PoolTimeout, OSError):
-        raise HTTPException(status_code=503, detail="계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.") from None
+    deleted = erase_account(request, user[0])
     response.delete_cookie(auth.COOKIE, path="/")
     return {"deleted": deleted}
+
+
+def erase_account(request: Request, user_id: int, actor_id: int | None = None) -> dict:
+    """일반 계정 하나의 분석 기록 → Store → 계정을 지우고 지운 건수를 돌려준다. 탈퇴와 관리자의 탈퇴 처리(`backend/api/admin.py`)가 같이 쓴다."""
+    try:
+        with conversation_service(request).account_deletion(user_id) as deleted:
+            deleted.update(auth.delete_account(user_id, actor_id))  # 계정은 마지막: 앞에서 실패하면 계정이 남아 다시 요청할 수 있다
+    except (psycopg.Error, PoolTimeout, OSError):
+        raise HTTPException(status_code=503, detail="계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.") from None
+    return deleted
