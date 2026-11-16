@@ -29,7 +29,7 @@ test('진행 중인 검색은 다시 그려져도 이어받는다', async () => 
   assert.equal(run.calls, 1);
 });
 
-test('못 찾음은 시간이 지나도 다시 보내지 않고, 다른 오류는 바로 다시 보낸다', async () => {
+test('실패(못 찾음·다른 오류)는 자동으로 다시 보내지 않고 다시 시도(fresh)할 때만 보낸다', async () => {
   const missing = counter(() => Promise.reject({ code: 'SCHEMATIC_NOT_FOUND' }));
   await assert.rejects(searchOnce('3:1', missing, false, 0));
   await assert.rejects(searchOnce('3:1', missing, false, REUSE_MS * 10));
@@ -37,7 +37,24 @@ test('못 찾음은 시간이 지나도 다시 보내지 않고, 다른 오류�
   const down = counter(() => Promise.reject({ code: '' }));
   await assert.rejects(searchOnce('4:1', down, false, 0));
   await assert.rejects(searchOnce('4:1', down, false, 1));
+  await assert.rejects(searchOnce('4:1', down, false, REUSE_MS * 10));
+  assert.equal(down.calls, 1);
+  await assert.rejects(searchOnce('4:1', down, true, REUSE_MS * 10));
   assert.equal(down.calls, 2);
+});
+
+test('직접 찾기가 실패해도 앞서 찾은 결과는 다음에 열 때 그대로 쓴다', async () => {
+  for (const [key, error] of [
+    ['6:1', { code: 'SCHEMATIC_NOT_FOUND' }],
+    ['7:1', { code: '' }],
+  ] as const) {
+    const found = counter(() => Promise.resolve('도면'));
+    await searchOnce(key, found, false, 0);
+    const manual = counter(() => Promise.reject(error));
+    await assert.rejects(searchOnce(key, manual, true, 1));
+    assert.equal(await searchOnce(key, found, false, 2), '도면');
+    assert.equal(found.calls, 1);
+  }
 });
 
 test('사용자가 직접 찾으면(fresh) 남은 결과가 있어도 새로 찾고 그 결과를 남긴다', async () => {

@@ -7,9 +7,13 @@
 
 // [주의] 서버가 서명한 이미지 주소는 15분 뒤 만료되므로 찾은 결과는 14분까지만 쓴다.
 export const REUSE_MS = 14 * 60 * 1000;
-const searches = new Map<string, { at: number; p: Promise<unknown>; missing: boolean }>();
+type Entry = { at: number; p: Promise<unknown>; ok: boolean; failed: boolean };
+const searches = new Map<string, Entry>();
 
-/** 같은 키의 검색이 진행 중이거나 쓸 수 있으면 그 약속을, 아니면(또는 fresh면) 새로 부른 약속을 돌려준다. */
+/**
+ * 같은 키의 검색이 진행 중이거나 쓸 수 있으면 그 약속을, 아니면 새로 부른 약속을 돌려준다.
+ * fresh는 사용자가 직접 누른 검색(다시 시도·다른 이름으로 찾기·다른 후보)이다. 자동으로 여는 쪽은 fresh를 넘기지 않는다.
+ */
 export function searchOnce<T>(
   key: string,
   run: () => Promise<T>,
@@ -17,14 +21,19 @@ export function searchOnce<T>(
   now = Date.now(),
 ): Promise<T> {
   const hit = searches.get(key);
-  if (!fresh && hit && (hit.missing || now - hit.at < REUSE_MS)) return hit.p as Promise<T>;
-  const entry = { at: now, p: run(), missing: false };
+  // [왜] 실패(못 찾음·409·502·503·네트워크)는 사용자가 다시 찾을 때까지 남겨 둔다. 지우면 대화를 옮길 때마다 유료 검색이 다시 나간다.
+  if (!fresh && hit && (hit.failed || now - hit.at < REUSE_MS)) return hit.p as Promise<T>;
+  const entry: Entry = { at: now, p: run(), ok: false, failed: false };
   searches.set(key, entry);
-  entry.p.catch((e) => {
-    // [왜] 못 찾음(404 SCHEMATIC_NOT_FOUND)은 이미지 주소가 없어 탭이 열려 있는 동안 쓴다.
-    // 다른 오류(409·502·503·네트워크)는 바로 다시 시도할 수 있게 버린다.
-    if ((e as { code?: string } | null)?.code === 'SCHEMATIC_NOT_FOUND') entry.missing = true;
-    else if (searches.get(key) === entry) searches.delete(key);
-  });
-  return entry.p;
+  entry.p.then(
+    () => {
+      entry.ok = true;
+    },
+    () => {
+      entry.failed = true;
+      // [왜] 직접 찾은 이름·후보가 실패해도 앞서 찾은 도면은 지우지 않고 다음에 열 때 그대로 보인다.
+      if (hit?.ok && searches.get(key) === entry) searches.set(key, hit);
+    },
+  );
+  return entry.p as Promise<T>;
 }
