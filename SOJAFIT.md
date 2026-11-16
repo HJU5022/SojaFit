@@ -717,7 +717,7 @@ SojaFit (proj3-b)
 │       ├── smoke/          <- HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py), 인젝션 HTTP 시험 판정(injection_http.py)
 │       │   └── schematic_search_observations_2026-11-15.json <- 로컬 8011 회로도 후보·출처·이미지 로드 관찰 기록 복사본
 │       ├── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
-│       └── cold_start/     <- 로컬 Docker G2·KiCad 포함/분리 기동 시간 원시 CSV·JSON(회차별 배열 포함, 11-13~14)
+│       └── docker_performance/ <- 로컬 Docker 빌드·기동·첫 회로도 렌더링 실측 CSV·JSON(11-13~14)
 │
 └── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
     ├── DOCS.md             <- 폴더 설명
