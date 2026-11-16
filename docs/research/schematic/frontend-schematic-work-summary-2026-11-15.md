@@ -1,6 +1,7 @@
 # SojaFit 프런트 오류 수정·회로도 검색 개선 공유 보고서
 
 작성일: 2026-11-15 KST<br>
+상태: 이력(11-15 작업 보고). 본문의 화면 파일(`frontend/src/pages/` · `components/` · `hooks/` · `styles/`)은 11-16 새 화면 교체로 없어졌다. 지금 화면 구조는 [frontend/src/SRC.md](../../../frontend/src/SRC.md)<br>
 대상: OSC 브랜치, 로컬 서비스 `http://localhost:8011`<br>
 코드 기준: 마지막 검증 당시 HEAD `45740ce`와 미커밋 변경 사항<br>
 실제 검색 검증 중단 시점: 2026-11-15 04:17:11 KST
