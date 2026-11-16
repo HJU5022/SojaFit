@@ -119,7 +119,7 @@ def remember_provider_limit(error):
 class ExternalSchematicNotFound(ExternalSchematicError):
     def __init__(self, *args, reason: str = "not_found"):
         super().__init__(*args)
-        if reason not in {"not_found", "no_candidates", "validation_failed", 'circuit_mismatch'}:
+        if reason not in {"not_found", "no_candidates", "validation_failed", 'circuit_mismatch', 'ambiguous_manufacturer'}:
             raise ValueError("유효하지 않은 회로도 실패 원인입니다.")
         self.reason = reason
 
