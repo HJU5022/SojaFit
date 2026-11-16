@@ -68,6 +68,8 @@ export type Project = {
   source_kind: string;
   demo_id: string | null;
   circuit_version: number;
+  /** 회로가 있는지(circuit_version > 0). 사이드바가 회로 없는 대화를 프로젝트 나무 밖에 모은다(#31) */
+  has_circuit: boolean;
   connections: { components?: Component[]; nets?: any[]; [key: string]: any };
 };
 type Component = {

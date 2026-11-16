@@ -185,8 +185,8 @@ export function ApprovedCases() {
       ) : (
         <Empty title="아직 승인한 후보가 없습니다.">
           <p>검토 결과의 후보 상세에서 근거를 확인하고 승인하세요.</p>
-          <a href="/projects" className="button primary">
-            프로젝트로
+          <a href="/app" className="button primary">
+            새 대화로
           </a>
         </Empty>
       )}
@@ -197,21 +197,24 @@ export function ApprovedCases() {
             승인을 취소하고 사례를 삭제합니다. 기존 견적은 이력으로 남고, 같은 검토에서 후보를 다시
             승인할 수 있습니다.
           </p>
-          <button
-            className="primary"
-            onClick={async () => {
-              try {
-                await api('/approved-cases/' + remove, 'DELETE');
-                setRemove(null);
-                data.reload();
-              } catch (e) {
-                setError(e as Error);
-                setRemove(null);
-              }
-            }}
-          >
-            사례 삭제
-          </button>
+          <div className="dialog-actions">
+            <button onClick={() => setRemove(null)}>취소</button>
+            <button
+              className="primary"
+              onClick={async () => {
+                try {
+                  await api('/approved-cases/' + remove, 'DELETE');
+                  setRemove(null);
+                  data.reload();
+                } catch (e) {
+                  setError(e as Error);
+                  setRemove(null);
+                }
+              }}
+            >
+              사례 삭제
+            </button>
+          </div>
         </Modal>
       )}
     </div>

@@ -3,9 +3,14 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, ChevronRight, FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError } from './api';
 import { ErrorBox, Loading, Modal, navigate, RowMenu, useResource } from './ui';
-import { refreshNavigation } from './Projects';
+import { NewProject, refreshNavigation } from './Projects';
 import type { Demo, Project, ThreadListItem } from './types';
-/** 사이드바 "대화"(모든 프로젝트, 최근 활동 순)와 "프로젝트"(펼치면 그 대화). 대화 목록은 한 번 받아 프로젝트별로 나눈다. */
+/** 펼친 프로젝트 번호를 이 브라우저에 남기는 키(사이드바 나무, #31). */
+const EXPANDED = 'sojafit.sidebar.expanded';
+/**
+ * 사이드바 나무(Claude Code처럼, #31 #36): "프로젝트" 아래 프로젝트마다 펼치면 그 대화가 들여 달리고 "이 회로로 새 대화"가 있다.
+ * 회로가 없는 프로젝트(has_circuit=false)의 대화와 대화도 없는 빈 프로젝트는 나무 밖 "대화"에 한 줄씩 둔다. 대화는 어느 쪽이든 한 번만 나온다.
+ */
 export function ConversationNav({
   projectId,
   threadId,
@@ -15,12 +20,23 @@ export function ConversationNav({
 }) {
   const threads = useResource<ThreadListItem[]>('/threads'),
     projects = useResource<Project[]>('/projects');
-  const [renaming, setRenaming] = useState<string | null>(null),
-    [remove, setRemove] = useState<ThreadListItem | null>(null),
-    [expanded, setExpanded] = useState<number[]>(projectId ? [Number(projectId)] : []),
+  const [renaming, setRenaming] = useState<string | null>(null), // 't<대화 id>' · 'p<프로젝트 id>'
+    [remove, setRemove] = useState<
+      { thread: ThreadListItem; project?: never } | { project: Project; thread?: never } | null
+    >(null),
+    [expanded, setExpanded] = useState<number[]>(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(EXPANDED) ?? '[]');
+        return Array.isArray(saved) ? saved.filter(Number.isInteger) : [];
+      } catch {
+        return [];
+      }
+    }),
+    [create, setCreate] = useState(false),
+    [busy, setBusy] = useState(false),
     [error, setError] = useState<Error | null>(null);
   useEffect(() => {
-    // [왜] 작업대가 실행·첨부·삭제 뒤 refreshNavigation()으로 알린다. 새 질문이 대화 이름·순서를 바꾼다
+    // [왜] 작업대가 실행·첨부·삭제 뒤 refreshNavigation()으로 알린다. 새 질문이 대화 이름·순서를, 첨부가 회로 유무를 바꾼다
     const fn = () => {
       threads.reload();
       projects.reload();
@@ -29,149 +45,241 @@ export function ConversationNav({
     return () => window.removeEventListener('projects-changed', fn);
   }, []);
   useEffect(() => {
-    // [왜] 작업대는 첫 질문의 분석이 끝나야 알린다. 새 대화로 옮겨 오면 분석 전에도 목록에 보이게 한 번 다시 읽는다
+    // [왜] 작업대는 첫 질문의 분석이 끝나야 알린다. 새 대화·새 프로젝트로 옮겨 오면 분석 전에도 목록에 보이게 한 번 다시 읽는다
     if (threadId && threads.data && !threads.data.some((t) => t.id === threadId)) threads.reload();
-  }, [threadId]);
-  async function rename(t: ThreadListItem, title: string) {
-    setRenaming(null);
-    if (!title.trim() || title.trim() === t.title) return;
+    if (projectId && projects.data && !projects.data.some((p) => String(p.id) === projectId))
+      projects.reload();
+    // [왜] 사이드바(Shell)는 화면을 옮겨도 다시 만들어지지 않는다. 처음 값이 아니라 주소가 바뀔 때마다 열린 대화의 프로젝트를 펼친다
+    if (projectId)
+      setExpanded((x) => (x.includes(Number(projectId)) ? x : [...x, Number(projectId)]));
+  }, [threadId, projectId]);
+  useEffect(() => {
     try {
-      const saved = await api<ThreadListItem>('/threads/' + t.id, 'PATCH', { title });
-      threads.reload();
-      // [왜] 열린 작업대 제목도 새로고침 없이 바뀌게 서버가 정리한 이름을 알린다(Workbench가 받는다)
-      window.dispatchEvent(new CustomEvent('thread-renamed', { detail: saved }));
+      localStorage.setItem(EXPANDED, JSON.stringify(expanded));
+    } catch {
+      // 저장소를 못 써도(사생활 보호 창 등) 이번 화면에서는 펼친 상태가 유지된다
+    }
+  }, [expanded]);
+  async function rename(key: string, value: string, before: string) {
+    setRenaming(null);
+    if (!value.trim() || value.trim() === before) return;
+    try {
+      if (key.startsWith('t')) {
+        const saved = await api<ThreadListItem>('/threads/' + key.slice(1), 'PATCH', {
+          title: value,
+        });
+        threads.reload();
+        // [왜] 열린 작업대 제목도 새로고침 없이 바뀌게 서버가 정리한 이름을 알린다(Workbench가 받는다)
+        window.dispatchEvent(new CustomEvent('thread-renamed', { detail: saved }));
+      } else {
+        const saved = await api<Project>('/projects/' + key.slice(1), 'PATCH', { name: value });
+        refreshNavigation();
+        window.dispatchEvent(new CustomEvent('project-renamed', { detail: saved }));
+      }
     } catch (e) {
       setError(e as Error);
     }
   }
-  const row = (t: ThreadListItem) =>
-    renaming === t.id ? (
-      <form
-        key={t.id}
-        className="thread-row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          // [왜] 저장은 blur 한 곳에서만 한다(Enter와 blur가 두 번 저장하지 않게)
-          (e.currentTarget.elements.namedItem('title') as HTMLInputElement).blur();
+  async function confirmRemove() {
+    if (!remove) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (remove.thread) {
+        await api('/threads/' + remove.thread.id, 'DELETE');
+        // 보고 있던 대화를 지우면 같은 회로의 새 대화 화면으로 간다
+        if (remove.thread.id === threadId) navigate('/app?project=' + remove.thread.project_id);
+      } else {
+        await api('/projects/' + remove.project.id, 'DELETE');
+        if (String(remove.project.id) === projectId) navigate('/app');
+      }
+      setRemove(null);
+      refreshNavigation();
+    } catch (e) {
+      setError(e as Error); // 분석 중이면 409. 창을 닫지 않고 서버 문구를 보인다
+    } finally {
+      setBusy(false);
+    }
+  }
+  const menu = (key: string, label: string, onDelete: () => void) => (
+    <RowMenu
+      label={label}
+      items={[
+        { label: '이름 변경', icon: <Pencil size={14} />, onSelect: () => setRenaming(key) },
+        {
+          label: '삭제',
+          icon: <Trash2 size={14} />,
+          danger: true,
+          onSelect: () => {
+            setError(null);
+            onDelete();
+          },
+        },
+      ]}
+    />
+  );
+  // 그 자리에서 이름 고치기: Enter·다른 곳 클릭이면 저장, Esc면 그대로
+  const renameForm = (key: string, label: string, value: string) => (
+    <form
+      key={key}
+      className="thread-row"
+      onSubmit={(e) => {
+        e.preventDefault();
+        // [왜] 저장은 blur 한 곳에서만 한다(Enter와 blur가 두 번 저장하지 않게)
+        (e.currentTarget.elements.namedItem('title') as HTMLInputElement).blur();
+      }}
+    >
+      <input
+        name="title"
+        aria-label={label}
+        defaultValue={value}
+        maxLength={200}
+        autoFocus
+        onBlur={(e) => void rename(key, e.currentTarget.value, value)}
+        onKeyDown={(e) => {
+          if (e.key !== 'Escape') return;
+          e.currentTarget.value = value; // 원래 이름으로 돌려 blur 저장이 아무것도 하지 않게 한다
+          e.currentTarget.blur();
         }}
-      >
-        <input
-          name="title"
-          aria-label="대화 이름"
-          defaultValue={t.title}
-          maxLength={200}
-          autoFocus
-          onBlur={(e) => void rename(t, e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key !== 'Escape') return;
-            e.currentTarget.value = t.title; // 원래 이름으로 돌려 blur 저장이 아무것도 하지 않게 한다
-            e.currentTarget.blur();
-          }}
-        />
-      </form>
+      />
+    </form>
+  );
+  const row = (t: ThreadListItem) =>
+    renaming === 't' + t.id ? (
+      renameForm('t' + t.id, '대화 이름', t.title)
     ) : (
       <div key={t.id} className={'thread-row' + (t.id === threadId ? ' selected' : '')}>
-        <a href={`/app?project=${t.project_id}&thread=${t.id}`} title={t.project_name}>
+        <a href={`/app?project=${t.project_id}&thread=${t.id}`} title={t.title}>
           {t.title}
         </a>
-        <RowMenu
-          label="대화 메뉴"
-          items={[
-            { label: '이름 변경', icon: <Pencil size={14} />, onSelect: () => setRenaming(t.id) },
-            {
-              label: '삭제',
-              icon: <Trash2 size={14} />,
-              danger: true,
-              onSelect: () => {
-                setError(null);
-                setRemove(t);
-              },
-            },
-          ]}
-        />
+        {menu('t' + t.id, '대화 메뉴', () => setRemove({ thread: t }))}
+      </div>
+    );
+  const all = threads.data ?? [],
+    tree = projects.data?.filter((p) => p.has_circuit) ?? [],
+    loose = new Set(projects.data?.filter((p) => !p.has_circuit).map((p) => p.id)),
+    // [왜] 대화도 회로도 없는 프로젝트("나중에 첨부"로 만든 것)는 나무에 없으므로 "대화"에 한 줄로 남겨 열 수 있게 한다
+    empty = projects.data?.filter(
+      (p) => loose.has(p.id) && !all.some((t) => t.project_id === p.id),
+    ),
+    looseThreads = all.filter((t) => loose.has(t.project_id));
+  // 프로젝트 줄: 나무에서는 펼치기 버튼(toggle), "대화"의 빈 프로젝트는 그 작업대 링크. 둘 다 ⋯ 메뉴가 옆에 있다
+  const projectRow = (p: Project, toggle?: React.ReactNode) =>
+    renaming === 'p' + p.id ? (
+      renameForm('p' + p.id, '프로젝트 이름', p.name)
+    ) : (
+      <div
+        key={p.id}
+        className={
+          'thread-row' + (!toggle && String(p.id) === projectId && !threadId ? ' selected' : '')
+        }
+      >
+        {toggle ?? (
+          <a href={'/app?project=' + p.id} title={p.name}>
+            {p.name}
+          </a>
+        )}
+        {menu('p' + p.id, p.name + ' 메뉴', () => setRemove({ project: p }))}
       </div>
     );
   return (
     <div className="sidebar-projects">
-      <p>대화</p>
-      {threads.loading ? (
+      {threads.loading || projects.loading ? (
         <Loading />
-      ) : threads.error ? (
-        <ErrorBox error={threads.error} retry={threads.reload} />
-      ) : threads.data?.length ? (
-        threads.data.map(row)
+      ) : threads.error || projects.error ? (
+        <ErrorBox
+          error={threads.error ?? projects.error}
+          retry={() => {
+            threads.reload();
+            projects.reload();
+          }}
+        />
       ) : (
-        <p className="muted">아직 대화가 없습니다.</p>
+        <>
+          {!!(looseThreads.length || empty?.length) && (
+            <>
+              <p>대화</p>
+              {looseThreads.map(row)}
+              {empty?.map((p) => projectRow(p))}
+            </>
+          )}
+          <div className="nav-section">
+            <p>프로젝트</p>
+            <button
+              className="icon-button"
+              aria-label="새 프로젝트"
+              title="새 프로젝트"
+              onClick={() => setCreate(true)}
+            >
+              <Plus size={15} />
+            </button>
+          </div>
+          {tree.length ? (
+            tree.map((p) => {
+              const open = expanded.includes(p.id);
+              return (
+                <div key={p.id}>
+                  {projectRow(
+                    p,
+                    <button
+                      className="folder-toggle"
+                      aria-expanded={open}
+                      title={p.name}
+                      onClick={() =>
+                        setExpanded((x) => (open ? x.filter((id) => id !== p.id) : [...x, p.id]))
+                      }
+                    >
+                      <ChevronRight size={14} />
+                      <span>{p.name}</span>
+                    </button>,
+                  )}
+                  {open && (
+                    <div className="folder-items">
+                      {all.filter((t) => t.project_id === p.id).map(row)}
+                      <a
+                        className={String(p.id) === projectId && !threadId ? 'selected' : ''}
+                        href={'/app?project=' + p.id}
+                      >
+                        <Plus size={13} />이 회로로 새 대화
+                      </a>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <p className="muted">아직 프로젝트가 없습니다.</p>
+          )}
+        </>
       )}
       {!remove && <ErrorBox error={error} />}
-      <p>프로젝트</p>
-      {projects.loading ? (
-        <Loading />
-      ) : projects.error ? (
-        <ErrorBox error={projects.error} retry={projects.reload} />
-      ) : projects.data?.length ? (
-        projects.data.map((p) => {
-          const open = expanded.includes(p.id);
-          return (
-            <div key={p.id}>
-              <button
-                className="folder-toggle"
-                aria-expanded={open}
-                onClick={() =>
-                  setExpanded((x) => (open ? x.filter((id) => id !== p.id) : [...x, p.id]))
-                }
-              >
-                <ChevronRight size={14} />
-                <span>{p.name}</span>
-              </button>
-              {open && (
-                <div className="folder-items">
-                  {threads.data
-                    ?.filter((t) => t.project_id === p.id)
-                    .map((t) => (
-                      <a
-                        key={t.id}
-                        className={t.id === threadId ? 'selected' : ''}
-                        href={`/app?project=${p.id}&thread=${t.id}`}
-                      >
-                        {t.title}
-                      </a>
-                    ))}
-                  <a
-                    className={String(p.id) === projectId && !threadId ? 'selected' : ''}
-                    href={'/app?project=' + p.id}
-                  >
-                    <Plus size={13} />이 회로로 새 대화
-                  </a>
-                </div>
-              )}
-            </div>
-          );
-        })
-      ) : (
-        <p className="muted">아직 프로젝트가 없습니다.</p>
-      )}
       {remove && (
-        <Modal title="대화를 삭제할까요?" close={() => setRemove(null)}>
-          <p>“{remove.title}” 대화와 분석 기록이 삭제됩니다. 복구할 수 없습니다.</p>
+        <Modal
+          title={remove.thread ? '대화를 삭제할까요?' : '프로젝트를 삭제할까요?'}
+          close={() => !busy && setRemove(null)}
+        >
+          <p>
+            {remove.thread
+              ? `“${remove.thread.title}” 대화와 분석 기록이 삭제됩니다.`
+              : `“${remove.project.name}” 프로젝트의 회로, 대화, 승인, 견적이 함께 삭제됩니다.`}{' '}
+            복구할 수 없습니다.
+          </p>
           <ErrorBox error={error} />
-          <button
-            className="primary"
-            onClick={async () => {
-              try {
-                await api('/threads/' + remove.id, 'DELETE');
-                setRemove(null);
-                // 보고 있던 대화를 지우면 같은 회로의 새 대화 화면으로 간다
-                if (remove.id === threadId) navigate('/app?project=' + remove.project_id);
-                refreshNavigation();
-              } catch (e) {
-                setError(e as Error);
-              }
-            }}
-          >
-            삭제
-          </button>
+          <div className="dialog-actions">
+            <button disabled={busy} onClick={() => setRemove(null)}>
+              취소
+            </button>
+            <button className="primary" disabled={busy} onClick={confirmRemove}>
+              {busy ? '삭제하는 중…' : '삭제'}
+            </button>
+          </div>
         </Modal>
+      )}
+      {create && (
+        <NewProject
+          close={() => setCreate(false)}
+          onCreated={(p) => navigate('/app?project=' + p.id)}
+        />
       )}
     </div>
   );
