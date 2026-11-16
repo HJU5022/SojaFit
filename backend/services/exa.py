@@ -334,21 +334,31 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
             cached = _from_prefetch(url) if grade == 2 else None
             return cached or _body(client, 'GET', url, MAX_BYTES, redirect_validator=(grade2_pdf if grade == 2 else None))
 
+        parse_lock = Lock()
+
+        def fetch_and_parse(url):
+            # [왜] 받기가 먼저 끝난 쪽부터 파싱을 시작하되, 파싱은 락으로 한 번에 하나만 돈다(1 vCPU · 1GiB). 예외는 던지지 않고 돌려줘 실패 로그는 원래 순서로 본 경로가 남긴다
+            try:
+                raw, url = fetch(url)
+                if not raw.startswith(b'%PDF-'):
+                    return url, [], None
+                with parse_lock:
+                    return url, verified_rows(raw, url, parts, words, grade=grade), None
+            except (ValueError, httpx.HTTPError) as error:
+                return url, [], error
+
         with ThreadPoolExecutor(max(len(chosen), 1)) as pool:
-            jobs = {url: None if _stale_revision(url, raw_terms) else pool.submit(copy_context().run, fetch, url)
+            jobs = {url: None if _stale_revision(url, raw_terms) else pool.submit(copy_context().run, fetch_and_parse, url)
                     for url in chosen}
             for url, job in jobs.items():
                 rows = []
                 if job is None:
                     LOGGER.debug('datasheet_candidate_rejected stage=revision reason=requested_revision_mismatch url=%s', urlsplit(url).path[:160])
                 else:
-                    try:
-                        raw, url = job.result()
-                        rows = verified_rows(raw, url, parts, words, grade=grade) if raw.startswith(b'%PDF-') else []
-                    except (ValueError, httpx.HTTPError) as error:
+                    url, rows, error = job.result()
+                    if error is not None:
                         _failure('pdf_fetch', error)
                         LOGGER.debug('datasheet_candidate_rejected stage=fetch reason=unreadable_pdf url=%s', urlsplit(url).path[:160])
-                        rows = []
                     if not rows:
                         LOGGER.debug('datasheet_candidate_rejected stage=row_parser reason=no_exact_verified_row url=%s', urlsplit(url).path[:160])
                 title = urlsplit(url).path.rsplit('/', 1)[-1]

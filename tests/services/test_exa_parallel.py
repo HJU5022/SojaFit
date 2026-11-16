@@ -127,3 +127,35 @@ def test_prefetch_wait_is_one_budget_per_request(env, monkeypatch):
         assert exa._from_prefetch(A) is None
         assert exa._from_prefetch(B) is None  # 같은 예산을 이미 썼으므로 더 기다리지 않는다
         assert time.monotonic() - start < 0.6
+
+
+def test_early_download_is_parsed_before_slow_one_ends_and_parses_never_overlap(env, monkeypatch):
+    # 두 번째 후보(B)가 먼저 받아지면 A의 받기가 끝나기 전에 B 파싱이 시작된다. 파싱은 겹치지 않고 결과는 원래 순서다
+    delays, events, lock = {A: 0.4, B: 0.0}, [], threading.Lock()
+    base_body, active = exa._body, {'now': 0, 'peak': 0}
+
+    def body(client, method, url, limit, **kwargs):
+        if method == 'GET':
+            time.sleep(delays[url])
+            with lock:
+                events.append(('dl_end', url, time.monotonic()))
+            return b'%PDF-1.7 ' + url.encode(), url
+        return base_body(client, method, url, limit, **kwargs)
+
+    def rows(raw, url, parts, words, grade=None):
+        with lock:
+            events.append(('parse_start', url, time.monotonic()))
+            active['now'] += 1
+            active['peak'] = max(active['peak'], active['now'])
+        time.sleep(0.1)
+        with lock:
+            active['now'] -= 1
+        return [{'content': f'{url[-8:]} row{i}', 'page': i, 'doc_parts': ['SS34']} for i in (1, 2)]
+
+    monkeypatch.setattr(exa, '_body', body)
+    monkeypatch.setattr(exa, 'verified_rows', rows)
+    docs = run()
+    t = {(kind, url): at for kind, url, at in events}
+    assert t[('parse_start', B)] < t[('dl_end', A)]
+    assert t[('parse_start', A)] >= t[('dl_end', A)] and active['peak'] == 1
+    assert [d['source_url'] for d in docs] == [A, A, B, B] and [d['chunk_id'] for d in docs] == ['W1', 'W2', 'W3', 'W4']
