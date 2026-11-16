@@ -2954,8 +2954,38 @@ form {
   width: 10%;
   white-space: nowrap;
 }
-.report-sign tbody tr:nth-child(2) td {
+.report-sign-line td {
   height: 48px; /* 서명 칸 */
+}
+/* ECO 양식(#56): 손으로 적는 빈칸. 인쇄는 배경을 빼므로 옅은 테두리로 그린다 */
+.report-blank {
+  min-height: 56px;
+  margin-top: 4px;
+  border: 1px solid #9aa5aa;
+}
+.report-facts .report-blank {
+  flex: 1;
+  min-height: 1.6em;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid #9aa5aa;
+}
+.report-items td {
+  height: 40px;
+}
+.report-items label {
+  display: block;
+  white-space: nowrap;
+}
+.report-items input {
+  margin: 0 2px 0 0;
+  vertical-align: middle;
+}
+.report-part {
+  margin-top: 22px;
+  padding-top: 8px;
+  border-top: 2px solid var(--ink);
+  color: var(--muted);
 }
 @media (max-width: 760px) {
   .report {
@@ -2986,7 +3016,7 @@ form {
     font-size: 11px;
     line-height: 1.45;
   }
-  /* A4 한 장에 들도록 화면보다 간격을 줄인다 */
+  /* A4 두 장 안에 들도록 화면보다 간격을 줄인다 */
   .report section {
     margin-top: 10px;
   }
@@ -2999,11 +3029,12 @@ form {
   .report td {
     padding: 3px 6px;
   }
-  .report-sign tbody tr:nth-child(2) td {
+  .report-sign-line td {
     height: 40px;
   }
   .report .muted,
   .report-facts dt,
+  .report-part,
   .report-sources a {
     color: #000;
   }
