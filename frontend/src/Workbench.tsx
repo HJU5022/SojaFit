@@ -60,13 +60,16 @@ const pendingStart: {
 } = { current: null };
 // [왜] 새 대화 화면은 옮기면 사라지므로 작업대가 열릴 때 한 번 보일 한 줄 안내(#48 이미 있는 회로로 이어 가기)도 모듈에 둔다
 const startNotice: { current: { project: string; text: string } | null } = { current: null };
-/** 프로젝트에 새 대화를 만들어 질문을 첫 질문으로 보낸다. 질문이 비면 그 회로의 작업대만 연다(빈 대화 화면이 무엇을 검토할지 묻는다). notice는 열린 작업대 대화 위에 한 번 보인다. */
+/** 프로젝트에 새 대화를 만들어 질문을 첫 질문으로 보낸다. 질문이 비면 그 회로의 작업대만 연다(빈 대화 화면이 무엇을 검토할지 묻는다). notice는 처음 열린 대화 위에만 보인다. */
 export async function openWithQuestion(projectId: number | string, question: string, notice = '') {
+  const tid = question.trim()
+    ? (await api<{ id: string }>(`/projects/${projectId}/threads`, 'POST')).id
+    : '';
+  // [왜] 대화 만들기가 실패하면 안내를 남기지 않는다(다음에 이 프로젝트를 열 때 엉뚱하게 뜨지 않게)
   startNotice.current = notice ? { project: String(projectId), text: notice } : null;
-  if (!question.trim()) return navigate('/app?project=' + projectId);
-  const created = await api<{ id: string }>(`/projects/${projectId}/threads`, 'POST');
-  pendingStart.current = { tid: created.id, question, conditions: '', target: '' };
-  navigate(`/app?project=${projectId}&thread=${created.id}`);
+  if (!tid) return navigate('/app?project=' + projectId);
+  pendingStart.current = { tid, question, conditions: '', target: '' };
+  navigate(`/app?project=${projectId}&thread=${tid}`);
 }
 /** 검토할 부품(읽기 전용). 대상은 서버가 질문 · 회로로 정하거나 대화에서 묻는다(SPEC 8.9, #30). status는 작업대가 정한 진행 안내. */
 export function TargetInfo({
@@ -337,7 +340,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
     [rename, setRename] = useState(false),
     [reload, setReload] = useState(0),
-    [notice, setNotice] = useState('');
+    [notice, setNotice] = useState<{ text: string; thread: string | null } | null>(null);
   const controller = useRef<AbortController | null>(null),
     runId = useRef<string | null>(null),
     scope = useRef(0),
@@ -352,7 +355,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     })();
   useEffect(() => {
     if (startNotice.current?.project !== projectId) return;
-    setNotice(startNotice.current.text);
+    // [왜] 작업대는 프로젝트마다 한 번 그려져 같은 프로젝트의 다른 대화로 옮겨도 남는다. 처음 연 대화에서만 보인다
+    setNotice({ text: startNotice.current.text, thread: threadId });
     startNotice.current = null;
   }, [projectId]);
   useEffect(() => {
@@ -749,9 +753,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               )}
             </div>
             <div className="conversation-scroll">
-              {notice && (
+              {notice?.thread === threadId && (
                 <div className="notice" role="status">
-                  <p>{notice}</p>
+                  <p>{notice.text}</p>
                 </div>
               )}
               <ErrorBox
