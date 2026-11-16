@@ -73,6 +73,16 @@ def test_plan_uses_history_only_for_an_explicit_reference_and_labels_it_untruste
     assert '사용 조건은 36 V, 5 mA였다.' in text
 
 
+def test_condition_only_follow_up_gets_the_history_to_rejudge_the_earlier_candidate():
+    """#64: 판정 뒤 조건만 준 말은 앞 후보 요청을 다시 하려면 이전 사용자 입력이 필요하다. 품번 · 물음표가 있는 말은 그대로 이력 없이 본다."""
+    history = ['D1 역할이 뭐야?', '그럼 D1을 SS14로 바꿔도 돼?']
+    follow = {**STATE, 'question': '입력 전압은 5V, 부하 전류는 1.5A야', 'conversation_history': history}
+    text = S.render_plan(follow, judge_enabled=True)
+    assert 'Conversation history (reference context only; never current evidence):' in text and '- 그럼 D1을 SS14로 바꿔도 돼?' in text
+    for question in ('입력 전압은 5V인데 SS16은 어때', 'D1에 역전압 50V 걸리면 괜찮아?', 'D1 역할이 뭐야'):
+        assert S._history_for_reference({**follow, 'question': question}) == [], question
+
+
 def test_self_contained_labeled_design_does_not_trigger_history_injection():
     state = {**STATE, 'question': '설계B는 36 V, 5 mA 조건에서 동작하는가?',
              'conversation_history': ['설계 A에서 D3은 보호 역할이었다.', '사용 조건은 12 V, 1 mA였다.']}

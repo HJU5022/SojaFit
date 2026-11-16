@@ -115,17 +115,24 @@ class Plan(BaseModel):
     keep_earlier: bool = Field(default=False, description='replan only: true to keep the earlier ok answers in the final answer (e.g. the found candidates when the user asked for them)')
     part_kinds: list[PartKind] = Field(default_factory=list,
                                        description='next=parts_list only: the part kinds the user asks to list or count; empty = every part')
+    # [왜] 앞 답 · 근거를 다시 보여 달라는 말에 Supervisor가 "다시 조회하지 않고 말씀드리지 않겠습니다"라고 썼다(#64).
+    #      그래프는 앞 답을 갖고 있지 않으므로 화면에 남은 답의 근거 단추를 코드가 고정 문구로 알려 준다
+    reply_kind: Literal['', 'earlier_answer'] = Field(
+        default='', description="next=finish only: 'earlier_answer' when the user asks to see an earlier answer or its evidence again "
+                                "(the code replies with a fixed pointer to it); empty otherwise")
 
     @model_validator(mode='after')
     def consistent(self):
         if self.next != 'parts_list':
             self.part_kinds = []  # [왜] 종류는 부품 목록 길만 쓴다. 다른 길에 채워 와도 형식 재시도(유료)로 다시 부르지 않고 비운다(#59)
+        if self.next != 'finish':
+            self.reply_kind = ''  # 같은 이유: 끝내기 길만 쓴다
         # [왜] 형식이 틀린 계획은 llm.chat이 다시 부르게 ValidationError로 낸다(MULTI_AGENT.md "구조 결정": 형식이 틀리면 다시 부름)
         if self.next == 'refuse' and self.reason not in REFUSAL_REASONS:
             raise ValueError('refuse needs a refusal reason')
         if any(d.reason not in REFUSAL_REASONS for d in self.declined):
             raise ValueError('a declined part needs a refusal reason')
-        if self.next == 'finish' and not self.reply.strip():
+        if self.next == 'finish' and not self.reply.strip() and self.reply_kind != 'earlier_answer':
             raise ValueError('finish needs a reply')  # [왜] 이 길은 서브에이전트를 거치지 않아 Supervisor의 reply가 곧 답이다
         if self.next == 'tasks':
             if not 1 <= len(self.tasks) <= MAX_TASKS:

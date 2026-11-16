@@ -24,7 +24,7 @@
 | `답 정리` | 할 일 1개의 답(판정은 코드 답 틀) | 없음 |
 | `종합` | 보고를 코드로 이을 수 없을 때만(조건은 [SPEC.md](../../SPEC.md) 2절 "종합으로 가는 조건"). 판정 표는 코드가 그대로 붙임 | `synth` |
 | `답 검사` | 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답·판정 결과·질문에 있던 숫자인지 검사. 걸리면 거절 | 없음 |
-| `끝내기`, `거절`, `가격 안내`, `부품 목록`, `견적 안내` | 마무리. 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고(첫 줄 아래 종류별 개수), 계획의 `part_kinds`가 있으면 그 종류만 심볼 칸을 더해 옮기며(다이오드는 LED 포함, 없으면 한 줄, #59), 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답. 견적 안내(질문 종류 `quote`, #60)는 `graph.nodes.quote_answer`가 견적을 만드는 화면 길(판정 → 승인 → 수량 → 견적 목록)을 고정 문구 `messages.QUOTE_GUIDE`로 답함(승인 기록을 읽지 않아 한 문구) | 없음 |
+| `끝내기`, `거절`, `가격 안내`, `부품 목록`, `견적 안내` | 마무리. 끝내기는 계획의 `reply_kind`가 `earlier_answer`면 reply 대신 고정 안내 `messages.EARLIER_ANSWER`(#64). 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고(첫 줄 아래 종류별 개수), 계획의 `part_kinds`가 있으면 그 종류만 심볼 칸을 더해 옮기며(다이오드는 LED 포함, 없으면 한 줄, #59), 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답. 견적 안내(질문 종류 `quote`, #60)는 `graph.nodes.quote_answer`가 견적을 만드는 화면 길(판정 → 승인 → 수량 → 견적 목록)을 고정 문구 `messages.QUOTE_GUIDE`로 답함(승인 기록을 읽지 않아 한 문구) | 없음 |
 
 - 노드별 모델: `backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 정본이고, 선정 이유는 ADR 0014·0017이다.
 - 상한(질문당): 할 일 수, 재계획, Supervisor LLM 호출, 서브에이전트 실행, 문서 할 일의 검색 횟수는 `contracts.py`의 `MAX_TASKS`, `MAX_REPLANS`, `MAX_SUPERVISOR_CALLS`, `MAX_AGENT_RUNS`, `MAX_SEARCHES`다. 넘으면 거절한다.
@@ -32,7 +32,7 @@
 - 판정 길(`Spec 에이전트`)은 사양 값 도구(`specs`, `find`)와 체크포인터가 있어야 켜지고, 없이 켜면 `build.py`가 `ValueError`를 낸다. 서비스는 카드 도구(`backend/rag/card_specs.py`, `backend/rag/card_find.py`)를 넘긴다.
 - 사용자 사실 기억: `mount_preference`는 판정 할 일의 Send 꾸러미에만 들어가고 찾기에서 질문이 실장 방식을 말하지 않았을 때 같은 판정 안의 후보 순서만 바꾼다(`backend/judge/verdict.py` `rank`의 `preferred`). 평가 실행기는 Store 없이 compile해 빈 값이다.
 - 승인 사례: 상태에 `approved_memories` 칸과 `memory_refs` 처리가 남아 있지만 서비스가 새 분석 입력에 빈 목록을 넣는다(`conversations/memory_service.py:442`). 승인 사례는 서비스 응답에 영향을 주지 않는다.
-- 대화 이력: `question`은 현재 요청만 담고 `conversation_history`는 이전 사용자 입력을 별도로 전달한다. 명시적인 이전 조건·후보 참조를 해석할 때만 이력을 사용하며, 과거 질문을 현재 할 일로 다시 실행하지 않는다. 현재 명시 조건과 회로 연결이 우선한다.
+- 대화 이력: `question`은 현재 요청만 담고 `conversation_history`는 이전 사용자 입력을 별도로 전달한다. 명시적인 이전 조건·후보 참조를 해석할 때와 품번 · 물음표 없이 조건 값만 준 말(앞 후보를 그 조건으로 다시 판정, #64)에만 이력을 사용하며, 과거 질문을 현재 할 일로 다시 실행하지 않는다. 현재 명시 조건과 회로 연결이 우선한다.
 - 웹 조회: 별도 에이전트가 아니다. `memory_service.py`가 `DEMO_MODE`가 아니고 `exa.enabled()`일 때만 문서·판정 에이전트에 등급별 조회 도구(`backend/services/exa.py`)를 넣는다(`memory_service.py:303-307`).
 - 계약: 분석 흐름은 [SPEC.md](../../SPEC.md), 판정은 [judge-agent.md](../../docs/specs/judge-agent.md)를 따른다.
 

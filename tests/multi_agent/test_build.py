@@ -461,6 +461,49 @@ def test_single_judge_task_answers_with_the_code_template():
     assert state['path'][-4:] == ['모으기', '답 정리', '답 검사', '끝']
 
 
+def test_condition_only_follow_up_rejudges_the_candidate_named_in_the_history():
+    """#64: 판정 뒤 "입력 전압은 5V, 부하 전류는 1.5A야"는 Supervisor가 이력을 받아 앞 후보(SS14)를 다시 판정하고,
+    판정 읽기는 지시서로 후보를 받되 회로 값은 지금 말에서만 읽는다(지시서 숫자는 숫자 확인 글에 넣지 않음)."""
+    users = {}
+    read = J.JudgeRead(role='R01', candidates=['SS14'], values=[J.Value(name='v_in_max', number=5, unit='V', quote='5V'),
+                                                                 J.Value(name='i_max', number=1.5, unit='A', quote='1.5A')])
+    p = Plan(question_type='candidate_judge', next='tasks',
+             tasks=[Task(id=1, agent='judge', kind='candidate_judge', goal='Re-judge whether SS14 can replace D1 with the conditions in the question.')])
+
+    def chat(node, system, user, schema):
+        users[node] = user
+        return {'supervisor': p, 'judge_read': read}[node]
+    config = {'configurable': {'thread_id': 'c64'}}
+    state = judge_app(chat).invoke({'input': '입력 전압은 5V, 부하 전류는 1.5A야', 'conversation_history': ['그럼 D1을 SS14로 바꿔도 돼?']}, config)
+    assert '- 그럼 D1을 SS14로 바꿔도 돼?' in users['supervisor']
+    assert 'Supervisor brief (the part of the question this task covers): Re-judge whether SS14' in users['judge_read']
+    assert 'Question: 입력 전압은 5V, 부하 전류는 1.5A야' in users['judge_read']
+    # 지금 말의 두 값은 받았고, 역할(R01)이 더 필요한 값만 조건 카드로 묻는다
+    assert state['__interrupt__'][0].value['missing'] == ['v_drop_allowed']
+
+
+def test_request_to_see_an_earlier_answer_again_gets_the_fixed_pointer_without_llm_text():
+    """#64: "아까 SS14 판정 근거 다시 보여줘"는 일상 대화로 끝내되 LLM 글 대신 화면에 남은 근거 자리를 알려 주는 고정 문구다."""
+    from backend.multi_agent.messages import EARLIER_ANSWER
+    chat = scripted(supervisor=[Plan(question_type='chat', next='finish', reply_kind='earlier_answer')])
+    out = app(chat).invoke({'input': '아까 SS14 판정 근거 다시 보여줘', 'conversation_history': ['그럼 D1을 SS14로 바꿔도 돼?']})
+    assert out['answer'] == EARLIER_ANSWER and not out['refusal'] and out['path'][-2:] == ['계획', '끝'] and chat.calls == ['supervisor']
+    # 다른 길에 채워 온 값은 형식 재시도 없이 비우고, 일상 대화 답은 그대로 reply가 필요하다
+    assert Plan(question_type='rating', next='refuse', reason=Reason.NOT_FOUND, reply_kind='earlier_answer').reply_kind == ''
+    with pytest.raises(ValueError):
+        Plan(question_type='chat', next='finish')
+
+
+def test_earlier_answer_pointer_names_the_real_screen_labels():
+    """앞 답 안내의 따옴표 속 이름은 화면 글자 그대로여야 한다(견적 안내와 같은 시험)."""
+    import re
+    from pathlib import Path
+    from backend.multi_agent.messages import EARLIER_ANSWER
+    screen = ''.join(Path(f'frontend/src/{name}').read_text(encoding='utf-8') for name in ('Reply.tsx', 'Candidate.tsx'))
+    labels = re.findall(r"'([^']+)'", EARLIER_ANSWER)
+    assert labels == ['조건과 근거 보기', '조건별 검토', '문서 근거'] and all(label in screen for label in labels)
+
+
 def provider_error(status=429):
     import httpx
     from openai import InternalServerError, RateLimitError

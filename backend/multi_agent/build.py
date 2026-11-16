@@ -23,7 +23,7 @@ from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import Reason, TaskReport
-from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST, refusal_for
+from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, NEED_NETLIST, refusal_for
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
 from backend.services.llm import is_llm_failure
@@ -64,6 +64,8 @@ def chat_reply_is_safe(state: dict, reply: str) -> bool:
 def finish_node(state: dict) -> dict:
     """끝내기: 일상 대화는 계획의 reply가 답이다. 서브에이전트를 거친 답은 이미 answer에 있다."""
     if not state.get('reports'):
+        if (state.get('plan') or {}).get('reply_kind') == 'earlier_answer':
+            return {'answer': EARLIER_ANSWER, 'path': ['끝']}  # 앞 답 · 근거 다시 보기는 LLM 글 대신 고정 안내(#64)
         reply = (state.get('plan') or {}).get('reply', '')
         if '승인사례:' in reply:
             reason = Reason.VERIFY_FAILED
