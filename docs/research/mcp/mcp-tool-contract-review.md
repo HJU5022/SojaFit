@@ -3,7 +3,7 @@
 - 상태: 현행
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002 (코드: `backend/graph/mcp_retriever.py`, `backend/mcp_skill/mcp_server/server.py`)
-- 정본 여부: 정본(검색기 연결 계약과 stdio 응답 형식). 도구 표의 정본은 [mcp-tool-implementation-plan.md](mcp-tool-implementation-plan.md)
+- 정본 여부: 정본(stdio 응답 형식 관찰과 1절의 코드 위치 대조). 검색기 연결 계약 자체는 작업서 [mcp-graph-integration.md](../../specs/mcp-graph-integration.md) "어댑터 계약"이 같은 내용을 담고 그 정본은 [SPEC.md](../../../SPEC.md) 8.7이다(2026-11-17, 두 문서가 함께 정본이라 적던 것을 나눔). 도구 표의 정본은 [mcp-tool-implementation-plan.md](mcp-tool-implementation-plan.md)
 - 관련 문서: [MCP 서버 안내](../../../backend/mcp_skill/MCP_SKILL.md), [RAG 작업서](../../specs/rag-pipeline.md), [MCP 검색 도구 작업서](../../specs/mcp-search-tools.md)
 
 ## 1. 질문과 결론
