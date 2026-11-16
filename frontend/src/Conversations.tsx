@@ -16,7 +16,7 @@ import {
 } from './ui';
 import { NewProject, refreshNavigation } from './Projects';
 import { openWithQuestion } from './Workbench';
-import type { Demo, Project, ThreadListItem } from './types';
+import type { Project, ThreadListItem } from './types';
 /** 펼친 프로젝트 번호를 이 브라우저에 남기는 키(사이드바 나무, #31). */
 const EXPANDED = 'sojafit.sidebar.expanded';
 /**

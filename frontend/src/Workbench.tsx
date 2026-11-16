@@ -347,8 +347,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [notice, setNotice] = useState<{ text: string; thread: string | null } | null>(null);
   const controller = useRef<AbortController | null>(null),
     runId = useRef<string | null>(null),
-    scope = useRef(0),
-    end = useRef<HTMLDivElement>(null);
+    scope = useRef(0);
   const attach = useNetlistAttach('.net,.txt,.kicad_sch', setAttachment);
   const parts = partsOf(project.data),
     usable = parts.filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p)),
@@ -899,7 +898,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   {active?.result.status === 'failed' && (
                     <button onClick={newReview}>새 검토로 다시 시작</button>
                   )}
-                  <div ref={end} />
                 </>
               )}
             </div>
