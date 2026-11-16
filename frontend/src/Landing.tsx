@@ -1,4 +1,7 @@
-/** 제품 소개. 예시 수치는 기록된 데모 결과(data/demo/recordings/outcomes.json, 질문 v3-01)에서 옮긴 값이고 실시간 판정이 아니다. */
+/**
+ * 제품 소개. 예시 수치는 기록된 데모 결과(data/demo/recordings/outcomes.json, 질문 v3-01)에서 옮긴 값이고 실시간 판정이 아니다.
+ * 판정 기준 구간(#criteria)의 숫자는 판정 규칙 코드에서 옮겼다(출처는 그 구간 주석). 판정을 계산하지 않는다.
+ */
 import { useEffect, useState } from 'react';
 import { ArrowRight, FileText, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
 import { Brand, Badge, Disclaimer } from './ui';
@@ -16,7 +19,7 @@ export function Landing() {
     );
     document
       .querySelectorAll(
-        '.landing section>h2,.landing section>p,.how li,.guide-row,.limits>div,.product-proof figure',
+        '.landing section>h2,.landing section>p,.how li,.criteria>ol,.rules,.limits>div,.product-proof figure',
       )
       .forEach((e) => {
         e.classList.add('reveal');
@@ -30,8 +33,8 @@ export function Landing() {
       <header className="landing-nav">
         <Brand />
         <nav>
-          <a href="#principle">판정 기준</a>
           <a href="#how">검토 과정</a>
+          <a href="#criteria">판정 기준</a>
           <a href="/login">
             로그인 <ArrowUpRight size={15} />
           </a>
@@ -231,35 +234,130 @@ export function Landing() {
             </figure>
           </div>
         </section>
-        <section className="verdict-guide">
-          <h2>
-            쓸 수 있는지,
-            <br />
-            아직 모르는지 분명하게.
-          </h2>
-          <div className="guide-row">
-            <h3>승인할 수 있는 후보</h3>
+        {/* 판정 방법·기준식·판정 5종. 숫자와 순서는 코드에서 옮겼다. 규칙이 바뀌면 이 구간도 같이 고친다.
+            - 1.25 · ÷0.7: backend/judge/rules/roles.yaml 머리 주석(kV = 1.25, kI = 1/0.7), 역할 수 23: 같은 파일 R01~R23
+            - 역할 예 3종: 같은 파일 R01(역극성 보호) · R05(AC · 브리지 정류) · R13(플라이백 전원 출력 정류)
+            - 질문에 적은 규격을 필수 조건으로 더함: backend/judge/conditions.py user_conditions
+            - 판정 순서: backend/judge/verdict.py judge_part(동일품 → 불충족 → 확인 안 됨 → 사양 동등 → 역할상 충분), 뜻은 SPEC 3절
+            - 예시가 역할상 충분인 이유(원래 1N4007RLG 데이터시트 없음): data/demo/recordings/outcomes.json v3-01 답 */}
+        <section id="criteria" className="criteria">
+          <h2>판정 방법과 기준</h2>
+          <p>회로 조건과 데이터시트 값을 코드로 비교하고, 조건마다 데이터시트 위치를 인용합니다.</p>
+          <ol className="method">
+            <li>
+              <b>1. 회로 조건</b>
+              넷리스트의 핀 연결로 부품의 회로 역할을 정하고, 입력 최대 전압·최대 전류 같은 회로
+              값을 받습니다. 빠진 값은 되묻습니다.
+            </li>
+            <li>
+              <b>2. 데이터시트 값</b>
+              후보 데이터시트의 표 행에서 정격 값과 시험 조건(온도·펄스 폭 등)을 읽습니다.
+            </li>
+            <li>
+              <b>3. 코드로 비교</b>
+              기준식 계산과 숫자·단위 비교는 모델이 아니라 판정 코드가 합니다. 시험 조건이 다르면
+              비교하지 않습니다.
+            </li>
+            <li>
+              <b>4. 근거 인용</b>
+              조건마다 데이터시트 파일과 쪽·표·행을 붙입니다.
+            </li>
+          </ol>
+          <h3>필수 조건의 기준식</h3>
+          <p>
+            대부분의 역할은 정격에 여유를 둡니다. 전압은 정격의 80%까지만 쓰도록 회로 값 × 1.25,
+            전류는 70%까지만 쓰도록 회로 값 ÷ 0.7(약 × 1.43) 이상인 정격을 요구합니다. 다이오드 회로
+            역할 23종마다 조건과 기준식이 있고, 아래는 그중 3종입니다. 질문에 적은 규격(예: 서지
+            전류 2 A 이상)도 필수 조건으로 더합니다.
+          </p>
+          <div className="rules">
             <div>
+              <strong>역극성 보호(직렬)</strong>
+              <dl>
+                <div>
+                  <dt>역전압 VRRM·VR</dt>
+                  <dd>입력 최대 전압 × 1.25 이상</dd>
+                </div>
+                <div>
+                  <dt>평균 순방향 전류 IF(AV)</dt>
+                  <dd>최대 전류 ÷ 0.7 이상</dd>
+                </div>
+                <div>
+                  <dt>순방향 전압 VF</dt>
+                  <dd>허용 전압강하 이하(값을 알려 준 경우만)</dd>
+                </div>
+              </dl>
+            </div>
+            <div>
+              <strong>AC · 브리지 정류</strong>
+              <dl>
+                <div>
+                  <dt>역전압 VRRM</dt>
+                  <dd>AC 실효값 × √2 × 1.25 이상(DC 입력이면 입력 최대 전압 × 1.25)</dd>
+                </div>
+                <div>
+                  <dt>평균 순방향 전류 IF(AV)</dt>
+                  <dd>부하 전류 ÷ 0.7 이상(다이오드 4개를 따로 쓰면 그 절반)</dd>
+                </div>
+              </dl>
+            </div>
+            <div>
+              <strong>플라이백 전원 출력 정류</strong>
+              <dl>
+                <div>
+                  <dt>역전압 VRRM</dt>
+                  <dd>(출력 전압 + 입력 최대 전압 × 권선비) × 2 이상(스너버가 있으면 × 1.25)</dd>
+                </div>
+                <div>
+                  <dt>평균 순방향 전류 IF(AV)</dt>
+                  <dd>출력 전류 ÷ 0.7 이상</dd>
+                </div>
+                <div>
+                  <dt>역회복 시간 trr</dt>
+                  <dd>75 ns 이하</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          <h3>판정 5종</h3>
+          <p>후보마다 위에서부터 차례로 따져, 처음 맞는 판정 하나를 냅니다.</p>
+          <ol className="verdict-order">
+            <li>
               <Badge verdict="IDENTICAL" />
-              <Badge verdict="SPEC_EQUIVALENT" />
-              <Badge verdict="ROLE_SUFFICIENT" />
-              <p>같은 제품인지, 주요 정격이 동등한지, 회로 역할에 충분한지 구분합니다.</p>
-            </div>
-          </div>
-          <div className="guide-row">
-            <h3>조건을 충족하지 못한 후보</h3>
-            <div>
+              <p>
+                같은 품번, 같은 기본 품번에 주문 코드만 다른 품번, 또는 제조사가 같은 제품이라고
+                밝힌 품번입니다.
+              </p>
+            </li>
+            <li>
               <Badge verdict="NOT_SUFFICIENT" />
-              <p>필수 조건을 만족하지 못하면 승인할 수 없습니다.</p>
-            </div>
-          </div>
-          <div className="guide-row">
-            <h3>근거가 더 필요한 후보</h3>
-            <div>
+              <p>
+                조건 중 하나라도 기준에 못 미칩니다. 다른 조건을 확인하지 못했어도 불충족입니다.
+              </p>
+            </li>
+            <li>
               <Badge verdict="NOT_VERIFIED" />
-              <p>문서에 값이 없거나 시험 조건이 다르면 결론을 유보합니다.</p>
-            </div>
-          </div>
+              <p>
+                필요한 값이 데이터시트에 없거나 시험 조건이 달라 비교하지 못했습니다. 견적에 넣지
+                않습니다.
+              </p>
+            </li>
+            <li>
+              <Badge verdict="SPEC_EQUIVALENT" />
+              <p>
+                조건을 모두 통과했고, 역할마다 정한 주요 정격(역전압·평균 전류·서지 전류 등)도 같은
+                시험 조건에서 원래 부품과 같거나 낫습니다. 원래 부품의 데이터시트가 있어야 합니다.
+              </p>
+            </li>
+            <li>
+              <Badge verdict="ROLE_SUFFICIENT" />
+              <p>
+                조건은 모두 통과했지만, 원래 부품보다 낮은 주요 정격이 있거나 원래 부품의
+                데이터시트가 없어 비교하지 못했습니다. 첫 화면의 1N4007G 예시는 원래 부품
+                1N4007RLG의 데이터시트를 찾지 못해 이 판정입니다.
+              </p>
+            </li>
+          </ol>
         </section>
         <section className="limits">
           <h2>판정의 한계와 승인</h2>

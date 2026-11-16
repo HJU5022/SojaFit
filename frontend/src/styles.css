@@ -550,25 +550,78 @@ form {
   color: var(--muted);
   margin-top: 10px;
 }
-.verdict-guide h2 {
-  margin-bottom: 40px;
+/* 판정 방법·기준식·판정 5종. 칸은 auto-fit이라 좁은 화면에서 저절로 한 줄씩 쌓인다. */
+.criteria h3 {
+  font-size: 18px;
+  font-weight: 550;
+  margin-top: 48px;
 }
-.guide-row {
+.criteria > p {
+  margin-top: 16px;
+}
+.method,
+.verdict-order {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+}
+.method {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 25px;
-  padding: 24px 0;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 20px;
 }
-.guide-row h3 {
-  font-size: 17px;
-  font-weight: 500;
-}
-.guide-row .badge {
-  margin: 0 5px 8px 0;
-}
-.guide-row p {
+.method li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 2px solid var(--control);
   font-size: 15px;
   color: var(--muted);
+}
+.method b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+.rules > div {
+  background: var(--surface);
+  border-radius: 5px;
+  padding: 20px;
+}
+.rules strong {
+  font-weight: 600;
+}
+.rules dl {
+  margin: 10px 0 0;
+  font-size: 14px;
+}
+.rules dl > div {
+  padding: 8px 0;
+  border-top: 1px solid #d5dde0;
+}
+.rules dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.rules dd {
+  margin: 2px 0 0;
+}
+.verdict-order li {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 20px;
+  align-items: baseline;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.verdict-order p {
+  font-size: 15px;
 }
 .limits {
   display: grid;
@@ -1881,19 +1934,16 @@ form {
   .how li {
     gap: 15px;
   }
-  .guide-row {
-    display: block;
-    padding: 21px 0;
+  .criteria h3 {
+    font-size: 16px;
+    margin-top: 36px;
   }
-  .guide-row h3 {
-    font-size: 15px;
-    margin-bottom: 12px;
+  .verdict-order li {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
-  .guide-row p {
+  .verdict-order p {
     font-size: 14px;
-  }
-  .verdict-guide h2 {
-    margin-bottom: 15px;
   }
   .limits h2 {
     font-size: 27px;
@@ -2315,7 +2365,7 @@ form {
 .landing .hero-copy,
 .landing .principle > p,
 .landing .how p,
-.landing .guide-row p,
+.landing .criteria > p,
 .landing .limits p {
   font-size: 16px;
   color: var(--ink);
