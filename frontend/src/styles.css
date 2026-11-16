@@ -642,6 +642,9 @@ form {
 }
 .auth-page {
   min-height: 100dvh;
+  /* [왜] 오류 · 안내 문장이 '6/번'처럼 낱말 중간에서 줄을 바꾸지 않게 한다(랜딩과 같은 규칙) */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .auth-page > header {
   display: flex;
@@ -660,10 +663,12 @@ form {
 }
 .auth-card h1 {
   font-size: 28px;
+  margin-bottom: 24px;
 }
+/* [왜] 로그인 화면은 제목 아래 설명이 없어서, 제목 아래 간격을 설명이 아닌 제목에 둔다 */
 .auth-card > p {
   color: var(--muted);
-  margin: 15px 0 28px;
+  margin: 0 0 28px;
 }
 .auth-card form > .primary {
   width: 100%;
@@ -705,11 +710,11 @@ form {
   font-size: 13px;
   color: var(--muted);
 }
-.auth-note {
-  padding: 50px 20px 30px;
-  text-align: center;
-  color: var(--muted);
+/* 로그인 실패 아래의 잠금 규칙 · 재설정 링크 안내 */
+.auth-card > .auth-help {
   font-size: 13px;
+  color: var(--muted);
+  margin: -4px 0 16px;
 }
 .subheading {
   margin: 25px 0 12px;
