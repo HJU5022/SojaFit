@@ -25,7 +25,7 @@ SojaFit은 회로를 읽고 대체 조건을 정해 후보 부품을 판정하�
 
 ## 확인 명령
 
-PR마다 CI(`.github/workflows/ci.yml`)가 도는 것과 같은 명령입니다. 조직 결제 한도로 Actions가 시작되지 않는 동안은 로컬에서 돌리고 결과를 작업 기록에 적습니다(README 5절).
+앞의 둘은 PR마다 CI(`.github/workflows/ci.yml`)가 도는 것과 같은 명령이고, 동결 해시 검사는 CI 밖에서 돌립니다. 조직 결제 한도로 Actions가 시작되지 않는 동안은 로컬에서 돌리고 결과를 작업 기록에 적습니다(README 5절).
 
 - 파이썬 회귀: `uv run pytest -q`(키 · 네트워크 없이 도는 것만. 저장소 구조 · 트리 검사는 `uv run pytest tests/repo`)
 - 화면: `cd frontend && npm ci && npm test && npm run format:check && npm run build`
