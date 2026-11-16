@@ -91,7 +91,7 @@
 | 보관 기간이 지나면 자동으로 지운다(프로젝트 · 분석 대화 60일, 기록 30일) | `db/020_service_baseline.sql`의 청소 함수 2개, 새 분석 때 작은 묶음 | 21조(파기): 보유기간이 지나 불필요해진 개인정보는 지체 없이 파기 |
 | 사용자가 프로젝트 · 내 설정을 지우면 바로 실제로 지운다 | `DELETE /api/projects/{id}`(같은 UUID 분석 기록 · checkpoint 포함), `DELETE /api/me/memory` | 36조(삭제 요구) |
 | 탈퇴하면 계정과 모든 기록을 지운다 | `DELETE /api/me`(기록 먼저, 계정 마지막, 다시 요청하면 이어서) | 37조(처리정지 요구 · 동의 철회) |
-| 가입·로그인 화면에서 처리방침을 알린다 | 공개 `/privacy`(`frontend/src/Account.tsx`의 `Privacy`: 처리 항목 · 보관 기간 · 삭제 · 외부 서비스. 새 화면의 글은 축약본이다)로 가는 링크. 별도 동의 체크와 동의값 저장은 없고 서버 `consent`는 호환용 선택 필드다(`backend/api/auth.py:193,260`) | 15조 2항(동의를 받을 때 알릴 사항) |
+| 가입·로그인 화면에서 처리방침을 알린다 | 공개 `/privacy`(`frontend/src/Account.tsx`의 `PrivacyText`: 처리 목적 · 항목 · 보유 기간 · 위탁 · 국외 이전 · 쿠키 · 권리 행사 · 보호책임자)로 가는 화면 맨 아래 고지 줄(`frontend/src/Legal.tsx`의 `Footer`, #27). 별도 동의 체크와 동의값 저장은 없고 서버 `consent`는 호환용 선택 필드다(`backend/api/auth.py:193,260`) | 15조 2항(동의를 받을 때 알릴 사항) |
 
 #### 사용자가 지울 때(구현)
 - 프로젝트 삭제 `DELETE /api/projects/{id}`(`backend/api/projects.py:184` `delete_owned_with_checkpoints`): 프로젝트 행을 잠근 같은 트랜잭션에서 그 프로젝트 대화 UUID의 분석 checkpoint 표 3개(`checkpoint_writes` · `checkpoint_blobs` · `checkpoints`, thread_id 글자) → 분석 thread(메시지 · 승인 기록 · 분석 사건은 FK cascade) → 남은 thread가 없는 같은 UUID 분석 회로 → 프로젝트(회로 · 대화 · run · 메시지 · 승인 · 견적 · 승인 사례는 FK cascade) 순서로 지운다(`memory_service.delete_analysis_threads`, 사용자 조건으로만 고름). 하나라도 실패하면 모두 되돌린다. 사용자 사실(Store)은 프로젝트에 딸리지 않아 남는다.
