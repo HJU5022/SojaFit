@@ -1,0 +1,79 @@
+prep_start None {}
+prep_apk_done None {'seconds': 3.3, 'rx_bytes': 19903371, 'packages': 'git python3 py3-httpx tzdata'}
+host_load_before_cold None {'load1_5_15': [4.55, 4.45, 4.2]}
+host_load_no_wait None {'note': 'd12: record only, no wait (other agents share the host)'}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'main'}
+git_clone_end 12.249 {'main_at_clone': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'commit': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'tree': '3c77569e5273bca2940bf07819f9027611490cce', 'branch': 'HEAD', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 45744, 'total_kb': 127652, 'has_env_file': False, 'rx_bytes': 46585396}
+host_load_at_up 12.25 {'load1_5_15': [4.95, 4.54, 4.23]}
+compose_up_issued 12.25 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 266.284 {'rx_bytes': 591000749}
+demo_login_A_done 266.799 {'status': '200', 'seconds': 0.513}
+smoke_start 266.8 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 278.176 {'exit_code': 0, 'rx_bytes': 591000749}
+host_load_end 280.553 {'load1_5_15': [15.8, 12.33, 7.95]}
+prep_start None {}
+prep_apk_done None {'seconds': 3.2, 'rx_bytes': 19967055, 'packages': 'git python3 py3-httpx tzdata'}
+host_load_before_cold None {'load1_5_15': [11.22, 9.64, 9.33]}
+host_load_no_wait None {'note': 'd12: record only, no wait (other agents share the host)'}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'main'}
+git_clone_end 7.539 {'main_at_clone': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'commit': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'tree': '3c77569e5273bca2940bf07819f9027611490cce', 'branch': 'HEAD', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 45744, 'total_kb': 127652, 'has_env_file': False, 'rx_bytes': 46600052}
+host_load_at_up 7.539 {'load1_5_15': [9.81, 9.39, 9.24]}
+compose_up_issued 7.539 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 295.984 {'rx_bytes': 593637196}
+demo_login_A_done 296.749 {'status': '200', 'seconds': 0.763}
+smoke_start 296.749 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 309.755 {'exit_code': 0, 'rx_bytes': 593637196}
+host_load_end 312.133 {'load1_5_15': [14.93, 13.56, 11.23]}
+prep_start None {}
+prep_apk_done None {'seconds': 4.0, 'rx_bytes': 19878999, 'packages': 'git python3 py3-httpx tzdata'}
+host_load_before_cold None {'load1_5_15': [14.24, 13.43, 11.27]}
+host_load_no_wait None {'note': 'd12: record only, no wait (other agents share the host)'}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'main'}
+git_clone_end 8.692 {'main_at_clone': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'commit': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'tree': '3c77569e5273bca2940bf07819f9027611490cce', 'branch': 'HEAD', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 45744, 'total_kb': 127652, 'has_env_file': False, 'rx_bytes': 46515997}
+host_load_at_up 8.692 {'load1_5_15': [14.7, 13.54, 11.32]}
+compose_up_issued 8.692 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 244.522 {'rx_bytes': 590601073}
+demo_login_A_done 244.86 {'status': '200', 'seconds': 0.335}
+smoke_start 244.86 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 254.398 {'exit_code': 0, 'rx_bytes': 590601073}
+host_load_end 256.779 {'load1_5_15': [11.05, 13.63, 12.07]}
+prep_start None {}
+prep_apk_done None {'seconds': 2.4, 'rx_bytes': 19911738, 'packages': 'git python3 py3-httpx tzdata'}
+host_load_before_cold None {'load1_5_15': [9.86, 13.08, 11.92]}
+host_load_no_wait None {'note': 'd12: record only, no wait (other agents share the host)'}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'main'}
+git_clone_end 7.311 {'main_at_clone': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'commit': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'tree': '3c77569e5273bca2940bf07819f9027611490cce', 'branch': 'HEAD', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 45744, 'total_kb': 127652, 'has_env_file': False, 'rx_bytes': 46619458}
+host_load_at_up 7.312 {'load1_5_15': [9.63, 12.98, 11.9]}
+compose_up_issued 7.312 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 234.346 {'rx_bytes': 592715493}
+demo_login_A_done 234.723 {'status': '200', 'seconds': 0.377}
+smoke_start 234.724 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 244.609 {'exit_code': 0, 'rx_bytes': 592715493}
+host_load_end 246.865 {'load1_5_15': [9.46, 12.48, 12.07]}
+prep_start None {}
+prep_apk_done None {'seconds': 2.5, 'rx_bytes': 19938210, 'packages': 'git python3 py3-httpx tzdata'}
+host_load_before_cold None {'load1_5_15': [8.86, 12.07, 11.94]}
+host_load_no_wait None {'note': 'd12: record only, no wait (other agents share the host)'}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'main'}
+git_clone_end 7.727 {'main_at_clone': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'commit': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'tree': '3c77569e5273bca2940bf07819f9027611490cce', 'branch': 'HEAD', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 45744, 'total_kb': 127652, 'has_env_file': False, 'rx_bytes': 46429487}
+host_load_at_up 7.727 {'load1_5_15': [8.94, 11.98, 11.91]}
+compose_up_issued 7.727 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 148.938 {'rx_bytes': 592448858}
+demo_login_A_done 149.235 {'status': '200', 'seconds': 0.295}
+smoke_start 149.235 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 158.515 {'exit_code': 0, 'rx_bytes': 592448858}
+host_load_end 160.759 {'load1_5_15': [10.8, 12.1, 11.99]}
+prep_start None {}
+prep_apk_done None {'seconds': 14.2, 'rx_bytes': 20160612, 'packages': 'git python3 py3-httpx tzdata'}
+host_load_before_cold None {'load1_5_15': [10.92, 11.82, 11.88]}
+host_load_no_wait None {'note': 'd12: record only, no wait (other agents share the host)'}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'main'}
+git_clone_end 13.341 {'main_at_clone': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'commit': '799ae63613a83105d3fd6e49d0abf3561b2f888c', 'tree': '3c77569e5273bca2940bf07819f9027611490cce', 'branch': 'HEAD', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 45744, 'total_kb': 127652, 'has_env_file': False, 'rx_bytes': 46575618}
+host_load_at_up 13.341 {'load1_5_15': [12.26, 12.07, 11.97]}
+compose_up_issued 13.348 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 207.649 {'rx_bytes': 593039222}
+demo_login_A_done 208.117 {'status': '200', 'seconds': 0.468}
+smoke_start 208.118 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 217.441 {'exit_code': 0, 'rx_bytes': 593039222}
+host_load_end 219.636 {'load1_5_15': [14.2, 13.38, 12.58]}
+loop done: Tue Nov 17 05:32:24 KST 2026

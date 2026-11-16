@@ -1,8 +1,8 @@
 # 필수 게이트 자기 점검
 
 - 상태: 현행
-- 기준일: 2026-11-16
-- 기준 커밋: `a0abece5`(`main`, PR #141 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-16 04:36 KST `sojafit-api-main-a0abece5-1116`). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다.
+- 기준일: 2026-11-16(11-17 재측정 행은 [evals/results/d12/](../evals/results/d12/README.md), 대상 `main` `799ae636`)
+- 기준 커밋: `a0abece5`(`main`, PR #141 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-17 05:03 KST 조회 `sojafit-api-main-799ae636-1117`, 그 전 11-16 04:36 KST `sojafit-api-main-a0abece5-1116`). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다.
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
 
@@ -16,12 +16,12 @@
 
 | 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
 |---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 그 뒤 리비전(`main7ba86325-1115` · `main76fadcb4-1116` · 지금 `main-a0abece5-1116`)의 로그인 뒤 25단계 점검 기록은 없다(확인 못 함). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
-| G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: 11-16 GitHub `main` `3ce5abdc` 새 clone → `/health` 200 242.8초, 스모크 28/28, [boot_2026-11-16](../evals/results/d10/boot_2026-11-16/README.md). 한계는 G2 절) |
+| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 그 뒤 리비전(`main7ba86325-1115` · `main76fadcb4-1116` · `main-a0abece5-1116` · 지금 `main-799ae636-1117`)의 로그인 뒤 25단계 점검 기록은 없다(확인 못 함, 조장용 명령은 [d12 README](../evals/results/d12/README.md)). 지금 리비전의 로그인 없는 GET은 11-17 05:03 KST에 정상이다. 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
+| G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: 11-17 `main` `799ae636` 새 clone → `/health` 200 6회 중앙값 239.4초(148.9 ~ 296.0), 스모크 6회 모두 28/28, 원시 로그 [d12/boot](../evals/results/d12/README.md). 11-16 `3ce5abdc` 1회 242.8초. 한계는 G2 절) |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 충족 (운영 DB 청크 본문 51,967개를 직접 열어 다시 계산한 sha256이 모두 서로 다르고 저장소 해시 목록과 같다(11-16, [db_content_hash_check](../evals/results/d10/db_content_hash_check_2026-11-16.md)), 문서 1,360, 파싱 Docling + pdfplumber. 한계는 G3 절) |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
-| G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
-| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 증거 보강 필요 (스크린샷 3장 · 배포본 트레이스 수신 확인, 대시보드에서 평가 점수가 트레이스에 붙은 화면은 아직 없음) |
+| G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 11-17 지금 코드 `799ae636` 웹 켬 2세트 49/50 · 49/50([d12](../evals/results/d12/README.md)). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
+| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 증거 보강 필요 (스크린샷 3장 · 배포본 트레이스 수신 확인. 점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 대시보드에서 평가 점수가 트레이스에 붙은 화면은 아직 없음) |
 | G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 진행 중 (비밀값 검사 충족, 시연 영상 파일 없음, 다른 조원 포트폴리오 · AI 도구 기록 없음. 아래 G7) |
 
 ## 게이트별 증거
@@ -33,6 +33,8 @@
 | 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
 | 이전 리비전 `sojafit-api-main76fadcb4-1116`(소스 `76fadcb4`, 2026-11-16 04:07 ~ 04:36 KST)과 `sojafit-api-main7ba86325-1115`(소스 `7ba86325`, 11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 지금 리비전은 README 「배포 리비전」 칸 | 리비전 이름은 `gcloud run revisions list`로 확인했다(11-16 04:37 KST). 두 리비전 모두 로그인 뒤 25단계 점검 기록은 없다(확인 못 함) | [README.md](../README.md) 표 |
 | 운영 시작 실패와 복구(2026-11-14 22:43 ~ 11-15 21:26 KST) | Secret Manager `EXA_API_KEY` 버전 1이 파기(DESTROYED)됐는데 서비스 설정이 그 버전을 고정해, 최소 인스턴스 0대인 운영 리비전 `574de79-rs`의 새 인스턴스가 시작하지 못했다(21:22 KST `/health` · `/login` · `/` 500). 같은 이미지에 `EXA_API_KEY:2`만 바꾼 리비전 `sojafit-api-574de79-exa2`를 21:26 KST에 100%로 돌려 복구했고, 22:29 KST에 위 현재 리비전으로 바꿨다. 누가 · 왜 버전 1을 파기했는지는 확인하지 못했다 | `docs/worklog/jeongun.md` 11-15 항목 「운영 다운 복구」 |
+| 지금 리비전 `sojafit-api-main-799ae636-1117`(소스 `main` `799ae636`) 로그인 없는 점검(2026-11-17 05:03 KST) | `gcloud run services describe`(읽기만)로 트래픽 100% 확인. `/health` 200(0.09초), `/login` · `/` · `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 53 · 경로 42(코드 전체 동작 60 · 경로 49 중 문서에 보이는 것, [routes.txt](../evals/results/d12/checks/routes.txt)). 로그인 뒤 25단계는 하지 않았다 | [unauth_checks.txt](../evals/results/d12/prod_unauth/unauth_checks.txt) |
+| 경보 설정 재조회(2026-11-17 04:55 KST, 읽기만) | 가동 확인 1개(`sojafit-api /health`, 5분 주기, 2xx만 통과, 6개 지역)와 경보 정책 1개(`SojaFit 운영 다운: /health 가동 확인 실패`, 켜짐, 메일 채널 1개)가 있다. 11-16 09:41 ~ 11-17 04:55 KST의 `uptime_check/check_passed` 시계열 점 8,292개(6개 지역)가 모두 참이었다(거짓 0). 새로 만들거나 바꾼 것은 없다 | [monitoring/](../evals/results/d12/monitoring/) |
 | 운영 다운 경보(2026-11-16) | 위 다운을 사람이 발견한 뒤 Cloud Monitoring에 `/health` 가동 확인(5분 주기, 2xx만 통과)과 경보 정책(실패 지역이 1개를 넘으면 메일)을 걸었다. 일부러 401을 주는 임시 확인으로 시험해 09:43:30 KST에 경보가 OPEN 되는 것을 API로 확인하고 임시 설정은 지웠다. 메일 도착 · 실제 다운 발령은 확인하지 않았다 | [alerting_2026-11-16.md](../evals/results/d10/alerting_2026-11-16.md) |
 | 리비전 `sojafit-api-574de79-rs`(소스 `main` `574de79`, 2026-11-13 12:07 KST 100% 전환, 11-15 21:26 KST까지 100%) 평가용 계정 25단계 | 배포 서버 · 실제 모델로 평가용 계정 A · B 로그인 200, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작(같은 이미지 다이제스트의 새 리비전), 같은 run 재개 200, 승인, 같은 승인 409, 견적, 계정 B의 접근 404. 통과 25 · 실패 0 · 건너뜀 0. 환경변수 32개(`EXA_WEB_SEARCH_ENABLED=1` 포함). 재개 요청을 이 리비전이 처리한 것은 서버 로그로 확인했다. 이 리비전은 `574de79`의 설정 그대로다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md), [서버 로그 발췌](../evals/results/d10/deploy_574de79/restart_server_log_2026-11-13.txt), [smoke_..._2026-11-13_120624.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_120624.json) |
 | 리비전 `sojafit-api-574de79`(소스 `main` `574de79`) 로그인 없는 점검 | 2026-11-13 10:53 KST: `/health` 200(0.11초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34, `/api/auth/me` 401, `/api/auth/demo-login` 404(`DEMO_MODE=0`) | [unauth_checks_raw.txt](../evals/results/d10/deploy_574de79/unauth_checks_raw.txt) |
@@ -65,6 +67,8 @@
 |---|---|---|
 | 키 없는 첫 기동 사전 점검(2026-11-13, `main` `574de79`의 `git archive` 사본, `.env` 없음, Apple M2 Docker Desktop) | `docker compose build --no-cache` 89.6초, `up --build -d` 반환 7.8초 · `/health` 200까지 11.0초(빌드 층 캐시 적중), 합계 약 100초. db healthy, thread-setup · corpus-load 정상 종료, 적재 문서 42 · 청크 1,556. 호스트 8000 포트 충돌로 사본에서만 18000으로 바꿨다 | [keyless_boot_574de79.md](../evals/results/d10/keyless_boot_574de79.md) |
 | 배포본의 평가용 계정 로그인(`574de79`, 2026-11-13) | 평가용 계정 A · B 로그인 200(0.96초 · 0.85초). 로컬 기동과 별개로 배포 주소에서의 로그인이다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md) |
+| 현행 측정(2026-11-17, GitHub `main` clone → `799ae636` checkout, 6회) | 회차마다 새 빈 `docker:dind`(29.9.3), `.env` 없음 · 키 없음, `docker compose up --build`. clone 시작 → `/health` 200: 266.3 · 296.0 · 244.5 · 234.3 · 148.9 · 207.6초(중앙값 **239.4초**), `up` → `/health` 중앙값 231.4초, 스모크 `--demo --refusal` 6회 모두 28 통과 · 0 실패 · 0 건너뜀, 내려받은 양 591 ~ 594 MB. 같은 호스트에서 다른 작업이 함께 돌아 1분 부하 4.95 ~ 14.70(시간 차이는 부하 탓, 코드 차이 아님). 1회차 dind에서 CI 재생 검사(기록 질문 10개)도 "기록과 같음" | [d12 README](../evals/results/d12/README.md) 「새 clone 기동」, 회차별 [run1](../evals/results/d12/boot/run1/) ~ run6 · [summary.json](../evals/results/d12/boot/summary.json), [replay_check.txt](../evals/results/d12/checks/replay_check.txt) |
+| 빈 엔진 6회 표(11-13 ~ 14, `docs/research/docker-cold-start-measurements.md` 1 · 4절)의 원시 | 회차별 값 · 단계 시각은 저장소에 있다: [scripts/results/docker_performance/](../scripts/results/docker_performance/)(`profile_lazyload_six_run_*` · `kicad_in_api_vs_renderer_split_*`). compose · 빌드 원시 로그는 실험 PC에만 있다(그 문서 7절). 그 표는 Engine 27.5.1의 `up` → `/health`라 위 dind 측정(clone 시작 기준)과 다른 계열이다 | [d12 README](../evals/results/d12/README.md) 「빈 엔진 기동 6회 측정의 원시 로그」 |
 | 현행 측정(2026-11-16, GitHub `main` `3ce5abdc`) | 빈 `docker:dind`(29.9.3)에서 새 clone, `.env` 없음 · 키 없음, `docker compose up --build`. clone 시작 → `/health` 200 **242.8초**, → 스모크 끝 251.4초, 스모크 `--demo --refusal` 28 통과 · 0 실패 · 0 건너뜀. 내려받은 양 585 MB. 호스트 부하가 높은 때(1분 평균 10)였다 | [boot_2026-11-16/README.md](../evals/results/d10/boot_2026-11-16/README.md) |
 | 현행 측정(2026-11-13, `jeongun-2` @ `ad8612e` = `main` `ea5797c`과 같은 트리 `6452cdfc…`) | 빈 `docker:dind`(29.9.3)에서 새 clone, `.env` 없음 · 키 없음, `docker compose up --build`. 냉: clone 시작 → `/health` 200 243.9초, `up` → `/health` 200 235.5초, `up` → 스모크 종료 243.1초, clone 시작 → 스모크 종료 251.6초(clone 8.4초). 온(`down -v` 뒤): `up` → `/health` 200 11.7초, → 스모크 종료 19.0초. 스모크 `--demo --refusal` 28 통과 · 0 실패 · 0 건너뜀(냉 · 온). 내려받은 양 852 MB(냉) | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json), [timeline_warm.json](../evals/results/d10/boot/timeline_warm.json), [smoke_cold.json](../evals/results/d10/boot/smoke_cold.json), [smoke_warm.json](../evals/results/d10/boot/smoke_warm.json) |
 | 시간이 늘어난 이유 | 시간은 이미지 빌드가 정한다(빌드 202.2초: `apt-get install kicad libcairo2` 70.0초, 이미지 내보내기 65.9초, `uv sync` 48.6초, `npm ci` 45.4초, 일부 겹침). `kicad libcairo2` 설치는 커밋 `e928d59`(11-11)가 `Dockerfile`에 넣었고 아래 11-10 측정은 그 전이다. 11-10과의 차이를 단계별로 나누어 재지는 않았다. 이미지 2.51 GB | [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json) `build_steps_seconds`, [Dockerfile](../Dockerfile) |
@@ -80,7 +84,7 @@
 |---|---|
 | 평가자 환경에서의 기동 | 발표 때 평가자가 하는 실행은 이 측정과 별개다. 이 측정은 Mac 호스트의 docker-in-docker 1회(냉)다 |
 | WSL에서 11-13 측정 | 하지 않았다. WSL 값은 11-10 측정뿐이다 |
-| 11-13 측정의 반복 · 회선 속도 | 냉 1회 · 온 1회, 호스트 부하 5.62 → 8.21, 회선 속도 미측정([측정 문서](../evals/results/d10/startup_restart_isolation_2026-11-13.md) 한계) |
+| 11-13 측정의 반복 · 회선 속도 | 냉 1회 · 온 1회, 호스트 부하 5.62 → 8.21, 회선 속도 미측정([측정 문서](../evals/results/d10/startup_restart_isolation_2026-11-13.md) 한계). 11-17에 냉 6회를 쟀다(위 표). 부하를 고정하지 못했고 온 재기동은 다시 재지 않았다 |
 | Windows Docker Desktop | 확인하지 않았다 |
 | WSL의 GitHub clone 시간 | 자격 증명이 없어 재지 않았다. 맥은 main clone 3.6초(저장소가 비공개라 저장된 자격 증명으로 받음) |
 
@@ -135,8 +139,9 @@
 |---|---|---|
 | 기준 평가셋 | v3 50건(관련 25 · 비관련 25, 2026-11-10 동결). v1 50건(11-02), v2 70건(11-03)도 동결 | `evals/FROZEN.json`, [ADR 0015](adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md) |
 | 개선 전후 비교 | 3-A 검색 5단계, 3-B 판정 길 8단계, 3-C v3 검색 길 2단계, 3-D 현재 스택 확인. 달라진 문항 목록과 회귀 문항 포함 | [EVAL_REPORT.md](../EVAL_REPORT.md) 3절 |
-| v3 현재 값 | 50/50(`DEMO_MODE` 미기록. `DEMO_MODE=0` 기록 측정은 47 ~ 50/50, [EVAL_REPORT.md](../EVAL_REPORT.md) 8.2절 통과 열) | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
+| v3 현재 값 | 2026-11-17 지금 코드 `799ae636` · `DEMO_MODE=0` 웹 켬 + 미리 출발(`WEB_PREFETCH=1`, 운영 리비전에는 없음) 1세트씩 2번: 두 번 모두 **49/50**(실패 v3-16 `wrong_citation`, 무관 거절 25/25), p50 · p95 5.5 · 16.7초와 4.8 · 9.1초. 이전 헤드라인 50/50(`DEMO_MODE` 미기록, 11-12 `520988c`+작업 트리). `DEMO_MODE=0` 기록 측정은 47 ~ 50/50([EVAL_REPORT.md](../EVAL_REPORT.md) 8.2절 통과 열) | [d12/gate/set1.json](../evals/results/d12/gate/set1.json) · [set_b/set1.json](../evals/results/d12/gate/set_b/set1.json), `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
 | 검색 기준선(v1) | 하이브리드 Recall@5 0.737 · MRR 0.649 | `evals/results/retrieval/retrieval_baseline_2026-11-03.json` |
+| 서비스 검색 재측정(2026-11-17, `799ae636`) | 같은 실행기(`run_retrieval_service`, 사전 등록 #26 설정) 11-04 → 11-17: R1 고르기용 46 Page Recall@5 0.8587 → 0.8152, 확인용 38 0.9079 → 0.9079, v2 19 0.7939(11-04 0.8246). 달라진 문항 R1 4개(r1-042 · 086 · 098 내려감, r1-097 올라감), v2 2개(draft30-m04 · draft50-n04 내려감). 사이에 코퍼스(v1 → v4h)와 검색 코드가 함께 바뀌었다 | [d12/retrieval/service_r1_2026-11-17.json](../evals/results/d12/retrieval/service_r1_2026-11-17.json), `evals/results/retrieval/service_r1_2026-11-04.json` |
 | 사전 등록 | 바꾸기 전 기대를 기록 | `evals/guides/preregister.md` |
 
 확인 못 한 것:
@@ -162,7 +167,7 @@
 
 | 항목 | 이유 |
 |---|---|
-| 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 캡처는 없다(스크린샷 3장에는 점수 열 · 점수 화면이 없다). 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md) |
+| 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 캡처는 없다(스크린샷 3장에는 점수 열 · 점수 화면이 없다). 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md). 2026-11-17 재조회: 운영 프로젝트 점수 57,198개(숫자 · 참거짓 40,826 + 범주 16,372)가 트레이스 4,109개에 붙어 있고, 11-17 `799ae636` 게이트 세트의 트레이스 50개에 700개가 붙었다. 캡처할 트레이스: `5fa5c6c56187c8a38326de96fd57dfa5`(v3-01, 점수 15개), [d12 README](../evals/results/d12/README.md) |
 | 배포본 서비스 분석 트레이스의 Langfuse 수신 | 수신을 확인했다: 11-13 09:38~10:10 배포본 요청이 트레이스로 보인다(스크린샷 `01`, 최근 1일 루트 관측 약 101건). 403 원인은 [langfuse_403_2026-11-13.md](../evals/results/d10/langfuse_403_2026-11-13.md). 확인 시점의 리비전은 `fadde2a`이고 그 뒤의 100% 리비전(`574de79-rs`, 지금 리비전은 README 표 「배포 리비전」)에서 새로 캡처하지는 않았다 |
 | 현재 Skill 실행 UI | 확인하지 않았다 |
 
@@ -174,16 +179,17 @@
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
 | 포트폴리오 | 하정운 1건 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) |
+| 비밀값 검사(재검사) | 2026-11-17, `main` `799ae636`, gitleaks `v8.30.1`(같은 이미지 digest), 저장소 `.gitleaks.toml`(허용 5) · `.gitleaksignore`(지문 14줄), `--redact`, 이력 전체 1,250 커밋 검사(`git rev-list --count` 1,494, 병합 제외 1,252), **발견 0건 · 종료 코드 0** | [gitleaks_full_history.txt](../evals/results/d12/checks/gitleaks_full_history.txt) |
 | 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/), 현재 HEAD 재검사: [secrets/after_2026-11-13_556384b.md](../evals/results/d10/secrets/after_2026-11-13_556384b.md) |
 
 확인 못 한 것(없는 것):
 
 | 항목 | 상태 |
 |---|---|
-| 시연 영상 파일 | 없음 |
+| 시연 영상 파일 | 11-17 녹화: `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`(1:48, 동결 커밋 `9c87ba36`). 상세는 [DELIVERABLES.md](deliverables/DELIVERABLES.md) 남은 일 |
 | GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다. 동결 직전에 로컬 `gitleaks`를 다시 돌려야 한다 |
 | 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
-| 다른 조원 포트폴리오(오세창 · 심태현) | 없음 |
+| 다른 조원 포트폴리오(오세창 · 심태현) | 11-17 초안 있음(조장 위임 AI 작성): [portfolio-osc.md](deliverables/portfolio-osc.md), [portfolio-sth.md](deliverables/portfolio-sth.md). 본인 확인 전 |
 
 ## 변이 확인
 
@@ -213,5 +219,5 @@
 
 | 항목 | 상태 | 증거 |
 |---|---|---|
-| 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원 · 재개. 승인 전 부작용 없음, 같은 승인 요청 반복 시 실행 중복 없음 | 로컬 compose에서 확인(2026-11-13, `jeongun-2` `ad8612e` = `main` `ea5797c`과 같은 트리; 2026-11-09, `jeongun-8` `f6b6d7e`). 배포 주소에서는 확인하지 않음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json) |
+| 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원 · 재개. 승인 전 부작용 없음, 같은 승인 요청 반복 시 실행 중복 없음 | 로컬 compose에서 확인(2026-11-13, `jeongun-2` `ad8612e` = `main` `ea5797c`과 같은 트리; 2026-11-09, `jeongun-8` `f6b6d7e`). 배포 주소에서는 2026-11-13 리비전 `sojafit-api-574de79-rs`에서 재시작 뒤 재개 · 승인 · 같은 승인 409를 확인했다(위 G4 표 "배포 서버 재시작 뒤 재개 · 계정 분리" 행). 그 뒤 리비전에서는 다시 확인하지 않음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json) |
 | 사용자별 DB Store에 기억 저장, 의미 검색 · 활용 · 잘못된 기억 수정. thread 체크포인트나 코퍼스 벡터만으로 사용자 장기 기억을 대신하지 않음 | 일부 확인. 저장 · 격리 · 수정 · 삭제는 가짜 임베딩 DB 시험과 로컬 compose에서 확인. 실제 Voyage 임베딩과 배포 DB에서의 의미 검색은 확인하지 않음 | [test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py) |

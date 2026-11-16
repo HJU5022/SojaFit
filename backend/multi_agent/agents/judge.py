@@ -24,7 +24,7 @@ from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
-from backend.multi_agent.agents.part_names import MAKER, ground_part_names, part_tokens
+from backend.multi_agent.agents.part_names import ground_part_names, part_tokens, strip_maker
 from backend.multi_agent.facts import ORDER_CODE, refs_of
 from backend.multi_agent.revisions import document_revision, requested_revisions, revisions_for_part
 from backend.rag.spec_lookup import CODES as SPEC_CODES
@@ -540,11 +540,6 @@ def _prefer_role_from_load(roles: list[str], rules: dict, text: str) -> list[str
 EDITION = re.compile(r'[A-Z]\d{4}|(?:19|20)\d{2}|판|EDITION|VERSION|\bREV', re.I)  # 데이터시트 판으로 보이는 글
 
 
-def _part(name: str) -> str:
-    """품번 앞의 제조사 이름(TSC · Taiwan Semiconductor)을 뗀다."""
-    return MAKER.sub('', name or '').strip()
-
-
 # [왜] 원래 부품이 '제조사 미상 1N5819'이거나 다른 제조사(onsemi · Vishay …)면 TSC 같은 품번 문서는 그 부품의 문서가 아니다. 정답들은
 #      원래 값을 TSC 값으로 대신하지 않는다(v3-01 근거, 11-07 c20-04: TSC 1N5819 값으로 사양 동등을 냈다)
 UNKNOWN_MAKER = re.compile(r'제조사\s*(?:가|는|를)?\s*(?:미상|불명|모르|알\s*수\s*없|확인하지\s*못)|maker (?:is )?unknown|unknown maker', re.I)
@@ -578,7 +573,7 @@ def _rule_codes(rules: list[dict]) -> set[str]:
 
 def _rows(specs, name: str) -> list[dict]:
     """품번의 사양 표 행. 제조사 이름을 떼고 찾고, 없으면 첫 낱말(주문 코드를 뗀 기본 품번, 1N4148 R0G → 1N4148)로 다시 찾는다."""
-    name = _part(name)
+    name = strip_maker(name)
     return (specs(name) or specs(name.split()[0])) if name else []
 
 
@@ -703,7 +698,7 @@ def _identical(retriever, original: str, candidate: str) -> tuple[bool, dict | N
 
     주문 코드 규칙을 먼저 보고, 그 행을 못 찾으면 제조사가 같은 제품이라고 밝힌 청크를 찾아 그 청크를 인용한다(EC-10).
     """
-    o, c = _part(original).upper().split(), _part(candidate).upper().split()
+    o, c = strip_maker(original).upper().split(), strip_maker(candidate).upper().split()
     if not o or not c or o[0] != c[0]:
         return False, None
     if o == c:
@@ -731,7 +726,7 @@ UNI, BI = re.compile(r'단방향|unidirection|uni-direction', re.I), re.compile(
 
 def _direction(part: str) -> str:
     """TSC TVS 품번의 방향: AEC 'H'를 뗀 끝이 C · CA면 양방향, 아니면 단방향(문서 'For bidirectional use C or CA suffix')."""
-    base = re.sub(r'H$', '', (_part(part).upper().split() or [''])[0])
+    base = re.sub(r'H$', '', (strip_maker(part).upper().split() or [''])[0])
     return 'bi' if re.search(r'CA?$', base) else 'uni'
 
 
@@ -893,8 +888,8 @@ def _original_from_text(read: JudgeRead, text: str) -> str:
     #      동일품을 사양 동등으로 냈다(11-06 공식 7회차 v3-06)
     upper = text.upper()
     for cand in read.candidates:
-        c = _part(cand).upper().split()
-        if not c or _part(read.original_part).upper().split()[:1] == c[:1]:
+        c = strip_maker(cand).upper().split()
+        if not c or strip_maker(read.original_part).upper().split()[:1] == c[:1]:
             continue
         for m in re.finditer(r'(?<![A-Z0-9])' + re.escape(c[0]) + r'(?:\s+([RALM][A-Z0-9]G?))?(?![A-Z0-9])', upper):
             if m.group(0).split() != c:
@@ -912,7 +907,7 @@ def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason
     # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
     #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)
     missing = {name.upper() for name, ok in (facts.get('parts') or {}).items() if not ok}
-    if gone := [c for c in read.candidates if _part(c).upper() in missing]:
+    if gone := [c for c in read.candidates if strip_maker(c).upper() in missing]:
         return Reason.PART_MISSING, 'candidate not in the corpus: ' + ', '.join(gone)
     wanted = read.revision_wanted.strip().upper()
     # [왜] 판정 길에는 코퍼스 개정판 전체 목록이 없다. 사실 확인이 코퍼스에 있다고 확인한 개정 코드(K2611)를 담을 때만 통과한다
@@ -1092,9 +1087,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             ahead.shutdown(wait=False)
     try:
         if prefetch and read.original_part and not original_not_tsc(read.original_part, text):
-            prefetch([_part(read.original_part), _part(read.original_part).split(' ')[0]], need)
+            prefetch([strip_maker(read.original_part), strip_maker(read.original_part).split(' ')[0]], need)
         original_rows = [] if original_not_tsc(read.original_part, text) else _rows(specs, read.original_part)  # 후보 조회와 같은 규칙(제조사 이름 · 주문 코드)
-        original_editions = revisions_for_part(revision_text, _part(read.original_part)) if editions else set()
+        original_editions = revisions_for_part(revision_text, strip_maker(read.original_part)) if editions else set()
         if editions:
             original_rows = [row for row in original_rows if _row_revision(row) in (original_editions or set())]
         if state.get('question_type') == 'candidate_find' and not original_rows and extra:
@@ -1156,14 +1151,14 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         results = []
         if prefetch and candidates:
             # 후보들을 문서별로 묶어 한 번에 읽어 둔다(후보마다 차례로 읽으면 LLM 호출이 후보 수만큼 이어진다)
-            prefetch([n for c in candidates for n in (_part(c[0]), _part(c[0]).split(' ')[0])], need)
+            prefetch([n for c in candidates for n in (strip_maker(c[0]), strip_maker(c[0]).split(' ')[0])], need)
         # [왜] _identical은 후보마다 검색 1~2번(각 1.2~1.5초)을 차례로 불러 v3-06에서 4~6초였다. 읽기만 하고 서로 영향이 없어(후보 이름 · 원래 품번만 입력)
         #      후보마다 동시에 시작해 두고 아래 루프가 원래 순서대로 결과를 꺼낸다. 오류는 꺼내는 자리에서 그대로 올라간다(원래 호출 자리와 같음)
         ident_pool = ThreadPoolExecutor(max_workers=4)
         idents = [ident_pool.submit(contextvars.copy_context().run, _identical, retriever, read.original_part, c[0]) for c in candidates]
         ident_pool.shutdown(wait=False)
         for (name, category, packages), ident in zip(candidates, idents):
-            part_editions = revisions_for_part(revision_text, _part(name)) if editions else set()
+            part_editions = revisions_for_part(revision_text, strip_maker(name)) if editions else set()
             if editions and not part_editions:
                 continue  # An ambiguous part/edition association must not borrow another part's edition.
             rows = _rows(specs, name)
@@ -1179,7 +1174,7 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                 maker = read.maker_wanted or ('TSC' if tsc_candidate else '')
                 if not tsc_candidate or maker.upper() in ('TSC', 'TAIWAN SEMICONDUCTOR'):
                     try:
-                        grade2_rows = _grade2_rows(web_search, _part(name), missing_codes, maker)
+                        grade2_rows = _grade2_rows(web_search, strip_maker(name), missing_codes, maker)
                     except SearchBudgetExhausted as error:
                         grade2_budget_exhausted = error.grade == 2
                         grade2_rows = []
@@ -1190,10 +1185,10 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             if (web_search_fallback and web_search and not grade2_budget_exhausted
                     and 'VRRM' in {str(code).upper() for code in missing_codes}
                     and not grade2_rows):
-                reference_terms = f"{read.maker_wanted or 'TSC'} {_part(name)} repetitive peak reverse voltage VRRM"
+                reference_terms = f"{read.maker_wanted or 'TSC'} {strip_maker(name)} repetitive peak reverse voltage VRRM"
                 reference_terms += ' ' + ' '.join(sorted(part_editions))
                 try:
-                    fallback_rows = web_search_fallback([_part(name)], reference_terms) or []
+                    fallback_rows = web_search_fallback([strip_maker(name)], reference_terms) or []
                 except SearchBudgetExhausted as error:
                     grade3_budget_exhausted = error.grade == 3
                     fallback_rows = []

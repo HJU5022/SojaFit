@@ -13,7 +13,7 @@
 | 분류 | 기준 | 스크립트 |
 |---|---|---|
 | 운영 | 시험·CI·서비스 코드·운영 절차 문서가 호출하거나 지정하고, 지금 코드에서 돈다 | `db/gen_schema_docs.py`, `db/voyage_rollout.py`, `demo/record_demo.py`, `langfuse/langfuse_skill_check.py`, `smoke/http_smoke.py` |
-| 재현용 | 저장소에 원시 결과가 있고, 결과를 다시 만들거나 구조를 증명하는 데 쓴다. 호출처는 문서·시험 | `auth/auth_boundary_after_merge.py`, `db/verify_chain/verify_chain.sh`, `db/verify_redesign/*.sh`, `eval/stage_report.py`, `eval/approval_wait_report.py`, `smoke/injection_http.py`, `bit_search/bit_search_exp.py` |
+| 재현용 | 저장소에 원시 결과가 있고, 결과를 다시 만들거나 구조를 증명하는 데 쓴다. 호출처는 문서·시험 | `auth/auth_boundary_after_merge.py`, `db/verify_chain/verify_chain.sh`, `db/verify_redesign/*.sh`, `eval/stage_report.py`, `eval/approval_wait_report.py`, `eval/chunk_source_check.py`, `eval/run_codex_v3_isolated.py`, `eval/tally_codex_v3.py`, `smoke/injection_http.py`, `bit_search/bit_search_exp.py` |
 | 일회성 | 한 번 쓴 실험·변환이거나 전제(OS, 모델·차원, 외부 작업 폴더)가 지금 맞지 않아 그대로 돌지 않는다 | `auth/measure_scrypt_concurrent.py`, `eval/import_human_review.py`, `hf_jobs/hf_job.py`, `hf_jobs/hf_data.py`, `smoke/verify_external_schematics.py` |
 
 호출 근거: `db/gen_schema_docs.py`는 `tests/db/test_schema_docs.py`가, `demo/record_demo.py replay`는 `.github/workflows/ci.yml`이, `langfuse/langfuse_skill_check.py`의 함수는 `tests/services/test_langfuse_prompts.py`가, `smoke/http_smoke.py`는 `tests/api/test_http_smoke.py`와 `docs/GATES.md`가 부른다. 나머지 근거는 하위 폴더 설명 파일의 "분류 근거" 열.
@@ -27,7 +27,7 @@
 | `bit_search/` | 비트 후보 + 정확 재정렬 검색 속도·recall 실험 스크립트 | [BIT_SEARCH.md](bit_search/BIT_SEARCH.md) |
 | `db/` | DB 손 작업(voyage-4-large 적용 점검·마이그레이션·검증, 스키마 문서 생성) | [DB.md](db/DB.md) |
 | `demo/` | 키 없는 데모가 재생할 LLM 응답을 실제 키로 기록하고 키 없이 재생해 대조 | [DEMO.md](demo/DEMO.md) |
-| `eval/` | 사람 채점 시트를 평가 JSONL로 되돌리는 변환과, 단계별 응답 시간·비용·사람 대기 시간 집계(D8) | [EVAL.md](eval/EVAL.md) |
+| `eval/` | 사람 채점 시트를 평가 JSONL로 되돌리는 변환, 단계별 응답 시간·비용·사람 대기 시간 집계(D8), 청크와 원본 PDF 대조(D10), Codex v3 비교 실행·집계 | [EVAL.md](eval/EVAL.md) |
 | `hf_jobs/` | Hugging Face Jobs로 GPU 임베딩을 돌리는 스크립트 | [HF_JOBS.md](hf_jobs/HF_JOBS.md) |
 | `langfuse/` | Langfuse 프롬프트·Skill 연결 점검 스크립트 | [LANGFUSE.md](langfuse/LANGFUSE.md) |
 | `smoke/` | 로컬 compose·배포 주소의 사용자 흐름을 HTTP로 점검하는 스크립트와 인젝션 HTTP 시험 | [SMOKE.md](smoke/SMOKE.md) |
@@ -39,7 +39,6 @@
 
 | 폴더 | 파일 | 만든 스크립트 | 내용 |
 |---|---|---|---|
-| `results/smoke/` | `schematic_search_observations_2026-11-15.json` | 브라우저 직접 검증 기록 복사 | 로컬 8011의 회로도 후보·공개 원본 링크·이미지 로드 상태. 새 실측이나 평가 점수가 아님. 해석: [공유 보고서](../docs/research/frontend-schematic-work-summary-2026-11-15.md) |
 | `results/auth/` | `auth_boundary_2026-11-02.json` | `auth/auth_boundary_after_merge.py` | 로그인 잠금·세션 만료 경계 실측 |
 | `results/auth/` | `scrypt_concurrent_2026-11-02.json`, `scrypt_concurrent_2026-11-04.json` | `auth/measure_scrypt_concurrent.py` | 동시 scrypt·프로세스 메모리 실측 |
 | `results/storage/` | `storage_contract_2026-11-02.json` | `backend/rag/storage.py` CLI 계열 | 합성 벡터 64행·1536차원으로 vector→halfvec 형식·용량·검색 계약 확인. 실제 코퍼스 결과 아님 |
@@ -51,6 +50,7 @@
 | `results/docker_performance/` | `kicad_uv_sequential_vs_parallel_stages_2026-11-14.csv`, `kicad_uv_sequential_vs_parallel_outcomes_2026-11-14.csv`, `kicad_uv_sequential_vs_parallel_run_records_2026-11-14.json` | 저장소 밖 OSC 로컬 측정 스크립트 | KiCad·Python 순차/병렬 설치의 단계 시간, 응답·PNG 결과, 6회차 원본 객체. 이미지·Compose 로그 미포함 |
 | `results/docker_performance/` | `kicad_in_api_vs_renderer_split_rounds_2026-11-14.csv`, `kicad_in_api_vs_renderer_split_medians_2026-11-14.csv`, `kicad_in_api_vs_renderer_split_run_records_2026-11-14.json` | 저장소 밖 OSC 로컬 측정 스크립트 | KiCad 내장 API와 분리 렌더러의 이미지 크기·첫 응답·첫 PNG 비교, 6회차 원본 객체. 이미지·Compose 로그 미포함 |
 | `results/smoke/` | `smoke_*.json` 15개, `injection_http_*.json` 7개 | `smoke/http_smoke.py`, `smoke/injection_http.py` | HTTP 점검 단계 기록. 아래 표 |
+| `results/smoke/` | `schematic_search_observations_2026-11-15.json` | 브라우저 직접 검증 기록 복사 | 로컬 8011의 회로도 후보·공개 원본 링크·이미지 로드 상태. 새 실측이나 평가 점수가 아님. 해석: [공유 보고서](../docs/research/schematic/frontend-schematic-work-summary-2026-11-15.md) |
 
 ### `results/smoke/` 파일
 

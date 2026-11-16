@@ -3,7 +3,7 @@
 - 상태: 현행
 - 기준일: 2026-10-29 (수집 기준일. 각 파일의 `generated`, `checked_on`, 집계 제목에 적힌 날짜)
 - 정본 여부: 정본(이 폴더 파일의 목록과 sha256)
-- 관련 문서: [docs/TOPIC.md](../../TOPIC.md)(각주 [1]~[4]), [market-user-journey.md](../market-user-journey.md), [job-postings-summary.md](job-postings-summary.md)
+- 관련 문서: [docs/TOPIC.md](../../TOPIC.md)(각주 [1]~[4]), [market-user-journey.md](../market/market-user-journey.md), [job-postings-summary.md](job-postings-summary.md)
 
 ## 역할
 

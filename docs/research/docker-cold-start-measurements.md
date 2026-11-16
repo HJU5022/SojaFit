@@ -125,6 +125,7 @@
 | 첫 기능·첫 회로도 여덟 가지 | `osc-coldstart-experiments/results/run-20261113-csA/`의 `통합-실측표.md`, `OSC-CS-1`~`OSC-CS-8` 개별 `report.md`, `split-comparison/crossover-214221.csv`, `split-comparison/first-213613.csv` |
 | KiCad 이미지·렌더러 | `KiCad-Docker-기동시간-실측-및-방식-비교-2026-11-13.md`, `KiCad-렌더러-경량화-로컬-콜드스타트-실측-2026-11-13.md` |
 | 운영 첫 요청·검색 단계 | `osc-coldstart-experiments/results/운영-min1-20261113/`의 `cloud-run.csv`, `browser.csv`, `검색-단계별-로컬-재현.csv`, `운영-첫응답-비교.md`. 검색 하위 단계별 CSV는 배포 코드의 로컬 재현 기록이다. |
+| G2 새 clone 기동 재측정(11-17, `799ae636`, dind 29.9.3, clone 시작 기준, 6회, 원시 로그 저장소 안) | [evals/results/d12/](../../evals/results/d12/README.md). 1절 표(Engine 27.5.1, up 기준)와 다른 계열 |
 
 ## 부록. 개별 회차의 경과 시간
 

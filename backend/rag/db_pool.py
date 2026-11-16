@@ -1,4 +1,4 @@
-"""DB 연결 풀: 검색(`retrieve.py`)이 호출마다 새 연결을 맺지 않도록 프로세스당 풀 하나를 DSN별로 늦게 만들어 돌려준다.
+"""DB 연결 풀: 검색(`retrieve.py`)과 카드 도구(`card_find.py`, `card_specs.py`)가 호출마다 새 연결을 맺지 않도록 프로세스당 풀 하나를 DSN별로 늦게 만들어 돌려준다.
 
 - 역할: `connection()` 컨텍스트 매니저. `with connection() as conn:` 블록이 정상으로 끝나면 commit, 예외면 rollback하고 연결을 풀에 돌려준다
   (`psycopg.connect()`를 `with`로 쓰던 때와 같은 트랜잭션 의미, 닫는 대신 반납한다).

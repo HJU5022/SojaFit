@@ -10,26 +10,26 @@
 `evals/runners/run_graph.py:133`과 `evals/runners/run_skill_pair.py:179`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`만 뺀다. 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라진다. 프롬프트가 아닌 문서는 이 폴더에 두지 않는다.
 
 ## 노드별 모델
-`backend/services/langfuse_prompts.py`의 `NODE_MODELS`(`:33`)가 노드별 모델의 정본이다. 선정 이유는 ADR 0014(노드별 분리)와 ADR 0017(Supervisor 모델)이다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 쓴다. `NODES`에 든 열 개 프롬프트(`supervisor_v0.md` 제외)는 `publish_nodes`가 `backend/prompts/<노드>.md`에서 읽어 Langfuse에 등록하고(`:159`), 실행 전 고정 버전 대조가 같은 파일과 원격 본문을 비교한다(`:181`).
+`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드별 모델의 정본이다. 선정 이유는 ADR 0014(노드별 분리)와 ADR 0017(Supervisor 모델)이다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 쓴다. `NODES`에 든 열 개 프롬프트(`supervisor_v0.md`, `schematic_dialogue.md` 제외. `schematic_dialogue.md`는 `llm.schematic_dialogue_chat`으로 부른다)는 `publish_nodes`가 `backend/prompts/<노드>.md`에서 읽어 Langfuse에 등록하고, 실행 전 고정 버전 대조(`load_development`)가 같은 파일과 원격 본문을 비교한다.
 
 ## 파일
-읽는 코드는 `backend/`, `evals/`, `scripts/`에서 `prompts` 경로로 파일을 여는 곳을 grep한 결과다. 서비스(요청 처리)가 읽는 파일은 여섯 개이고, 단일 그래프 전용 네 개는 평가 실행기만 돌린다. 어떤 코드도 읽지 않는 프롬프트 파일은 없다.
+읽는 코드는 `backend/`, `evals/`, `scripts/`에서 `prompts` 경로로 파일을 여는 곳을 grep한 결과다. 서비스(요청 처리)가 읽는 파일은 일곱 개이고, 단일 그래프 전용 네 개는 평가 실행기만 돌린다. 어떤 코드도 읽지 않는 프롬프트 파일은 없다.
 
 | 파일 | 내용 | 읽는 코드 | 서비스 사용 |
 |---|---|---|---|
 | `PROMPTS.md` | 이 문서(프롬프트 해시에서 제외) | 없음 | 해당 없음 |
-| `supervisor.md` | 멀티 Supervisor(계획)의 시스템 프롬프트: 질문 종류, 할 일 목록과 지시서, 거절 사유, 검색어 쓰는 법. 영어 | `backend/multi_agent/supervisor.py:31` | 사용 |
-| `docs_answer.md` | 멀티 RAG 에이전트의 근거 채점 + 답 쓰기 프롬프트. 영어, 답은 한국어 | `backend/multi_agent/agents/docs.py:34` | 사용 |
-| `schematic_dialogue.md` | 검증된 회로도 후보의 차이 설명·선택 질문·전체 소개. 영어, 답은 한국어 | `backend/projects/schematic_dialogue.py` | POST 회로도 대화 |
-| `synth.md` | 멀티 종합 노드 프롬프트(보고가 서로 다른 에이전트 2개 이상이고 일부 답·실패가 섞여 `답 정리`가 못 이을 때만, SPEC.md 2절). 영어, 답은 한국어 | `backend/multi_agent/supervisor.py:32` | 사용 |
-| `judge_read.md` | Spec 에이전트 읽기 노드 프롬프트: 역할·회로 값 읽기, 숫자 비교 없음. 영어 | `backend/multi_agent/agents/judge.py:35` | 사용 |
-| `card_read.md` | 카드 읽기 프롬프트: 카드에서 값·원문 인용 읽기. 영어 | `backend/rag/card_read.py:25` | 사용 |
-| `card_pick.md` | 카드 찾기가 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 프롬프트(코드 고르기 `code_pick`이 못 줄 세울 때만). 영어 | `backend/rag/card_find.py:91` | 사용 |
-| `route.md` | 단일 그래프 라우팅 프롬프트: 질문 종류 8가지, 확인된 사실로 정하는 검색 전 거절 사유, 일상 대화 답. 영어 | `backend/graph/nodes.py:180` | 평가 전용 |
-| `grade.md` | 단일 그래프 채점 프롬프트: 근거가 든 청크 번호 고르기 | `backend/graph/nodes.py:291` | 평가 전용 |
-| `rewrite.md` | 단일 그래프 재작성 프롬프트: 원래 질문을 영어 검색어 한 줄로 | `backend/graph/nodes.py:307` | 평가 전용 |
-| `generate.md` | 단일 그래프 생성 프롬프트: 근거만으로 인용을 붙여 답하기 | `backend/graph/nodes.py:440` | 평가 전용 |
-| `supervisor_v0.md` | Supervisor V0의 질문 분류·근거 선택·다음 경로 계약. `backend/` 코드는 읽지 않음 | `evals/runners/run_supervisor_prompt_v0.py:25` | 사용 안 함 |
+| `supervisor.md` | 멀티 Supervisor(계획)의 시스템 프롬프트: 질문 종류, 할 일 목록과 지시서, 거절 사유, 검색어 쓰는 법. 영어 | `backend/multi_agent/supervisor.py`(`PROMPT`) | 사용 |
+| `docs_answer.md` | 멀티 RAG 에이전트의 근거 채점 + 답 쓰기 프롬프트. 영어, 답은 한국어 | `backend/multi_agent/agents/docs.py`(`PROMPT`) | 사용 |
+| `schematic_dialogue.md` | 검증된 회로도 후보의 차이 설명·선택 질문·전체 소개. 영어, 답은 한국어 | `backend/projects/schematic_dialogue.py`(`_PROMPT`) | POST 회로도 대화 |
+| `synth.md` | 멀티 종합 노드 프롬프트(보고가 서로 다른 에이전트 2개 이상이고 일부 답·실패가 섞여 `답 정리`가 못 이을 때만, SPEC.md 2절). 영어, 답은 한국어 | `backend/multi_agent/supervisor.py`(`SYNTH_PROMPT`) | 사용 |
+| `judge_read.md` | Spec 에이전트 읽기 노드 프롬프트: 역할·회로 값 읽기, 숫자 비교 없음. 영어 | `backend/multi_agent/agents/judge.py`(`PROMPT`) | 사용 |
+| `card_read.md` | 카드 읽기 프롬프트: 카드에서 값·원문 인용 읽기. 영어 | `backend/rag/card_read.py`(`PROMPT`) | 사용 |
+| `card_pick.md` | 카드 찾기가 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 프롬프트(코드 고르기 `code_pick`이 못 줄 세울 때만). 영어 | `backend/rag/card_find.py`(`PICK_PROMPT`) | 사용 |
+| `route.md` | 단일 그래프 라우팅 프롬프트: 질문 종류 8가지, 확인된 사실로 정하는 검색 전 거절 사유, 일상 대화 답. 영어 | `backend/graph/nodes.py`(`route`) | 평가 전용 |
+| `grade.md` | 단일 그래프 채점 프롬프트: 근거가 든 청크 번호 고르기 | `backend/graph/nodes.py`(`grade`) | 평가 전용 |
+| `rewrite.md` | 단일 그래프 재작성 프롬프트: 원래 질문을 영어 검색어 한 줄로 | `backend/graph/nodes.py`(`rewrite`) | 평가 전용 |
+| `generate.md` | 단일 그래프 생성 프롬프트: 근거만으로 인용을 붙여 답하기 | `backend/graph/nodes.py`(`generate`) | 평가 전용 |
+| `supervisor_v0.md` | Supervisor V0의 질문 분류·근거 선택·다음 경로 계약. `backend/` 코드는 읽지 않음 | `evals/runners/run_supervisor_prompt_v0.py`(`PROMPT_PATH`) | 사용 안 함 |
 
 단일 그래프 전용 프롬프트는 [GRAPH.md](../graph/GRAPH.md)의 분담 표대로 `evals/runners/run_graph.py`(단일 대 멀티 비교, EVAL_REPORT.md 4장)와 `run_skill_pair.py`가 쓴다.
 

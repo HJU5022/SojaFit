@@ -1,0 +1,12 @@
+# 로컬 DB sojafit-live-db 코퍼스 수 (d12, 읽기 전용)
+date: 2026-11-17 05:06:28 KST
+db: docker container sojafit-live-db (pgvector/pgvector:pg16, 127.0.0.1:55433, db app). 운영 Supabase가 아니다. d12 게이트 · 검색 재측정이 이 DB를 읽었다
+------
+source_documents|1360
+document_chunks|51967
+distinct chunk_sha256|51967
+chunk_embeddings|51967
+chunk_embedding_bits|51967
+embedding_model|voyage-4-large|51967
+stored chunk_sha256 sorted, newline-joined, sha256: 82dff159a6790631ae80d21b8e5aa10549dc54faffd914062c660526214ae677 51967
+repo chunk_sha256.tsv same method: 82dff159a6790631ae80d21b8e5aa10549dc54faffd914062c660526214ae677 51967

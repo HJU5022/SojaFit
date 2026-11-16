@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: 서버 API(`/health`, 로그인·세션, 가격·재고, 프로젝트, 대화·실행, 견적, 내 설정)와 그 아래 저장소·분석 서비스 연결을 확인하는 회귀 테스트.
-- 넣는 것: `backend/main.py`, `backend/api/*.py`, `backend/auth.py`, `backend/errors.py`, `backend/logs.py`를 대상으로 한 `test_*.py`와, HTTP 경로를 거쳐야 의미가 있는 흐름 시험(`test_threads.py`, `test_deletion.py`, `test_public_grants.py`, 배포 점검 스크립트 `scripts/smoke/`의 오프라인 시험). DB 시험은 전용 DB 주소 환경변수가 있을 때만 돌린다([TESTS.md](../TESTS.md)).
+- 넣는 것: `backend/main.py`, `backend/api/*.py`, `backend/auth.py`, `backend/errors.py`, `backend/logs.py`를 대상으로 한 `test_*.py`와, HTTP 경로를 거쳐야 의미가 있는 흐름 시험(`test_threads.py`, `test_deletion.py`, 배포 점검 스크립트 `scripts/smoke/`의 오프라인 시험). DB 시험은 전용 DB 주소 환경변수가 있을 때만 돌린다([TESTS.md](../TESTS.md)).
 - 넣지 않는 것: 그래프 노드 시험(`tests/graph/`), 검색·적재 시험(`tests/rag/`), LLM 호출 시험(`tests/services/`), 일회성 인증 실측(`scripts/auth/`).
 - 담당: 서비스·운영
 
@@ -12,7 +12,7 @@
 | 파일 | 확인하는 것 |
 |---|---|
 | `API.md` | 이 문서 |
-| `test_auth.py` | 인증 단위·DB 통합: 비밀번호 해시·강도, 세션 만료, 로그인 잠금, 데모 로그인, 자기 가입·IP 한도, 관리자 권한, 비활성 계정, 쿠키·출처. DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만 |
+| `test_auth.py` | 인증 단위·DB 통합: 비밀번호 해시·강도, 세션 만료, 로그인 잠금, 데모 로그인, 자기 가입·IP 한도, 관리자 권한, 비활성 계정, 쿠키·출처, Google OAuth(state 브라우저 묶음 · PKCE · ID 토큰 검증 · 승인 CLI · 연결 해제). DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만 |
 | `test_admin.py` | 관리자 계정 관리 DB 통합: 관리자 아님 401·403, 가림 해제 사유 5~500자(아니면 422, 이력 없음)·이력을 먼저 쓰고 원문·로그에 원문 없음, 작업 이력 목록, 정지가 세션 폐기, 탈퇴 처리가 관리자·자기 자신을 기록 삭제 전에 거절. `TEST_AUTH_DATABASE_URL`일 때만 |
 | `test_local_live_config.py` | 로컬 실제 API Compose의 DB·Origin 격리, 별도 볼륨, loopback 포트, live 설정, KiCad 빌드·renderer 제외, 키 없는 기본 데모를 검사. 가짜 비밀값과 Compose 해석만 사용 |
 | `test_email_auth.py` | 메일 인증 가입·비밀번호 재설정: 가짜 SMTP와 격리 DB로 인증 전 계정 없음, 토큰 만료·재발급·재사용·경합, 발송 한도, 재설정 뒤 세션 폐기, TLS 검증 |
@@ -31,7 +31,6 @@
 | `test_deletion.py` | 격리 DB의 삭제 범위: 프로젝트 삭제와 단일 대화 삭제가 해당 React 행과 같은 UUID 분석 기록만 지움, 탈퇴가 그 사용자의 기록·Store namespace·계정을 지우고 다른 사용자는 남김, 진행 중 분석과 탈퇴의 409, 보관 기간 청소 |
 | `test_quotes.py` | 승인·견적·사례 API의 Origin·입력 allow-list·안전 오류(같은 메시지 두 번 승인은 409 `ALREADY_APPROVED`), 승인 사례 상세의 소유자만 · 공개 허용 목록(DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만) |
 | `test_full_service_flow.py` | 격리 PostgreSQL의 업로드 → interrupt 재개 → 승인 → 가격 없는 견적 → 소유권 → cascade 전체 흐름, 저장 대화 GET이 소유자에게만 보임 |
-| `test_public_grants.py` | `db/026_revoke_public_grants_and_rls.sql`을 격리 PostgreSQL에서: 공개 역할 권한 회수, 재실행 동일, 소유자는 RLS 뒤에도 읽기·쓰기, anon은 코퍼스 표를 못 읽음, LangGraph 체크포인트·Store 표 동작 |
 | `test_http_restart.py` | 명시적으로 실행할 때만 Docker로 실제 HTTP 서버를 종료·재기동해 소유자 재개와 다른 계정의 404를 확인. 기본 pytest에서는 건너뜀 |
 | `test_http_smoke.py` | `scripts/smoke/http_smoke.py`를 가짜 서버(`httpx.MockTransport`)로 오프라인 시험: 단계 통과·실패 처리, `--confirm-live` 없으면 요청 없이 멈춤, 결과 파일·화면에 비밀값 없음 |
 | `test_injection_http.py` | `scripts/smoke/injection_http.py`를 가짜 서버로 오프라인 시험: 정상 run 통과, 공격문이 정해진 위치에만 실림, 하루 한도에서 재시도 없이 멈춤, `--confirm-live` 없으면 요청 없이 멈춤, 결과 파일·화면에 비밀값·질문·공격문 없음 |

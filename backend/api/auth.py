@@ -101,8 +101,7 @@ def google_callback(request: Request):
         if session:
             response = RedirectResponse("/login", status_code=303)
             response.delete_cookie(GOOGLE_PENDING_COOKIE, path="/api/auth/google")
-            secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
-            response.set_cookie(auth.COOKIE, session[0], httponly=True, secure=secure, samesite="lax", max_age=8 * 3600, path="/")
+            set_session_cookie(response, session[0])
         else:
             request_id = auth.request_google_link(*identity)
             response = RedirectResponse("/login?google=finish", status_code=303)

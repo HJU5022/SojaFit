@@ -7,6 +7,10 @@ from backend.rag.source_metadata import source_metadata
 from backend.services.datasheet_rows import grade2_pdf, official_pdf
 from backend.services.exa import reference_url
 
+# 공개 결과의 질문 종류 · 가격 품번 허용 규칙. public_state와 result_dto가 같은 규칙을 쓴다
+QUESTION_TYPES = frozenset({'out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'quote', 'role', 'rating', 'candidate_judge', 'candidate_find'})
+PRICE_PART = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}')
+
 
 class BrowserResult(BaseModel):
     answer: str = ''
@@ -128,8 +132,8 @@ def public_state(state: dict) -> dict:
     question_type = state.get('question_type', '')
     parts = state.get('price_parts', [])
     result = {'answer': answer if isinstance(answer, str) else '',
-              'question_type': question_type if isinstance(question_type, str) and question_type in {'out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'quote', 'role', 'rating', 'candidate_judge', 'candidate_find'} else '',
-              'price_parts': [p for p in parts if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(parts, list) else []}
+              'question_type': question_type if isinstance(question_type, str) and question_type in QUESTION_TYPES else '',
+              'price_parts': [p for p in parts if isinstance(p, str) and PRICE_PART.fullmatch(p)] if isinstance(parts, list) else []}
     reports = state.get('final_reports') or state.get('reports') or []
     cited = {str(item) for report in reports if isinstance(report, dict)
              for item in report.get('evidence_ids', [])}
@@ -224,7 +228,6 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
             safe_interrupt['target_choices'] = choices[:30]
             found = ', '.join(c['ref'] + (f"({c['value']})" if c['value'] else '') for c in choices[:30])
             safe_interrupt['question'] = f'넷리스트에서 다이오드 {found}를 찾았어요. 어떤 부품을 바꿀까요?'
-    question_types = {'out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'quote', 'role', 'rating', 'candidate_judge', 'candidate_find'}
     question_type = state.get('question_type')
     judgement = safe_judgement(state.get('judgement')) or {}
     # 공식 출처는 브라우저 응답에만 붙인다. runs.safe_result의 고정 저장 형식에는 넣지 않는다.
@@ -287,8 +290,8 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
     web_used = any(entry.get('source_type') in ('external_web', 'web_reference') for entry in evidence)
     return BrowserResult(answer=answer if isinstance(answer, str) else '', status=status, stage=stage,
                          evidence=evidence, refusal=answer if status == 'refused' and isinstance(answer, str) else '',
-                         question_type=question_type if isinstance(question_type, str) and question_type in question_types else '',
-                         price_parts=[p for p in state.get('price_parts', []) if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(state.get('price_parts', []), list) else [],
+                         question_type=question_type if isinstance(question_type, str) and question_type in QUESTION_TYPES else '',
+                         price_parts=[p for p in state.get('price_parts', []) if isinstance(p, str) and PRICE_PART.fullmatch(p)] if isinstance(state.get('price_parts', []), list) else [],
                          interrupt=safe_interrupt, error=error, judgement=judgement, request_id=request_id,
                          web_search_unavailable=state.get('web_search_unavailable') is True and not web_used,
                          profile_hints=[{key: str(hint.get(key, '')) for key in ('kind', 'value', 'text')} for hint in profile_hints][:3])

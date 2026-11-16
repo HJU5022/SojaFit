@@ -277,10 +277,6 @@ def test_demo_check_requires_demo_id_only_for_demo_projects(storage):
         for kind, demo_id in (("demo", None), ("upload", "breadboard_supply")):
             with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
                 conn.execute("INSERT INTO projects (user_id,name,source_kind,demo_id) VALUES (%s,'위반',%s,%s)", (owner, kind, demo_id))
-        with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
-            conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'demo without id','demo')", (owner,))
-        with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
-            conn.execute("INSERT INTO projects (user_id,name,source_kind,demo_id) VALUES (%s,'upload with id','upload','breadboard_supply')", (owner,))
 
 
 def test_duplicate_name_is_owned_and_requires_explicit_confirmation(storage):

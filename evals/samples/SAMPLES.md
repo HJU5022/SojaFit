@@ -17,4 +17,6 @@
 | `supervisor_prompt_v0.jsonl` | 비동결 표본 | 수퍼바이저 V0 세 후보를 같은 조건에서 비교하는 13건. 같은 사용자 요청의 회로·데이터시트·승인 사례 확보 전후와 재시도 소진 상태를 포함 | `run_supervisor_prompt_v0*.py` |
 | `supervisor_prompt_v0_frozen.json` | 무결성 기록 | 위 13건의 sha256·건수. 루트 `FROZEN.json`의 v1·v2 동결을 바꾸지 않음 | `supervisor_prompt_v0_common.py` |
 
+`retrieval_r1_rewrite_q3.json`은 표본이 아니라 고정 질의(같은 종류인 `rewrite_q3_v2.json`·`rewrite_q3_v3.json`은 `evals/inputs/`)라 위 "넣는 것"과 어긋난다. `run_retrieval_r1.py`·`run_retrieval_service.py`·`eval_grader.py`의 경로 상수, 사전 등록, `evals/results/retrieval/2026-11-16-cand-pool/README.md`가 이 경로를 기록해 옮기지 않았다.
+
 판정 출처: `retrieval_r1.jsonl`의 정답 페이지는 사양 표 행이 있는 쪽으로 정했고 사람 판정은 없다. 질문은 사용자 말투로 자동 초안을 쓴 뒤 기계 검사·자동 O/X 검사를 통과한 것만 남겼다. 생성 스크립트는 저장소 밖(`전자_데이터시트/evidence/r1/`의 `make_items.py`·`gen_questions.py`)에 있다.

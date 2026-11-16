@@ -3,7 +3,7 @@
 ## 역할
 - 이 폴더: 사전 등록한 실험의 계획과 결과를 둡니다(질문, 조건, 결과, 결정, 한계). 문서마다 첫머리 헤더(상태, 기준일, 기준 커밋, 정본 여부, 관련 문서)가 상태의 정본입니다.
 - 넣는 것: `<english-kebab>.md` 실험 기록(사전 등록 계약, 사후등록, 측정 계획, 측정 결과, 평가셋 초안 작업서, 채점기 계약).
-- 넣지 않는 것: 기능 작업서(`../specs/`), 선택지 비교·조사 보고(`../research/`), 결정(`../adr/`), 결과 기대 수치(`../../evals/guides/preregister.md`), 원시 결과(`../../evals/results/`, `../../scripts/results/`).
+- 넣지 않는 것: 기능 작업서(`../specs/`), 선택지 비교·조사 보고와 길어서 따로 쓴 결과 보고(`../research/`, 이 폴더의 계약 문서가 링크한다. 예: `supervisor-stage3-results.md`, `injection-results.md`), 결정(`../adr/`), 결과 기대 수치(`../../evals/guides/preregister.md`), 원시 결과(`../../evals/results/`, `../../scripts/results/`).
 - 담당: 그 실험의 담당
 
 ## 파일

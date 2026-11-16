@@ -1,0 +1,54 @@
+{
+ "alertPolicies": [
+  {
+   "name": "projects/sojafit/alertPolicies/1983946805653212849",
+   "displayName": "SojaFit 운영 다운: /health 가동 확인 실패",
+   "combiner": "OR",
+   "creationRecord": {
+    "mutateTime": "2026-11-16T00:40:14.954583079Z",
+    "mutatedBy": "<email redacted>"
+   },
+   "mutationRecord": {
+    "mutateTime": "2026-11-16T00:40:14.954583079Z",
+    "mutatedBy": "<email redacted>"
+   },
+   "conditions": [
+    {
+     "conditionThreshold": {
+      "filter": "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.label.check_id=\"sojafit-api-health-eRGzPUOyMbY\" AND resource.type=\"uptime_url\"",
+      "comparison": "COMPARISON_GT",
+      "thresholdValue": 1,
+      "duration": "0s",
+      "trigger": {
+       "count": 1
+      },
+      "aggregations": [
+       {
+        "alignmentPeriod": "1200s",
+        "perSeriesAligner": "ALIGN_NEXT_OLDER",
+        "crossSeriesReducer": "REDUCE_COUNT_FALSE",
+        "groupByFields": [
+         "resource.label.host"
+        ]
+       }
+      ]
+     },
+     "displayName": "/health 가동 확인이 2개 지역 넘게 실패(5분 주기)",
+     "name": "projects/sojafit/alertPolicies/1983946805653212849/conditions/1983946805653211660"
+    }
+   ],
+   "documentation": {
+    "content": "Cloud Run sojafit-api 공개 주소의 /health가 2xx를 주지 않는다. 확인 순서: gcloud run services describe sojafit-api(트래픽 100% 리비전) → Cloud Logging 오류 → 되돌릴 리비전은 README 표 「배포 리비전」.",
+    "mimeType": "text/markdown"
+   },
+   "notificationChannels": [
+    "projects/sojafit/notificationChannels/2862916083268395771"
+   ],
+   "enabled": true,
+   "alertStrategy": {
+    "autoClose": "1800s"
+   }
+  }
+ ],
+ "totalSize": 1
+}

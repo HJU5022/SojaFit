@@ -3,7 +3,8 @@
 역할: HTTP 상태마다 기본 코드(`DEFAULT_CODES`), 화면이 다르게 반응해야 하는 상황 코드 5개(`SPECIAL_CODES`)를 붙이는 `ApiError`,
 예외 · 상태에서 코드를 고르는 `code_for`, 오류 응답 · 분석 실패 하나를 로그 한 줄로 남기는 `log_error`.
 호출자: backend/main.py(공통 오류 처리기), backend/api/conversations.py(SSE `failed`), 상황 코드를 내는 곳
-(backend/auth.py의 `check_origin`, backend/api/quotes.py, backend/conversations/memory_service.py).
+(backend/auth.py의 `check_origin`, backend/api/quotes.py, backend/api/external_circuits.py, backend/conversations/memory_service.py).
+코드 표를 읽는 곳: backend/conversations/models.py(저장한 실행 오류의 code 검사).
 하지 않는 일: 응답 JSON 만들기(backend/main.py의 `error_response`), 로그 줄 모양 · 요청 ID 연결(backend/logs.py),
 바깥 서비스 장애 판별(backend/services/llm.py의 `is_upstream_error`).
 출처: SPEC.md 4절 공통 오류, ADR 0019, docs/specs/api-error-contract.md.

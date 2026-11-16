@@ -1,0 +1,12 @@
+# API 동작 · 경로 수 (d12)
+date: 2026-11-17 05:04:46 KST
+commit: 799ae63613a83105d3fd6e49d0abf3561b2f888c
+command: DEMO_MODE=1 PYTHONPATH=<clone> python evals/results/d12/checks/count_routes.py (FastAPI app.routes 전체 + TestClient /openapi.json)
+------
+ops 60 paths 49
+docs ops 53 docs paths 42
+mutating 30
+response_model 49
+json body models 15
+204 [('DELETE', '/api/projects/{project_id}'), ('DELETE', '/api/approved-cases/{case_id}'), ('DELETE', '/api/threads/{thread_id}'), ('DELETE', '/api/me/memory')]
+exit: 0

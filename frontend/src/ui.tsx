@@ -444,7 +444,7 @@ export function Source({ cite }: { cite: Citation }) {
     </div>
   );
 }
-/** 선택 부품의 핀·네트 연결 개념도. zoomable이면 그림을 눌러 큰 창으로 본다(작업대 왼쪽 "회로" 구역). */
+/** 선택 부품의 핀·네트 연결 개념도. zoomable이면 그림을 눌러 큰 창으로 본다(작업대 오른쪽 회로 패널의 "회로" 구역). */
 export function Circuit({
   project,
   target,

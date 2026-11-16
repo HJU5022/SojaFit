@@ -5,12 +5,13 @@ auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_
 (auth_login_ip_attempts), 세션은 절대 8시간·유휴 2시간이다.
 이메일 가입은 소유 확인 뒤 user 계정만 만들며, 인증 완료 시 IP당 UTC 하루 3회 한도를 적용한다(auth_email.py). 직접 signup 헬퍼는 내부/기존 회귀용이다.
 Google 신원 확인 뒤 사용자가 명시적으로 일반 가입하거나 기존 계정의 비밀번호를 재확인한다. 관리자 최초 연결은 승인 CLI를 거친다.
-호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
+호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 CLI(`python -m backend.auth`: 계정 생성, `--hash-only` 해시만 출력, `--delete-user-id` · `--revoke-google-user-id` · `--disable-admin-id` · `--approve-google`, docs/specs/google-admin-login.md).
 하지 않는 일: HTTP 라우트·쿠키 설정(backend/api/auth.py 등 backend/api/), 테이블 생성(db/*.sql), 메일 전송(services/mail.py)·이메일 토큰 처리(auth_email.py),
-회로·대화·기억·견적의 사용자별 권한 검증(해당 기능 구현 후 추가).
+회로·대화·기억·견적의 사용자별 권한 검증(각 저장소가 `user_id` 조건으로 한다).
 출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
-DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단).
+DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단),
+GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET(Google 로그인을 켰을 때).
 테이블 정의는 db/020_service_baseline.sql과 추가 인증 SQL 027·029·030, 관리자 작업 이력 034를 따른다. 옛 서비스 증분 SQL은 db/legacy/ 이력이다.
 """
 import getpass
@@ -94,6 +95,13 @@ def verify_password(password: str, encoded: str | None) -> bool:
         return hmac.compare_digest(actual, bytes.fromhex(expected))
     except (ValueError, TypeError):
         return False
+
+
+def new_session(conn, user_id: int) -> str:
+    """새 세션 토큰을 만들어 그 해시만 auth_sessions에 넣고 원문 토큰을 돌려준다. 절대 만료 8시간(쿠키 max_age와 같음)."""
+    token = secrets.token_urlsafe(32)
+    conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
+    return token
 
 
 def purge_expired_sessions(conn) -> None:
@@ -218,10 +226,8 @@ def google_session(issuer: str, subject: str, *, admin_only: bool = False) -> tu
         user = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
         if not user or not user[1] or (admin_only and user[0] != "admin") or not conn.execute("SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s AND user_id=%s", (issuer, subject, user_id)).fetchone():
             return None
-        token = secrets.token_urlsafe(32)
         purge_expired_sessions(conn)
-        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
-        return token, user_id
+        return new_session(conn, user_id), user_id
 
 
 def google_admin_session(issuer: str, subject: str) -> tuple[str, int] | None:
@@ -256,11 +262,8 @@ def complete_google_user(request_id: str, ip: str, *, user_id: int | None = None
                     raise HTTPException(409, '활성 일반 계정만 직접 연결할 수 있습니다. 관리자는 운영자 연결 승인이 필요합니다.')
             conn.execute('INSERT INTO auth_google_identities(issuer,subject,user_id) VALUES (%s,%s,%s)', (issuer,subject,user_id))
             conn.execute('DELETE FROM auth_google_pending WHERE request_id=%s', (request_id,))
-            token = secrets.token_urlsafe(32)
             purge_expired_sessions(conn)
-            conn.execute("INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP+INTERVAL '8 hours')",
-                         (session_token_hash(token),user_id))
-            return token, user_id
+            return new_session(conn, user_id), user_id
     except psycopg.errors.UniqueViolation:
         raise HTTPException(409, '이미 가입되었거나 다른 Google 계정이 연결되어 있습니다. 기존 로그인으로 확인해 주세요.') from None
 
@@ -369,9 +372,7 @@ def authenticate(email: str, password: str, ip: str, *, issue_session: bool = Tr
         # [주의] IP 실패 기록은 성공해도 지우지 않는다. 지우면 공격자가 자기 계정 로그인을 끼워 넣어 IP 횟수를 계속 되돌릴 수 있다
         if not issue_session:
             return '', user[0]  # 연결 성공 전에는 로그인 세션을 만들지 않는다.
-        token = secrets.token_urlsafe(32)
-        cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
-        return token, user[0]
+        return new_session(cur, user[0]), user[0]
 
 
 def client_ip(request: Request) -> str:
@@ -410,7 +411,7 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
 
     Args:
         email: 가입 이메일(공백 제거·소문자로 맞춘다).
-        password: 평문 비밀번호(길이 검증은 호출자 backend/api/auth.py가 한다).
+        password: 평문 비밀번호(길이 검증은 호출자가 한다. API의 /signup은 이 함수 대신 auth_email.py를 거치고, 이 함수는 시험 헬퍼다).
         ip: client_ip()가 돌려준 값. 원문 대신 키 해시만 저장한다.
     Returns:
         (세션 토큰, user_id). 이미 있는 이메일이면 None(호출자가 409).
@@ -429,9 +430,7 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
         if not user:
             return None  # [주의] 예외 없이 끝내야 위 가입 횟수가 커밋된다
         purge_expired_sessions(cur)
-        token = secrets.token_urlsafe(32)
-        cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
-        return token, user[0]
+        return new_session(cur, user[0]), user[0]
 
 
 def demo_session(account: str) -> tuple[str, int] | None:
@@ -457,9 +456,7 @@ def demo_session(account: str) -> tuple[str, int] | None:
         if not user:
             return None
         purge_expired_sessions(conn)
-        token = secrets.token_urlsafe(32)
-        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
-        return token, user[0]
+        return new_session(conn, user[0]), user[0]
 
 
 def current_user(request: Request) -> tuple[int, str]:

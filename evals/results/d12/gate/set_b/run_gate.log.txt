@@ -1,0 +1,185 @@
+start 2026-11-17 05:32:51 KST
+ 5:32  up 7 days,  6:45, 7 users, load averages: 12.27 13.00 12.47
+                             ListToolsRequest                                   
+gate_warmup_s	5.74
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-01	PASS	cited_gold	[['1N4007G', 'ROLE_SUFFICIENT']]	5.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-02	PASS	cited_gold	[['SS24', 'NOT_VERIFIED']]	4.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-03	PASS	cited_gold	[['LL4148 L0G', 'IDENTICAL']]	4.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-04	PASS	cited_gold	[['UF4007', 'NOT_VERIFIED']]	4.8초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-05	PASS	cited_gold	[['S1M', 'NOT_SUFFICIENT']]	6.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-06	PASS	cited_gold	[['BZV55B3V3 L0G', 'IDENTICAL']]	6.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-07	PASS	cited_gold	[['SS16', 'NOT_VERIFIED']]	4.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-08	PASS	cited_gold	[['SS14H', 'SPEC_EQUIVALENT']]	5.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-09	PASS	cited_gold	[['SMBJ14AH', 'SPEC_EQUIVALENT']]	6.6초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-10	PASS	cited_gold	[['SMAJ6.0CA', 'NOT_SUFFICIENT']]	5.6초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-11	PASS	cited_gold	[['GS1G', 'ROLE_SUFFICIENT'], ['GS1J', 'ROLE_SUFFICIENT'], ['S1G-K', 'ROLE_SUFFICIENT'], ['S1G-T', 'ROLE_SUFFICIENT'], ['S1GH', 'ROLE_SUFFICIENT'], ['S1J-K', 'ROLE_SUFFICIENT'], ['S1J-T', 'ROLE_SUFFICIENT'], ['S1JH', 'ROLE_SUFFICIENT'], ['TSD1GH', 'ROLE_SUFFICIENT']]	5.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-12	PASS	cited_gold	[['HER105G', 'ROLE_SUFFICIENT'], ['HER105G-K', 'ROLE_SUFFICIENT'], ['HER105GH', 'ROLE_SUFFICIENT'], ['HER106G', 'ROLE_SUFFICIENT'], ['HER106G-K', 'ROLE_SUFFICIENT'], ['HER106GH', 'ROLE_SUFFICIENT'], ['MUR160A', 'ROLE_SUFFICIENT'], ['MUR160AH', 'ROLE_SUFFICIENT'], ['SF16G', 'ROLE_SUFFICIENT'], ['SF16G-K', 'ROLE_SUFFICIENT'], ['SF16GH', 'ROLE_SUFFICIENT'], ['SF17G', 'ROLE_SUFFICIENT'], ['SF17G-K', 'ROLE_SUFFICIENT'], ['SF17GH', 'ROLE_SUFFICIENT'], ['SF18G', 'ROLE_SUFFICIENT'], ['SF18G-K', 'ROLE_SUFFICIENT'], ['SF18GH', 'ROLE_SUFFICIENT'], ['UF4004', 'ROLE_SUFFICIENT'], ['UF4004H', 'ROLE_SUFFICIENT'], ['UF4005', 'ROLE_SUFFICIENT'], ['UF4005H', 'ROLE_SUFFICIENT']]	5.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-13	PASS	cited_gold	[['BZT52B3V3', 'SPEC_EQUIVALENT'], ['BZV55B3V3', 'SPEC_EQUIVALENT']]	4.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-14	PASS	cited_gold	[['SS14H', 'ROLE_SUFFICIENT'], ['SS15H', 'ROLE_SUFFICIENT'], ['SS16H', 'ROLE_SUFFICIENT'], ['SSA1H40H', 'ROLE_SUFFICIENT'], ['SSA1H60H', 'ROLE_SUFFICIENT'], ['SSL14H', 'ROLE_SUFFICIENT']]	4.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-15	PASS	cited_gold	[['SMAJ5.0A', 'IDENTICAL'], ['SMAJ5.0AH', 'SPEC_EQUIVALENT'], ['SMAJ5.0', 'ROLE_SUFFICIENT'], ['SMAJ5.0H', 'ROLE_SUFFICIENT']]	9.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-16	FAIL	wrong_citation		12.8초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-17	PASS	cited_gold		4.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-18	PASS	cited_gold		4.8초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-19	PASS	cited_gold		4.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-20	PASS	cited_gold		6.6초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-21	PASS	cited_gold		4.8초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-22	PASS	cited_gold		4.7초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-23	PASS	cited_gold		1.7초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-24	PASS	cited_gold		8.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-25	PASS	cited_gold		4.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-26	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-27	PASS	correct_refusal		1.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-28	PASS	correct_refusal		1.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-29	PASS	correct_refusal		1.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-30	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-31	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-32	PASS	correct_refusal		5.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-33	PASS	correct_refusal		6.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-34	PASS	correct_refusal		4.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-35	PASS	correct_refusal		6.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-36	PASS	correct_refusal		7.6초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-37	PASS	correct_refusal		9.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-38	PASS	correct_refusal		7.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-39	PASS	correct_refusal		1.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-40	PASS	correct_refusal		1.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-41	PASS	correct_refusal		4.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-42	PASS	correct_refusal		1.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-43	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-44	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-45	PASS	correct_refusal		1.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-46	PASS	correct_refusal		4.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-47	PASS	correct_refusal		6.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-48	PASS	correct_refusal		4.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-49	PASS	correct_refusal		3.9초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-50	PASS	correct_refusal		4.7초
+{"set": 1, "done": 50, "total": 50, "passed": 49, "p95_s": 9.1, "p50_s": 4.8, "session": "gate-dataset_v3-1117-0532-set1", "stopped_at": "v3-16", "model_env": {"LAB_THINKING": "", "LAB_THINKING_ON": "", "LAB_NODE_MODELS": "", "LAB_EFFORT": "", "DEMO_MODE": "0", "EVAL_WEB": "1", "WEB_PREFETCH": "1"}, "db": "app", "llm_provider": "openrouter", "claude_direct": false, "git": "799ae636"}
+end 2026-11-17 05:36:52 KST
+ 5:36  up 7 days,  6:49, 7 users, load averages: 6.83 8.86 10.72
+
+[exited with code 0]

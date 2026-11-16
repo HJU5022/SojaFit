@@ -1,0 +1,1162 @@
+# pytest full run (macOS host, one process, d12)
+date: 2026-11-17 05:42 KST
+commit: 799ae63613a83105d3fd6e49d0abf3561b2f888c (clean local clone)
+python: Python 3.12.14 (uv.lock 같은 venv, 키 · DB 환경변수 없음: env -i)
+host: Darwin arm64
+command: env -i PATH=/usr/bin:/bin HOME=$HOME perl -e 'alarm 600; exec @ARGV' <venv>/bin/python -m pytest -p no:cacheprovider -rs -o faulthandler_timeout=120
+------
+============================= test session starts ==============================
+platform darwin -- Python 3.12.14, pytest-9.2.0, pluggy-1.7.0
+rootdir: /private/tmp/claude-501/-Users-jeong-un--claude-spares-spare-x97wQL/ea8eff7f-b66c-41ee-b1a3-4563c4f4c83f/scratchpad/gl-d12/pt
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1, langsmith-0.14.14
+collected 3202 items
+
+tests/api/test_admin.py ssss                                             [  0%]
+tests/api/test_auth.py ..sss.s....ss.................ssss..ssss.ssss.s.. [  1%]
+.ss.................ssss...............                                  [  2%]
+tests/api/test_conversations.py ........................................ [  4%]
+.......................................                                  [  5%]
+tests/api/test_datasheets.py .ss...                                      [  5%]
+tests/api/test_deletion.py ssssssssssssssss                              [  6%]
+tests/api/test_email_auth.py ..ssssssssssss......                        [  6%]
+tests/api/test_errors.py ...........................                     [  7%]
+tests/api/test_external_circuits.py .................................... [  8%]
+....................................................................     [ 10%]
+tests/api/test_frontend.py ........................................      [ 11%]
+tests/api/test_full_service_flow.py ssssssss                             [ 12%]
+tests/api/test_google_users.py .......sssssssssss                        [ 12%]
+tests/api/test_health.py ........                                        [ 13%]
+tests/api/test_http_restart.py s                                         [ 13%]
+tests/api/test_http_smoke.py .........                                   [ 13%]
+tests/api/test_injection_http.py ..........                              [ 13%]
+tests/api/test_local_live_config.py ss                                   [ 13%]
+tests/api/test_logs.py .......                                           [ 13%]
+tests/api/test_openapi.py ............................                   [ 14%]
+tests/api/test_prices.py ..........                                      [ 15%]
+tests/api/test_projects.py ............................................. [ 16%]
+......................s.................ss                               [ 17%]
+tests/api/test_public_grants.py sss                                      [ 17%]
+tests/api/test_quotes.py ........s                                       [ 18%]
+tests/api/test_threads.py ..........................sss...ssssssssssssss [ 19%]
+sssssss...ss                                                             [ 20%]
+tests/conversations/test_charge_pool.py ......                           [ 20%]
+tests/conversations/test_dto.py ........................................ [ 21%]
+..............                                                           [ 21%]
+tests/conversations/test_profile.py ..........ss                         [ 22%]
+tests/conversations/test_repository.py sssssssssssssssssssssssssss       [ 23%]
+tests/db/test_schema_docs.py ssssssssss                                  [ 23%]
+tests/evals/test_approval_wait_report.py ..s                             [ 23%]
+tests/evals/test_bit_search.py ....                                      [ 23%]
+tests/evals/test_check_injection_result.py ....                          [ 23%]
+tests/evals/test_chunk_source_check.py .................                 [ 24%]
+tests/evals/test_claim_consistency.py .....                              [ 24%]
+tests/evals/test_compare_supervisor_prompt_v0.py ....                    [ 24%]
+tests/evals/test_embedding_grid.py ......                                [ 24%]
+tests/evals/test_eval_grader.py .........                                [ 25%]
+tests/evals/test_frozen_evals.py ...                                     [ 25%]
+tests/evals/test_gate_report.py ...                                      [ 25%]
+tests/evals/test_import_human_review.py ......                           [ 25%]
+tests/evals/test_import_supervisor_prompt_v0_langfuse.py .......         [ 25%]
+tests/evals/test_injection_baseline.py ................................. [ 26%]
+..................                                                       [ 27%]
+tests/evals/test_injection_baseline_plan.py .....................        [ 27%]
+tests/evals/test_injection_preflight.py ..............................   [ 28%]
+tests/evals/test_input_surfaces.py .........                             [ 29%]
+tests/evals/test_judgement_bundle.py .................s                  [ 29%]
+tests/evals/test_retrieval_d3.py ....                                    [ 29%]
+tests/evals/test_retrieval_layers.py ............                        [ 30%]
+tests/evals/test_retrieval_service.py .....                              [ 30%]
+tests/evals/test_run_graph.py .....................                      [ 31%]
+tests/evals/test_run_judge_dev.py ....                                   [ 31%]
+tests/evals/test_saved_defense_replay.py ....                            [ 31%]
+tests/evals/test_score_answer.py ...............                         [ 31%]
+tests/evals/test_score_compound.py ..                                    [ 31%]
+tests/evals/test_score_ragas.py .....                                    [ 31%]
+tests/evals/test_skill_pair.py ..................                        [ 32%]
+tests/evals/test_stage_timing.py .......                                 [ 32%]
+tests/evals/test_supervisor_guard_injection.py ....                      [ 32%]
+tests/evals/test_supervisor_jev.py ..................................... [ 34%]
+...                                                                      [ 34%]
+tests/evals/test_supervisor_models.py .....................              [ 34%]
+tests/evals/test_supervisor_prompt_v0.py ......                          [ 34%]
+tests/evals/test_supervisor_prompt_v0_common.py ....                     [ 35%]
+tests/evals/test_supervisor_prompt_v0_jev.py .......                     [ 35%]
+tests/evals/test_supervisor_stage3_report.py ..........                  [ 35%]
+tests/evals/test_trust_boundary.py .........                             [ 35%]
+tests/graph/test_agent_netlist.py .............                          [ 36%]
+tests/graph/test_graph_build.py .............................            [ 37%]
+tests/graph/test_graph_generate.py ............                          [ 37%]
+tests/graph/test_graph_grade.py ....                                     [ 37%]
+tests/graph/test_graph_mcp_retriever.py ..................               [ 38%]
+tests/graph/test_graph_mcp_stdio.py s                                    [ 38%]
+tests/graph/test_graph_read_input.py .............                       [ 38%]
+tests/graph/test_graph_refuse.py ........                                [ 38%]
+tests/graph/test_graph_rewrite.py ....                                   [ 39%]
+tests/graph/test_graph_route.py ......                                   [ 39%]
+tests/graph/test_graph_search.py .....                                   [ 39%]
+tests/graph/test_graph_state.py .                                        [ 39%]
+tests/graph/test_graph_supervisor.py .....                               [ 39%]
+tests/judge/test_judge_conditions.py ........................            [ 40%]
+tests/judge/test_judge_pricing.py ............                           [ 40%]
+tests/judge/test_judge_rules_file.py .......                             [ 40%]
+tests/judge/test_judge_sheet_conditions.py .................             [ 41%]
+tests/judge/test_judge_verdict.py ...................................... [ 42%]
+.....                                                                    [ 42%]
+tests/mcp_skill/test_mcp_server.py ..................................... [ 43%]
+...................                                                      [ 44%]
+tests/multi_agent/test_agents.py .............................           [ 45%]
+tests/multi_agent/test_build.py ........................................ [ 46%]
+........................................................................ [ 48%]
+..................                                                       [ 49%]
+tests/multi_agent/test_contracts.py ..............                       [ 49%]
+tests/multi_agent/test_docs_agent.py ................................... [ 51%]
+........................................................................ [ 53%]
+....................................                                     [ 54%]
+tests/multi_agent/test_facts_lookup.py .............                     [ 54%]
+tests/multi_agent/test_judge.py ........................................ [ 56%]
+................................................                         [ 57%]
+tests/multi_agent/test_judge_read.py ................................... [ 58%]
+.................................................                        [ 60%]
+tests/multi_agent/test_part_names.py ..............................      [ 61%]
+tests/multi_agent/test_readme_graph.py .                                 [ 61%]
+tests/multi_agent/test_supervisor.py ................................... [ 62%]
+..................                                                       [ 62%]
+tests/projects/test_catalog.py .....                                     [ 62%]
+tests/projects/test_external_circuit_search.py ...............           [ 63%]
+tests/projects/test_external_schematic.py ..F........................... [ 64%]
+........................................................................ [ 66%]
+.....                                                                    [ 66%]
+tests/projects/test_netlist.py ......................................... [ 68%]
+......................                                                   [ 68%]
+tests/projects/test_official_schematic.py ..F........................... [ 69%]
+........................................................................ [ 71%]
+.............                                                            [ 72%]
+tests/projects/test_project_repository.py .s.ssssssssssss                [ 72%]
+tests/projects/test_schematic_dialogue.py ...............                [ 73%]
+tests/projects/test_schematic_discovery.py ............................. [ 74%]
+........................................................................ [ 76%]
+................                                                         [ 76%]
+tests/projects/test_schematic_render.py ...............FFFFFFFFFFF...... [ 77%]
+................................F....................................... [ 80%]
+........................................................................ [ 82%]
+...............F...................                                      [ 83%]
+tests/projects/test_service_schema.py ssssssssss                         [ 83%]
+tests/projects/test_visuals.py .....................                     [ 84%]
+tests/rag/test_card_find.py .........................                    [ 85%]
+tests/rag/test_card_read.py ..........................................   [ 86%]
+tests/rag/test_card_specs.py ....                                        [ 86%]
+tests/rag/test_demo_snapshot.py ..s                                      [ 86%]
+tests/rag/test_package_outlines.py .............................         [ 87%]
+tests/rag/test_rag_chunk.py ......s........ssssssssssssss                [ 88%]
+tests/rag/test_rag_collect.py ......                                     [ 88%]
+tests/rag/test_rag_ingest.py ....s...                                    [ 89%]
+tests/rag/test_rag_parse.py ...                                          [ 89%]
+tests/rag/test_rag_retrieve.py ...........s...........                   [ 89%]
+tests/rag/test_rag_specs.py ...                                          [ 89%]
+tests/rag/test_rag_storage.py .ssssssss                                  [ 90%]
+tests/rag/test_rag_subset.py ........................                    [ 91%]
+tests/rag/test_rag_units.py .....................                        [ 91%]
+tests/rag/test_voyage_rollout.py ....                                    [ 91%]
+tests/repo/test_repo_layout.py .....                                     [ 91%]
+tests/services/test_datasheet_rows.py .................................. [ 93%]
+......................................                                   [ 94%]
+tests/services/test_demo_replay.py ...................                   [ 94%]
+tests/services/test_document_language.py ..............                  [ 95%]
+tests/services/test_exa_parallel.py ...........                          [ 95%]
+tests/services/test_exa_prefetch.py .....                                [ 95%]
+tests/services/test_langfuse_prompts.py ...........................      [ 96%]
+tests/services/test_llm.py ............................................. [ 97%]
+..                                                                       [ 98%]
+tests/services/test_mouser.py ...............                            [ 98%]
+tests/services/test_quote_service.py ................................    [ 99%]
+tests/services/test_service_trace.py ................                    [100%]
+
+=================================== FAILURES ===================================
+_____________ test_failure_diagnostics_do_not_log_query_or_source ______________
+
+service = (<backend.projects.external_schematic.ExternalSchematicService object at 0x119f9aff0>, Counter(), [1000], VerifiedSche...e=3, manufacturer=None, model=None, revision=None, source_sha256=None, license_evidence_url=None, circuit_sha256=None))
+caplog = <_pytest.logging.LogCaptureFixture object at 0x119f9b0b0>
+
+    def test_failure_diagnostics_do_not_log_query_or_source(service, caplog):
+        worker, _, _, _ = service
+        worker.search = lambda *args: (WebSchematicRef('https://example.org/private-schematic.pdf',
+            'https://example.org/private', 'private.pdf', 'pdf', 'private title', 'Publisher'),)
+        worker.inspect = lambda *args, **kwargs: ()
+        with caplog.at_level('INFO', logger=api.__name__):
+            with pytest.raises(ExternalSchematicNotFound):
+                worker.find('private user query')
+        record = next(record for record in caplog.records if record.message == 'schematic_lookup_failed')
+        assert (record.candidate_count, record.inspect_rejected, record.render_rejected) == (1, 1, 0)
+        assert record.reason == 'validation_failed'
+>       assert 'private' not in str(vars(record))
+E       assert 'private' not in "{'name': 'b...kup_failed'}"
+E         
+E         'private' is contained here:
+E           hname': '/private/tmp/claude-501/-Users-jeong-un--claude-spares-spare-x97wQL/ea8eff7f-b66c-41ee-b1a3-4563c4f4c83f/scratchpad/gl-d12/pt/backend/projects/external_schematic.py', 'filename': 'external_schematic.py', 'module': 'external_schematic', 'exc_info': None, 'exc_text': None, 'stack_info': None, 'lineno': 665, 'funcName': '_find', 'created': 1794861769.441937, 'msecs': 441.0, 'relativeCreated': 32242.877960205078, 'thread': 8620572544, 'threadName': 'MainThread', 'processName': 'MainProcess', 'process': 52736, 'taskName': None, 'reason': 'validation_faile...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+tests/projects/test_external_schematic.py:49: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     backend.projects.external_schematic:external_schematic.py:665 schematic_lookup_failed
+___ test_search_diagnostics_distinguish_raw_results_from_filtered_candidates ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11a375850>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x11a375a90>
+
+    def test_search_diagnostics_distinguish_raw_results_from_filtered_candidates(monkeypatch, caplog):
+        _enabled(monkeypatch)
+        from backend.projects import external_circuit_search as search
+        def handle(request):
+            return httpx.Response(200, json={'results': [{
+                'title': 'private Board 5V', 'url': 'https://example.org/private.pdf',
+            }]})
+        with caplog.at_level('INFO', logger=search.__name__):
+            with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+                assert search.search_public_schematics('private Board 5V', client=client) == ()
+        record = next(record for record in caplog.records if record.message == 'schematic_search_candidates')
+        assert (record.raw_result_count, record.candidate_count) == (1, 0)
+>       assert 'private' not in str(vars(record))
+E       assert 'private' not in "{'name': 'b...candidates'}"
+E         
+E         'private' is contained here:
+E           hname': '/private/tmp/claude-501/-Users-jeong-un--claude-spares-spare-x97wQL/ea8eff7f-b66c-41ee-b1a3-4563c4f4c83f/scratchpad/gl-d12/pt/backend/projects/external_circuit_search.py', 'filename': 'external_circuit_search.py', 'module': 'external_circuit_search', 'exc_info': None, 'exc_text': None, 'stack_info': None, 'lineno': 838, 'funcName': '_search_public_schematics', 'created': 1794861770.769846, 'msecs': 769.0, 'relativeCreated': 33570.78695297241, 'thread': 8620572544, 'threadName': 'MainThread', 'processName': 'MainProcess', 'process': 52736, 'taskName':...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+tests/projects/test_official_schematic.py:55: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     backend.projects.external_circuit_search:external_circuit_search.py:838 schematic_search_candidates
+_____________________ test_svg_rasterizes_visible_geometry _____________________
+
+    def test_svg_rasterizes_visible_geometry():
+        svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><rect width="20" height="10" fill="red"/></svg>'
+>       png, = fetch(svg, "text/plain", "svg")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:193: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/projects/test_schematic_render.py:157: in fetch
+    return render.render_external_schematic(source, client=client, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/projects/schematic_render.py:653: in render_external_schematic
+    result.extend(_sheets(kind, path, work / f"pages-{index}"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'svg', path = PosixPath('/tmp/sojafit-render-5sz33nw7/asset-0')
+output = PosixPath('/tmp/sojafit-render-5sz33nw7/pages-0'), pdf_pages = None
+
+    def _sheets(kind: str, path: Path, output: Path, *, pdf_pages: tuple[int, ...] | None = None) -> tuple[bytes, ...]:
+        output.mkdir()
+        if path.stat().st_size > (MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES):
+            raise _invalid()
+        try:
+            command = [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)]
+            if pdf_pages is not None:
+                command.append(",".join(str(index) for index in pdf_pages))
+            subprocess.run(
+                command,
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+>           raise _invalid() from None
+E           backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:325: ExternalSchematicInvalidSource
+__________ test_svg_rejects_active_content_and_node_limit[<script/>] ___________
+
+body = b'<script/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_______ test_svg_rejects_active_content_and_node_limit[<foreignObject/>] _______
+
+body = b'<foreignObject/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_______ test_svg_rejects_active_content_and_node_limit[<g onclick="a"/>] _______
+
+body = b'<g onclick="a"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<use href="https://unsafe.example"/>] _
+
+body = b'<use href="https://unsafe.example"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<g style="fill:url(file:///tmp/x)"/>] _
+
+body = b'<g style="fill:url(file:///tmp/x)"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<style>@import "https://unsafe.example";</style>] _
+
+body = b'<style>@import "https://unsafe.example";</style>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<use xml:base="file:///tmp/x" href="#x"/>] _
+
+body = b'<use xml:base="file:///tmp/x" href="#x"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+____________ test_svg_rejects_active_content_and_node_limit[body7] _____________
+
+body = b'<g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/>.../><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_entity_and_pixel_overflow[<!DOCTYPE svg [<!ENTITY e "d">]><svg/>] _
+
+data = b'<!DOCTYPE svg [<!ENTITY e "d">]><svg/>'
+
+    @pytest.mark.parametrize("data", [
+        b'<!DOCTYPE svg [<!ENTITY e "d">]><svg/>', b'<svg width="999999" height="999999"/>',
+    ])
+    def test_svg_rejects_entity_and_pixel_overflow(data):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(data)
+
+tests/projects/test_schematic_render.py:213: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_entity_and_pixel_overflow[<svg width="999999" height="999999"/>] _
+
+data = b'<svg width="999999" height="999999"/>'
+
+    @pytest.mark.parametrize("data", [
+        b'<!DOCTYPE svg [<!ENTITY e "d">]><svg/>', b'<svg width="999999" height="999999"/>',
+    ])
+    def test_svg_rejects_entity_and_pixel_overflow(data):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(data)
+
+tests/projects/test_schematic_render.py:213: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_unmarked_normal_image_retains_exact_page_evidence[svg-<h2>Downloads</h2><img src="/assets/driver.svg" alt="Schematic">] _
+
+kind = 'svg'
+html = '<h2>Downloads</h2><img src="/assets/driver.svg" alt="Schematic">'
+
+    @pytest.mark.parametrize("kind,html", [
+        ("png", '<h2>Schematic and Fab Print</h2><img src="/assets/driver.png">'),
+        ("png", '<h2>Downloads</h2><a href="/assets/driver.png">Circuit diagram</a>'),
+        ("svg", '<h2>Downloads</h2><img src="/assets/driver.svg" alt="Schematic">'),
+    ])
+    def test_unmarked_normal_image_retains_exact_page_evidence(kind, html):
+        data = schematic_picture() if kind == "png" else b'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150"><path d="M10 10L100 100"/></svg>'
+        url = "https://example.org/assets/driver." + kind
+        def handle(request):
+            if str(request.url) == url:
+                return httpx.Response(200, headers={"Content-Type": "image/png" if kind == "png" else "image/svg+xml"}, content=data)
+            return httpx.Response(200, headers={"Content-Type": "text/html"}, text=html)
+        with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+>           digest, count = render.inspect_public_schematic(url, kind, "Adafruit MOSFET Driver",
+                title="Adafruit MOSFET Driver", page_url="https://example.org/driver.md", client=client)
+
+tests/projects/test_schematic_render.py:493: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:1471: in inspect_public_schematic
+    _svg(data)
+backend/projects/schematic_render.py:208: in _svg
+    from cairosvg.surface import PNGSurface
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+../../wt-live/.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11a2d4ce0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '/Users/jeong-un/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+../../wt-live/.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+___ test_tsc_application_worker_and_render_preserve_hash_and_page_selection ____
+
+    def test_tsc_application_worker_and_render_preserve_hash_and_page_selection():
+        import hashlib
+        url = 'https://services.taiwansemi.com/storage/resources/datasheet/TS19503CB10H_A2103.pdf'
+        data = published_pdf('Taiwan Semiconductor TS19503CB10H TYPICAL APPLICATION CIRCUIT VIN GND OUT C1 C2 U1', pages=2)
+        with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, content=data, headers={'Content-Type':'application/pdf'}))) as client:
+>           digest, count = render.inspect_public_schematic(url, 'pdf', 'TS19503CB10H', page_url=url, client=client)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:1181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:1431: in inspect_public_schematic
+    pages = _bounded_pdf_schematic_pages(data, tsc_query=query)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = b'%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R 3 0 R ] /Count 2...00000122 00000 n \n0000000248 00000 n \n0000000318 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n620\n%%EOF'
+tsc_query = 'TS19503CB10H'
+
+    def _bounded_pdf_schematic_pages(data: bytes, *, tsc_query: str | None = None) -> tuple[int, ...]:
+        """Inspect untrusted PDF bytes in the bounded worker process."""
+        if not isinstance(data, bytes) or len(data) > MAX_PDF_BYTES:
+            raise _invalid()
+        with tempfile.TemporaryDirectory(prefix="sojafit-public-pdf-inspect-") as temporary:
+            path = Path(temporary) / "input.pdf"
+            path.write_bytes(data)
+            try:
+                result = subprocess.run(
+                    [sys.executable, "-m", "backend.projects.schematic_render",
+                     "inspect-tsc-pdf" if tsc_query else "inspect-pdf", str(path), *([tsc_query] if tsc_query else [])],
+                    cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                    capture_output=True, text=True,
+                    env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+                )
+            except subprocess.CalledProcessError:
+>               raise _invalid() from None
+E               backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:1162: ExternalSchematicInvalidSource
+=========================== short test summary info ============================
+SKIPPED [1] tests/api/test_admin.py:65: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_admin.py:74: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_admin.py:98: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_admin.py:107: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:89: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:113: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:132: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:168: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:281: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:318: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:477: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:511: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:532: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:571: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:616: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:637: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:669: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:692: requires an isolated authentication test database
+SKIPPED [3] tests/api/test_auth.py:747: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:776: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:832: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:918: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:952: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1133: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1150: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1176: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1217: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_datasheets.py:72: requires an isolated test database
+SKIPPED [1] tests/api/test_datasheets.py:85: requires an isolated test database
+SKIPPED [2] tests/api/test_deletion.py:151: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:178: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:191: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:207: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:228: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:251: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:293: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:324: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:351: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:399: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:414: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:432: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:450: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:457: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:472: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_email_auth.py:56: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:85: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:93: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:111: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:131: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:141: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:161: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:169: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:179: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:195: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:205: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:216: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_full_service_flow.py:34: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:121: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:132: requires isolated PostgreSQL
+SKIPPED [3] tests/api/test_full_service_flow.py:170: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:197: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:223: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_google_users.py:104: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:117: requires new isolated local OAuth test database
+SKIPPED [2] tests/api/test_google_users.py:131: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:143: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:157: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:166: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:177: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:193: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:210: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:220: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_http_restart.py:85: explicit Docker repro only
+SKIPPED [1] tests/api/test_local_live_config.py:12: Docker Compose CLI required (daemon not used)
+SKIPPED [1] tests/api/test_local_live_config.py:50: Docker Compose CLI required (daemon not used)
+SKIPPED [1] tests/api/test_projects.py:427: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_projects.py:580: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_projects.py:662: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_public_grants.py:124: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:151: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:160: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_quotes.py:132: requires an isolated service test database (tests/db_schema.py)
+SKIPPED [1] tests/api/test_threads.py:248: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:271: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:306: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:386: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:403: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:415: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:453: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:462: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:493: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:518: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:544: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:580: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:591: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:612: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:627: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:647: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:732: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:743: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:778: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:823: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:848: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:884: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:903: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:916: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:1013: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:1033: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [2] tests/conversations/test_profile.py:196: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/conversations/test_repository.py:11: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:22: requires isolated PostgreSQL
+SKIPPED [4] tests/conversations/test_repository.py:46: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:60: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:87: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:108: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:161: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:183: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:216: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:241: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:255: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:270: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:288: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:296: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:309: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:319: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:331: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:345: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:363: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:374: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:393: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:417: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:432: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:457: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:52: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:64: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:79: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:86: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:102: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:108: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:120: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:128: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:141: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:151: requires isolated PostgreSQL
+SKIPPED [1] tests/evals/test_approval_wait_report.py:47: 일회용 DB 없음
+SKIPPED [1] tests/evals/test_judgement_bundle.py:147: requires disposable TEST_INJECTION_DATABASE_URL
+SKIPPED [1] tests/graph/test_graph_mcp_stdio.py:22: TEST_DATABASE_URL에 격리 코퍼스가 있을 때만 돈다
+SKIPPED [1] tests/projects/test_project_repository.py:47: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:86: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:93: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:121: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:140: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:153: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:162: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:194: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:243: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:268: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:286: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:299: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:318: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:75: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:84: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:91: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:98: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:104: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:116: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:133: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:145: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:174: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:199: requires an isolated authentication test database
+SKIPPED [1] tests/rag/test_demo_snapshot.py:65: DEMO_SNAPSHOT_SOURCE(저장소 밖 chunks-v4h 폴더)가 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_chunk.py:61: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [3] tests/rag/test_rag_chunk.py:181: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [11] tests/rag/test_rag_chunk.py:219: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [1] tests/rag/test_rag_ingest.py:70: TEST_DATABASE_URL을 줄 때만 돈다
+SKIPPED [1] tests/rag/test_rag_retrieve.py:117: TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_storage.py:66: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:78: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:110: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:125: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:133: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:141: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:155: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:163: dedicated TEST_DATABASE_URL required
+================ 15 failed, 2982 passed, 205 skipped in 55.55s =================
+exit: 1

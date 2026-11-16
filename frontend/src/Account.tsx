@@ -1,17 +1,7 @@
 /** 설정·개인정보 안내. 승인 사례는 Approved.tsx, 관리자는 Admin.tsx. 출처: SPEC 8.5·8.6절. */
 import { useEffect, useState } from 'react';
 import { api } from './api';
-import {
-  Badge,
-  Brand,
-  Disclaimer,
-  Empty,
-  ErrorBox,
-  Loading,
-  Modal,
-  plainClick,
-  useResource,
-} from './ui';
+import { ErrorBox, Loading, Modal, useResource } from './ui';
 import type { Fact, User } from './types';
 // [왜] 직무는 #24 전까지 이 코드 중에서 골랐다. 그때 저장한 값은 글 칸에 화면 이름으로 보인다(서버도 같은 코드를 이 이름으로 받음)
 const oldJobRoles: Record<string, string> = {

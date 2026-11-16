@@ -1,0 +1,9435 @@
+{
+ "meta": {
+  "preregister": "d12 재측정(2026-11-17, 사전 등록 #26과 같은 실행기 · 설정)",
+  "run_at": "2026-11-17T05:04:32",
+  "config": "C|v4large|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3",
+  "k": 20,
+  "warmup_sec": 1.24,
+  "commit": "799ae636"
+ },
+ "r1": {
+  "rows": [
+   {
+    "id": "r1-001",
+    "sec": 1.058,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-002",
+    "sec": 0.872,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      3
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK12065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-003",
+    "sec": 0.523,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      2
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      4
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      2
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-004",
+    "sec": 0.485,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      3
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      2
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ],
+     [
+      "RS1AH SERIES_B2304.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-005",
+    "sec": 0.487,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      3
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      2
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      2
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-006",
+    "sec": 0.697,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      2
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      2
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      3
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ],
+     [
+      "TS20K40-T SERIES_A2208.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-007",
+    "sec": 0.886,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      2
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ],
+     [
+      "BAT54WH_A2501.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-008",
+    "sec": 0.539,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.3333333333333333,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-009",
+    "sec": 0.483,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-011",
+    "sec": 0.481,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      2
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      2
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-012",
+    "sec": 0.532,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4S SERIES_K2411.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-013",
+    "sec": 0.499,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.3333333333333333,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-014",
+    "sec": 0.501,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      1
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      3
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      1
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      1
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      2
+     ],
+     [
+      "TESDA5V0U40P1Q0_A2505.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-015",
+    "sec": 0.846,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDK08065G1_A2507.pdf",
+      5
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 0.3333333333333333,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-016",
+    "sec": 0.571,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      2
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      3
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      2
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      1
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      2
+     ],
+     [
+      "SMA6J SERIES_E2102.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-018",
+    "sec": 0.461,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      4
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-019",
+    "sec": 0.524,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      3
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ],
+     [
+      "GBL005 SERIES_K2103.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-020",
+    "sec": 0.5,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      2
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ],
+     [
+      "RB500V-40H_A2502.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-021",
+    "sec": 0.498,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-022",
+    "sec": 0.525,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      2
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-024",
+    "sec": 0.51,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      3
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      1
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      2
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      2
+     ],
+     [
+      "S3JFSH_A2303.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-025",
+    "sec": 0.539,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      4
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      3
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      1
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      2
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      2
+     ],
+     [
+      "BZD27C11PWH SERIES_B2203.pdf",
+      4
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-026",
+    "sec": 0.474,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-027",
+    "sec": 0.51,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      2
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      3
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      5
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-029",
+    "sec": 0.557,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      2
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      2
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      7
+     ]
+    ],
+    "page_mrr": 0.25,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-030",
+    "sec": 0.832,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      3
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      2
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      2
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-031",
+    "sec": 0.52,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-033",
+    "sec": 0.897,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ],
+     [
+      "RB520S-30_D2510.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-034",
+    "sec": 0.486,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      2
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      2
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ],
+     [
+      "TSSA3U45_P2307.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-035",
+    "sec": 0.834,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-036",
+    "sec": 0.495,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-038",
+    "sec": 0.535,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      2
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      2
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      4
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-040",
+    "sec": 0.694,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      1
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-041",
+    "sec": 0.489,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-042",
+    "sec": 0.543,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      1
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      1
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      2
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 0.14285714285714285,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-043",
+    "sec": 0.482,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      3
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-046",
+    "sec": 0.609,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      3
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      4
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      3
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      4
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-047",
+    "sec": 0.467,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      3
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      3
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      4
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-048",
+    "sec": 0.486,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      3
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      3
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-049",
+    "sec": 0.575,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      3
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      4
+     ],
+     [
+      "UG2D_F2105.pdf",
+      2
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-050",
+    "sec": 0.484,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      2
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      2
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-051",
+    "sec": 0.712,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      1
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ],
+     [
+      "BZD17C SERIES_L2103.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 0.3333333333333333,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-052",
+    "sec": 0.633,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      5
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-053",
+    "sec": 0.473,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      4
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-054",
+    "sec": 0.479,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDT20065G1_A2404.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-055",
+    "sec": 0.51,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-056",
+    "sec": 0.508,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-057",
+    "sec": 0.483,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      2
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      3
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-058",
+    "sec": 0.489,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "UR2KB60 SERIES_L2104.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-059",
+    "sec": 0.494,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      2
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      3
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-060",
+    "sec": 0.609,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      5
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-061",
+    "sec": 0.566,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-062",
+    "sec": 0.674,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "S2DAL SERIES_B2103.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-063",
+    "sec": 0.596,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ],
+     [
+      "MMSZ4678 SERIES_A2311.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.5,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 0.5,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 0.5,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-064",
+    "sec": 0.566,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      2
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      3
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDH40065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.5,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-066",
+    "sec": 0.68,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      3
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-067",
+    "sec": 0.47,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      2
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      2
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      1
+     ],
+     [
+      "TS20P01G SERIES_O2203.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-068",
+    "sec": 0.505,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-069",
+    "sec": 0.511,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      2
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "PU2BM SERIES_B2103.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-071",
+    "sec": 0.512,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      1
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      4
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-073",
+    "sec": 0.486,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDK16065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK16065G1_A2507.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-074",
+    "sec": 0.699,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      2
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "FR201G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-075",
+    "sec": 0.593,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-076",
+    "sec": 0.485,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      2
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      3
+     ],
+     [
+      "TSSW3H120H_A2510.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-077",
+    "sec": 0.487,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      2
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      2
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      3
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-078",
+    "sec": 0.487,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      2
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ],
+     [
+      "S2DA-T SERIES_D2111.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-083",
+    "sec": 1.112,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5391G SERIES_G2309.pdf",
+      1
+     ],
+     [
+      "1N4933G SERIES_I2104.pdf",
+      1
+     ],
+     [
+      "1N4933G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "1N5391G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "ABS15J SERIES_E2103.pdf",
+      1
+     ],
+     [
+      "BZY55C2V4 SERIES_E2301.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZY55B2V4 SERIES_D2301.pdf",
+      1
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      1
+     ],
+     [
+      "BZT52B2V4SH SERIES_A2503.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-084",
+    "sec": 0.994,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS116_F2001.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "TSD3G_F2102.pdf",
+      1
+     ],
+     [
+      "TSD2G_F2102.pdf",
+      1
+     ],
+     [
+      "TSD3GH_A2102.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-085",
+    "sec": 0.706,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "TSCDT08065G1_A2404.pdf",
+      1
+     ],
+     [
+      "SS22L SERIES_O2103.pdf",
+      1
+     ],
+     [
+      "SK22A SERIES_S2307.pdf",
+      1
+     ],
+     [
+      "SS22 SERIES_N2306.pdf",
+      1
+     ],
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSSW1H100H_A2510.pdf",
+      1
+     ],
+     [
+      "TSSW2H100H_A2510.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-086",
+    "sec": 0.693,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "ABS20M_B2103.pdf",
+      1
+     ],
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "RDBLS207G_B2103.pdf",
+      1
+     ],
+     [
+      "BYG21M_B2102.pdf",
+      1
+     ],
+     [
+      "BYG23M_C2102.pdf",
+      1
+     ],
+     [
+      "RS3MFS_D2304.pdf",
+      1
+     ],
+     [
+      "RTBS60M_A2111.pdf",
+      1
+     ],
+     [
+      "RABS20M_C2304.pdf",
+      1
+     ],
+     [
+      "RABS15M_D2103.pdf",
+      1
+     ],
+     [
+      "RS3MFSH_B2304.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-087",
+    "sec": 0.697,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAW56 SERIES_I2001.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      3
+     ],
+     [
+      "SK52C SERIES_S2311.pdf",
+      4
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "SK52CH SERIES_C2311.pdf",
+      4
+     ],
+     [
+      "SSL32 SERIES_K2310.pdf",
+      3
+     ],
+     [
+      "SK52B SERIES_Q2309.pdf",
+      5
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-088",
+    "sec": 0.764,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "GBU604-K SERIES_E2103.pdf",
+      1
+     ],
+     [
+      "6A05G SERIES_F2104.pdf",
+      1
+     ],
+     [
+      "31DF4 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "GBJL45J_D2606.pdf",
+      1
+     ],
+     [
+      "PU1BFSH SERIES_A2109.pdf",
+      1
+     ],
+     [
+      "PU1BFS SERIES_A2210.pdf",
+      1
+     ],
+     [
+      "PU1BBH SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BAH SERIES_B2110.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ],
+     [
+      "PU1BA SERIES_A2210.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.25,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-089",
+    "sec": 0.81,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "PLAD15Q_B2606.pdf",
+      1
+     ],
+     [
+      "TSCDT15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDK15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDFS02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDT05120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-090",
+    "sec": 0.821,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR302 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "SR502 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "TSS0230U_G1706.pdf",
+      1
+     ],
+     [
+      "SS34FSH SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "TST40122C_A2405.pdf",
+      3
+     ],
+     [
+      "SS13M SERIES_O2103.pdf",
+      3
+     ],
+     [
+      "SS13MH SERIES_A2103.pdf",
+      3
+     ],
+     [
+      "TSF40122C_A2405.pdf",
+      3
+     ],
+     [
+      "S1GFL SERIES_E2103.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-091",
+    "sec": 0.689,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDFS02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDAH30120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDT05120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH40120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDT10120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDH40120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDH10120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-092",
+    "sec": 0.638,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "TSD3G_F2102.pdf",
+      1
+     ],
+     [
+      "TSD2G_F2102.pdf",
+      1
+     ],
+     [
+      "TSD2GH_A2102.pdf",
+      1
+     ],
+     [
+      "TSD3GH_A2102.pdf",
+      1
+     ],
+     [
+      "TSCDM08120G2H_A2506.pdf",
+      3
+     ],
+     [
+      "TSCDH20065G1_A2404.pdf",
+      3
+     ],
+     [
+      "TSCDT05120G2H_A2506.pdf",
+      3
+     ],
+     [
+      "TSCDT08120G2H_A2506.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-093",
+    "sec": 0.71,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "1N4148WH_A2501.pdf",
+      1
+     ],
+     [
+      "1N4148WSH_A2501.pdf",
+      1
+     ],
+     [
+      "1N4148WTH_A2501.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "2A01G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "MMBD4148 SERIES_F2112.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-094",
+    "sec": 0.738,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZT52B2V4 SERIES_F15.pdf",
+      2
+     ],
+     [
+      "SSB44_C2309.pdf",
+      2
+     ],
+     [
+      "TSFS3M45H_A2510.pdf",
+      2
+     ],
+     [
+      "SSB44H_B2309.pdf",
+      2
+     ],
+     [
+      "TSAL3M45H_A2510.pdf",
+      2
+     ],
+     [
+      "MBRAD1045DH_A2303.pdf",
+      2
+     ],
+     [
+      "TSAD10M45H_A2601.pdf",
+      2
+     ],
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "TSF20H45C_C2012.pdf",
+      2
+     ],
+     [
+      "TST30L45C_C2104.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-095",
+    "sec": 0.643,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "GBJ15KGLV_B2603.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ],
+     [
+      "RSFAL SERIES_M2103.pdf",
+      1
+     ],
+     [
+      "TSF20H60C_C2012.pdf",
+      1
+     ],
+     [
+      "GBU1505 SERIES_B2305.pdf",
+      1
+     ],
+     [
+      "TSF10H60C_F2102.pdf",
+      1
+     ],
+     [
+      "TSF10H60C_F2102.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ],
+     [
+      "TST10H60C_A2010.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.5,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-096",
+    "sec": 0.708,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "3A60 SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "SSB3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSAL3M60H_A2510.pdf",
+      1
+     ],
+     [
+      "SSA3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSSW3M60H_A2510.pdf",
+      1
+     ],
+     [
+      "SSC3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "MBRAD1060DH_A2303.pdf",
+      1
+     ],
+     [
+      "MBRAD2060H_A2303.pdf",
+      1
+     ],
+     [
+      "MBRAD1560DH_A2303.pdf",
+      1
+     ],
+     [
+      "TSSA3U60_H2306.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-097",
+    "sec": 0.591,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSUP15H120H_A2403.pdf",
+      1
+     ],
+     [
+      "TST40122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSAD10H120CH_A2601.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0
+   },
+   {
+    "id": "r1-098",
+    "sec": 0.611,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "SD103AM3 SERIES_B2606.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR502 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "SR302 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "SR802 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "SS54FSH SERIES_B2103.pdf",
+      1
+     ],
+     [
+      "TESDA24VB28P2CX_A2503.pdf",
+      3
+     ],
+     [
+      "TESDA24VB17P1Q1_A2502.pdf",
+      3
+     ],
+     [
+      "TESDA24VB17P1M3_A2502.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-099",
+    "sec": 0.602,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSF40102C_A2405.pdf",
+      3
+     ],
+     [
+      "TSF20122C_A2405.pdf",
+      3
+     ],
+     [
+      "RB495D_G14.pdf",
+      2
+     ],
+     [
+      "SK52B SERIES_Q2309.pdf",
+      5
+     ],
+     [
+      "TSUP5102_B2508.pdf",
+      3
+     ],
+     [
+      "SK52BH SERIES_B2309.pdf",
+      5
+     ],
+     [
+      "TSAL5M60H_A2510.pdf",
+      3
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      3
+     ],
+     [
+      "SK52C SERIES_S2311.pdf",
+      4
+     ],
+     [
+      "SK52CH SERIES_C2311.pdf",
+      4
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   },
+   {
+    "id": "r1-100",
+    "sec": 0.6,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDT05120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDT08120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDT10120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDFS02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDM05120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ],
+     [
+      "TSCDK05120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 0.0,
+    "page_hit@1": 0.0,
+    "page_recall@1": 0.0,
+    "all_evidence@1": 0.0,
+    "page_hit@3": 0.0,
+    "page_recall@3": 0.0,
+    "all_evidence@3": 0.0,
+    "page_hit@5": 0.0,
+    "page_recall@5": 0.0,
+    "all_evidence@5": 0.0,
+    "page_hit@10": 0.0,
+    "page_recall@10": 0.0,
+    "all_evidence@10": 0.0,
+    "page_hit@20": 0.0,
+    "page_recall@20": 0.0,
+    "all_evidence@20": 0.0
+   }
+  ],
+  "dev": {
+   "page_hit@1": 0.6522,
+   "page_hit@3": 0.8043,
+   "page_hit@5": 0.8261,
+   "page_hit@10": 0.8478,
+   "page_hit@20": 0.8478,
+   "page_recall@1": 0.5652,
+   "page_recall@3": 0.7935,
+   "page_recall@5": 0.8152,
+   "page_recall@10": 0.837,
+   "page_recall@20": 0.837,
+   "all_evidence@1": 0.4783,
+   "all_evidence@3": 0.7826,
+   "all_evidence@5": 0.8043,
+   "all_evidence@10": 0.8261,
+   "all_evidence@20": 0.8261,
+   "page_mrr": 0.7296
+  },
+  "test": {
+   "page_hit@1": 0.6842,
+   "page_hit@3": 0.8947,
+   "page_hit@5": 0.9211,
+   "page_hit@10": 0.9211,
+   "page_hit@20": 0.9211,
+   "page_recall@1": 0.5921,
+   "page_recall@3": 0.8553,
+   "page_recall@5": 0.9079,
+   "page_recall@10": 0.9211,
+   "page_recall@20": 0.9211,
+   "all_evidence@1": 0.5,
+   "all_evidence@3": 0.8158,
+   "all_evidence@5": 0.8947,
+   "all_evidence@10": 0.9211,
+   "all_evidence@20": 0.9211,
+   "page_mrr": 0.7873
+  }
+ },
+ "v2": {
+  "rows": [
+   {
+    "id": "draft30-e03",
+    "sec": 0.498,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      3
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-e04",
+    "sec": 0.489,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      3
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.5,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-e05",
+    "sec": 0.496,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.3333333333333333,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.6666666666666666,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.6666666666666666,
+    "all_evidence@5": 0.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 0.6666666666666666,
+    "all_evidence@10": 0.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 0.6666666666666666,
+    "all_evidence@20": 0.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-e08",
+    "sec": 0.52,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      1
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      3
+     ],
+     [
+      "SS32 SERIES_Q2412.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.3333333333333333,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.3333333333333333,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.3333333333333333,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.3333333333333333,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.3333333333333333,
+    "all_evidence@5": 0.0,
+    "page_recall_rec@5": 0.3333333333333333,
+    "page_hit@10": 1.0,
+    "page_recall@10": 0.6666666666666666,
+    "all_evidence@10": 0.0,
+    "page_recall_rec@10": 0.6666666666666666,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-m03",
+    "sec": 0.558,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      3
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-m04",
+    "sec": 0.549,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.25,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.25,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.25,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.25,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.25,
+    "all_evidence@5": 0.0,
+    "page_recall_rec@5": 0.25,
+    "page_hit@10": 1.0,
+    "page_recall@10": 0.25,
+    "all_evidence@10": 0.0,
+    "page_recall_rec@10": 0.25,
+    "page_hit@20": 1.0,
+    "page_recall@20": 0.25,
+    "all_evidence@20": 0.0,
+    "page_recall_rec@20": 0.25
+   },
+   {
+    "id": "draft30-m05",
+    "sec": 0.518,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-m07",
+    "sec": 0.573,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      1
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ],
+     [
+      "BZX84C2V4 SERIES_F2001.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.5,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-h04",
+    "sec": 0.496,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.5,
+    "all_evidence@5": 0.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 0.5,
+    "all_evidence@10": 0.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 0.5,
+    "all_evidence@20": 0.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft30-h05",
+    "sec": 0.487,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft50-n01",
+    "sec": 0.514,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      3
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.5,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft50-n02",
+    "sec": 0.536,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      2
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      3
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      2
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.5,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.5,
+    "all_evidence@5": 0.0,
+    "page_recall_rec@5": 0.5,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft50-n03",
+    "sec": 0.506,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft50-n04",
+    "sec": 0.592,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.3333333333333333,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.3333333333333333,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.3333333333333333,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.3333333333333333,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.3333333333333333,
+    "all_evidence@5": 0.0,
+    "page_recall_rec@5": 0.3333333333333333,
+    "page_hit@10": 1.0,
+    "page_recall@10": 0.3333333333333333,
+    "all_evidence@10": 0.0,
+    "page_recall_rec@10": 0.3333333333333333,
+    "page_hit@20": 1.0,
+    "page_recall@20": 0.3333333333333333,
+    "all_evidence@20": 0.0,
+    "page_recall_rec@20": 0.3333333333333333
+   },
+   {
+    "id": "draft50-n05",
+    "sec": 0.549,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      1
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      1
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      1
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      1
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      4
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      1
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 0.5,
+    "all_evidence@1": 0.0,
+    "page_recall_rec@1": 0.5,
+    "page_hit@3": 1.0,
+    "page_recall@3": 0.5,
+    "all_evidence@3": 0.0,
+    "page_recall_rec@3": 0.5,
+    "page_hit@5": 1.0,
+    "page_recall@5": 0.5,
+    "all_evidence@5": 0.0,
+    "page_recall_rec@5": 0.5,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft50-n06",
+    "sec": 0.5,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft50-n07",
+    "sec": 0.525,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      3
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft50-n08",
+    "sec": 0.531,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      2
+     ],
+     [
+      "1N4148 SERIES_K2301.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   },
+   {
+    "id": "draft52-n21",
+    "sec": 0.49,
+    "n_results": 20,
+    "name_mapped": 0,
+    "top": [
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      3
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      2
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      4
+     ],
+     [
+      "1N5817 SERIES_H2104.pdf",
+      1
+     ]
+    ],
+    "page_mrr": 1.0,
+    "page_hit@1": 1.0,
+    "page_recall@1": 1.0,
+    "all_evidence@1": 1.0,
+    "page_recall_rec@1": 1.0,
+    "page_hit@3": 1.0,
+    "page_recall@3": 1.0,
+    "all_evidence@3": 1.0,
+    "page_recall_rec@3": 1.0,
+    "page_hit@5": 1.0,
+    "page_recall@5": 1.0,
+    "all_evidence@5": 1.0,
+    "page_recall_rec@5": 1.0,
+    "page_hit@10": 1.0,
+    "page_recall@10": 1.0,
+    "all_evidence@10": 1.0,
+    "page_recall_rec@10": 1.0,
+    "page_hit@20": 1.0,
+    "page_recall@20": 1.0,
+    "all_evidence@20": 1.0,
+    "page_recall_rec@20": 1.0
+   }
+  ],
+  "summary": {
+   "page_hit@1": 1.0,
+   "page_hit@3": 1.0,
+   "page_hit@5": 1.0,
+   "page_hit@10": 1.0,
+   "page_hit@20": 1.0,
+   "page_recall@1": 0.6447,
+   "page_recall@3": 0.7149,
+   "page_recall@5": 0.7939,
+   "page_recall@10": 0.864,
+   "page_recall@20": 0.8816,
+   "all_evidence@1": 0.3684,
+   "all_evidence@3": 0.4737,
+   "all_evidence@5": 0.6316,
+   "all_evidence@10": 0.7368,
+   "all_evidence@20": 0.7895,
+   "page_mrr": 1.0
+  },
+  "summary_rec": {
+   "page_recall_rec@1": 0.6798,
+   "page_recall_rec@3": 0.7588,
+   "page_recall_rec@5": 0.8377,
+   "page_recall_rec@10": 0.9079,
+   "page_recall_rec@20": 0.9254
+  }
+ },
+ "parity": {
+  "n": 84,
+  "same": 29,
+  "different": 55,
+  "same_rate": 0.3452,
+  "differences": [
+   {
+    "id": "r1-001",
+    "service": [
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      1
+     ],
+     [
+      "TESD5V0V4UA_B2109.pdf",
+      2
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-003",
+    "service": [
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      2
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      4
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      2
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      1
+     ],
+     [
+      "SMA4S12AH SERIES_C2103.pdf",
+      4
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-005",
+    "service": [
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      3
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      3
+     ],
+     [
+      "HER101G SERIES_L2104.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-008",
+    "service": [
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      3
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-011",
+    "service": [
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      2
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      2
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-013",
+    "service": [
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      1
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ],
+     [
+      "SFF501G SERIES_I2105.pdf",
+      2
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-015",
+    "service": [
+     [
+      "TSCDK08065G1_A2507.pdf",
+      5
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      2
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      6
+     ],
+     [
+      "TSCDK08065G1_A2507.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-018",
+    "service": [
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "US1AH SERIES_A2102.pdf",
+      2
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-021",
+    "service": [
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      1
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      2
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      5
+     ],
+     [
+      "TSUP10150H_A2505.pdf",
+      3
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-022",
+    "service": [
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      1
+     ],
+     [
+      "BAS21H_A2412.pdf",
+      2
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-026",
+    "service": [
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      2
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SF41G SERIES_G2105.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-027",
+    "service": [
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      2
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      2
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ],
+     [
+      "TESDD5V0_E1901.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-029",
+    "service": [
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      2
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      2
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ]
+    ],
+    "r1": [
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      2
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      1
+     ],
+     [
+      "1.5SMCH SERIES_B2207.pdf",
+      3
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-030",
+    "service": [
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      3
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      3
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ],
+     [
+      "RS1DLWH SERIES_A2103.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-031",
+    "service": [
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      2
+     ],
+     [
+      "HER101G-K SERIES_B2104.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-035",
+    "service": [
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      1
+     ],
+     [
+      "BAV19WS SERIES_K2212.pdf",
+      2
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-038",
+    "service": [
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      2
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      2
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      2
+     ],
+     [
+      "BZX84JB2V4H SERIES_A2503.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-040",
+    "service": [
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      1
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ],
+     [
+      "TESDH3V3B03P1Q0_A2305.pdf",
+      2
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-041",
+    "service": [
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-042",
+    "service": [
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ]
+    ],
+    "r1": [
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      4
+     ],
+     [
+      "P4KE SERIES_N2104.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-043",
+    "service": [
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      3
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "BA157G-K SERIES_B2104.pdf",
+      3
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-046",
+    "service": [
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      3
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      4
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      3
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      4
+     ],
+     [
+      "RB706F-40_C2102.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-048",
+    "service": [
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      3
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      2
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      1
+     ],
+     [
+      "BAV99WH_A2412.pdf",
+      4
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-049",
+    "service": [
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      3
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      1
+     ],
+     [
+      "UG2D_F2105.pdf",
+      3
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-050",
+    "service": [
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      2
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      2
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      4
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      2
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      3
+     ],
+     [
+      "TSD2GFSH SERIES_B2312.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-052",
+    "service": [
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      2
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      5
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      1
+     ],
+     [
+      "TPMR10D SERIES_D2309.pdf",
+      3
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-053",
+    "service": [
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      4
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      2
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      1
+     ],
+     [
+      "TESD5V0L1UC_E2007.pdf",
+      4
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-055",
+    "service": [
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      2
+     ],
+     [
+      "SMB10JH SERIES_A2102.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-056",
+    "service": [
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      1
+     ],
+     [
+      "RS5D-T SERIES_C2602.pdf",
+      2
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-059",
+    "service": [
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      1
+     ],
+     [
+      "TSS42U SERIES_D1601.pdf",
+      2
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-060",
+    "service": [
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      2
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      6
+     ],
+     [
+      "TSAD10H120H_A2601.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-061",
+    "service": [
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      1
+     ],
+     [
+      "PU6BBH SERIES_B2109.pdf",
+      2
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-066",
+    "service": [
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      2
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ],
+     [
+      "BYG20D SERIES_F2102.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-068",
+    "service": [
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      2
+     ],
+     [
+      "TSUP10M60SH_B2103.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-071",
+    "service": [
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      1
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      4
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      1
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ],
+     [
+      "TSZU52C2V0 SERIES_G2009.pdf",
+      2
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-075",
+    "service": [
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      2
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ],
+     [
+      "TBS806 SERIES_A2010.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-077",
+    "service": [
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      2
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      2
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ],
+     [
+      "UG1004G SERIES_D2601.pdf",
+      1
+     ]
+    ],
+    "same_set": true
+   },
+   {
+    "id": "r1-083",
+    "service": [
+     [
+      "1N5391G SERIES_G2309.pdf",
+      1
+     ],
+     [
+      "1N4933G SERIES_I2104.pdf",
+      1
+     ],
+     [
+      "1N4933G-K SERIES_B2104.pdf",
+      1
+     ],
+     [
+      "1N5391G-T SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "ABS15J SERIES_E2103.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "1N4148WH_A2501.pdf",
+      1
+     ],
+     [
+      "1N5391G SERIES_G2309.pdf",
+      1
+     ],
+     [
+      "1N4148WTH_A2501.pdf",
+      1
+     ],
+     [
+      "1N4148WSH_A2501.pdf",
+      1
+     ],
+     [
+      "FR151G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-084",
+    "service": [
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "BAS116_F2001.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "TS4148 SERIES_A2301.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "BAS116_F2001.pdf",
+      1
+     ],
+     [
+      "LL4148 SERIES_K2301.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-085",
+    "service": [
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "TSCDT08065G1_A2404.pdf",
+      1
+     ],
+     [
+      "SS22L SERIES_O2103.pdf",
+      1
+     ],
+     [
+      "SK22A SERIES_S2307.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "1SS355_D2212.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF40102C_A2405.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-086",
+    "service": [
+     [
+      "ABS20M_B2103.pdf",
+      1
+     ],
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "RDBLS207G_B2103.pdf",
+      1
+     ],
+     [
+      "BYG21M_B2102.pdf",
+      1
+     ],
+     [
+      "BYG23M_C2102.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "TS40P05G SERIES_G2203.pdf",
+      1
+     ],
+     [
+      "RTBS40M_B2103.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ],
+     [
+      "GBPC40_50 SERIES_G2211.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-087",
+    "service": [
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "BAW56 SERIES_I2001.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "TSUP3150H_A2505.pdf",
+      3
+     ]
+    ],
+    "r1": [
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "TSS70U_C1601.pdf",
+      1
+     ],
+     [
+      "BAW56 SERIES_I2001.pdf",
+      1
+     ],
+     [
+      "BAS70 SERIES_G2606.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-088",
+    "service": [
+     [
+      "GBU604-K SERIES_E2103.pdf",
+      1
+     ],
+     [
+      "6A05G SERIES_F2104.pdf",
+      1
+     ],
+     [
+      "31DF4 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "GBJL45J_D2606.pdf",
+      1
+     ],
+     [
+      "PU1BFSH SERIES_A2109.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "GBJL45J_D2606.pdf",
+      1
+     ],
+     [
+      "UGS5JH_D2606.pdf",
+      1
+     ],
+     [
+      "UGS20JH_F2510.pdf",
+      1
+     ],
+     [
+      "ES3DB-A SERIES_C2102.pdf",
+      1
+     ],
+     [
+      "PU1BBH SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-089",
+    "service": [
+     [
+      "PLAD15Q_B2606.pdf",
+      1
+     ],
+     [
+      "TSCDT15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDK15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH15120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "PLAD15Q_B2606.pdf",
+      1
+     ],
+     [
+      "TSCDH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDAH15120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-090",
+    "service": [
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR302 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "SR502 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "TSS0230U_G1706.pdf",
+      1
+     ],
+     [
+      "SS34FSH SERIES_B2103.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "SSL22H SERIES_B2309.pdf",
+      1
+     ],
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ],
+     [
+      "B0520LW SERIES_J2112.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-091",
+    "service": [
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDFS02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDAH30120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TSCDAH30120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDH30120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QBH_A2408.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-092",
+    "service": [
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "TSD3G_F2102.pdf",
+      1
+     ],
+     [
+      "TSD2G_F2102.pdf",
+      1
+     ],
+     [
+      "TSD2GH_A2102.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "MMBD3004 SERIES_C2001.pdf",
+      1
+     ],
+     [
+      "BAV23CH_A2501.pdf",
+      1
+     ],
+     [
+      "ES3DB-A SERIES_C2102.pdf",
+      1
+     ],
+     [
+      "TSCDF06065G1_A2404.pdf",
+      1
+     ],
+     [
+      "PU1BB SERIES_A2510.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-093",
+    "service": [
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "BAS16_F2001.pdf",
+      1
+     ],
+     [
+      "1N4148W SERIES_K1804.pdf",
+      1
+     ],
+     [
+      "1N4148WH_A2501.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "GS2ZA_A2510.pdf",
+      1
+     ],
+     [
+      "GS1Z_A2510.pdf",
+      1
+     ],
+     [
+      "S2YH_A2408.pdf",
+      1
+     ],
+     [
+      "S2YAH_A2408.pdf",
+      1
+     ],
+     [
+      "2A01G-T SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-094",
+    "service": [
+     [
+      "BZT52B2V4 SERIES_F15.pdf",
+      2
+     ],
+     [
+      "SSB44_C2309.pdf",
+      2
+     ],
+     [
+      "TSFS3M45H_A2510.pdf",
+      2
+     ],
+     [
+      "SSB44H_B2309.pdf",
+      2
+     ],
+     [
+      "TSAL3M45H_A2510.pdf",
+      2
+     ]
+    ],
+    "r1": [
+     [
+      "BZT52C2V4 SERIES_G1804.pdf",
+      2
+     ],
+     [
+      "SSL22 SERIES_M2309.pdf",
+      2
+     ],
+     [
+      "TSUP12122_B2508.pdf",
+      2
+     ],
+     [
+      "SSL22H SERIES_B2309.pdf",
+      2
+     ],
+     [
+      "BZT52B2V4 SERIES_F15.pdf",
+      2
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-095",
+    "service": [
+     [
+      "GBJ15KGLV_B2603.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ],
+     [
+      "RSFAL SERIES_M2103.pdf",
+      1
+     ],
+     [
+      "TSF20H60C_C2012.pdf",
+      1
+     ],
+     [
+      "GBU1505 SERIES_B2305.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "PUUP10JH_A2412.pdf",
+      1
+     ],
+     [
+      "PUUP10J_B2412.pdf",
+      1
+     ],
+     [
+      "SFAS1008G_E2103.pdf",
+      1
+     ],
+     [
+      "SFAS1008GH_A2103.pdf",
+      1
+     ],
+     [
+      "FRAF10JG_A2206.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-096",
+    "service": [
+     [
+      "3A60 SERIES_B2105.pdf",
+      1
+     ],
+     [
+      "SSB3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSAL3M60H_A2510.pdf",
+      1
+     ],
+     [
+      "SSA3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSSW3M60H_A2510.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "SSC3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "SSA3H60H_A2504.pdf",
+      1
+     ],
+     [
+      "TSSA3U60_H2306.pdf",
+      1
+     ],
+     [
+      "TSSA3U60H_B2306.pdf",
+      1
+     ],
+     [
+      "3A60 SERIES_B2105.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-097",
+    "service": [
+     [
+      "TSUP15H120H_A2403.pdf",
+      1
+     ],
+     [
+      "TST40122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST30122C_A2405.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "TSF20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20122C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST30122C_A2405.pdf",
+      1
+     ],
+     [
+      "TST10122C_A2405.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-098",
+    "service": [
+     [
+      "SD103AW SERIES_E2606.pdf",
+      1
+     ],
+     [
+      "SD103AM3 SERIES_B2606.pdf",
+      1
+     ],
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR502 SERIES_J2105.pdf",
+      1
+     ],
+     [
+      "SR302 SERIES_J2105.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "BAT201M3_B2609.pdf",
+      1
+     ],
+     [
+      "SR1202 SERIES_G2105.pdf",
+      1
+     ],
+     [
+      "RB751V-40_E1701.pdf",
+      1
+     ],
+     [
+      "B0520LW SERIES_J2112.pdf",
+      1
+     ],
+     [
+      "SS22M SERIES_M2103.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-099",
+    "service": [
+     [
+      "TSF40102C_A2405.pdf",
+      3
+     ],
+     [
+      "TSF20122C_A2405.pdf",
+      3
+     ],
+     [
+      "RB495D_G14.pdf",
+      2
+     ],
+     [
+      "SK52B SERIES_Q2309.pdf",
+      5
+     ],
+     [
+      "TSUP5102_B2508.pdf",
+      3
+     ]
+    ],
+    "r1": [
+     [
+      "TST10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TST20102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSF10102C_A2405.pdf",
+      1
+     ],
+     [
+      "TSSW1H100H_A2510.pdf",
+      1
+     ],
+     [
+      "TSAD10H100CH_A2601.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   },
+   {
+    "id": "r1-100",
+    "service": [
+     [
+      "TSCDB01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDB02120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDFS01120G2H_B2507.pdf",
+      1
+     ],
+     [
+      "TSCDT05120G2H_A2506.pdf",
+      1
+     ],
+     [
+      "TSCDT08120G2H_A2506.pdf",
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "HS1QB_A2408.pdf",
+      1
+     ],
+     [
+      "HS1Q_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QH_A2408.pdf",
+      1
+     ],
+     [
+      "HS1QFSH_A2505.pdf",
+      1
+     ],
+     [
+      "HS1QALH_A2505.pdf",
+      1
+     ]
+    ],
+    "same_set": false
+   }
+  ]
+ },
+ "errors": {
+  "r1": 0,
+  "v2": 0
+ },
+ "name_mapped": 0,
+ "latency": {
+  "retrieve": {
+   "n": 103,
+   "p50": 0.532,
+   "p95": 0.872,
+   "max": 1.112
+  },
+  "rewrite": {
+   "n": 20,
+   "p50": 1.285,
+   "p95": 2.043,
+   "max": 2.312,
+   "stopped_by_cap": false
+  }
+ },
+ "openrouter_spent_usd": 0.0005
+}

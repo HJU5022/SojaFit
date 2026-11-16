@@ -1,0 +1,22 @@
+{
+ "notificationChannels": [
+  {
+   "type": "email",
+   "displayName": "SojaFit 운영 경보 메일",
+   "labels": {
+    "email_address": "<redacted>"
+   },
+   "name": "projects/sojafit/notificationChannels/2862916083268395771",
+   "enabled": true,
+   "creationRecord": {
+    "mutateTime": "2026-11-16T00:40:04.573938825Z"
+   },
+   "mutationRecords": [
+    {
+     "mutateTime": "2026-11-16T00:40:04.573938825Z"
+    }
+   ]
+  }
+ ],
+ "totalSize": 1
+}

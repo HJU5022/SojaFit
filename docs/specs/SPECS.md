@@ -8,14 +8,16 @@
 
 ## 알려진 겹침
 - 가입·로그인 규칙, 오류 코드, 토큰 한도, API 경로 수는 루트 `SPEC.md`가 정본입니다. 이 폴더의 문서는 해당 절을 링크합니다.
-- 화면 계약: 2026-11-16 새 화면 교체 뒤 현재 화면의 경로 · 파일 구조는 `frontend/FRONTEND.md`와 `frontend/src/SRC.md`, 흐름은 루트 `SPEC.md` 2절이 정본입니다. `frontend-screen-redesign.md` · `dummy-full-flow.md`는 교체 전 화면의 이력이고, `d5-frontend-service.md`는 기능 계약(API · 저장 경계)이 현행이고 화면 구현 행만 새 화면에 맞췄습니다.
+- 화면 계약: 2026-11-16 새 화면 교체 뒤 현재 화면의 경로 · 파일 구조는 `frontend/FRONTEND.md`와 `frontend/src/SRC.md`, 흐름은 루트 `SPEC.md` 2절이 정본입니다. `frontend-screen-redesign.md`는 교체 전 화면의 이력이고(옛 화면의 개발 전용 더미 모드 작업서 `dummy-full-flow.md`는 새 화면에 그 모드가 없어 2026-11-17에 지웠다. 내용은 git 이력에 있다), `d5-frontend-service.md`는 기능 계약(API · 저장 경계)이 현행이고 화면 구현 행만 새 화면에 맞췄습니다.
+
+## 줄 번호
+- 문서 안의 `파일:줄` 번호는 그 문서 머리의 기준 커밋 때의 것이다. 코드가 바뀌면 몇 줄씩 어긋나므로 함수 · 상수 이름으로 찾는다.
 
 ## 파일
 - `_example.md` — 강사 스캐폴드의 작업서 형식 예시(AGENTS.md가 가리킴)
 - `api-error-contract.md` — FastAPI 공통 JSON 오류 응답과 서버 생성 요청 식별자
 - `circuit-context-diagram.md` — 대상 부품의 1·2단계 연결 개념도 계약
 - `d5-frontend-service.md` — React·Vite 화면과 서비스 API 연결 계약(기능 계약 현행, 화면 구현 행은 새 화면 기준)
-- `dummy-full-flow.md` — (폐기·이력) 옛 화면의 개발 전용 더미 모드 흐름. 새 화면에 더미 모드가 없다
 - `evaluator-demo-readiness.md` — 키 없는 Compose 데모: DEMO_REPLAY 기록 응답 재생
 - `external-complete-schematics.md` — TSC와 영어 공식 제조사 참고 회로도, 공개 저장소 완성 회로도 시트의 백엔드 제공 계약, 자원 상한, 공식 PDF 최대 2개 병렬 검사 범위
 - `frontend-screen-redesign.md` — (이력) 11-16 교체 전 화면의 경로와 화면 계약

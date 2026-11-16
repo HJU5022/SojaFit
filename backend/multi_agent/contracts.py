@@ -47,7 +47,7 @@ class Reason(str, Enum):
     LIMIT_REACHED = 'limit_reached'          # 질문당 상한 초과 · 계획 형식 실패
     VERIFY_FAILED = 'verify_failed'          # 답 검사(인용 · 숫자)에 걸림
     SEARCH_ERROR = 'search_error'            # 검색 장애(오류이며 정상 거절이 아니다)
-    # 재시도 사유: 다음 시도에서 무엇을 바꿀지 알려 주는 용도(단일 그래프 · 기록용)
+    # 재시도 사유: 다음 시도에서 무엇을 바꿀지 알려 주는 용도(멀티 `collect_node`의 재계획 판단 `RETRY_REASONS`에도 씀)
     NO_RESULT = 'no_result'                  # 검색 0건: 필터를 풀어 본다
     ALL_REJECTED = 'all_rejected'            # 결과는 있으나 근거가 아님: 검색어를 바꿔 본다
     PARTIAL = 'partial'                      # 일부 근거만 있음: 부족한 값을 겨냥해 본다

@@ -1,4 +1,4 @@
-"""오류 코드 15개(ADR 0019)와 오류 로그 한 줄 시험. DB · 바깥 호출 없음.
+"""오류 코드 16개(ADR 0019)와 오류 로그 한 줄 시험. DB · 바깥 호출 없음.
 
 - 역할: 코드 표와 `ApiError` · `code_for`, 상황 코드가 나는 실제 자리(조건 대기 · 하루 상한 · 호출 간격 · 분석 실패의 502 · 504 · 실행 상한),
   (승인 409 `ALREADY_APPROVED`는 test_quotes.py, Origin 403 `ORIGIN_MISMATCH`는 test_health.py)
@@ -31,11 +31,11 @@ ORIGIN = {'origin': 'http://testserver'}
 QUESTION = 'PRIVATE_QUESTION_TEXT 회로의 D1을 바꿔도 되나요'
 
 
-def test_table_has_fifteen_codes_and_defaults():
+def test_table_has_sixteen_codes_and_defaults():
     assert len(set(DEFAULT_CODES.values()) | set(SPECIAL_CODES)) == 16
     assert [code_for(s) for s in (400, 422, 429, 502, 503, 504)] == ['VALIDATION_ERROR', 'VALIDATION_ERROR', 'RATE_LIMITED',
                                                                    'UPSTREAM_ERROR', 'UNAVAILABLE', 'TIMEOUT']
-    assert code_for(405) == 'VALIDATION_ERROR' and code_for(501) == 'INTERNAL_ERROR'  # 표에 없는 상태도 15개 안에서
+    assert code_for(405) == 'VALIDATION_ERROR' and code_for(501) == 'INTERNAL_ERROR'  # 표에 없는 상태도 16개 안에서
     assert code_for(409, ApiError(409, 'x', code='CONDITION_PENDING')) == 'CONDITION_PENDING'
     with pytest.raises(ValueError):
         ApiError(409, 'x', code='LIMIT_EXCEEDED')  # 표와 다른 상태

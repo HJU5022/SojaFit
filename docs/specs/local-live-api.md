@@ -2,6 +2,7 @@
 
 - 상태: 현행. 로컬 실행·로그인·저장·실제 모델·외부 검색 응답 확인(2026-11-15). KiCad 미설치 이미지의 공식 PDF 회로도 수신·정격 분석 통합 검증 완료. 검증은 11-16 새 화면 교체 전 화면으로 했다
 - 기준일: 2026-11-15
+- 회로도 업로드 주의(2026-11-17, 코드 읽기만 하고 실행은 안 함): `docker-compose.local.yml`은 `KICAD_RENDERER_URL`을 비워 두고 `INCLUDE_KICAD=0`으로 빌드한다. `.kicad_sch` 업로드(#52, [SPEC.md](../../SPEC.md) 8.10)는 렌더러 주소가 없으면 `backend/projects/schematic.py`의 `export_uploaded_kicad`가 `KicadServiceUnavailable`을 내므로, 이 로컬 구성에서는 503일 것이다. `.net` 업로드는 영향이 없다
 - 기준 커밋: 기록 없음(2026-11-15 통합 검증 환경 기준)
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 4절 API · 7절 데모). 로컬 실제 API 실행 방식의 상세
 - 관련 문서: [frontend/FRONTEND.md](../../frontend/FRONTEND.md), [db/DB.md](../../db/DB.md), [netlist-conversation-versions.md](netlist-conversation-versions.md)

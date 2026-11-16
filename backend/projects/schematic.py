@@ -63,11 +63,14 @@ def _run_export(root: Path, output: Path, kind: str) -> tuple[str, Path]:
     return version, pdf
 
 
+# 렌더러로 보내고 렌더러가 받는 source 칸. 보내는 쪽(_source_payload)과 받는 쪽(_renderer_source)이 같은 목록을 쓴다
+SOURCE_FIELDS = ("repository", "commit", "license", "attribution", "repository_url", "source_url",
+                 "source_file", "asset_kind", "asset_paths", "root_schematic", "expected_sheets")
+
+
 def _source_payload(source: Any) -> dict[str, Any]:
     """렌더러로 보낼 수 있는 검증된 source의 제한된 직렬화."""
-    fields = ("repository", "commit", "license", "attribution", "repository_url", "source_url",
-              "source_file", "asset_kind", "asset_paths", "root_schematic", "expected_sheets")
-    payload = {field: getattr(source, field, None) for field in fields}
+    payload = {field: getattr(source, field, None) for field in SOURCE_FIELDS}
     if not isinstance(payload["repository"], str) or not isinstance(payload["commit"], str):
         raise ValueError("invalid schematic source")
     if payload["asset_kind"] != "kicad" or not isinstance(payload["asset_paths"], tuple):
@@ -222,9 +225,7 @@ def _renderer_source(payload: Any):
     from backend.projects.schematic_source import VerifiedSchematicSource
     if not isinstance(payload, dict):
         raise ValueError("invalid source")
-    required = ("repository", "commit", "license", "attribution", "repository_url", "source_url",
-                "source_file", "asset_kind", "asset_paths", "root_schematic", "expected_sheets")
-    if any(key not in payload for key in required):
+    if any(key not in payload for key in SOURCE_FIELDS):
         raise ValueError("invalid source")
     if payload["asset_kind"] != "kicad" or not isinstance(payload["asset_paths"], list):
         raise ValueError("renderer accepts KiCad sources only")
@@ -234,7 +235,7 @@ def _renderer_source(payload: Any):
         raise ValueError("invalid schematic files")
     if type(payload["expected_sheets"]) is not int or not 1 <= payload["expected_sheets"] <= RENDERER_MAX_SHEETS:
         raise ValueError("invalid sheet count")
-    values = {key: payload[key] for key in required if key not in {"asset_paths", "expected_sheets"}}
+    values = {key: payload[key] for key in SOURCE_FIELDS if key not in {"asset_paths", "expected_sheets"}}
     values["asset_paths"] = tuple(payload["asset_paths"])
     values["expected_sheets"] = payload["expected_sheets"]
     return VerifiedSchematicSource(**values)

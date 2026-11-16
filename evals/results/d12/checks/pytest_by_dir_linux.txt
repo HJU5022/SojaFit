@@ -1,0 +1,241 @@
+# pytest per test directory, one process each (Linux container, d12 run 4)
+date: 2026-11-17 05:28 KST
+commit: 799ae63613a83105d3fd6e49d0abf3561b2f888c (clean local clone)
+image: sojafit-d12-api:799ae636
+why: 한 프로세스로 전체를 돌리면 Linux에서 run 1 · 2 · 3 모두 새 스레드 시작(Thread.start)에서 멈췄다. 시험 자체의 통과 여부를 보려고 tests/ 아래 폴더마다 따로 돌린다(같은 venv, 폴더마다 새 pytest 프로세스, 폴더당 timeout 300초)
+command: for d in tests/*/; do timeout 300 uv run --locked pytest -p no:cacheprovider -q -rs -o faulthandler_timeout=120 $d; done
+------------------------------------------------------------
+=== tests/api/
+SKIPPED [1] tests/api/test_email_auth.py:141: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:161: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:169: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:179: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:195: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:205: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:216: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_full_service_flow.py:34: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:121: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:132: requires isolated PostgreSQL
+SKIPPED [3] tests/api/test_full_service_flow.py:170: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:197: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:223: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_google_users.py:104: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:117: requires new isolated local OAuth test database
+SKIPPED [2] tests/api/test_google_users.py:131: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:143: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:157: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:166: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:177: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:193: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:210: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:220: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_http_restart.py:85: explicit Docker repro only
+SKIPPED [1] tests/api/test_local_live_config.py:12: Docker Compose CLI required (daemon not used)
+SKIPPED [1] tests/api/test_local_live_config.py:50: Docker Compose CLI required (daemon not used)
+SKIPPED [1] tests/api/test_projects.py:427: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_projects.py:580: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_projects.py:662: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_public_grants.py:124: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:151: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:160: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_quotes.py:132: requires an isolated service test database (tests/db_schema.py)
+SKIPPED [1] tests/api/test_threads.py:248: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:271: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:306: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:386: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:403: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:415: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:453: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:462: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:493: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:518: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:544: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:580: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:591: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:612: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:627: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:647: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:732: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:743: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:778: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:823: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:848: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:884: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:903: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:916: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:1013: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:1033: requires isolated TEST_THREAD_DATABASE_URL
+528 passed, 114 skipped in 60.93s (0:01:00)
+exit(tests/api/): 0
+=== tests/conversations/
+Bytecode compiled 13290 files in 5.82s
+......................................................................ss [ 72%]
+sssssssssssssssssssssssssss                                              [100%]
+=========================== short test summary info ============================
+SKIPPED [2] tests/conversations/test_profile.py:196: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/conversations/test_repository.py:11: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:22: requires isolated PostgreSQL
+SKIPPED [4] tests/conversations/test_repository.py:46: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:60: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:87: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:108: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:161: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:183: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:216: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:241: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:255: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:270: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:288: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:296: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:309: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:319: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:331: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:345: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:363: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:374: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:393: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:417: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:432: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:457: requires isolated PostgreSQL
+70 passed, 29 skipped in 3.29s
+exit(tests/conversations/): 0
+=== tests/db/
+Bytecode compiled 13290 files in 943ms
+ssssssssss                                                               [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/db/test_schema_docs.py:52: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:64: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:79: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:86: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:102: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:108: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:120: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:128: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:141: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:151: requires isolated PostgreSQL
+10 skipped in 0.19s
+exit(tests/db/): 0
+=== tests/evals/
+Bytecode compiled 13290 files in 324ms
+..s..................................................................... [ 18%]
+........................................................................ [ 36%]
+.......................................................s................ [ 54%]
+........................................................................ [ 72%]
+........................................................................ [ 90%]
+......................................                                   [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/evals/test_approval_wait_report.py:47: 일회용 DB 없음
+SKIPPED [1] tests/evals/test_judgement_bundle.py:147: requires disposable TEST_INJECTION_DATABASE_URL
+396 passed, 2 skipped in 51.86s
+exit(tests/evals/): 0
+=== tests/fixtures/
+Bytecode compiled 13290 files in 2.48s
+
+no tests ran in 0.14s
+exit(tests/fixtures/): 0
+=== tests/graph/
+Bytecode compiled 13290 files in 850ms
+........................................................................ [ 60%]
+....s..........................................                          [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/graph/test_graph_mcp_stdio.py:22: TEST_DATABASE_URL에 격리 코퍼스가 있을 때만 돈다
+118 passed, 1 skipped in 7.18s
+exit(tests/graph/): 0
+=== tests/judge/
+Bytecode compiled 13290 files in 976ms
+........................................................................ [ 69%]
+...............................                                          [100%]
+103 passed in 0.50s
+exit(tests/judge/): 0
+=== tests/mcp_skill/
+Bytecode compiled 13290 files in 521ms
+........................................................                 [100%]
+56 passed in 1.25s
+exit(tests/mcp_skill/): 0
+=== tests/multi_agent/
+Bytecode compiled 13290 files in 387ms
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+........................................................................ [ 36%]
+........................................................................ [ 49%]
+........................................................................ [ 61%]
+........................................................................ [ 73%]
+........................................................................ [ 86%]
+........................................................................ [ 98%]
+.........                                                                [100%]
+585 passed in 7.51s
+exit(tests/multi_agent/): 0
+=== tests/projects/
+Bytecode compiled 13290 files in 306ms
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 31%]
+........................................................................ [ 41%]
+..................s.ssssssssssss........................................ [ 51%]
+........................................................................ [ 62%]
+........................................................................ [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+...............ssssssssss.....................                           [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/projects/test_project_repository.py:47: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:86: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:93: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:121: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:140: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:153: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:162: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:194: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:243: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:268: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:286: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:299: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:318: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:75: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:84: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:91: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:98: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:104: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:116: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:133: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:145: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:174: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:199: requires an isolated authentication test database
+671 passed, 23 skipped in 31.49s
+exit(tests/projects/): 0
+=== tests/rag/
+Bytecode compiled 13290 files in 409ms
+........................................................................ [ 30%]
+.s...................................s........ssssssssssssss..........s. [ 61%]
+................s...............ssssssss................................ [ 92%]
+.................                                                        [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/rag/test_demo_snapshot.py:65: DEMO_SNAPSHOT_SOURCE(저장소 밖 chunks-v4h 폴더)가 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_chunk.py:61: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [3] tests/rag/test_rag_chunk.py:181: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [11] tests/rag/test_rag_chunk.py:219: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [1] tests/rag/test_rag_ingest.py:70: TEST_DATABASE_URL을 줄 때만 돈다
+SKIPPED [1] tests/rag/test_rag_retrieve.py:117: TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_storage.py:66: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:78: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:110: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:125: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:133: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:141: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:155: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:163: dedicated TEST_DATABASE_URL required
+207 passed, 26 skipped in 2.69s
+exit(tests/rag/): 0
+=== tests/repo/
+Bytecode compiled 13290 files in 448ms
+.....                                                                    [100%]
+5 passed in 0.65s
+exit(tests/repo/): 0
+=== tests/services/
+Bytecode compiled 13290 files in 438ms
+........................................................................ [ 27%]
+........................................................................ [ 55%]
+........................................................................ [ 83%]
+..........................................                               [100%]
+258 passed in 17.59s
+exit(tests/services/): 0

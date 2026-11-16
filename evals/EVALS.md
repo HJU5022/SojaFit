@@ -75,6 +75,41 @@
 | `results/supervisor/` | Supervisor 후보 비교 단계별 `<날짜>-<이름>/`(manifest, 문항별 행, summary, 호출 증거). V0 프롬프트 비교와 Langfuse 가져오기 영수증 포함 | `run_supervisor_*.py`, `report_supervisor_stage3.py`, `import_supervisor_prompt_v0_langfuse.py` | 각 하위 폴더 `*summary*.json`, [supervisor-prompt-v0.md](guides/supervisor-prompt-v0.md) |
 | `results/threads/` | thread 기억·입력 경로·신뢰 경계·판정 묶음 확인과 인젝션 실측 원시(`injection_*`) | `run_thread_validation.py`, `run_trust_boundary.py`, `run_claim_consistency.py`, `run_input_surfaces.py`, `run_judgement_bundle.py`, `run_injection_baseline.py`, `run_supervisor_guard_injection.py` | 아래 "인젝션 파일" |
 
+### 그래프 하위 폴더 (`results/graph/`)
+
+`results/graph/` 아래 실험별 폴더와 바로 아래 파일이다. "내용"에 만든 것을 적지 않은 폴더의 `set*.json`은 `run_gate.py` 결과다(파일의 `summary.session`이 `gate-`로 시작, 2026-11-17 확인). 그 밖의 파일은 "내용"에 적는다. 수치는 각 폴더의 README·SUMMARY와 해석 문서에 있고 이 표에 옮기지 않는다. "해석 문서 없음"은 `docs/worklog/` 밖에서 이 폴더를 인용한 문서가 없다는 뜻이다(2026-11-17 `git grep` 기준).
+
+| 폴더·파일 | 내용 | 해석 |
+|---|---|---|
+| `graph_dataset_v2_*.json`, `multi_dataset_v2_*.json` | 동결 v2 단일·멀티 그래프 문항별 지표(`run_graph.py`) | `EVAL_REPORT.md` 4장, [preregister.md](guides/preregister.md)의 `run_graph` 결과 줄 |
+| `memory_operations_2026-11-09.json`, `thread_validation_2026-11-09.json`, 동명 `.usage.json` | 앱 사례 기억 운영 재검증, thread 검증과 사용량(`run_thread_validation.py`) | [thread-memory-operations.md](../docs/experiments/thread-memory-operations.md), 사전 등록 2026-11-09 |
+| `2026-11-06-judge-steps/` | 사전 등록 #39~#42(동결 v2 70문항) 판정 단계 원시(`run_graph.py` 형식, 저장소 밖 lab에서 옮김). 출처 · sha256은 `sources_2026-11-10.json` | `EVAL_REPORT.md` 3 · 4 · 5장 |
+| `2026-11-06-judge-diagnosis/` | 판정 길 실패 진단(#39 · #40): 문항별 표(`judge_items.*`), draft50-n04 · n08 재실행(`n04_n08_checks.json`). 만든 스크립트는 저장소에 없음 | 폴더 `README.md`, `EVAL_REPORT.md` 5장 |
+| `2026-11-10-v3-outside/` | v3 #47 구성(B) · #48+#49(C) 원시와 요약 `B5-summary.json` | 폴더 `README.md`, [d9-outside-evidence-2026-11-11.md](../docs/research/d9-outside-evidence-2026-11-11.md) |
+| `2026-11-10-v3-haiku-sets/` | v3 50문항 Haiku 구성(#50) 원시(`gate-*-set1.json`은 `run_gate.py` 세트 결과로 파일 이름이 `summary.session`과 같음, `summary_*`·`stage_costs_*`는 집계). 출처 · sha256은 `sources_2026-11-11.json` | `EVAL_REPORT.md` 3 · 8장 |
+| `2026-11-11-d8-stages/`, `2026-11-11-d8-stages-rerun/` | D8 v3 50문항 단계 시간 · 호출별 비용과 집계 `stage_summary.json`, 공급자 429로 실패한 문항 재실행 | `EVAL_REPORT.md` 8장, [d8-stage-remeasure-plan.md](../docs/experiments/d8-stage-remeasure-plan.md) |
+| `2026-11-11-langfuse-probe/`, `2026-11-11-langfuse-probe-v2/` | 동결 v3-01 한 문항의 Langfuse 수신 점검(입력 `v3-01-only.jsonl`) | 사전 등록 "2026-11-11 D8 추적 보완 뒤 한 문항 수신 점검". 해석 문서 없음 |
+| `2026-11-11-langfuse-ragas-probe/`, `2026-11-11-langfuse-ragas-probe-v2/`, `2026-11-11-langfuse-ragas-probe-v3/` | 같은 한 문항으로 RAGAS 점수 전송 점검 | 해석 문서 없음 |
+| `2026-11-11-ndocs-acc/` | `FIND_N_DOCS` 값별 v3 50문항 정확도 | 폴더 `SUMMARY.md`, `EVAL_REPORT.md` 8장, [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
+| `2026-11-11-speed-e-warm/`, `2026-11-11-speed-f-find-ndocs/`, `2026-11-11-speed-g-all/` | 응답 시간 레버 비교(데우기 공통 · 찾기 문서 수 · A~D 레버). `speed-g-all/E-v3-50-warm-n5/set1.json`은 `ndocs-acc/N5/set1.json`과 바이트가 같은 파일 | 각 폴더 `SUMMARY.md`, [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
+| `2026-11-11-speed-s1-docs-retry/`, `2026-11-11-speed-s2-warmup/`, `2026-11-11-speed-s3-cite-repair/` | 문서 재시도 · 데우기 · 인용 보정 켬/끔 | [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
+| `2026-11-11-synth-01-repeat10/`, `2026-11-11-synth-both-agents/` | 합성 문항 반복 · 두 에이전트 실행(입력 jsonl 포함) | 해석 문서 없음 |
+| `2026-11-12-codex-v3-50/` | Codex v3 50문항 답과 규칙 · 사람 판정 집계(`TALLY.md`, `scripts/eval/tally_codex_v3.py`) | `EVAL_REPORT.md` 10장 |
+| `2026-11-12-d9-improve2/` | D9 v3 50문항 멀티 게이트와 `report.json` | `EVAL_REPORT.md` 3 · 4장, [GATES.md](../docs/GATES.md) |
+| `2026-11-12-d9-judge-dev-multi/`, `2026-11-12-d9-judge-dev-single/` | 판정 연습 44문항 멀티 · 단일(`run_graph.py` 결과, 세션 `multi-`·`graph-`). 입력 `judge_dev_44.jsonl`은 두 폴더가 같은 파일 | `EVAL_REPORT.md` 4장 |
+| `2026-11-12-d9-langfuse-capture/` | Langfuse 수집 확인 실행. `dual/`·`dual2/`·`retry-16-17/`의 json은 `run_graph.py --multi` 결과(세션 `multi-`), 입력은 `dual*.jsonl` | `EVAL_REPORT.md` 7장 |
+| `2026-11-12-d9-v3-single/` | v3 단일 그래프(`run_graph.py` 결과) | `EVAL_REPORT.md` 4장 |
+| `2026-11-12-v3-16-warm-recheck/` | v3-16 한 문항 데운 뒤 재확인 | 해석 문서 없음 |
+| `2026-11-13-citecheck-v3/` | 인용 숫자 검사 브랜치의 v3 50문항 재측정과 `report.json` | `EVAL_REPORT.md` 5 · 6 · 8장, [GATES.md](../docs/GATES.md) |
+| `2026-11-14-web-prefetch/`, `2026-11-14-docs-parallel/`, `2026-11-14-grade3-early/`, `2026-11-14-no-replan/`, `2026-11-15-web-parallel/` | 웹 근거 미리 출발(B0 · B1 · A1), 검색 병렬화(P1), 참고 웹 검색 미리 출발(G1 무효 · G2 · P1b), 코퍼스 밖 재계획 생략(R1), 웹 공식 검색 병렬 출발(B1) | 각 폴더 `README.md`(사전 등록 · 코드 커밋), `EVAL_REPORT.md` 8장 |
+| `2026-11-16-speed-baseline/`, `2026-11-16-speed-L3/`, `2026-11-16-speed-L4/` | speed-exp 웹 켬 기준 A1~A4와 레버 L3 · L4 | 사전 등록 "2026-11-15 speed-exp" 항목들(판정 기록). 해석 문서 없음 |
+| `2026-11-16-speedoff-baseline/`, `2026-11-16-speedoff-P2/` | speed-exp 웹 끔 기준 B1~B3와 레버 P2(Voyage 연결 재사용) | 같은 사전 등록 항목들, `d10/langfuse_scores_2026-11-16.md`(B3 trace) |
+| `2026-11-16-fixes-before/`, `2026-11-16-fixes-after/` | 동결 전 백엔드 수정 묶음의 웹 끔 v3 전후 | 각 폴더 `README.md` |
+| `2026-11-16-codex-v3-50-isolated/` | Codex 격리 재비교 원본 로그(`raw/`) · `runs.json` · 규칙 채점 `tally.jsonl`(`scripts/eval/run_codex_v3_isolated.py`, `tally_codex_v3.py`) | `EVAL_REPORT.md` 10장 |
+| `2026-11-16-terra-v3-50-isolated-web/` | Terra 웹 검색 격리 기준선 원본 로그 · 규칙 · 사람 판정. `scripts/run_isolated_baseline.py`는 실행 당시 스크립트 사본이고 실행기가 아니다 | 폴더 `README.md` · `TALLY.md`, `EVAL_REPORT.md` 10장 |
+
+- `results/d10/mutation/`의 `.py`·`.sh`는 변이 시험 증거 묶음의 재현 스크립트라 결과와 함께 둔다. 위 Terra 폴더의 `scripts/`와 함께, 원시 결과 폴더 안의 코드는 실행기 목록([RUNNERS.md](runners/RUNNERS.md))에 넣지 않는다.
+
 ### 인젝션 파일 (`results/threads/`)
 
 | 파일 | 내용 |
@@ -86,9 +121,23 @@
 | `injection_t3_smoke_live_2026-11-11_07.jsonl`, 동명 `.meta.json`·`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json` | T3 스모크07의 원시·메타·예산·승인 |
 | `injection_remaining_review_queue_2026-11-11.json` | 실측03·스모크08의 원시 SHA·행·정상 짝·검토 대기 목록 |
 | `injection_baseline_review_2026-11-10.json`, `injection_baseline_checks_2026-11-10.json`, `injection_exposure_simulated_v3_2026-11-10.jsonl`, `injection_baseline_artifact_index_2026-11-10.json` | 준비 산출물 통합본: 계획·모의 실행 메타, 무료 검사 기록, 모의 실행 원시, 경로·해시 인덱스 |
+| `injection_exposure_code_freeze_2026-11-10.json` | T1 · T3 노출 실행의 승인 범위 · 상한과 옛 코드 동결 커밋 · 보관 참조 기록. 실행 승인 문서가 아님(파일의 `note`). 해석 문서 없음 |
 | `supervisor_guard_injection_2026-11-16.json` | Supervisor 답 가드 켬/끔 짝 실측 22작업 원시(호출별 카나리 노출, 계획 · reply, 보고, 켬/끔 답, 공급자 사용량). 해석은 [supervisor-guard-injection-recheck.md](../docs/experiments/supervisor-guard-injection-recheck.md) |
 
 - 실행별 파일은 서로 덮어쓰지 않고 합산하지 않는다.
 - 실측01·02와 스모크01~06의 원시는 저장소 밖 백업에 있다. 크기·SHA256·복원 방법은 `injection_baseline_artifact_index_2026-11-10.json`의 `measured_runs_archive`.
 - 통합 전 준비 산출물 33개의 원본은 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`(커밋 107aaa3)에 있다. 이 참조는 저장소를 공유해도 함께 공유되지 않는다. 경로·해시는 `injection_baseline_artifact_index_2026-11-10.json`.
 - 사람 검토 건수와 판정 결과: [injection-results.md](../docs/research/injection-results.md).
+
+### 그 밖의 thread 파일 (`results/threads/`)
+
+| 파일 | 만든 것 | 해석 |
+|---|---|---|
+| `claim_consistency_*.json` 6개 | `run_claim_consistency.py` | [injection-results.md](../docs/research/injection-results.md), [c2-defense-recheck.md](../docs/experiments/c2-defense-recheck.md) |
+| `input_surface_*.json` 6개 | `run_input_surfaces.py` | [injection-results.md](../docs/research/injection-results.md) |
+| `judgement_bundle_*.json` 6개 | `run_judgement_bundle.py` | [preregister.md](guides/preregister.md), [c2-defense-recheck.md](../docs/experiments/c2-defense-recheck.md) |
+| `trust_boundary_plan_2026-11-09.json`, `trust_boundary_live_2026-11-09.json` | `run_trust_boundary.py` | [injection-results.md](../docs/research/injection-results.md) |
+| `live_smoke_2026-11-09.json` | 저장소 밖 `thread_live_eval.py`(동결 v2 4문항 실제 모델) | 사전 등록 "2026-11-09 사용자 업로드·영속 thread 실제 모델 연결 smoke" |
+| `input_regression_2026-11-09.json` | 저장소 밖 `thread_input_eval.py`(v1 · v2 문항의 연결 경로와 업로드 파서 결과 대조) | 해석 문서 없음 |
+| `local_g4_isolation_2026-11-09.json` | 키 없는 로컬 compose에서 HTTP로 한 G4 · D7 점검 기록 | `EVAL_REPORT.md`, [GATES.md](../docs/GATES.md), `d10/startup_restart_isolation_2026-11-13.md` |
+| `saved_defense_replay_after_2026-11-10.json` | 저장한 응답 두 건의 오프라인 재생(실제 모델 호출 0, 파일의 `mode`) | 해석 문서 없음 |

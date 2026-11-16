@@ -1,0 +1,10 @@
+# 운영 주소 로그인 없는 GET 점검 (d12)
+date: 2026-11-17 05:03:42 KST
+revision (gcloud run services describe, 100%): sojafit-api-main-799ae636-1117, image sojafit-api@sha256:25aabdc847a7d6b0139083a092532d49af59926fbc5d3944b20cf6f6a7461366, created 2026-11-17 04:49:56 KST
+GET /health 200 0.090248s
+GET /login 200 0.079672s
+GET / 200 0.187038s
+GET /app 200 0.088807s
+GET /api/auth/me 401 0.085180s
+GET /openapi.json 200
+openapi.json: 동작 53 경로 42 version 0.1.0

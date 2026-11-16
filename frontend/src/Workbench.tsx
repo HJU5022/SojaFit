@@ -219,7 +219,7 @@ export function CircuitSection({
   target: string;
   threadId: string | null;
 }) {
-  const usable = partsOf(project).filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p));
+  const usable = partsOf(project).filter((p) => !unsupportedPartReason(p));
   return (
     <section className="circuit-section" id="circuit-section">
       <h2>회로</h2>
@@ -314,7 +314,7 @@ function CircuitRequest({
     </div>
   );
 }
-/** 사용자가 회로 패널을 닫았으면 이 브라우저에 남겨 다시 저절로 열지 않는다(#47). 다시 열면 지운다 */
+/** 사용자가 회로 패널을 닫았으면 이 브라우저에 남겨 프로젝트를 열 때 다시 저절로 열지 않는다(#47, 첫 회로 첨부 때는 연다). 다시 열면 지운다 */
 const PANEL_CLOSED = 'sojafit.panel.closed';
 export function Workbench({ projectId, threadId }: { projectId: string; threadId: string | null }) {
   const project = useResource<Project>(
@@ -347,11 +347,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [notice, setNotice] = useState<{ text: string; thread: string | null } | null>(null);
   const controller = useRef<AbortController | null>(null),
     runId = useRef<string | null>(null),
-    scope = useRef(0),
-    end = useRef<HTMLDivElement>(null);
+    scope = useRef(0);
   const attach = useNetlistAttach('.net,.txt,.kicad_sch', setAttachment);
   const parts = partsOf(project.data),
-    usable = parts.filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p)),
+    usable = parts.filter((p) => !unsupportedPartReason(p)),
     // [왜] 과거 LED 대화처럼 지원하지 않는 부품이 대상이면 보내기 전에 이유를 보인다(서버도 422)
     targetReason = (() => {
       const chosen = parts.find((p) => p.ref === target);
@@ -552,7 +551,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       setPendingQuestion('');
     } catch (e) {
       if (localScope !== scope.current) return;
-      setStopped(true);
+      // [왜] 실행을 시작하기 전에 거절된 요청(422 · 409 · 429 · 503)은 오류만 보인다. '수신 멈춤'은 시작된 실행의 스트림이 끊겼을 때만이다(#69)
+      if (liveRun) setStopped(true);
       if ((e as Error).name !== 'AbortError') setError(e as Error);
     } finally {
       if (localScope === scope.current) setBusy(false);
@@ -615,7 +615,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   async function resume(body: any) {
-    if (body.target) setTarget(body.target); // 고른 부품을 왼쪽 연결도 · 후보 상세에 바로 보인다
+    if (body.target) setTarget(body.target); // 고른 부품을 오른쪽 회로 패널의 연결 개념도 · 후보 상세에 바로 보인다
     if (active) await execute(active.thread_id, `/runs/${active.id}/resume`, body);
   }
   async function older() {
@@ -899,7 +899,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   {active?.result.status === 'failed' && (
                     <button onClick={newReview}>새 검토로 다시 시작</button>
                   )}
-                  <div ref={end} />
                 </>
               )}
             </div>

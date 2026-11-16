@@ -12,7 +12,7 @@ import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 
-from backend.rag.card_find import MAX_CARDS, bi_copies, doc_packages, h_copies, mentions
+from backend.rag.card_find import H_PART, MAX_CARDS, bi_copies, doc_packages, h_copies, mentions
 from backend.rag.card_read import SI, _names
 from backend.rag.pipeline.specs import AEC_ALL
 
@@ -177,7 +177,7 @@ def part_docs_index():
                 by_doc.setdefault(key, set()).add(part)
         for key, index, table, content in rows:
             bases = by_doc.get(key, set())
-            for token in re.findall(r'(?<![A-Z0-9])[A-Z0-9][A-Z0-9-]{2,}H(?![A-Z0-9])', content.upper()):
+            for token in H_PART.findall(content.upper()):
                 if token[:-1] in bases:
                     built.setdefault(token, []).append(key)
         for part, keys in built.items():

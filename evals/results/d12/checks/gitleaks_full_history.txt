@@ -1,0 +1,14 @@
+# gitleaks full history (d12)
+date: 2026-11-17 04:54 KST
+target: 799ae63613a83105d3fd6e49d0abf3561b2f888c (main, PR #147 merge), local clone of the repo checked out at that commit, mounted read-only
+history: git rev-list --count 799ae636 = 1494 (non-merge 1252)
+gitleaks: v8.30.1, image ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f (same digest as d10/secrets/commands.md)
+config: repo .gitleaks.toml ([[allowlists]] 5) + .gitleaksignore (fingerprint lines 14), auto-loaded
+command: docker run --rm -v <clone>:/repo:ro -v <out>:/out -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo <image@digest> git /repo --no-banner --redact --log-opts="799ae636" -r /out/full_history.json -f json
+exit: 0 (read alone with $?)
+report json: []
+------
+7:54PM INF Unknown SCM platform. Use --platform to include links in findings. host=
+7:54PM INF 1250 commits scanned.
+7:54PM INF scanned ~110906368 bytes (110.91 MB) in 40.1s
+7:54PM INF no leaks found

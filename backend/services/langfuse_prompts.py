@@ -2,8 +2,9 @@
 
 역할: 공급자 보고 비용을 보존하는 공통 callback을 제공하고, 로컬 소스(backend/prompts/*.md, backend/mcp_skill/skills/SKILL.md)를 `development` 라벨로 등록하고, 로컬과 원격이
 한 글자라도 다르면 LLM 호출 전에 ValueError로 멈춘다. `session()`을 명시적으로 켠 구간에서만 추적하고, 꺼져 있으면 no-op이거나 빈 값이다.
-호출자: backend/services/llm.py(`node_chat`·`_openrouter_call`), scripts/langfuse/langfuse_skill_check.py(등록·검증), evals/*, tests/services/test_langfuse_prompts.py.
-입력: Langfuse client(langfuse.get_client()). 읽는 환경변수는 없다(키는 langfuse SDK가 LANGFUSE_* 에서 읽는다).
+호출자: backend/services/llm.py(`node_chat`·`_openrouter_call`), backend/conversations/memory_service.py(단계 시간 `timed_tool` · `AnalysisTimings`, 분석 사건 추적 `publish_analysis_trace`),
+backend/services/service_trace.py(`CostCallbackHandler`), scripts/langfuse/langfuse_skill_check.py(등록·검증), evals/*, tests/services/test_langfuse_prompts.py.
+입력: Langfuse client(langfuse.get_client()). `publish_analysis_trace`만 LANGFUSE_PUBLIC_KEY · LANGFUSE_SECRET_KEY가 있는지 보고, 그 밖의 키는 langfuse SDK가 LANGFUSE_* 에서 읽는다.
 하지 않는 일: LLM 호출 자체(llm.py), production 라벨 변경, 프롬프트 원문 관리(backend/prompts/).
 출처: SPEC.md 5절 "Langfuse 프롬프트와 실행 추적"·"도메인 Skill 적용", backend/services/SERVICES.md.
 """

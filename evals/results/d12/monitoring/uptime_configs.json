@@ -1,0 +1,27 @@
+[
+  {
+    "checkerType": "STATIC_IP_CHECKERS",
+    "displayName": "sojafit-api /health",
+    "httpCheck": {
+      "acceptedResponseStatusCodes": [
+        {
+          "statusClass": "STATUS_CLASS_2XX"
+        }
+      ],
+      "path": "/health",
+      "port": 443,
+      "requestMethod": "GET",
+      "useSsl": true
+    },
+    "monitoredResource": {
+      "labels": {
+        "host": "sojafit-api-559369539072.asia-northeast3.run.app",
+        "project_id": "sojafit"
+      },
+      "type": "uptime_url"
+    },
+    "name": "projects/sojafit/uptimeCheckConfigs/sojafit-api-health-eRGzPUOyMbY",
+    "period": "300s",
+    "timeout": "10s"
+  }
+]

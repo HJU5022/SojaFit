@@ -1,7 +1,7 @@
 """LLM·임베딩 호출의 유일한 입구.
 
 역할: 채팅 호출(`chat`·`node_chat`, Pydantic 출력 검증, 형식 재시도 상한), 임베딩(`embed_texts`), 평가 전용 호출 예산(`evaluation_limits`), Decisions API 평가 호출(`evaluation_decision`)을 맡는다.
-호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`·Decisions 평가), tests/services/test_llm.py.
+호출자: backend/graph · backend/multi_agent 노드(`node_chat`), backend/rag 검색(`voyage_embed` · `voyage_rerank`), 적재 도구 backend/rag/pipeline/ingest.py(`embed_texts`), evals/*(`evaluation_limits`·Decisions 평가), tests/services/test_llm.py.
 입력: 시스템·사용자 프롬프트와 Pydantic schema. 출력: 검증된 schema 객체(임베딩은 벡터 목록).
 Voyage(검색): `voyage_embed`(질문 임베딩 voyage-4-large 1024차원), `voyage_rerank`(rerank-3). 사전 등록 #25의 측정 설정이다(ADR 0004 갱신 2026-11-03).
 하지 않는 일: 데모 모드 응답 기록 · 재생(backend/services/demo.py의 recorder · replayer. 서비스는 DEMO_REPLAY=1에서 이 파일 대신 재생 chat을 쓴다. DEMO_MODE는 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),

@@ -89,7 +89,7 @@
 
 - 서버: `POST /api/runs/{run_id}/recover`(`backend/api/conversations.py:205`)는 로그인·Origin·소유권을 확인하고 `Run` DTO를 돌려준다. `running`의 갱신 시각이 max(300초, `ANALYSIS_MAX_SECONDS`+60초)보다 오래되고 thread의 분석 advisory 잠금이 없을 때만 failed로 바꾼다(`backend/conversations/repository.py:23-36`). 경로 계약은 [SPEC.md](../../SPEC.md) 4절.
 - 서버: 재개 답에 요청하지 않은 키가 있으면 상태 전이 전에 422다(`backend/conversations/memory_service.py:462-463`).
-- 클라이언트(읽기 확인): 스트림 수신 120초 제한, 연결 종료 뒤 `GET` 복구 최대 30회(1초 간격, 요청당 10초), 끝나지 않으면 `recover` 한 번 호출(`frontend/src/hooks/useRunStream.ts:30-45,64`). 질문·재개 POST는 자동 재전송하지 않는다.
+- 클라이언트(읽기 확인): 스트림 수신 120초 제한, 연결 종료 뒤 `GET` 복구 최대 30회(1초 간격, 요청당 10초), 끝나지 않으면 `recover` 한 번 호출(`frontend/src/hooks/useRunStream.ts:30-45,64`, 11-16 교체 전 옛 화면. 새 화면은 `frontend/src/Workbench.tsx`의 `recover`가 `POST /api/runs/{id}/recover`를 한 번 부르며, 120초 · 30회 복구 상한은 새 화면 코드에서 찾지 못했다(2026-11-17 대조)). 질문·재개 POST는 자동 재전송하지 않는다.
 
 ## 구현 상태
 
@@ -101,5 +101,5 @@
 
 ## 한계
 
-- `tests/api/test_errors.py`의 `test_table_has_fifteen_codes_and_defaults` 이름은 15개를 말하지만 단언은 16이다. `backend/errors.py` 머리 주석(`ADR 0019의 15개`, `상황 코드 4개`)도 코드 표(기본 11 + 상황 5)와 다르다. 코드는 이 구역 밖이다.
+- `backend/errors.py` 머리 주석(`ADR 0019의 15개`, `상황 코드 4개`)은 코드 표(기본 11 + 상황 5)와 다르다. 코드는 이 구역 밖이다.
 - 화면 쪽 오류 정규화(HTML·빈 본문·잘못된 JSON 처리)와 failed 안내 단일화는 `frontend/**`를 읽어 대조하지 않았다.

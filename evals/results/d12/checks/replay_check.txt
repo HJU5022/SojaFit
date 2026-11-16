@@ -1,0 +1,294 @@
+# CI eval-replay (.github/workflows/ci.yml) inside the run1 dind, d12
+date: 2026-11-17 05:09 KST
+commit: 799ae63613a83105d3fd6e49d0abf3561b2f888c
+------------------------------------------------------------
+ Image sojafit-ci-corpus-load Building 
+ Image sojafit-ci-thread-setup Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.03kB done
+#1 DONE 0.0s
+
+#2 [corpus-load internal] load build definition from Dockerfile
+#2 transferring dockerfile: 3.54kB 0.0s done
+#2 DONE 0.0s
+
+#3 [corpus-load internal] load metadata for ghcr.io/astral-sh/uv:0.12.9
+#3 DONE 0.9s
+
+#4 [corpus-load internal] load metadata for docker.io/library/python:3.12-slim
+#4 DONE 1.2s
+
+#5 [thread-setup internal] load metadata for docker.io/library/node:24-slim
+#5 DONE 1.2s
+
+#6 [thread-setup internal] load .dockerignore
+#6 transferring context: 454B done
+#6 DONE 0.0s
+
+#7 [thread-setup stage-2  1/11] FROM docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+#7 resolve docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b 0.0s done
+#7 DONE 0.0s
+
+#8 [corpus-load] FROM ghcr.io/astral-sh/uv:0.12.9@sha256:8b940d3a9d65bed080436972241af2e21c84b5e8c9193f7014ed71479ee795ff
+#8 resolve ghcr.io/astral-sh/uv:0.12.9@sha256:8b940d3a9d65bed080436972241af2e21c84b5e8c9193f7014ed71479ee795ff 0.0s done
+#8 DONE 0.0s
+
+#9 [corpus-load frontend-build 1/9] FROM docker.io/library/node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
+#9 resolve docker.io/library/node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 0.0s done
+#9 DONE 0.0s
+
+#10 [corpus-load internal] load build context
+#10 transferring context: 23.42kB 0.1s done
+#10 transferring context: 23.42kB 0.1s done
+#10 DONE 0.1s
+
+#11 [corpus-load stage-2 10/11] COPY db/ ./db/
+#11 CACHED
+
+#12 [corpus-load stage-2  2/11] RUN apt-get update     && if [ "0" = "1" ]; then apt-get install -y --no-install-recommends kicad libcairo2; else apt-get install -y --no-install-recommends libcairo2; fi     && rm -rf /var/lib/apt/lists/*
+#12 CACHED
+
+#13 [corpus-load stage-2  7/11] COPY backend/ ./backend/
+#13 CACHED
+
+#14 [corpus-load frontend-build 3/9] COPY frontend/package.json frontend/package-lock.json ./
+#14 CACHED
+
+#15 [corpus-load frontend-build 8/9] COPY data/circuits/ /data/circuits/
+#15 CACHED
+
+#16 [corpus-load stage-2  4/11] WORKDIR /app
+#16 CACHED
+
+#17 [corpus-load stage-2  6/11] RUN uv sync --locked --no-dev --no-cache
+#17 CACHED
+
+#18 [corpus-load frontend-build 6/9] COPY frontend/src/ ./src/
+#18 CACHED
+
+#19 [corpus-load frontend-build 4/9] RUN npm ci
+#19 CACHED
+
+#20 [corpus-load stage-2  8/11] COPY --from=frontend-build /frontend/dist/ ./frontend/dist/
+#20 CACHED
+
+#21 [corpus-load frontend-build 9/9] RUN VITE_LOCAL_ATTACHMENT_UI=0 npm run build
+#21 CACHED
+
+#22 [corpus-load stage-2  3/11] COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
+#22 CACHED
+
+#23 [corpus-load frontend-build 2/9] WORKDIR /frontend
+#23 CACHED
+
+#24 [corpus-load frontend-build 7/9] COPY frontend/public/ ./public/
+#24 CACHED
+
+#25 [corpus-load stage-2  9/11] COPY data/ ./data/
+#25 CACHED
+
+#26 [corpus-load frontend-build 5/9] COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json ./
+#26 CACHED
+
+#27 [corpus-load stage-2  5/11] COPY pyproject.toml uv.lock .python-version ./
+#27 CACHED
+
+#28 [corpus-load stage-2 11/11] RUN useradd --create-home --shell /usr/sbin/nologin sojafit
+#28 CACHED
+
+#29 [corpus-load] exporting to image
+#29 exporting layers done
+#29 exporting manifest sha256:a83b1df5afb2a7a2e5e73991ff4bf13b087fcfe578686b8559d9c68bf6e5b1e8 0.0s done
+#29 exporting config sha256:ef0cb75c69ac56bb2116078eba3aa4fbb1f1e21ee10c38e35ed3bf274fe6c5e8 0.0s done
+#29 exporting attestation manifest sha256:55833f97f50b4bd9d0b9c6955e26ee48d46a586774266b4e12c3f47a5b6b0d29 0.0s done
+#29 exporting manifest list sha256:e692ef01fdaa388a1ae80f742309b5f2fbad3966766613240ebe24f0431ef466 0.0s done
+#29 naming to docker.io/library/sojafit-ci-corpus-load:latest done
+#29 unpacking to docker.io/library/sojafit-ci-corpus-load:latest done
+#29 DONE 0.1s
+
+#30 [thread-setup] exporting to image
+#30 exporting layers done
+#30 exporting manifest sha256:44e391017e22c16220c9a9ae5052d0fd4b2c37d9420ce7b42488ff78b42720b5 0.0s done
+#30 exporting config sha256:ff5c08d835817e518ad581e7bec2799424a0e89070246a2546cc5cb246292dce 0.0s done
+#30 exporting attestation manifest sha256:971a054a5875ea28c31c50e7c7a5800322c9550595ae8821cbdbf0e8afb528dd 0.0s done
+#30 exporting manifest list sha256:707c62e2073d5359a4ad506afaffdc29f6bfb9959f73ffb9eafb027a255bb9a5 0.0s done
+#30 naming to docker.io/library/sojafit-ci-thread-setup:latest done
+#30 unpacking to docker.io/library/sojafit-ci-thread-setup:latest done
+#30 DONE 0.1s
+
+#31 [thread-setup] resolving provenance for metadata file
+#31 DONE 0.0s
+
+#32 [corpus-load] resolving provenance for metadata file
+#32 DONE 0.0s
+ Image sojafit-ci-thread-setup Built 
+ Image sojafit-ci-corpus-load Built 
+ Volume sojafit-ci_pgdata Creating 
+ Network sojafit-ci_default Creating 
+ Volume sojafit-ci_pgdata Created 
+ Network sojafit-ci_default Created 
+ Container sojafit-ci-db-1 Creating 
+ Container sojafit-ci-db-1 Created 
+ Container sojafit-ci-thread-setup-1 Creating 
+ Container sojafit-ci-corpus-load-1 Creating 
+ Container sojafit-ci-corpus-load-1 Created 
+ Container sojafit-ci-thread-setup-1 Created 
+ Container sojafit-ci-db-1 Starting 
+ Container sojafit-ci-db-1 Started 
+ Container sojafit-ci-db-1 Waiting 
+ Container sojafit-ci-db-1 Healthy 
+ Container sojafit-ci-corpus-load-1 Starting 
+ Container sojafit-ci-thread-setup-1 Starting 
+ Container sojafit-ci-thread-setup-1 Started 
+ Container sojafit-ci-corpus-load-1 Started 
+ Image sojafit-ci-api Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.43kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 3.54kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 ...
+
+#4 [internal] load metadata for ghcr.io/astral-sh/uv:0.12.9
+#4 DONE 0.2s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 0.3s
+
+#5 [internal] load metadata for docker.io/library/node:24-slim
+#5 DONE 0.3s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 454B done
+#6 DONE 0.0s
+
+#7 [frontend-build 1/9] FROM docker.io/library/node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
+#7 resolve docker.io/library/node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 0.0s done
+#7 DONE 0.0s
+
+#8 FROM ghcr.io/astral-sh/uv:0.12.9@sha256:8b940d3a9d65bed080436972241af2e21c84b5e8c9193f7014ed71479ee795ff
+#8 resolve ghcr.io/astral-sh/uv:0.12.9@sha256:8b940d3a9d65bed080436972241af2e21c84b5e8c9193f7014ed71479ee795ff 0.0s done
+#8 DONE 0.0s
+
+#9 [stage-2  1/11] FROM docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+#9 resolve docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b 0.0s done
+#9 DONE 0.0s
+
+#10 [internal] load build context
+#10 transferring context: 23.42kB 0.0s done
+#10 DONE 0.0s
+
+#11 [frontend-build 7/9] COPY frontend/public/ ./public/
+#11 CACHED
+
+#12 [stage-2  9/11] COPY data/ ./data/
+#12 CACHED
+
+#13 [stage-2 10/11] COPY db/ ./db/
+#13 CACHED
+
+#14 [stage-2  8/11] COPY --from=frontend-build /frontend/dist/ ./frontend/dist/
+#14 CACHED
+
+#15 [frontend-build 2/9] WORKDIR /frontend
+#15 CACHED
+
+#16 [frontend-build 5/9] COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json ./
+#16 CACHED
+
+#17 [stage-2  2/11] RUN apt-get update     && if [ "0" = "1" ]; then apt-get install -y --no-install-recommends kicad libcairo2; else apt-get install -y --no-install-recommends libcairo2; fi     && rm -rf /var/lib/apt/lists/*
+#17 CACHED
+
+#18 [stage-2  3/11] COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
+#18 CACHED
+
+#19 [stage-2  5/11] COPY pyproject.toml uv.lock .python-version ./
+#19 CACHED
+
+#20 [frontend-build 9/9] RUN VITE_LOCAL_ATTACHMENT_UI=0 npm run build
+#20 CACHED
+
+#21 [stage-2  7/11] COPY backend/ ./backend/
+#21 CACHED
+
+#22 [stage-2  6/11] RUN uv sync --locked --no-dev --no-cache
+#22 CACHED
+
+#23 [frontend-build 4/9] RUN npm ci
+#23 CACHED
+
+#24 [frontend-build 3/9] COPY frontend/package.json frontend/package-lock.json ./
+#24 CACHED
+
+#25 [frontend-build 8/9] COPY data/circuits/ /data/circuits/
+#25 CACHED
+
+#26 [frontend-build 6/9] COPY frontend/src/ ./src/
+#26 CACHED
+
+#27 [stage-2  4/11] WORKDIR /app
+#27 CACHED
+
+#28 [stage-2 11/11] RUN useradd --create-home --shell /usr/sbin/nologin sojafit
+#28 CACHED
+
+#29 exporting to image
+#29 exporting layers done
+#29 exporting manifest sha256:8bb4d0283733d509e146faad3f68759291ef45ac46b83330a0b1470a43a07c2f done
+#29 exporting config sha256:0663445cb81755a5c7165d64cd80e9fee36fc58954083a856ec4bf1a6b8660bb done
+#29 exporting attestation manifest sha256:96ef992c1570f0c2b40b8a8c07516a6fe205688ff12122669f313bfea75aa8aa done
+#29 exporting manifest list sha256:efb1186294285fc9af67689550591534d9fd00c6e07ec1141735153e569b414c done
+#29 naming to docker.io/library/sojafit-ci-api:latest done
+#29 unpacking to docker.io/library/sojafit-ci-api:latest done
+#29 DONE 0.0s
+
+#30 resolving provenance for metadata file
+#30 DONE 0.0s
+ Image sojafit-ci-api Built 
+ Container sojafit-ci-corpus-load-1 Waiting 
+ Container sojafit-ci-db-1 Waiting 
+ Container sojafit-ci-thread-setup-1 Waiting 
+ Container sojafit-ci-db-1 Healthy 
+ Container sojafit-ci-corpus-load-1 Exited 
+ Container sojafit-ci-thread-setup-1 Exited 
+ Container sojafit-ci-api-run-e5abace6ec66 Creating 
+ Container sojafit-ci-api-run-e5abace6ec66 Created 
+질문 10개 · 그래프 실행 12번. 예상 LLM 호출 약 18~51회 [추정, 형식 재시도 제외], 상한 실행마다 16회 · 예약 $0.50. v3 실측 문항당 약 $0.001 → 약 $0.010
+[11/16/26 20:09:24] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+v3-01	입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝	[['1N4007G', 'ROLE_SUFFICIENT']]	1.1초
+[11/16/26 20:09:25] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+demo-find	입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝	[['1N4148', 'IDENTICAL'], ['1N4448', 'SPEC_EQUIVALENT'], ['1N914B', 'SPEC_EQUIVALENT'], ['1N4148W', 'ROLE_SUFFICIENT'], ['1N4448W', 'ROLE_SUFFICIENT'], ['1N914BW', 'ROLE_SUFFICIENT'], ['BAS16', 'ROLE_SUFFICIENT'], ['LL4148', 'ROLE_SUFFICIENT'], ['LL4448', 'ROLE_SUFFICIENT'], ['LL914B', 'ROLE_SUFFICIENT']]	0.1초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+demo-rating	입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝		0.1초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+v3-36	입력 읽기>기억 읽기>사실 확인>계획>거절	part_missing	0.0초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+v3-30	입력 읽기>기억 읽기>사실 확인>계획>거절	not_found	0.0초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+v3-03	입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝	[['LL4148 L0G', 'IDENTICAL']]	0.0초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+demo-leak	입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝		0.0초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+demo-notsuff	입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝	[['1N4148', 'NOT_SUFFICIENT']]	0.0초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+demo-ask	입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝	[['1N4004G', 'ROLE_SUFFICIENT']]	0.0초
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+demo-edition	입력 읽기>기억 읽기>사실 확인>계획>거절	revision_missing	0.0초
+재생 결과가 기록과 같습니다
+exit: 0

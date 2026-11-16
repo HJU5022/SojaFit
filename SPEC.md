@@ -1,8 +1,8 @@
 # SojaFit SPEC
 
 - 상태: 현행
-- 기준일: 2026-11-16 (4절 API 표 · 오류 코드 · 화면 경로 · 노드별 모델을 `76fadcb4`의 코드와 대조해 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
-- 기준 커밋: `76fadcb4`(위에서 대조한 부분), 나머지 `6707002`
+- 기준일: 2026-11-17 ("현재 구현 경계" 표와 4절 API 행 수를 `799ae636`의 코드와 대조해 고쳤다. 11-16에는 4절 API 표 · 오류 코드 · 화면 경로 · 노드별 모델을 `76fadcb4`와 대조했다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
+- 기준 커밋: `799ae636`(현재 구현 경계 · 4절 행 수), `76fadcb4`(그 밖에 11-16에 대조한 부분), 나머지 `6707002`
 - 정본 여부: 정본(기능 · API 경로 · 오류 코드 · 한도 · 인증 규칙). 다른 문서와 내용이 다르면 이 문서를 따른다
 - 관련 문서: [README.md](README.md), [EVAL_REPORT.md](EVAL_REPORT.md), [docs/GATES.md](docs/GATES.md), `docs/reference/team-contract.md`(담당과 수정 경로), `docs/adr/`(바뀐 결정의 이유)
 
@@ -15,9 +15,9 @@
 | 제공 | 로그인 · Google 가입 · 로그인(일반 사용자 · 관리자) · 이메일 인증 가입 · 비밀번호 재설정 · 데모 모드 버튼 로그인 · 관리자 계정 · 가격 조회 · 외부 원본 회로도 조회 · 공통 오류 응답 |
 | 제공 | 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 대화 상세 조회 · 삭제, 탈퇴 · 프로젝트 삭제, 보관 기간 청소 |
 | 제공 | 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`). 멀티 그래프의 `기억 읽기` 노드가 선호 실장 방식으로 후보 순서만 바꾼다(8.5) |
-| 제공 | React 작업대(랜딩 · 로그인 · 가입 · 대화 목록 · 프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 원본 회로도 · 후보 승인 · 견적 · 승인 사례 · 내 설정 · 사용자 관리 · 처리방침) |
+| 제공 | React 작업대(랜딩 · 로그인 · 가입 · 대화 목록 · 프로젝트 · 회로 없이 바로 질문하는 새 대화(2절, 8.8) · 넷리스트(`.net`)와 회로도(`.kicad_sch`, 8.10) 업로드 · 대상 선택 · 분석 실행 · 원본 회로도 · 회로 부품 점검표(4절 `GET /api/projects/{id}/parts`) · 후보 승인 · 견적 · 승인 사례와 대체 검토 보고서(8.4) · 데이터시트 서재 `/library`(4절 `GET /api/datasheets`) · 내 설정 · 사용자 관리 · 처리방침) |
 | 키 없는 데모 | `DEMO_REPLAY=1`의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생한다(7절). 기록은 데모 질문 10개(`data/demo/recordings/`)뿐이라 기록에 없는 질문은 받지 않는다 |
-| 없음 | 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기(승인 사례는 새 분석에 넘기지 않음, 8.5) |
+| 없음 | 승인 사례를 다음 판정에 함께 보이기(승인 사례는 새 분석에 넘기지 않음, 8.5) |
 
 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않는다.
 
@@ -49,7 +49,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 서비스와 전혀 상관없는 질문(날씨, 우산, 점심 메뉴 등). 인사·감사 같은 일상 대화는 받아 주되 짧게 응하고 서비스를 안내합니다.
 - 대체 판정 5종을 판정 규칙이 없는 부품 종류에 내는 일. 규칙은 1차로 다이오드에만 있고, 그 밖의 전자 부품은 웹 자료로 값을 찾아 인용해 알려 주는 데까지만 하며(근거 등급은 위 표), 규칙이 없으면 판정 대신 그렇다고 밝힙니다.
 - 실제 주문·결제, 판매처 찾기·비교(가격·재고는 Mouser 한 곳의 조회 시점 값만 보여 줍니다)
-- 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트를 받아 쓰는 일. 이 회사 부품은 데이터시트 링크만 보여 줍니다.
+- 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트를 코퍼스로 모으거나 저장하는 일. 다만 내부 근거가 부족한 질문에서는 공식 제조사 일곱 곳(TSC · TI · ST · ADI · onsemi · Infineon · Vishay)의 PDF를 답할 때 받아 메모리에서 쪽 · 표 행을 읽어 2등급 근거로 인용합니다(PR #146, Nexperia 제외, [official-datasheet-evidence.md](docs/specs/official-datasheet-evidence.md)). 그 밖의 제조사 부품은 데이터시트 링크만 보여 줍니다.
 
 ### 숫자 성공 기준
 
@@ -236,6 +236,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/prices` | 로그인 | 쿼리 `parts` 품번 1~10개 | 200 `PricesAvailable \| PricesUnavailable` | 422 | 후보의 가격 · 재고를 근거와 따로 보임, 저장하지 않음(1절 하는 일, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
     | `GET /api/datasheets` | 로그인 | 선택 쿼리 `q` ≤100자(품번 · 제목 · 제조사 부분 일치, 대소문자 무시) · `category`(분류 이름) · `page` 1~1000(한 쪽 50건) | 200 `DatasheetPage` `{items: [{id, title, publisher, revision, category, source_url, collected_at, parts}], total, page, page_size, categories: [{category, count}]}` | 422 | 데이터시트 서재(화면 `/library`, #67): 판정 근거로 쓰는 코퍼스 문서(폐기 제외)를 제목 순으로 보이고 원문 PDF로 잇는다. 품번은 표지 청크(`chunk_index` 0)의 품번 목록에서 찾아 SS34로 "SS32 SERIES"가 나온다. `categories`는 검색과 상관없는 서재 전체의 분류별 수. 읽기만 함 |
     | `GET /api/external-circuits/schematics` | 로그인 | 쿼리 `q` 2~200자, 선택 `source_url` 최대 2048자(현재 검색 후보 URL만 허용) | 200 `ExternalSchematicResponse` `{project, commit, license, attribution, repository_url, source_url, source_file, source_type, evidence_grade, manufacturer, model, revision, source_sha256, license_evidence_url, images: [{sheet, url}], choices: [{title, source_url, source_type, revision}]}` (일부 출처 필드는 null 가능) | 404 `SCHEMATIC_NOT_FOUND` · 422 · 502 · 503 | 이름으로 공개 회로도를 찾아 검증된 제조사 원본은 `manufacturer_official`/2등급, GitHub 커뮤니티 원본은 `community`/3등급, 출처 미확인 공개 웹은 `public_web`/등급 없음으로 표시함. 후보 선택과 시트 이미지 주소를 제공하며 저장하지 않음(`Cache-Control: private, no-store`). 서버는 같은 검색어 · 회로 연결의 결과를 프로세스 메모리에 15분 재사용한다(이미지 서명도 15분). 작업대는 저장된 데모 도면이 없고 넷리스트가 있는 프로젝트를 열면 프로젝트 이름으로 한 번 자동 조회하고, 같은 탭에서는 (프로젝트, 회로 버전)마다 다시 보내지 않는다(찾은 결과 14분. 실패(404 · 409 · 502 · 503 · 네트워크)는 탭이 열려 있는 동안 남기고 사용자가 다시 찾을 때만 다시 보낸다. 직접 찾은 이름 · 후보가 실패해도 앞서 찾은 결과는 남긴다) |
+    | `POST /api/external-circuits/schematics/dialogue` | 로그인 · Origin | `SchematicDialogueRequest` `{question(1~2000자), queries(검색어 1~3개, 각 2~200자), project_id?, circuit_version?, thread_id?, reference_only(기본 true), component_type?('diode')}` | 200 `SchematicDialogueResponse` `{queries, count, candidates: [위 choices 칸 + candidate_id · number · queries · selection_url], dialogue: {status(generated \| unavailable), mode(select \| all \| single), selection_required, message, question, descriptions, reason, clarification_fields}, failures}` | 404 · 422 · 429 `LIMIT_EXCEEDED`(회로도 소개 예약 한도) · 502 · 503 | 검색어마다 위 GET과 같은 검색으로 찾은 후보를 모아 LLM이 후보 설명 · 고를 질문을 쓴다(`backend/projects/schematic_dialogue.py`). 후보 선택과 이미지는 각 후보의 `selection_url`(위 GET)로 받는다. 글 생성에 실패하면 `dialogue.status=unavailable`이고 후보 목록은 그대로 준다. 저장하지 않음(`Cache-Control: private, no-store`). 상세는 `backend/api/API.md` |
     | `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}` | 로그인 | - | 200 `image/png` | 404 `SCHEMATIC_NOT_FOUND` · 502 · 503 | 위 응답의 서명된 주소로 시트 이미지 한 장을 받음 |
 
   - 인증 · 가입: 사전 생성된 이메일 계정 · Google 계정 · 이메일 인증으로 가입한 계정과 DB 세션을 씁니다(상세 `docs/specs/login-auth.md`). 이메일 가입은 메일 링크로 이메일을 확인한 뒤에만 계정을 만듭니다(`DEMO_MODE`와 상관없이 열림). `POST /api/auth/signup`은 이메일만 받아 가입 메일(60분 유효 링크)을 보내고 이 단계에서는 계정 · 세션을 만들지 않습니다. 링크의 토큰과 비밀번호(12~1024자, 공백뿐 · 숫자만 · 단순 반복 불가)를 `POST /api/auth/signup/confirm`으로 보내면 `user` 계정이 만들어지고, 세션은 로그인에서 받습니다. `consent`는 있어도 되는 선택 칸이며 동의 증거로 저장하지 않습니다. 메일 설정이 없으면 503, 같은 이메일(5회/시간) · IP(10회/시간) · 서비스 전체(200회/일) 메일 요청 한도를 넘으면 429, 클라이언트 IP당 UTC 하루 3회를 넘는 가입 확정도 429입니다. 입력 오류는 422(입력값 미노출)입니다.
@@ -400,7 +401,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | D4 단일 | `판정 읽기` | `판정` |
   | D5 멀티(`Spec 에이전트` 안) | `회로 읽기` | `대체 부품 판정` |
 - 회로 값 이름: 읽기 입력 글에는 역할마다 그 역할이 받는 값 이름 · 종류(`roles.yaml` `inputs`에서 코드가 만든다)를, 읽기 프롬프트(`judge_read.md` "Value names")에는 모든 값 이름의 뜻 · 단위를 둡니다. 읽기는 고른 역할(과 `role_alt`)의 이름만 쓰고, 사용자가 다른 말(부하 전류 · 출력 전류 · 반대쪽 전원)로 준 값은 그 역할에서 같은 양을 뜻하는 이름으로 옮깁니다. 그 역할에 없는 이름 · 질문에 없는 숫자는 코드가 버리고 판정 결과의 `dropped`에 남깁니다. `roles.yaml`에 값 이름이 늘면 프롬프트에 뜻이 있는지 시험이 확인합니다. `vz_min` · `vz_max`는 인용 글에 숫자 범위가 있을 때만 받습니다(공칭 ± 공차는 요구 성질 `VZ`, 사전 등록 #48).
-- 코퍼스 밖 요구: 읽기는 사용자가 꼭 요구한 것을 세 칸으로 따로 냅니다. `required_specs`는 요구한 부품 성질을 사용자 말 그대로 적고, 사양 코드 19개(숫자 17종 + `PACKAGE` + `AEC_Q101`), 판정 전용 `DIRECTION`, 또는 해당 없음인 `none` 중 하나로 연결합니다. `maker_wanted`에는 요구 제조사, `revision_wanted`에는 요구 개정 코드·판을 둡니다. 판정 노드는 규칙·조건을 만들기 전에 코드로 대조합니다(숫자 판단 없음): 제조사가 TSC(와 공식 웹 조회 제조사)가 아니면 `maker_missing`(#63), 개정판이 사실 확인(`facts.revisions`)에서 코퍼스에 있다고 확인된 개정 코드를 담지 않으면 `revision_missing`, 성질 하나라도 `none`이면 `not_found`입니다. 판정 길에는 코퍼스 개정판 전체 목록이 없어 질문 속 개정 코드의 사실 확인만 씁니다(연도판·버전처럼 개정 코드가 아닌 판은 확인할 수 없으니 거절). 거절이면 인터럽트·사양 값 읽기 없이 판정 보고서(`fail` + 사유)를 냅니다. 단일 그래프는 그 사유로 거절 노드로 가고(`refusal.code`), 멀티는 Supervisor가 그 사유로 거절합니다(프롬프트 규칙 3. LLM이 다른 길을 고르면 한도 거절처럼 코드가 거절로 바꿉니다). 사양 코드가 있는 성질(역누설 → IR, 표면실장 → PACKAGE, 자동차 등급 → AEC_Q101), 방향 요구와 TSC·확인된 개정 코드는 통과합니다. 거절 문구는 사실 확인에서 없다고 확인된 품번만 이름으로 넣습니다. `revision_wanted`가 40자를 넘으면(읽기가 개정 코드 대신 '개정 요구 없음' 같은 설명 글을 적은 것) 형식 재시도 없이 그 글 안의 개정 코드 모양(K2611)만 남기고, 없으면 요구 없음으로 받습니다(사전 등록 #45). 사실 확인이 코퍼스에 없다고 한 품번을 후보로 판정하라고 하면 `part_missing`으로 거절합니다(ADR 0017).
+- 코퍼스 밖 요구: 읽기는 사용자가 꼭 요구한 것을 세 칸으로 따로 냅니다. `required_specs`는 요구한 부품 성질을 사용자 말 그대로 적고, 사양 코드 19개(숫자 17종 + `PACKAGE` + `AEC_Q101`), 판정 전용 `DIRECTION`, 또는 해당 없음인 `none` 중 하나로 연결합니다. `maker_wanted`에는 요구 제조사, `revision_wanted`에는 요구 개정 코드·판을 둡니다. 판정 노드는 규칙·조건을 만들기 전에 코드로 대조합니다(숫자 판단 없음): 제조사가 TSC · Infineon이 아니면 `maker_missing`(#63. 판정은 TSC 내부 카드 행을 쓰므로 #146의 다른 공식 웹 제조사(Vishay · TI · ST · ADI · onsemi)도 판정 길에서는 거절한다, `96fb0f23`), 개정판이 사실 확인(`facts.revisions`)에서 코퍼스에 있다고 확인된 개정 코드를 담지 않으면 `revision_missing`, 성질 하나라도 `none`이면 `not_found`입니다. 판정 길에는 코퍼스 개정판 전체 목록이 없어 질문 속 개정 코드의 사실 확인만 씁니다(연도판·버전처럼 개정 코드가 아닌 판은 확인할 수 없으니 거절). 거절이면 인터럽트·사양 값 읽기 없이 판정 보고서(`fail` + 사유)를 냅니다. 단일 그래프는 그 사유로 거절 노드로 가고(`refusal.code`), 멀티는 Supervisor가 그 사유로 거절합니다(프롬프트 규칙 3. LLM이 다른 길을 고르면 한도 거절처럼 코드가 거절로 바꿉니다). 사양 코드가 있는 성질(역누설 → IR, 표면실장 → PACKAGE, 자동차 등급 → AEC_Q101), 방향 요구와 TSC·확인된 개정 코드는 통과합니다. 거절 문구는 사실 확인에서 없다고 확인된 품번만 이름으로 넣습니다. `revision_wanted`가 40자를 넘으면(읽기가 개정 코드 대신 '개정 요구 없음' 같은 설명 글을 적은 것) 형식 재시도 없이 그 글 안의 개정 코드 모양(K2611)만 남기고, 없으면 요구 없음으로 받습니다(사전 등록 #45). 사실 확인이 코퍼스에 없다고 한 품번을 후보로 판정하라고 하면 `part_missing`으로 거절합니다(ADR 0017).
 - 사양 값 조회 품번: 품번 앞의 제조사 이름(`TSC` · `Taiwan Semiconductor`, 대소문자 무시)은 떼고 찾습니다. 그래도 없으면 첫 낱말(주문 코드를 뗀 기본 품번, `1N4148 R0G` → `1N4148`)로 다시 찾습니다. 답에 보이는 품번은 질문에 쓴 대로 둡니다.
 - 주문 코드 동일품: 원래 품번과 후보가 기본 품번이 같고 꼬리가 주문 코드(R · A · L · M + 글자나 숫자 하나 + 선택 G, 예: `R0G` · `A0G` · `RFG` · `L0` · `M6G`)만 다르면(한쪽은 기본 품번뿐이어도 됨) 동일품입니다. 근거는 그 문서 주문 정보 표(`ORDERING INFORMATION`)에서 그 주문 코드가 적힌 행 청크이고, 조건 표 맨 앞 줄로 인용합니다. 그 행을 찾지 못하면 이 규칙으로 동일품을 내지 않고, 제조사가 같은 제품이라고 밝힌 청크를 찾습니다(EC-10). 동일품은 조건 결과보다 먼저입니다(쇼트키 면제 뒤에도 같음).
 - 같은 품번 판정: 후보가 모두 원래 부품과 같은 품번이면 회로 값 · 역할을 묻지 않고 동일품입니다(작업서 5단계, #65). 읽기가 원래 부품을 후보에서 빼 후보가 비고 지금 질문의 품번이 원래 품번 하나뿐이면 그 품번을 후보로 씁니다.

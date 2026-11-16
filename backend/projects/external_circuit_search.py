@@ -1,4 +1,7 @@
-"""Exa의 외부 자료 후보를 반환한다. 다운로드, 파일 저장, DB 변경은 수행하지 않는다."""
+"""Exa · 공식 제조사 · GitHub 검색으로 외부 회로도 자료 후보를 고르고 정제한다.
+
+후보 확인에 필요한 공개 페이지 · API 응답은 schematic_discovery.download_bounded(크기 · 호스트 제한)로만 받는다. 파일 저장, DB 변경은 하지 않는다.
+"""
 import ipaddress
 import json
 import logging
@@ -33,8 +36,6 @@ class ExternalCircuitSearchConfigurationError(ExternalCircuitSearchError):
 
 PROJECT_RESERVED_PATHS = {
     "github.com": frozenset({"features", "topics", "explore", "marketplace", "settings", "orgs", "users", "login", "signup"}),
-    "gitlab.com": frozenset({"explore", "users", "groups", "help", "dashboard", "projects", "admin", "login"}),
-    "codeberg.org": frozenset({"explore", "users", "user", "groups", "help", "dashboard", "projects", "admin", "login"}),
 }
 
 

@@ -18,17 +18,6 @@ from backend.services import llm
 
 
 MAX_CANDIDATES = 24
-DIFFERENCE_FIELDS = (
-    "title",
-    "manufacturer",
-    "model",
-    "revision",
-    "source_type",
-    "source_file",
-    "attribution",
-    "source_identifier",
-    "source_url",
-)
 FACT_FIELDS = (
     "title",
     "manufacturer",
@@ -39,6 +28,7 @@ FACT_FIELDS = (
     "attribution",
     "source_identifier",
 )
+DIFFERENCE_FIELDS = (*FACT_FIELDS, "source_url")
 _URL = re.compile(r"https?://|www\.", re.IGNORECASE)
 _NUMBER = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?")
 _CHOICE_LANGUAGE = re.compile(r"선택|고르|어느\s+회로|choose|pick|one\s+(?:of|only)", re.IGNORECASE)
@@ -81,19 +71,6 @@ def _differences(candidates: list[dict]) -> list[str]:
         for field in DIFFERENCE_FIELDS
         if len({str(_field_value(item, field) or "") for item in candidates}) > 1
     ]
-
-
-def _invalid_count(reason: str, mode: str) -> dict:
-    return {
-        "status": "unavailable",
-        "mode": mode,
-        "selection_required": mode == "select",
-        "message": None,
-        "question": None,
-        "descriptions": [],
-        "reason": reason,
-        "clarification_fields": [],
-    }
 
 
 def _failure(reason: str, mode: str, fields: list[str]) -> dict:
@@ -217,13 +194,13 @@ def build_dialogue(
     """후보 설명을 생성한다. 외부 후보는 이미 서버에서 검증됐다는 전제다."""
     mode = _mode(candidates, requested_multiple) if candidates else ("all" if requested_multiple else "single")
     if not candidates or len(candidates) > MAX_CANDIDATES:
-        return _invalid_count("invalid_candidate_count", mode)
+        return _failure("invalid_candidate_count", mode, [])
 
     ids = [item.get("candidate_id") for item in candidates]
     if any(not isinstance(value, str) or not value for value in ids) or len(set(ids)) != len(ids):
-        return _invalid_count("invalid_candidate_metadata", mode)
+        return _failure("invalid_candidate_metadata", mode, [])
     if any("number" not in item or "queries" not in item for item in candidates):
-        return _invalid_count("invalid_candidate_metadata", mode)
+        return _failure("invalid_candidate_metadata", mode, [])
 
     fields = _differences(candidates)
     system = _PROMPT
