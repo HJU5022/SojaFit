@@ -22,7 +22,7 @@
 | G6 트레이스 | Langfuse 트레이스와 평가 점수 연결, 대시보드 | [EVAL_REPORT.md](../../EVAL_REPORT.md) 7장, [langfuse_403_2026-11-13.md](../../evals/results/d10/langfuse_403_2026-11-13.md) | [GATES.md](../GATES.md) G6 행을 따른다(이 표에 따로 적던 상태가 GATES와 갈라져 2026-11-17에 지움) | D11 11/16 |
 | Langfuse 스크린샷 | 3장 이상, 트레이스 상세 1장 이상 | [langfuse/](langfuse/) `01` ~ `07` | 충족: 7장(트레이스 상세 포함). 11-13 배포본 3장, 11-17 점수 화면 · 홈 대시보드 4장(`04` ~ `07`은 다른 작업이 넣음) | D11 11/16 |
 | G7 비밀값(G7의 일부; G7 전체는 시연 영상이 없어 GATES에서 진행 중) | 비밀값 커밋 없음 | [secret_scan_2026-11-13.md](../../evals/results/d10/secret_scan_2026-11-13.md), [.env.example](../../.env.example) | 충족: gitleaks 이력 801 커밋 발견 0건(로컬 실행. GitHub Actions 결과는 확인 못 함) | D11 11/16 |
-| 시연 영상 | 3분 이내, 정상·실패 경로, 원본, 동결 커밋 SHA, 배포 리비전 번호 | [demo_script.md](demo_script.md), `video/sojafit-demo-2026-11-17.mp4` | 11-17 녹화: 1:48, 정상 경로 v3-01과 실패 사례 3건, 동결 커밋 `9c87ba36`, 첫 화면에 배포 리비전 `sojafit-api-main-799ae636-1117`. 파일은 다른 작업이 넣음(넣은 뒤 충족) | D11 11/16 |
+| 시연 영상 | 3분 이내, 정상·실패 경로, 원본, 동결 커밋 SHA, 배포 리비전 번호 | [demo_script.md](demo_script.md), `video/sojafit-demo-2026-11-17.mp4` | 11-17 녹화: 1:35, 정상 경로 v3-01과 실패 사례 3건, 동결 커밋 `9c87ba36`, 첫 화면에 배포 리비전 `sojafit-api-main-799ae636-1117`. 파일은 다른 작업이 넣음(넣은 뒤 충족) | D11 11/16 |
 | 실패 사례 분석 | 코드로 되돌린 결정 1건과 이유, 미채택 실험, 판정자 한계 | [failure_analysis.md](failure_analysis.md) | 부분: 11-13에 3항목, 11-16에 9절(인젝션 사례 1건 · Luna 한계)을 채움. 남은 일은 정답 초안 작성자 서술 불일치([DELIVERABLES.md](DELIVERABLES.md)) | D12 11/17 |
 | AI 도구 사용 기록 | 팀의 AI 코딩 도구 사용 기록 | [ai_tools_log.md](ai_tools_log.md) | 부분: 하정운 기록만. 다른 조원 기록 없음 | D12 11/17 |
 | 포트폴리오 | 조원 수(3명)만큼 | [portfolio-jeongun.md](portfolio-jeongun.md), [portfolio-osc.md](portfolio-osc.md), [portfolio-sth.md](portfolio-sth.md) | 부분: 3/3 있음. 오세창 · 심태현 본은 11-17 조장 위임 AI 초안이라 본인 확인 전 | D12 11/17 |

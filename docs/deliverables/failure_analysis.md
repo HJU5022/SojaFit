@@ -50,7 +50,7 @@
 | 표 주석 미부착 약 216표 | 남음. 동결셋 검색 지표로 재측정하지 않음 | EVAL_REPORT 11장 2행 |
 | 배포 HTTP 인젝션 T4 흔들림 | 토큰 한도 상향 배포 뒤 재측정 전 | EVAL_REPORT 11장 3행 |
 | 승인 대기 시간 | 값 없음 | EVAL_REPORT 11장 4행 |
-| 시연 영상 파일 · Langfuse 화면의 평가 점수 연결 캡처 | 11-17 생김: 영상 `video/sojafit-demo-2026-11-17.mp4`(1:48, 정상 경로 v3-01과 실패 사례 3건), Langfuse 점수 화면 4장(`langfuse/04` ~ `07`, 모두 7장) | [DELIVERABLES.md](DELIVERABLES.md) |
+| 시연 영상 파일 · Langfuse 화면의 평가 점수 연결 캡처 | 11-17 생김: 영상 `video/sojafit-demo-2026-11-17.mp4`(1:35, 정상 경로 v3-01과 실패 사례 3건), Langfuse 점수 화면 4장(`langfuse/04` ~ `07`, 모두 7장) | [DELIVERABLES.md](DELIVERABLES.md) |
 
 순위와 한계 표의 정본은 EVAL_REPORT 11장이다.
 
