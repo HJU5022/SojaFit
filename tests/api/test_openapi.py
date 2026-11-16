@@ -3,7 +3,7 @@
 - 역할: 요청 본문 모델마다 예시가 있고 그 예시가 실제로 통과하는지, 모르는 칸 금지, 업로드의 multipart 칸 문서,
   SSE 두 경로의 `text/event-stream` 설명, 204 · SSE가 아닌 성공 응답의 스키마가 비지 않았는지,
   응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/types.ts의 타입)을 지우지 않는지 본다.
-  동작 50개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
+  동작 52개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
 - 하지 않는 일: 오류 응답 모양(test_health.py · test_errors.py), 가격 응답의 실제 칸(test_prices.py),
   업로드 수신 상한 · 오류 코드(test_projects.py), Swagger 화면 자체(서버를 띄우지 않는다).
 - 출처: SPEC.md 4절 엔드포인트 표, backend/api/API.md.
@@ -27,7 +27,7 @@ from backend.main import app
 ORIGIN = {'origin': 'http://testserver'}
 # 요청 본문 모델 전부. 새 본문 모델을 만들면 여기에 넣어야 아래 시험이 예시 · 모르는 칸 금지를 본다
 BODY_MODELS = [auth_api.Login, auth_api.Signup, auth_api.PasswordAction, auth_api.DemoLogin, admin.AccountState, projects.CreateProject, projects.RenameProject,
-               quotes.ApproveBody, quotes.QuoteBody, conversations.StartRun, conversations.ResumeRun, profile.ProfileUpdate]
+               quotes.ApproveBody, quotes.QuoteBody, conversations.StartRun, conversations.ResumeRun, conversations.RenameThread, profile.ProfileUpdate]
 
 
 def openapi():
@@ -76,7 +76,7 @@ def test_no_success_response_has_an_empty_schema():
     assert empty == []
 
 
-# (메서드, 경로) 50개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
+# (메서드, 경로) 52개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
 ROUTES = {
     ('POST', '/api/auth/signup/confirm'), ('POST', '/api/auth/password-reset'), ('POST', '/api/auth/password-reset/confirm'),
     ('GET', '/api/auth/google/onboarding'), ('POST', '/api/auth/google/signup'), ('POST', '/api/auth/google/link'),
@@ -97,13 +97,14 @@ ROUTES = {
     ('GET', '/api/judge/roles'), ('GET', '/api/demo-questions'), ('GET', '/api/projects/{project_id}/threads'),
     ('POST', '/api/projects/{project_id}/threads'), ('GET', '/api/runs/{run_id}'), ('POST', '/api/threads/{thread_id}/runs'),
     ('POST', '/api/runs/{run_id}/resume'), ('GET', '/api/threads/{thread_id}'), ('DELETE', '/api/threads/{thread_id}'),
+    ('GET', '/api/threads'), ('PATCH', '/api/threads/{thread_id}'),
     ('GET', '/api/external-circuits/schematics'),
     ('GET', '/api/external-circuits/schematics/{signed_token}/{sheet_index}'),
 }
 
 
 def test_routes_are_pinned_and_live_only_in_api_routers():
-    """동작(메서드, 경로) 50개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
+    """동작(메서드, 경로) 52개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
     # [왜] main.py에 @app.get 같은 경로를 두면 app.routes에 APIRoute로 바로 들어온다
     assert [r.path for r in app.routes if isinstance(r, APIRoute)] == []
     # [주의] FastAPI 0.162는 include_router한 라우터를 `original_router`를 가진 묶음 하나로 app.routes에 둔다
@@ -138,6 +139,7 @@ CASE = {'id', 'approval_id', 'candidate_part', 'verdict', 'created_at'}
 RESULT = {'answer', 'status', 'stage', 'question_type', 'evidence', 'judgement', 'price_parts', 'refusal', 'interrupt',
           'request_id', 'profile_hints', 'error'}
 FACT = {'kind', 'value', 'text', 'version', 'updated_at', 'source'}
+THREAD_ITEM = {'id', 'project_id', 'project_name', 'title', 'created_at', 'last_activity_at'}
 
 # (메서드, 경로, 본문, auth를 바꿀 함수 이름 → 값, 가짜 연결이 돌려줄 결과, 화면이 읽는 칸)
 CASES = [
@@ -156,7 +158,9 @@ CASES = [
     ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [('1N5819', '1N5819'), (5, NOW)], QUOTE),
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW, THREAD)]], QUOTE | {'thread_id'}),
     ('get', '/api/approved-cases', None, {}, [[(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW)]], CASE),
-    ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW, 1)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status', 'circuit_version'}),
+    ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW, 1, None)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status', 'circuit_version'}),
+    ('get', '/api/threads', None, {}, [[(THREAD, 1, '전원부', None, '저장 질문', NOW, NOW)]], THREAD_ITEM),
+    ('patch', f'/api/threads/{THREAD}', {'title': '고친 이름'}, {}, [(THREAD,), [(THREAD, 1, '전원부', '고친 이름', '저장 질문', NOW, NOW)]], THREAD_ITEM),
     ('post', '/api/projects/1/threads', None, {}, [(1,), (THREAD,)], {'id', 'project_id'}),
     ('get', f'/api/runs/{RUN}', None, {}, [(RUN, THREAD, 'completed', JUDGED, 12)], {'id', 'thread_id', 'message_id', 'result'}),
 ]

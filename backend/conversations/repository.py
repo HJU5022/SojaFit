@@ -30,6 +30,19 @@ LIVE_RUN = ("r.status='running' AND (r.updated_at >= CURRENT_TIMESTAMP-(%s * int
             "OR NOT pg_try_advisory_xact_lock(hashtextextended(r.thread_id::text,0)))")
 
 
+def _summaries(conn, user_id, thread_id=None):
+    """대화 요약 {id, project_id, project_name, title, created_at, last_activity_at}. thread_id를 주면 그 대화 하나만."""
+    # [왜] 마지막 활동 = 만든 시각 · 마지막 메시지 · 마지막 run 갱신 중 가장 늦은 것(프로젝트별 목록 list_threads와 같은 기준)
+    rows = conn.execute("""SELECT t.id,t.project_id,p.name,t.title,q.content,t.created_at,greatest(t.created_at,m.last_at,r.last_at) AS activity
+        FROM threads t JOIN projects p ON p.id=t.project_id
+        LEFT JOIN LATERAL (SELECT content FROM messages WHERE thread_id=t.id AND role='user' ORDER BY id LIMIT 1) q ON true
+        LEFT JOIN LATERAL (SELECT max(created_at) AS last_at FROM messages WHERE thread_id=t.id) m ON true
+        LEFT JOIN LATERAL (SELECT max(updated_at) AS last_at FROM runs WHERE thread_id=t.id) r ON true
+        WHERE p.user_id=%s AND (%s::uuid IS NULL OR t.id=%s::uuid) ORDER BY activity DESC,t.id DESC""", (user_id, thread_id, thread_id))
+    return [{'id': str(row[0]), 'project_id': row[1], 'project_name': row[2], 'title': row[3] or thread_title(row[4]),
+             'created_at': row[5], 'last_activity_at': row[6]} for row in rows]
+
+
 class ConversationRepository:
     def recover_stale_run(self, user_id, run_id):
         """멈춘 소유 실행만 정리한다. 분석 잠금이 있으면 시각과 관계없이 그대로 둔다."""
@@ -135,18 +148,32 @@ class ConversationRepository:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id)).fetchone() is None:
                 raise ConversationNotFound
             rows = conn.execute("""SELECT t.id,t.created_at,q.content,r.id,r.status,
-                greatest(t.created_at,m.last_at,r.last_at) AS activity,t.circuit_version
+                greatest(t.created_at,m.last_at,r.last_at) AS activity,t.circuit_version,t.title
                 FROM threads t JOIN projects p ON p.id=t.project_id
                 LEFT JOIN LATERAL (SELECT content FROM messages WHERE thread_id=t.id AND role='user' ORDER BY id LIMIT 1) q ON true
                 LEFT JOIN LATERAL (SELECT max(created_at) AS last_at FROM messages WHERE thread_id=t.id) m ON true
                 LEFT JOIN LATERAL (SELECT id,status,max(updated_at) OVER () AS last_at FROM runs WHERE thread_id=t.id ORDER BY created_at DESC,id DESC LIMIT 1) r ON true
                 WHERE t.project_id=%s AND p.user_id=%s ORDER BY activity DESC,t.id DESC""", (project_id, user_id))
-            return [{'id': str(row[0]), 'project_id': project_id, 'created_at': row[1], 'title': thread_title(row[2]),
+            return [{'id': str(row[0]), 'project_id': project_id, 'created_at': row[1], 'title': row[7] or thread_title(row[2]),
                      'latest_run_id': str(row[3]) if row[3] else None, 'status': row[4], 'last_activity_at': row[5], 'circuit_version': row[6]} for row in rows]
+
+    def list_all_threads(self, user_id):
+        """사용자의 모든 프로젝트 대화를 마지막 활동이 최근인 순으로(사이드바 "대화" 목록). 읽기만 한다."""
+        with auth.connection() as conn:
+            return _summaries(conn, user_id)
+
+    def rename_thread(self, user_id, thread_id, title):
+        """소유한 대화의 이름만 바꾼다. 다른 사용자의 대화는 없는 대화와 같게 404."""
+        with auth.connection() as conn:
+            # [왜] 회로 버전 고정 트리거(db/031)는 project_id · circuit_version 변경만 막으므로 이름 변경은 지나간다
+            if conn.execute('UPDATE threads t SET title=%s FROM projects p WHERE p.id=t.project_id AND t.id=%s AND p.user_id=%s RETURNING t.id',
+                            (title, thread_id, user_id)).fetchone() is None:
+                raise ConversationNotFound
+            return _summaries(conn, user_id, thread_id)[0]
 
     def thread_detail(self, user_id, thread_id, limit=50, before_message_id=None):
         with auth.connection() as conn:
-            row = conn.execute('SELECT t.id,t.project_id,t.circuit_version FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s', (thread_id, user_id)).fetchone()
+            row = conn.execute('SELECT t.id,t.project_id,t.circuit_version,t.title FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s', (thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
             title = conn.execute("SELECT m.content FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s AND m.role='user' ORDER BY m.id LIMIT 1", (thread_id, user_id)).fetchone()
@@ -161,7 +188,7 @@ class ConversationRepository:
             if conn.execute("SELECT to_regclass('sojafit_agent.threads')").fetchone()[0] is not None:
                 target = conn.execute('SELECT a.target FROM sojafit_agent.threads a JOIN threads t ON t.id=a.id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s AND a.user_id=%s', (thread_id, user_id, user_id)).fetchone()
         page = rows[:limit]
-        return {'id': str(row[0]), 'project_id': row[1], 'circuit_version': row[2], 'title': thread_title(title[0] if title else ''),
+        return {'id': str(row[0]), 'project_id': row[1], 'circuit_version': row[2], 'title': row[3] or thread_title(title[0] if title else ''),
                 'target_ref': target[0] if target else None, 'target_locked': latest is not None,
                 'latest_run': {'id': str(latest[0]), 'status': latest[1], 'message_id': latest[2]} if latest else None,
                 'messages': [{'id': r[0], 'run_id': str(r[1]), 'role': r[2], 'content': r[3], 'created_at': r[4]} for r in reversed(page)],

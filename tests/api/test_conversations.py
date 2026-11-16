@@ -47,6 +47,56 @@ def test_thread_delete_uses_safe_errors(web, monkeypatch, failure_kind, status):
     assert response.json()['error']['request_id']
 
 
+def test_thread_list_and_rename_require_login(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.get('/api/threads').status_code == 401
+        assert client.patch(f'/api/threads/{uuid4()}', json={'title': '이름'}, headers=ORIGIN).status_code == 401
+
+
+def test_thread_list_is_the_session_users_and_not_cached(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    calls = []
+    monkeypatch.setattr(ConversationRepository, 'list_all_threads', lambda self, user: calls.append(user) or [])
+    with web(None, None) as client:
+        response = client.get('/api/threads')
+    assert response.status_code == 200 and response.json() == []
+    assert response.headers['cache-control'] == 'no-store'
+    assert calls == [1]
+
+
+def test_thread_rename_checks_origin_and_title_before_repository(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    calls, thread = [], str(uuid4())
+    def rename(self, user, key, title):
+        calls.append((user, key, title))
+        return {'id': key, 'project_id': 3, 'project_name': '전원부', 'title': title,
+                'created_at': '2026-11-16T00:00:00Z', 'last_activity_at': '2026-11-16T00:00:00Z'}
+    monkeypatch.setattr(ConversationRepository, 'rename_thread', rename)
+    with web(None, None) as client:
+        assert client.patch(f'/api/threads/{thread}', json={'title': '이름'}).status_code == 403
+        for body in ({'title': ''}, {'title': '   '}, {'title': 'x' * 201}, {'title': '이름', 'project_id': 9}, {}):
+            assert client.patch(f'/api/threads/{thread}', json=body, headers=ORIGIN).status_code == 422, body
+        assert client.patch('/api/threads/not-a-uuid', json={'title': '이름'}, headers=ORIGIN).status_code == 422
+        assert calls == []
+        response = client.patch(f'/api/threads/{thread}', json={'title': '  D1\n 교체   검토 '}, headers=ORIGIN)
+    assert response.status_code == 200 and response.json()['title'] == 'D1 교체 검토'
+    assert calls == [(1, thread, 'D1 교체 검토')]  # 줄바꿈 · 겹친 공백은 한 칸으로, 앞뒤 공백은 지운다(DB CHECK와 같은 모양)
+
+
+@pytest.mark.parametrize('failure_kind, status', [('missing', 404), ('database', 503)])
+def test_thread_rename_uses_safe_errors(web, monkeypatch, failure_kind, status):
+    import psycopg
+    from backend.conversations.repository import ConversationRepository, ConversationNotFound
+    def fail(*args):
+        raise {'missing': ConversationNotFound, 'database': psycopg.OperationalError}[failure_kind]('private database detail')
+    monkeypatch.setattr(ConversationRepository, 'rename_thread', fail)
+    with web(None, None) as client:
+        response = client.patch(f'/api/threads/{uuid4()}', json={'title': '이름'}, headers=ORIGIN)
+    assert response.status_code == status
+    assert 'private database detail' not in response.text
+
+
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None, refuse=None):

@@ -95,6 +95,28 @@ class ThreadSummary(Thread):
     status: RunStatus | None
 
 
+class ThreadListItem(Thread):
+    """모든 프로젝트를 모은 대화 목록의 한 줄(사이드바 "대화"). title은 고친 이름, 없으면 첫 질문으로 만든 이름."""
+    project_name: str
+    title: str
+    created_at: datetime
+    last_activity_at: datetime
+
+
+class RenameThread(BaseModel):
+    model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [{'title': 'D1 쇼트키 교체 검토'}]})
+    title: str
+
+    @field_validator('title')
+    @classmethod
+    def valid_title(cls, value: str) -> str:
+        # [왜] 줄바꿈 · 겹친 공백을 한 칸으로 줄인 뒤 잰다. DB CHECK(ck_threads_title)는 앞뒤 공백을 막아 여기서 못 거르면 422가 아니라 503이 된다
+        value = ' '.join(value.split())
+        if not 1 <= len(value) <= 200:
+            raise ValueError('대화 이름은 1~200자여야 합니다.')
+        return value
+
+
 class SavedMessage(BaseModel):
     id: int
     run_id: str
@@ -177,6 +199,18 @@ def list_demo_questions(user_id: int = Depends(auth.current_user_id), analysis=D
 def list_threads(project_id: int, response: Response, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
     response.headers['Cache-Control'] = 'no-store'
     return repo.list_threads(user_id, project_id)
+
+
+@router.get('/threads', response_model=list[ThreadListItem])
+def list_all_threads(response: Response, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """내 모든 프로젝트의 대화, 마지막 활동이 최근인 순. 다른 사용자의 대화는 나오지 않는다."""
+    response.headers['Cache-Control'] = 'no-store'
+    return repo.list_all_threads(user_id)
+
+
+@router.patch('/threads/{thread_id}', response_model=ThreadListItem, dependencies=[Depends(auth.check_origin)])
+def rename_thread(thread_id: UUID, body: RenameThread, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    return repo.rename_thread(user_id, str(thread_id), body.title)
 
 
 @router.get('/threads/{thread_id}', response_model=ThreadDetail)

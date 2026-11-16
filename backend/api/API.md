@@ -19,7 +19,7 @@
 | `prices.py` | `GET /api/prices`(로그인 필요, 요청 때 Mouser 조회, 선택 quantity 1~100000의 동일 품번 수량 구간/Decimal estimate를 응답에만 포함. `Cache-Control: no-store`, ADR 0009) |
 | `projects.py` | `GET /api/demo-circuits`(데모 모드만), `GET`·`POST /api/projects`(빈 생성 또는 데모 복제), `POST /api/projects/upload`, `POST /api/projects/{project_id}/netlist`(새 버전·새 대화), `GET`·`PATCH`·`DELETE /api/projects/{project_id}`. 상세 `thread_id` 쿼리는 해당 대화의 고정 버전을 반환 |
 | `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트) |
-| `conversations.py` | `GET /api/judge/roles`·`demo-questions`, 프로젝트별 thread `GET`·`POST`, `GET`·`DELETE /api/threads/{id}`, `POST /api/threads/{id}/runs`(SSE), `GET /api/runs/{id}`, `POST .../recover`, `POST .../resume`(SSE) |
+| `conversations.py` | `GET /api/judge/roles`·`demo-questions`, 프로젝트별 thread `GET`·`POST`, 모든 프로젝트의 대화 목록 `GET /api/threads`, `GET`·`PATCH`(이름 변경)·`DELETE /api/threads/{id}`, `POST /api/threads/{id}/runs`(SSE), `GET /api/runs/{id}`, `POST .../recover`, `POST .../resume`(SSE) |
 | `quotes.py` | `GET`·`POST /api/messages/{id}/approvals`(조회는 소유 assistant 메시지의 활성 승인(사례가 남은 승인)과 승인별 견적(`quotes`)만, 새로고침 뒤 복원용), `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}`(활성 승인 해제, snapshot/기존 견적 보존·재승인 허용) |
 | `profile.py` | `GET`·`PATCH`·`DELETE /api/me/memory`(사용자 사실 기억), `DELETE /api/me`(탈퇴) |
 
