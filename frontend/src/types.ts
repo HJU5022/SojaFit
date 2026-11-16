@@ -205,3 +205,22 @@ export type ExternalSchematic = {
   choices: SchematicChoice[];
   circuit_version: number | null;
 };
+/** GET /api/datasheets 한 줄: 서재(폐기 제외 코퍼스)의 데이터시트 하나. parts는 표지에 적힌 품번(#67). */
+export type Datasheet = {
+  id: number;
+  title: string;
+  publisher: string;
+  revision: string | null;
+  category: string | null;
+  source_url: string;
+  collected_at: string;
+  parts: string[];
+};
+/** GET /api/datasheets 응답. categories는 검색과 상관없는 서재 전체의 분류별 수(많은 순). */
+export type DatasheetPage = {
+  items: Datasheet[];
+  total: number;
+  page: number;
+  page_size: number;
+  categories: { category: string; count: number }[];
+};
