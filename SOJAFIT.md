@@ -211,6 +211,7 @@ SojaFit (proj3-b)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── db_pool.py      <- 검색용 DB 연결 풀(DSN별, pgvector 등록)
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
 │   │   ├── spec_lookup.py  <- 사양 코드 목록 · 찾기 순서 규칙(카드 도구 · 판정 import). 사양 표와 SQL 조회는 11-10에 지움(ADR 0016)
 │   │   ├── card_read.py    <- 카드(표 행 청크)에서 값 · 원문 인용 읽기(코드 먼저, 못 읽은 카드만 LLM)와 코드 확인
