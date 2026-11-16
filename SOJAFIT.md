@@ -143,8 +143,8 @@ SojaFit (proj3-b)
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory, 탈퇴 DELETE /api/me
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
-│   │   ├── external_circuits.py <- 공개 저장소 완성 회로도 manifest·PNG 시트 API
-│   │   └── projects.py     <- 사용자 프로젝트 CRUD(삭제는 같은 UUID 분석 기록까지)·공개 데모 카탈로그 API
+│   │   ├── external_circuits.py <- 외부 완성 회로도 manifest·PNG 시트·후보 대화(POST .../dialogue) API
+│   │   └── projects.py     <- 사용자 프로젝트 CRUD(삭제는 같은 UUID 분석 기록까지)·넷리스트 · 회로도 업로드·올린 회로도 그림·부품 점검표·데모 회로 목록(로그인 · DEMO_MODE=1) API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
