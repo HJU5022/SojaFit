@@ -829,6 +829,7 @@ form {
   padding: 5px 9px;
   font-size: 13px;
 }
+/* ⋯ 메뉴(ui.tsx RowMenu): 사이드바 대화 줄과 작업대 상단이 같이 쓴다. */
 .row-menu {
   position: relative;
 }
@@ -856,6 +857,9 @@ form {
   min-height: 34px;
   border: 0;
   font-size: 13px;
+}
+.row-menu [role='menu'] .danger {
+  color: #9f352f;
 }
 .folder-toggle {
   width: 100%;
@@ -1054,6 +1058,7 @@ form {
 }
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 .header-actions button {
@@ -1244,11 +1249,6 @@ form {
 .review-nav > p {
   font-size: 13px;
   margin: 15px 8px;
-}
-.danger-action {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 30px;
 }
 .conversation {
   display: flex;
@@ -2330,9 +2330,6 @@ form {
   }
   .review-nav > p {
     margin: 5px 8px;
-  }
-  .context-panel > .danger-action {
-    margin: 0;
   }
   .conversation {
     height: auto;

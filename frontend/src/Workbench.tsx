@@ -5,6 +5,7 @@ import {
   Check,
   LoaderCircle,
   Paperclip,
+  Pencil,
   Plus,
   Send,
   Square,
@@ -20,6 +21,7 @@ import {
   Markdown,
   Modal,
   navigate,
+  RowMenu,
   useResource,
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
@@ -331,13 +333,18 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         </div>
         <div className="header-actions">
           <button onClick={() => setShowQuotes(true)}>견적 목록</button>
-          <button
-            className="icon-button"
-            aria-label="프로젝트 이름 변경"
-            onClick={() => setRename(true)}
-          >
-            ···
-          </button>
+          <RowMenu
+            label="프로젝트 메뉴"
+            items={[
+              { label: '이름 변경', icon: <Pencil size={14} />, onSelect: () => setRename(true) },
+              {
+                label: '삭제',
+                icon: <Trash2 size={14} />,
+                danger: true,
+                onSelect: () => setRemove('project'),
+              },
+            ]}
+          />
         </div>
       </div>
       {project.loading ? (
@@ -434,9 +441,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 <p className="muted">아직 검토 기록이 없습니다.</p>
               )}
             </div>
-            <button className="text-button danger-action" onClick={() => setRemove('project')}>
-              프로젝트 삭제
-            </button>
           </aside>
           <section className="conversation">
             <div className="conversation-heading">
