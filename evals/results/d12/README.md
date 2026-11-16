@@ -31,13 +31,15 @@
 스크립트는 `scripts/smoke/http_smoke.py`이고 계정은 환경변수 `SMOKE_A_EMAIL` · `SMOKE_A_PASSWORD` · `SMOKE_B_EMAIL` · `SMOKE_B_PASSWORD`에서만 읽는다(명령줄 인자로 받지 않음, Secret Manager에 이 이름의 비밀은 없다: `gcloud secrets list` 이름 확인). 11-13 통과 기록과 같은 옵션이다([d10/deploy_574de79](../d10/deploy_574de79/README.md)). 저장소 루트(지금 `main`)에서:
 
 ```bash
-export SMOKE_A_EMAIL='<A 이메일>' SMOKE_B_EMAIL='<B 이메일>'; read -rs SMOKE_A_PASSWORD && export SMOKE_A_PASSWORD; read -rs SMOKE_B_PASSWORD && export SMOKE_B_PASSWORD
+export SMOKE_A_EMAIL='<A 이메일>' SMOKE_B_EMAIL='<B 이메일>'; read -rs SMOKE_A_PASSWORD && export SMOKE_A_PASSWORD; read -rs SMOKE_B_PASSWORD && export SMOKE_B_PASSWORD   # 같은 계정이 15분에 5번 틀리면 15분 잠긴다(SMOKE.md)
 uv run python scripts/smoke/http_smoke.py --base-url https://sojafit-api-559369539072.asia-northeast3.run.app --confirm-live --upload --pause-before-resume
 ```
 
 - `--pause-before-resume`은 4단계(조건 질문에서 멈춤) 뒤 Enter까지 기다린다. 그사이 서버 재시작(같은 이미지의 새 리비전, 11-13 절차)을 하려면 다른 터미널에서:
   `gcloud run deploy sojafit-api --project sojafit --region asia-northeast3 --image asia-northeast3-docker.pkg.dev/sojafit/cloud-run-source-deploy/sojafit-api@sha256:25aabdc847a7d6b0139083a092532d49af59926fbc5d3944b20cf6f6a7461366 --revision-suffix main-799ae636-rs --no-traffic --tag restart-799ae636`
   뒤 `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3 --to-revisions sojafit-api-main-799ae636-rs=100`. 재시작을 빼려면 `--pause-before-resume`을 지우고 Enter 없이 돈다.
+- 오늘 `799ae636`에서 확인한 것은 `--demo` 경로(키 없는 compose, 28/28 × 6)뿐이다. `--upload` · `--pause-before-resume` 경로는 오프라인 시험(`tests/api/test_http_smoke.py`)에 없고 11-13 `574de79`에서 쓴 옵션 그대로다.
+- 재시작 한 쌍(`gcloud run deploy` · `update-traffic`)은 선택이다. 운영 트래픽을 새 리비전으로 옮기는 일이라 조장 판단으로 한다.
 - 4 · 5단계가 실제 LLM을 부른다(11-13 어림 2 ~ 5회). 계정마다 하루 예약 토큰 한도가 있고 UTC 0시(09:00 KST)에 초기화된다(`scripts/smoke/SMOKE.md`).
 - 결과는 `scripts/results/smoke/smoke_<호스트>_<날짜>_<시각>.json`(비밀번호 · 이메일 · 답 글 없음). 통과 수와 이 파일을 GATES G1 · G4에 적는다.
 
@@ -102,7 +104,7 @@ CI 재생 검사(`.github/workflows/ci.yml` `eval-replay`와 같은 명령, 기�
 
 - Page Recall@5가 달라진 문항: R1 r1-042 · r1-086 · r1-098(1 → 0), r1-097(0 → 1). v2 draft30-m04(0.5 → 0.25), draft50-n04(0.667 → 0.333).
 - 두 측정 사이에 코퍼스(v1 → v4h)와 검색 코드(`backend/rag/retrieve.py` 최근 `6ca25d48` 11-16 21:08, `3204b898`)가 함께 바뀌었다. 어느 쪽 때문인지 나누지 않았다. "개선"이 아니라 지금 코드의 재측정이다.
-- 11-16 후보 수 실험(R1 84 Page Recall@5 0.8810, `run_retrieval_r1 cands`)은 다른 실행기다. 위 11-04 R1 84의 0.8810은 고르기용 · 확인용을 문항 수로 합친 값이다.
+- 11-16 후보 수 실험(`run_retrieval_r1 cands`, [2026-11-16-cand-pool](../retrieval/2026-11-16-cand-pool/README.md))의 기준 팔(n=50) 0.8810도 v1 코퍼스(저장소 밖 벡터 캐시, DB 없음)라 11-04 값과 같고, 오늘과 다른 문항도 같은 4개(r1-042 · r1-086 · r1-098 1 → 0, r1-097 0 → 1)다. 운영 DB는 11-11부터 v4h였으므로 11-16까지의 R1 검색 수치는 v1 코퍼스 기준이다. 위 11-04 R1 84의 0.8810은 고르기용 · 확인용을 문항 수로 합친 값이다.
 
 ### ③/④ Langfuse 점수
 

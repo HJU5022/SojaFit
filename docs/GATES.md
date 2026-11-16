@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-16(11-17 재측정 행은 [evals/results/d12/](../evals/results/d12/README.md), 대상 `main` `799ae636`)
-- 기준 커밋: `a0abece5`(`main`, PR #141 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-16 04:36 KST `sojafit-api-main-a0abece5-1116`). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다.
+- 기준 커밋: `a0abece5`(`main`, PR #141 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-17 05:03 KST 조회 `sojafit-api-main-799ae636-1117`, 그 전 11-16 04:36 KST `sojafit-api-main-a0abece5-1116`). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다.
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
 
