@@ -43,7 +43,7 @@ from psycopg import sql
 from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row, tuple_row
 from psycopg.types.json import Jsonb
-from psycopg_pool import ConnectionPool
+from psycopg_pool import ConnectionPool, PoolTimeout
 
 from backend.conversations import profile
 from backend.errors import ApiError
@@ -372,7 +372,7 @@ class Conversations:
         def charge(cost):
             """호출 한 번의 예약 USD · 토큰을 사용자 행과 서비스 행에 한 트랜잭션으로 더한다. 하나라도 넘으면 모두 되돌리고 429."""
             tokens, cost = budget.reserving_tokens, Decimal(str(cost))
-            with self.connection() as conn, conn.transaction():
+            def apply(conn):
                 # [왜] 사용자 행 → 서비스 행 순서로만 잠가 동시 호출끼리 교착하지 않는다. 예외가 나면 트랜잭션이 둘 다 되돌린다
                 usage = conn.execute('SELECT reserved_usd,reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=%s FOR UPDATE',
                                      (user, row['day'])).fetchone()
@@ -386,6 +386,14 @@ class Conversations:
                     raise ApiError(429, SERVICE_TOKENS_FULL, code='LIMIT_EXCEEDED')
                 conn.execute('UPDATE analysis_usage SET reserved_usd=reserved_usd+%s,reserved_tokens=reserved_tokens+%s WHERE user_id=%s AND day=%s',
                              (cost, tokens, user, row['day']))
+            # [왜] 호출마다 새 접속(TLS+인증)을 열면 예약 잠금 안에서 동시 호출이 줄을 섰다. 풀 연결을 빌린다(풀도 autocommit · dict_row · prepare_threshold=0이라 같은 의미)
+            # [주의] 풀이 짧은 시간 안에 연결을 못 주면 예전처럼 새 접속으로 한다. 풀 때문에 예전에 되던 예약이 실패하면 안 된다
+            try:
+                with self.pool.connection(timeout=0.5) as conn, conn.transaction():
+                    apply(conn)
+            except PoolTimeout:
+                with self.connection() as conn, conn.transaction():
+                    apply(conn)
         budget.on_reserve = charge
         return budget
 
