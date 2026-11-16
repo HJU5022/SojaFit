@@ -44,7 +44,7 @@ def frontend_client(built_frontend):
 
 # [왜] 백엔드가 보내는 주소(Google 콜백 /login?google=…, 메일 링크 /verify-email · /reset-password)와 화면 경로 전부가 index를 받아야 한다
 @pytest.mark.parametrize("path", ["/", "/login", "/login?google=finish", "/signup", "/password-reset", "/verify-email",
-                                  "/reset-password", "/privacy", "/app", "/app?project=1&thread=2", "/settings", "/approved",
+                                  "/reset-password", "/privacy", "/app", "/app?project=1&thread=2", "/projects", "/settings", "/approved",
                                   "/admin", "/admin/users", "/app/deep-link"])
 def test_react_route_returns_index(frontend_client, path):
     response = frontend_client.get(path)

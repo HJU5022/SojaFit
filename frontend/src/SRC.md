@@ -14,7 +14,7 @@
 ## 파일
 - `SRC.md` — 이 폴더 설명.
 - `main.tsx` — React 진입점·글꼴·스타일.
-- `App.tsx` — 경로 표와 세션 경계. 공개 경로(`/` · `/login` · `/signup` · `/password-reset` · `/privacy`, 메일 링크용 `/verify-email` · `/reset-password`)와 로그인 뒤 경로(`/app` · `/settings` · `/approved` · `/admin` · `/admin/users`).
+- `App.tsx` — 경로 표와 세션 경계. 공개 경로(`/` · `/login` · `/signup` · `/password-reset` · `/privacy`, 메일 링크용 `/verify-email` · `/reset-password`)와 로그인 뒤 경로(`/app`: 인자 없으면 새 대화 화면, `?project=&thread=`는 작업대 · `/projects` · `/settings` · `/approved` · `/admin` · `/admin/users`). 사이드바 맨 위는 "새 대화"이고 대화 목록·프로젝트 폴더는 `Conversations.tsx`가 그린다.
 - `api.ts` — 쿠키 API fetch 경계·오류(`ApiError`)·SSE 연결, 판정 5종·실행 상태의 화면 표기(`verdicts` · `statuses`).
 - `types.ts` — 공개 API 자료형.
 - `stream.ts` — SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트).
@@ -26,7 +26,8 @@
 - `Landing.tsx` — 공개 랜딩.
 - `Auth.tsx` — 로그인·가입·비밀번호 재설정·Google 계정 연결.
 - `Account.tsx` — 내 설정·승인 사례·관리자 계정·개인정보 안내.
-- `Projects.tsx` — 프로젝트 목록과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 받기 링크). `/api/demo-circuits`가 404(운영, `DEMO_MODE=0`)면 데모 회로 탭을 숨기고 넷리스트 업로드로 시작한다.
+- `Conversations.tsx` — 대화가 먼저인 입구. 사이드바 "대화"(모든 프로젝트의 대화, `GET /api/threads` 한 번, ⋯ 메뉴로 그 자리 이름 변경 `PATCH /api/threads/{id}` · 확인 뒤 삭제)와 "프로젝트"(같은 목록을 프로젝트별로 나눈 폴더), 새 대화 화면(넷리스트 첨부 → 파일 이름으로 `POST /api/projects/upload`, 기존 프로젝트 · 데모 회로 고르기, 409 중복이면 기존 열기 · 새로 만들기). 대화(thread)는 작업대의 첫 질문 때 생긴다.
+- `Projects.tsx` — 프로젝트 목록(`/projects`)과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 받기 링크). `/api/demo-circuits`가 404(운영, `DEMO_MODE=0`)면 데모 회로 탭을 숨기고 넷리스트 업로드로 시작한다.
 - `Workbench.tsx` — 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전.
 - `Reply.tsx` — 검토 결과 답과 조건 입력 카드.
 - `Schematic.tsx` — 원본 회로도 구역(작업대 왼쪽 열). 예제 프로젝트는 `/api/demo-circuits`의 저장된 도면(`/circuit-schematics/*.png`)과 출처·라이선스를, 모든 프로젝트는 버튼을 누를 때만 `GET /api/external-circuits/schematics`(프로젝트·회로 버전·대화 문맥을 보내 서버가 부품·핀 연결이 같다고 확인한 도면만 받음)로 웹 검색한다. 이미지는 같은 출처 경로만, 링크는 http(s)만 쓴다.

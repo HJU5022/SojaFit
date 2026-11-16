@@ -703,7 +703,6 @@ form {
   width: 100%;
   justify-content: flex-start;
   margin-bottom: 20px;
-  background: #f7f9fa;
 }
 .sidebar nav {
   display: grid;
@@ -735,27 +734,91 @@ form {
   color: var(--muted);
   font-size: 13px;
 }
-.sidebar-projects > a {
-  padding: 10px 11px;
+/* 사이드바 대화 줄(이름 + ⋯ 메뉴)과 프로젝트 폴더. 긴 이름은 한 줄로 자른다. */
+.sidebar-projects > p:not(:first-child) {
+  margin-top: 22px;
+}
+.thread-row {
   display: flex;
-  align-items: flex-start;
-  gap: 9px;
+  align-items: center;
+  border-radius: 5px;
+}
+.thread-row > a,
+.folder-items > a {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
   font-size: 13px;
-  line-height: 1.65;
   text-decoration: none;
   border-radius: 5px;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.sidebar-projects > a.selected {
+.thread-row.selected,
+.folder-items > a.selected {
   background: #dce5e9;
 }
-.circuit-dot {
-  width: 6px;
-  height: 6px;
-  border: 1px solid #7b8f99;
-  flex-shrink: 0;
-  margin-top: 7px;
-  border-radius: 1px;
+.thread-row form {
+  flex: 1;
+}
+.thread-row input {
+  min-height: 34px;
+  padding: 5px 9px;
+  font-size: 13px;
+}
+.row-menu {
+  position: relative;
+}
+.row-menu > button {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 4px;
+  color: var(--muted);
+}
+.row-menu [role='menu'] {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 5;
+  display: grid;
+  min-width: 130px;
+  padding: 4px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px #1f303826;
+}
+.row-menu [role='menu'] button {
+  justify-content: flex-start;
+  min-height: 34px;
+  border: 0;
+  font-size: 13px;
+}
+.folder-toggle {
+  width: 100%;
+  min-height: 34px;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+}
+.folder-toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-toggle[aria-expanded='true'] svg {
+  transform: rotate(90deg);
+}
+.folder-items {
+  display: grid;
+  padding-left: 18px;
 }
 .sidebar-bottom {
   padding-top: 15px;
@@ -843,6 +906,28 @@ form {
 .project-row > div:nth-child(2) {
   flex: 1;
   min-width: 0;
+}
+.new-chat {
+  max-width: 680px;
+}
+.new-chat .page-intro {
+  margin-bottom: 28px;
+}
+.new-chat form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 30px;
+}
+.new-chat form label {
+  flex: 1;
+  margin: 0;
+}
+.duplicate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
 .project-row h2 {
   font-size: 17px;
@@ -1965,9 +2050,6 @@ form {
     display: flex;
     align-items: center;
     justify-content: space-between;
-  }
-  .sidebar-projects > a {
-    font-size: 13px;
   }
   .sidebar-bottom > a {
     font-size: 14px;
