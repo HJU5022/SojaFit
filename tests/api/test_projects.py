@@ -24,7 +24,7 @@ def client(monkeypatch):
     ("GET", "/api/projects", None), ("POST", "/api/projects", {"demo_id": "breadboard_supply", "name": "회로"}),
     ("GET", "/api/projects/1", None), ("PATCH", "/api/projects/1", {"name": "수정"}),
     ("DELETE", "/api/projects/1", None), ("GET", "/api/demo-circuits", None),
-    ("POST", "/api/projects/1/netlist", None),
+    ("POST", "/api/projects/1/netlist", None), ("GET", "/api/projects/1/parts?circuit_version=1", None),
 ])
 def test_projects_require_session(client, method, path, body):
     response = client.request(method, path, json=body, headers={"origin": "http://testserver"})
@@ -636,5 +636,82 @@ def test_uploaded_schematic_is_owner_scoped_versioned_and_rendered_on_demand(cli
             assert client.delete(f"/api/projects/{pid}", headers=origin).status_code == 204
             with connect() as conn:
                 assert conn.execute("SELECT count(*) FROM circuit_schematics").fetchone()[0] == 0
+        finally:
+            admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+
+
+# 부품 점검표(#68) 시험 회로: 다이오드 둘(D1 · D10) · LED(D2) · 저항 둘 · IC. 순서를 섞어 자연 정렬도 본다
+PARTS_CIRCUIT = {"parts": [
+    {"ref": "U1", "value": "ATtiny85-20SU", "footprint": "Package_SO:SOIC-8", "symbol": "MCU_Microchip_ATtiny:ATtiny85-20SU"},
+    {"ref": "D10", "value": "BAT54", "footprint": "Package_TO_SOT_SMD:SOT-23", "symbol": "Device:D_Schottky"},
+    {"ref": "R2", "value": "1k", "footprint": "Resistor_SMD:R_0603", "symbol": "Device:R"},
+    {"ref": "D2", "value": "LED", "footprint": "LED_SMD:LED_0805", "symbol": "Device:LED"},
+    {"ref": "D1", "value": "1N4148", "footprint": "Diode_SMD:D_SOD-123", "symbol": "Device:D"},
+    {"ref": "R1", "value": "10k", "footprint": "Resistor_SMD:R_0603", "symbol": "Device:R"},
+], "nets": []}
+
+
+def test_parts_check_reuses_kind_support_and_corpus_rules_owner_only(client, monkeypatch):
+    """종류 · 개수는 part_kind, 판정 지원은 _require_supported_target, 데이터시트는 corpus_known 대조와 같다. 남의 프로젝트 · 없는 버전은 404."""
+    from fastapi import HTTPException
+    from backend.conversations.memory_service import _require_supported_target
+    from backend.projects.repository import ProjectRepository
+    from backend.rag import retrieve
+    url = os.getenv("TEST_AUTH_DATABASE_URL")
+    if not url:
+        pytest.skip("requires an isolated authentication test database")
+    looked = []
+    def corpus_known():  # [왜] 진짜는 검색 색인(DB 전체 청크)을 만든다. 사실 확인 도구(check_corpus)가 쓰는 소문자 품번 집합만 흉내 낸다
+        looked.append(1)
+        return {"1n4148"}, {"K2301"}
+    monkeypatch.setattr(retrieve, "corpus_known", corpus_known)
+    schema = "projects_parts_" + uuid4().hex
+    with psycopg.connect(url, autocommit=True) as admin:
+        admin.execute(sql.SQL("CREATE SCHEMA {} AUTHORIZATION CURRENT_USER").format(sql.Identifier(schema)))
+        connect = lambda: psycopg.connect(url, options=f"-csearch_path={schema}")
+        monkeypatch.setattr(auth, "connection", connect)
+        try:
+            with connect() as conn:
+                apply_service_schema(conn)
+                users = [row[0] for row in conn.execute("INSERT INTO users (login_id,password_hash,role) VALUES ('a@example.test','fake','user'),('b@example.test','fake','user') RETURNING id").fetchall()]
+                for token, user_id in zip(("owner-token", "other-token"), users):
+                    conn.execute("INSERT INTO auth_sessions (token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')", (auth.session_token_hash(token), user_id))
+            repo = ProjectRepository()
+            pid = repo.create_upload(users[0], "부품 회로", connections=PARTS_CIRCUIT, source_sha256="a" * 64, parser_version="test").id
+            empty = repo.create_empty(users[0], "빈 프로젝트").id
+            client.cookies.set(auth.COOKIE, "owner-token")
+            response = client.get(f"/api/projects/{pid}/parts?circuit_version=1")
+            assert response.status_code == 200, response.text
+            body = response.json()
+            rows = {row["ref"]: row for row in body["parts"]}
+            assert [row["ref"] for row in body["parts"]] == ["D1", "D2", "D10", "R1", "R2", "U1"]
+            assert {ref: (row["kind"], row["kind_name"]) for ref, row in rows.items()} == {
+                "D1": ("diode", "다이오드"), "D2": ("led", "LED"), "D10": ("diode", "다이오드"),
+                "R1": ("resistor", "저항"), "R2": ("resistor", "저항"), "U1": ("ic", "IC")}
+            assert body["counts"] == [{"kind": "diode", "name": "다이오드", "count": 2}, {"kind": "resistor", "name": "저항", "count": 2},
+                                      {"kind": "led", "name": "LED", "count": 1}, {"kind": "ic", "name": "IC", "count": 1}]
+            # 판정 지원은 판정이 대상을 받는지와 같다(서버 422를 그대로 따른다)
+            for ref, row in rows.items():
+                try:
+                    _require_supported_target(PARTS_CIRCUIT, ref)
+                    supported = True
+                except HTTPException:
+                    supported = False
+                assert row["judge_supported"] is supported, ref
+            assert {ref: row["judge_reason"] for ref, row in rows.items()} == {
+                "D1": None, "D10": None, "D2": "LED라서", "R1": "다이오드가 아니라서", "R2": "다이오드가 아니라서", "U1": "다이오드가 아니라서"}
+            assert {ref: row["datasheet"] for ref, row in rows.items()} == {
+                "D1": "1N4148", "D2": None, "D10": None, "R1": None, "R2": None, "U1": None}
+            assert rows["U1"] == {"ref": "U1", "value": "ATtiny85-20SU", "footprint": "Package_SO:SOIC-8", "symbol": "MCU_Microchip_ATtiny:ATtiny85-20SU",
+                            "kind": "ic", "kind_name": "IC", "judge_supported": False, "judge_reason": "다이오드가 아니라서", "datasheet": None}
+            # 회로 없는 v0은 빈 표이고 코퍼스를 읽지 않는다
+            calls = len(looked)
+            assert client.get(f"/api/projects/{empty}/parts?circuit_version=0").json() == {"circuit_version": 0, "parts": [], "counts": []}
+            assert len(looked) == calls
+            assert client.get(f"/api/projects/{pid}/parts?circuit_version=2").status_code == 404  # 없는 버전
+            assert client.get(f"/api/projects/{pid}/parts").status_code == 422  # 회로 버전은 꼭 준다
+            client.cookies.set(auth.COOKIE, "other-token")
+            denied = client.get(f"/api/projects/{pid}/parts?circuit_version=1")
+            assert denied.status_code == 404 and denied.json()["error"]["code"] == "NOT_FOUND"
         finally:
             admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))

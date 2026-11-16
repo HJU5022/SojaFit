@@ -125,6 +125,16 @@ class ProjectRepository:
             raise ProjectNotFound
         return row[0]
 
+    def circuit_connections(self, user_id: int, project_id: int, circuit_version: int) -> dict:
+        """그 사용자 프로젝트의 그 회로 버전 연결(부품 점검표, #68). v0은 빈 회로다. 없거나 남의 것이면 ProjectNotFound."""
+        with auth.connection() as conn:
+            row = conn.execute('SELECT v.connections FROM project_circuit_versions v JOIN projects p ON p.id=v.project_id '
+                               'WHERE p.user_id=%s AND v.project_id=%s AND v.version=%s',
+                               (user_id, project_id, circuit_version)).fetchone()
+        if row is None:
+            raise ProjectNotFound
+        return row[0]
+
     def create_demo(self, user_id: int, demo_id: str, name: str, *, allow_duplicate=False) -> Project:
         name = project_name(name)
         if demo_id not in DEMOS:
