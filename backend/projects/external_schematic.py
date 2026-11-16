@@ -1,6 +1,7 @@
-"""공개 완성 회로도의 검색, 15분 메모리 재사용, 서명된 시트 조회."""
+"""공개 완성 회로도의 검색, 15분 메모리 재사용, 서명된 시트 조회. 업로드한 회로도(#52)의 그림도 같은 메모리 캐시에 둔다."""
 import base64
 import binascii
+import hashlib
 import hmac
 import json
 import logging
@@ -800,3 +801,22 @@ def find_external_schematic(query: str, selected_url: str | None = None, compone
 def load_external_schematic_sheet(token: str, sheet_index: int, *, connections=None) -> bytes:
     _enabled()
     return _SERVICE.load(token, sheet_index, connections=connections)
+
+
+def _uploaded_key(source: str):
+    return ("upload", hashlib.sha256(source.encode("utf-8")).hexdigest())
+
+
+def remember_uploaded_sheets(source: str, sheets: tuple[bytes, ...]) -> None:
+    """업로드 때 렌더러가 함께 준 그림을 캐시에 넣어 첫 화면이 다시 그리지 않게 한다."""
+    _SERVICE.images.replace(_uploaded_key(source), sheets)
+
+
+def uploaded_schematic_sheet(source: str) -> bytes:
+    """업로드한 회로도 원문의 PNG. 15분 캐시에 없으면(만료 · 다른 인스턴스) 렌더러로 다시 그린다.
+
+    [주의] 소유 확인은 호출자가 원문을 DB에서 읽을 때 이미 했다. 키가 원문 해시라 같은 파일은 그림 하나를 같이 쓴다.
+    외부 검색이 아니므로 Exa 설정(_enabled)과 서명 키를 보지 않는다.
+    """
+    from backend.projects.schematic import export_uploaded_kicad
+    return _SERVICE.images.get(_uploaded_key(source), lambda: export_uploaded_kicad(source)[1])[0]

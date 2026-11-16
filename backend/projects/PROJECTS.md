@@ -28,11 +28,11 @@ GitHub 라이선스 metadata의 deprecated GPL 식별자는 canonical SPDX 표�
 | `catalog.py` | `catalog.json`의 안전한 ID·이름·저장소 내부 연결 경로를 검증하고 immutable catalog 제공(`load_catalog`, `catalog_by_id`) |
 | `models.py` | 목록 메타데이터 `ProjectSummary`와 정규화 연결 정보를 포함한 상세 `Project` DTO |
 | `netlist.py` | `normalize_netlist(bytes)`: KiCad export에서 연결 정보(parts/nets)만 제한된 메모리로 읽고 SHA-256과 함께 `NormalizedCircuit`으로 반환. `circuit_fingerprint`는 참조를 보존한 캐시/서명 식별, `same_circuit`는 확정 net·핀 역색인으로 후보를 좁히고 끝 숫자가 바뀐 부품의 전체 핀 연결 일대일 대응을 제한된 탐색으로 증명. 원본·경로·파일 핸들은 남기지 않음 |
-| `repository.py` | `ProjectRepository`: `create_empty`, `create_demo`, `create_upload`, `import_netlist`(새 버전·대화 원자 생성, 회로 없는 대화면 그 대화 유지), `list_owned`, `get_owned`(선택적 대화 버전), `rename_owned`, `delete_owned` |
+| `repository.py` | `ProjectRepository`: `create_empty`, `create_demo`, `create_upload`, `import_netlist`(새 버전·대화 원자 생성, 회로 없는 대화면 그 대화 유지. 두 업로드는 올린 회로도 원문을 같은 트랜잭션에서 그 버전에 저장, #52), `uploaded_schematic`(소유자 조건으로 회로도 원문), `list_owned`, `get_owned`(선택적 대화 버전), `rename_owned`, `delete_owned` |
 | `visuals.py` | `load_demo_visuals()`가 데모 catalog의 회로도 출처 정본(HTTPS, commit, 원본·배포 hash, PNG 경로)을 검증. 누락·추가 ID나 손상 자산은 예외. 외부 다운로드 없음 |
 | `external_circuit_search.py` | Exa 공개 웹 결과에서 회로도 이름과 파일을 확인하고 제조사·비공식 출처 후보를 정제. GitHub 저장소 후보 검색도 담당 |
-| `external_schematic.py` | 공개 원본 후보를 검증·변환·메모리 캐시하고 서명 token으로 시트 조회. 같은 검색의 다른 후보 선택을 검증 |
-| `schematic.py` | 제한된 KiCad CLI PDF·netlist export와 별도 renderer HTTP 경계. 프로젝트 원본은 반환된 실제 후보 연결을 API에서 전체 대조 |
+| `external_schematic.py` | 공개 원본 후보를 검증·변환·메모리 캐시하고 서명 token으로 시트 조회. 같은 검색의 다른 후보 선택을 검증. 올린 회로도 그림도 같은 캐시(원문 해시 키)에 두고 없으면 다시 그림(#52) |
+| `schematic.py` | 제한된 KiCad CLI PDF·netlist export와 별도 renderer HTTP 경계. 프로젝트 원본은 반환된 실제 후보 연결을 API에서 전체 대조. 올린 회로도는 `export_uploaded_kicad` → `/render {schematic}`이 (넷리스트, PNG 한 장)을 돌려줌(#52) |
 | `schematic_discovery.py` | GitHub tree에서 EDA 원본과 연결된 전체 회로도 자산 찾기 |
-| `schematic_render.py` | 공개 PDF/SVG/PNG의 해시·회로도 페이지를 확인하고 제한된 크기와 해상도의 PNG로 렌더링 |
+| `schematic_render.py` | 공개 PDF/SVG/PNG의 해시·회로도 페이지를 확인하고 제한된 크기와 해상도의 PNG로 렌더링. 올린 회로도 한 장의 사전 검사(`uploaded_schematic_text`: `(kicad_sch ...)` · 내장 라이브러리 · 하위 시트 없음)와 렌더러 쪽 변환(`render_uploaded_schematic`, #52) |
 | `schematic_source.py` | 검증된 외부 회로도 source DTO·서비스 오류와 호스트/인증별 제한 해제 시각. 제한 중 새 다운로드를 차단하며 최대128건의 프로세스 메모리만 사용 |

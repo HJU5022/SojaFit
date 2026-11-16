@@ -1,8 +1,12 @@
 """기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API. 삭제는 같은 UUID의 분석 기록 · checkpoint까지 지운다."""
+import hashlib
+from dataclasses import replace
+
 import psycopg
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
+from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 from starlette.formparsers import MultiPartException, MultiPartParser
 
@@ -132,14 +136,16 @@ class MemoryUploadParser(MultiPartParser):
 UPLOAD_BODY = {"requestBody": {"required": True, "content": {"multipart/form-data": {"schema": {
     "type": "object", "required": ["file", "name"], "additionalProperties": False,
     "properties": {"file": {"type": "string", "contentMediaType": "application/octet-stream",
-                            "description": "KiCad 넷리스트(.net, UTF-8, 5 MiB 이하)"},
+                            "description": "KiCad 넷리스트(.net) 또는 하위 시트 없는 회로도(.kicad_sch), UTF-8, 5 MiB 이하"},
                    "name": {"type": "string", "description": "프로젝트 이름(앞뒤 공백 제외 1~200자)"}}}}}}}
 
 
 @router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)], openapi_extra=UPLOAD_BODY)
 async def upload_project(request: Request, allow_duplicate: bool = False, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
-    normalized, name = await read_upload(request, with_name=True)
+    normalized, schematic, name = await read_upload(request, with_name=True)
     options = {"allow_duplicate": True} if allow_duplicate else {}
+    if schematic is not None:
+        options["schematic"] = schematic
     return repo.create_upload(user_id, name, connections=normalized.connections,
                               source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION, **options)
 
@@ -166,26 +172,64 @@ async def read_upload(request: Request, *, with_name: bool):
         expected = {"file", "name"} if with_name else {"file"}
         if len(items) != len(expected) or set(form) != expected or not isinstance(upload, UploadFile) or (with_name and not isinstance(name, str)):
             raise HTTPException(422, "파일과 프로젝트 이름만 입력해 주세요.")
-        extensions = (".net",) if with_name else (".net", ".txt")
+        extensions = (".net", ".kicad_sch") if with_name else (".net", ".txt", ".kicad_sch")
         if not upload.filename or not upload.filename.strip().lower().endswith(extensions):
-            raise HTTPException(400, ".net 확장자의 KiCad 넷리스트 파일이 필요합니다." if with_name else ".net 또는 .txt 확장자의 KiCad 넷리스트 파일이 필요합니다.")
+            raise HTTPException(400, ".net 넷리스트나 .kicad_sch 회로도 파일이 필요합니다." if with_name else ".net · .txt 넷리스트나 .kicad_sch 회로도 파일이 필요합니다.")
         name = project_name(name) if with_name else None
-        normalized = normalize_netlist(await upload.read(MAX_BYTES + 1))
-        await upload.close()  # 정규화 직후 원본 버퍼를 폐기하고 DB 경계를 지난다.
-        return normalized, name
+        raw = await upload.read(MAX_BYTES + 1)
+        await upload.close()  # 원본 버퍼를 폐기하고 DB 경계를 지난다. 넷리스트는 정규화한 연결만 남는다.
+        if upload.filename.strip().lower().endswith(".kicad_sch"):
+            return *(await read_schematic(raw, upload.filename)), name
+        return normalize_netlist(raw), None, name
     except (UploadLimit, NetlistTooLarge):
-        raise HTTPException(413, "넷리스트는 5 MiB 이하여야 합니다.") from None
+        raise HTTPException(413, "넷리스트·회로도는 5 MiB 이하여야 합니다.") from None
     except InvalidProject as exc:
         raise HTTPException(422, str(exc)) from None
     except InvalidNetlistEncoding:
         raise HTTPException(400, "UTF-8로 다시 저장하거나 KiCad에서 넷리스트(.net)로 다시 내보내 주세요.") from None
     except InvalidNetlist:
-        raise HTTPException(400, "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다.") from None
+        raise HTTPException(400, "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지 파일은 사용할 수 없습니다.") from None
     except MultiPartException:
         raise HTTPException(400, "파일을 다시 첨부해 주세요. 업로드 형식이 올바르지 않습니다.") from None
     finally:
         for upload in parser.uploads:
             await upload.close()
+
+
+SCHEMATIC_HIERARCHY = "하위 시트가 있는 회로도는 아직 지원하지 않아요. 넷리스트(.net)를 함께 올려 주세요."
+SCHEMATIC_INVALID = "회로도를 읽지 못했어요. KiCad 6 이상에서 저장한 .kicad_sch인지 확인해 주세요."
+SCHEMATIC_RENDERER_DOWN = "회로도 그림 서버에 연결하지 못했어요. 넷리스트(.net)로 올려 주세요."
+
+
+async def read_schematic(raw: bytes, filename: str):
+    """올린 .kicad_sch 한 장을 렌더러로 넷리스트와 그림으로 바꾼다(#52). 넷리스트는 .net 업로드와 같은 정규화를 거친다.
+
+    돌려주는 것: (정규화 회로, (파일 이름, 원문)). source_sha256은 회로도 파일의 해시다.
+    [왜] KiCad가 내보낸 넷리스트에는 임시 경로 · 시각이 들어가 같은 회로도도 매번 해시가 달라 409 중복을 못 잡는다.
+    """
+    from backend.projects.external_schematic import remember_uploaded_sheets
+    from backend.projects.schematic import InvalidKicadProject, KicadServiceUnavailable, export_uploaded_kicad
+    from backend.projects.schematic_render import HierarchicalSchematic, uploaded_schematic_text
+    from backend.projects.schematic_source import ExternalSchematicInvalidSource
+    if len(raw) > MAX_BYTES:
+        raise NetlistTooLarge("byte limit exceeded")
+    try:
+        text = uploaded_schematic_text(raw)  # 렌더러에 보내기 전에 (kicad_sch ...) 한 장인지 본다
+    except HierarchicalSchematic:
+        raise HTTPException(422, SCHEMATIC_HIERARCHY) from None
+    except ExternalSchematicInvalidSource:
+        raise HTTPException(422, SCHEMATIC_INVALID) from None
+    try:
+        # [주의] 렌더러 호출(최대 90초)은 동기 httpx라 이벤트 루프를 막지 않게 스레드에서 부른다
+        netlist, sheets = await run_in_threadpool(export_uploaded_kicad, text)
+        normalized = normalize_netlist(netlist)
+    except (InvalidKicadProject, InvalidNetlist):
+        raise HTTPException(422, SCHEMATIC_INVALID) from None
+    except KicadServiceUnavailable:
+        raise HTTPException(503, SCHEMATIC_RENDERER_DOWN) from None
+    remember_uploaded_sheets(text, sheets)
+    name = filename.replace("\\", "/").rsplit("/", 1)[-1].strip()[-255:]
+    return replace(normalized, source_sha256=hashlib.sha256(raw).hexdigest()), (name, text)
 
 
 class ImportNetlistResponse(BaseModel):
@@ -196,17 +240,39 @@ class ImportNetlistResponse(BaseModel):
 NETLIST_BODY = {"requestBody": {"required": True, "content": {"multipart/form-data": {"schema": {
     "type": "object", "required": ["file"], "additionalProperties": False,
     "properties": {"file": {"type": "string", "contentMediaType": "application/octet-stream",
-                            "description": "UTF-8 KiCad 넷리스트(.net 또는 .txt, 5 MiB 이하)"}}}}}}}
+                            "description": "UTF-8 KiCad 넷리스트(.net 또는 .txt) 또는 하위 시트 없는 회로도(.kicad_sch), 5 MiB 이하"}}}}}}}
 
 
 @router.post("/projects/{project_id}/netlist", status_code=201, response_model=ImportNetlistResponse,
              dependencies=[Depends(auth.check_origin)], openapi_extra=NETLIST_BODY)
 async def import_netlist(project_id: int, request: Request, thread_id: UUID | None = None, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     """thread_id: 회로 없이 시작한 그 대화에 회로를 붙여 같은 대화를 이어 간다(조건이 안 맞으면 지금처럼 새 대화, SPEC 4절)."""
-    normalized, _ = await read_upload(request, with_name=False)
+    normalized, schematic, _ = await read_upload(request, with_name=False)
+    options = {"schematic": schematic} if schematic is not None else {}
     project, thread_id = repo.import_netlist(user_id, project_id, connections=normalized.connections,
-                                           source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION, thread_id=thread_id)
+                                           source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION, thread_id=thread_id, **options)
     return {"project": project, "thread_id": thread_id}
+
+
+@router.get("/projects/{project_id}/schematic", response_class=Response,
+            responses={200: {"content": {"image/png": {"schema": {"type": "string", "format": "binary"}}}}})
+def uploaded_schematic(project_id: int, circuit_version: int = Query(ge=1), user_id: int = Depends(auth.current_user_id),
+                       repo: ProjectRepository = Depends(repository)):
+    """그 회로 버전에 올린 회로도(.kicad_sch)의 그림(#52). 소유자만 받고 없으면 404.
+
+    [왜] 외부 회로도처럼 서명한 주소를 쓰지 않는다. 원문이 DB에 있어 요청마다 세션 소유자로 다시 확인하면 된다.
+    """
+    from backend.projects.external_schematic import uploaded_schematic_sheet
+    from backend.projects.schematic import InvalidKicadProject, KicadServiceUnavailable
+    source = repo.uploaded_schematic(user_id, project_id, circuit_version)
+    try:
+        png = uploaded_schematic_sheet(source)
+    except InvalidKicadProject:
+        raise HTTPException(404, "업로드한 회로도를 그리지 못했습니다.") from None
+    except KicadServiceUnavailable:
+        raise HTTPException(503, "회로도 그림 서버에 연결하지 못했어요. 잠시 뒤 다시 열어 주세요.") from None
+    return Response(content=png, media_type="image/png", headers={
+        "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline"})
 
 
 @router.get("/projects/{project_id}", response_model=Project)

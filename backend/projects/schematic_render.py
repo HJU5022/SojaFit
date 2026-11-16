@@ -328,6 +328,86 @@ def _kicad_nodes(text):
         raise _invalid()
 
 
+def _sheet_files(raw: bytes) -> list[str]:
+    """회로도 한 장의 직접 객체를 검사하고 하위 시트 파일 이름을 돌려준다. 놓인 부품은 내장 라이브러리에 있어야 한다."""
+    # KiCad permits literal newlines in quoted descriptions. Normalize only
+    # the inspection copy for the shared JSON-string S-expression reader.
+    inspection = re.sub(r'"(?:\\.|[^"\\])*"',
+                        lambda match: json.dumps(json.loads(match[0], strict=False)),
+                        raw.decode("utf-8-sig"))
+    libraries, placed, children = set(), [], []
+    for tag, node in _kicad_nodes(inspection):
+        if tag == "library":
+            if len(node) < 2 or not isinstance(node[1], str):
+                raise _invalid()
+            libraries.add(node[1])
+        elif tag == "symbol":
+            symbol = node
+            ids = [n[1] for n in symbol if isinstance(n, list) and n[:1] == ["lib_id"] and len(n) == 2]
+            aliases = [n[1] for n in symbol if isinstance(n, list) and n[:1] == ["lib_name"] and len(n) == 2]
+            if (len(ids) != 1 or len(aliases) > 1
+                    or not isinstance((aliases or ids)[0], str)):
+                raise _invalid()
+            placed.append((aliases or ids)[0])
+        elif tag == "sheet":
+            sheet = node
+            found = [p[2] for p in sheet if isinstance(p, list) and len(p) >= 3
+                     and p[0] == "property" and str(p[1]).lower().replace(" ", "") == "sheetfile"]
+            if len(found) != 1 or not isinstance(found[0], str) or any(c in found[0] for c in "$%{}~"):
+                raise _invalid()
+            children.append(found[0])
+    if any(lib not in libraries for lib in placed):
+        raise _invalid()
+    return children
+
+
+class HierarchicalSchematic(ValueError):
+    """하위 시트를 가리키는 업로드 회로도. 아직 받지 않는다(#52)."""
+
+
+def uploaded_schematic_text(raw: bytes) -> str:
+    """사용자가 올린 .kicad_sch 한 장을 KiCad에 넘기기 전에 검사한다: UTF-8 · (kicad_sch ...) 한 덩어리 · 하위 시트 없음.
+
+    형식이 틀리면 ExternalSchematicInvalidSource, 하위 시트가 있으면 HierarchicalSchematic.
+    """
+    try:
+        text = raw.decode("utf-8")
+        if "\x00" in text:
+            raise _invalid()
+        children = _sheet_files(raw)
+    except (UnicodeDecodeError, ValueError):  # json 정규화 실패도 ValueError
+        raise _invalid() from None
+    if children:
+        raise HierarchicalSchematic()
+    return text
+
+
+def render_uploaded_schematic(text: str, *, kicad_export: Callable = run_kicad_pdf,
+                              kicad_netlist_export: Callable = run_kicad_netlist) -> tuple[bytes, tuple[bytes, ...]]:
+    """업로드한 회로도 한 장에서 (KiCad 넷리스트 원문, PNG 시트 1장)을 만든다. 파일 이름은 고정이라 사용자 경로가 명령에 들어가지 않는다."""
+    from backend.projects.netlist import MAX_BYTES
+
+    uploaded_schematic_text(text.encode("utf-8"))  # 렌더러도 API와 같은 검사를 다시 한다
+    with tempfile.TemporaryDirectory(prefix="sojafit-upload-") as temporary:
+        work = Path(temporary)
+        (work / "source").mkdir()
+        root = work / "source" / "upload.kicad_sch"
+        root.write_text(text, encoding="utf-8")
+        # [주의] 두 변환은 출력 폴더를 따로 쓴다. _run_export가 그 폴더에 home을 만들어 같은 폴더면 두 번째가 실패한다
+        (work / "netlist").mkdir()
+        netlist = kicad_netlist_export(root, work / "netlist")
+        if not netlist.is_file() or netlist.stat().st_size > MAX_BYTES:
+            raise _invalid()
+        (work / "export").mkdir()
+        _, pdf = kicad_export(root, work / "export")
+        if not pdf.is_file():
+            raise _invalid()
+        sheets = _sheets("pdf", pdf, work / "pages")
+        if len(sheets) != 1:
+            raise _invalid()
+        return netlist.read_bytes(), sheets
+
+
 def _selected_kicad(source: VerifiedSchematicSource, fetch: Callable[[str], bytes], dest: Path) -> tuple[Path, int]:
     """Fetch only the already inspected KiCad hierarchy, never the whole repository archive."""
     paths = tuple(dict.fromkeys(source.asset_paths))
@@ -344,35 +424,7 @@ def _selected_kicad(source: VerifiedSchematicSource, fetch: Callable[[str], byte
         if len(raw) > MAX_IMAGE_BYTES or total > MAX_ARCHIVE_BYTES:
             raise _invalid()
         contents[path] = raw
-        # KiCad permits literal newlines in quoted descriptions. Normalize only
-        # the inspection copy for the shared JSON-string S-expression reader.
-        inspection = re.sub(r'"(?:\\.|[^"\\])*"',
-                            lambda match: json.dumps(json.loads(match[0], strict=False)),
-                            raw.decode("utf-8-sig"))
-        libraries, placed, children = set(), [], []
-        for tag, node in _kicad_nodes(inspection):
-            if tag == "library":
-                if len(node) < 2 or not isinstance(node[1], str):
-                    raise _invalid()
-                libraries.add(node[1])
-            elif tag == "symbol":
-                symbol = node
-                ids = [n[1] for n in symbol if isinstance(n, list) and n[:1] == ["lib_id"] and len(n) == 2]
-                aliases = [n[1] for n in symbol if isinstance(n, list) and n[:1] == ["lib_name"] and len(n) == 2]
-                if (len(ids) != 1 or len(aliases) > 1
-                        or not isinstance((aliases or ids)[0], str)):
-                    raise _invalid()
-                placed.append((aliases or ids)[0])
-            elif tag == "sheet":
-                sheet = node
-                found = [p[2] for p in sheet if isinstance(p, list) and len(p) >= 3
-                         and p[0] == "property" and str(p[1]).lower().replace(" ", "") == "sheetfile"]
-                if len(found) != 1 or not isinstance(found[0], str) or any(c in found[0] for c in "$%{}~"):
-                    raise _invalid()
-                children.append(path.parent / _path(found[0]))
-        if any(lib not in libraries for lib in placed):
-            raise _invalid()
-        files[path] = children
+        files[path] = [path.parent / _path(name) for name in _sheet_files(raw)]
     root = _path(source.root_schematic)
     count = 0
     seen = set()

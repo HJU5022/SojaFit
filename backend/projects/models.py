@@ -23,3 +23,5 @@ class ProjectSummary(BaseModel):
 
 class Project(ProjectSummary):
     connections: dict
+    schematic_file: str | None = None
+    """이 회로 버전에 올린 회로도(.kicad_sch) 파일 이름. 없으면 None이고 화면은 웹 검색으로 원본 회로도를 찾는다(#52)."""

@@ -150,8 +150,8 @@ def test_chat_netlist_uses_bounded_parser_and_creates_new_thread(upload_boundary
 
 @pytest.mark.parametrize("path,data,expected", [
     ("/api/projects/upload", b"\xff", "UTF-8로 다시 저장하거나 KiCad에서 넷리스트(.net)로 다시 내보내 주세요."),
-    ("/api/projects/upload", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다."),
-    ("/api/projects/5/netlist", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다."),
+    ("/api/projects/upload", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지 파일은 사용할 수 없습니다."),
+    ("/api/projects/5/netlist", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지 파일은 사용할 수 없습니다."),
 ])
 def test_netlist_failure_messages_distinguish_encoding_and_syntax(upload_boundary, path, data, expected):
     client, payloads, uploads, _ = upload_boundary
@@ -384,7 +384,7 @@ def test_upload_requires_nonempty_net_filename_and_closes(upload_boundary, filen
                            headers={"origin": "http://testserver", "content-type": "multipart/form-data; boundary=boundary"})
     assert response.status_code == 400
     assert response.headers["X-Request-ID"]
-    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": ".net 확장자의 KiCad 넷리스트 파일이 필요합니다.",
+    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": ".net 넷리스트나 .kicad_sch 회로도 파일이 필요합니다.",
                                           "request_id": response.headers["X-Request-ID"]}}
     assert payloads == [] and reads == []
     assert uploads and all(upload.file.closed for upload in uploads)
