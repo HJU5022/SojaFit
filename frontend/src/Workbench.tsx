@@ -373,6 +373,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     setPendingQuestion('');
     setProgress(null);
     setSelected(null);
+    // [왜] 작업대는 프로젝트마다 한 번 그려져(App의 key) 대화를 옮겨도 남는다. 대상은 대화의 것이라 비우고, 대화가 있으면 불러온 target_ref로 다시 정한다(#53)
+    setTarget('');
     setLoading(!!threadId);
     runId.current = null;
     if (threadId)
