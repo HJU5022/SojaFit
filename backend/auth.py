@@ -5,12 +5,13 @@ auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_
 (auth_login_ip_attempts), 세션은 절대 8시간·유휴 2시간이다.
 이메일 가입은 소유 확인 뒤 user 계정만 만들며, 인증 완료 시 IP당 UTC 하루 3회 한도를 적용한다(auth_email.py). 직접 signup 헬퍼는 내부/기존 회귀용이다.
 Google 신원 확인 뒤 사용자가 명시적으로 일반 가입하거나 기존 계정의 비밀번호를 재확인한다. 관리자 최초 연결은 승인 CLI를 거친다.
-호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
+호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 CLI(`python -m backend.auth`: 계정 생성, `--hash-only` 해시만 출력, `--delete-user-id` · `--revoke-google-user-id` · `--disable-admin-id` · `--approve-google`, docs/specs/google-admin-login.md).
 하지 않는 일: HTTP 라우트·쿠키 설정(backend/api/auth.py 등 backend/api/), 테이블 생성(db/*.sql), 메일 전송(services/mail.py)·이메일 토큰 처리(auth_email.py),
-회로·대화·기억·견적의 사용자별 권한 검증(해당 기능 구현 후 추가).
+회로·대화·기억·견적의 사용자별 권한 검증(각 저장소가 `user_id` 조건으로 한다).
 출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
-DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단).
+DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단),
+GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET(Google 로그인을 켰을 때).
 테이블 정의는 db/020_service_baseline.sql과 추가 인증 SQL 027·029·030, 관리자 작업 이력 034를 따른다. 옛 서비스 증분 SQL은 db/legacy/ 이력이다.
 """
 import getpass
@@ -410,7 +411,7 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
 
     Args:
         email: 가입 이메일(공백 제거·소문자로 맞춘다).
-        password: 평문 비밀번호(길이 검증은 호출자 backend/api/auth.py가 한다).
+        password: 평문 비밀번호(길이 검증은 호출자가 한다. API의 /signup은 이 함수 대신 auth_email.py를 거치고, 이 함수는 시험 헬퍼다).
         ip: client_ip()가 돌려준 값. 원문 대신 키 해시만 저장한다.
     Returns:
         (세션 토큰, user_id). 이미 있는 이메일이면 None(호출자가 409).
