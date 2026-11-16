@@ -1,7 +1,13 @@
 /** 공개 프로젝트의 components·nets를 빠짐없이 표시하는지 검사한다. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { partsOf, pinsOf, projectNameFromQuestion, unsupportedPartReason } from '../src/circuit.ts';
+import {
+  duplicateAction,
+  partsOf,
+  pinsOf,
+  projectNameFromQuestion,
+  unsupportedPartReason,
+} from '../src/circuit.ts';
 test('공개 components 배열에서 D1과 핀 이름을 보존한다', () => {
   const p: any = {
     connections: {
@@ -76,4 +82,18 @@ test('회로 없이 보낸 질문의 프로젝트 이름은 겹친 공백을 줄
   assert.equal(projectNameFromQuestion('  1N4148\n역전압   몇 V야? '), '1N4148 역전압 몇 V야?');
   assert.equal(projectNameFromQuestion('가'.repeat(40)), '가'.repeat(30));
   assert.equal(projectNameFromQuestion('   '), '새 대화');
+});
+test('업로드 409 중복: 같은 넷리스트면 그 프로젝트로 잇고, 이름만 겹치면 새로 만든다(#48)', () => {
+  const nameOnly = { id: 9, name: 'attiny85-time-switch', matches: ['name'] };
+  assert.deepEqual(duplicateAction([nameOnly]), { action: 'create' });
+  // 서버가 최근 순으로 주므로 넷리스트가 같은 첫 프로젝트를 고른다
+  assert.deepEqual(
+    duplicateAction([
+      nameOnly,
+      { id: 5, name: '샘플', matches: ['netlist'] },
+      { id: 3, name: '옛 샘플', matches: ['name', 'netlist'] },
+    ]),
+    { action: 'continue', projectId: 5, name: '샘플' },
+  );
+  assert.deepEqual(duplicateAction([]), { action: 'create' });
 });

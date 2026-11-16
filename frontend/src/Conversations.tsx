@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { projectNameFromQuestion } from './circuit';
+import { duplicateAction, projectNameFromQuestion } from './circuit';
 import { isSendKey } from './display';
 import { ErrorBox, Loading, Modal, navigate, RowMenu, useNetlistAttach, useResource } from './ui';
 import { NewProject, refreshNavigation } from './Projects';
@@ -307,7 +307,7 @@ export function NewConversation() {
     [error, setError] = useState<Error | null>(null);
   // [왜] 새 대화 업로드(POST /api/projects/upload)는 .net만 받는다. 작업대 첨부는 .txt도 받는다
   const attach = useNetlistAttach('.net', setAttachment);
-  async function start(allowDuplicate = false) {
+  async function start() {
     setBusy(true);
     setError(null);
     try {
@@ -324,11 +324,21 @@ export function NewConversation() {
             .slice(0, 200) || '새 회로',
         );
         body.set('file', attachment);
-        project = await api(
-          '/projects/upload' + (allowDuplicate ? '?allow_duplicate=true' : ''),
-          'POST',
-          body,
-        );
+        try {
+          project = await api('/projects/upload', 'POST', body);
+        } catch (e) {
+          // 409 중복(#48): 같은 넷리스트면 그 프로젝트로 잇고, 이름만 겹치면 한 번만 allow_duplicate로 다시 만든다. 그 밖의 오류는 그대로 보인다
+          const duplicates = e instanceof ApiError && e.status === 409 && e.details?.duplicates;
+          if (!duplicates?.length) throw e;
+          const next = duplicateAction(duplicates);
+          if (next.action === 'continue')
+            return await openWithQuestion(
+              next.projectId,
+              question,
+              `이미 있는 회로라 그 프로젝트(${next.name})에서 이어서 검토해요`,
+            );
+          project = await api('/projects/upload?allow_duplicate=true', 'POST', body);
+        }
       } else
         // [왜] 회로 없는 대화도 프로젝트 하나에 담는다(대화는 프로젝트에 속한다). 질문에서 지은 이름은 겹쳐도 되니 409를 묻지 않는다
         project = await api('/projects?allow_duplicate=true', 'POST', {
@@ -353,9 +363,6 @@ export function NewConversation() {
     }
   }
   const disabled = busy || (!question.trim() && !attachment);
-  // 409: 같은 이름이나 같은 회로의 프로젝트가 있다(넷리스트 첨부). 그 회로로 이어 갈지, 그래도 새로 만들지 고르게 한다
-  const duplicates: { id: number; name: string }[] =
-    error instanceof ApiError && error.status === 409 ? (error.details?.duplicates ?? []) : [];
   return (
     <div className="page-content new-chat" {...attach.dropZone}>
       {/* [왜] 채팅 앱처럼 안내는 가운데, 입력창은 아래에 둔다(#41). 회로가 붙기 전이라 특정 부품을 가정한 예시 질문은 두지 않는다(#45) */}
@@ -377,33 +384,7 @@ export function NewConversation() {
         </p>
       </div>
       {busy && <Loading label="대화를 준비하는 중" />}
-      <ErrorBox error={duplicates.length ? null : error} />
-      {duplicates.length > 0 && (
-        <div className="notice" role="alert">
-          <p>같은 이름이나 같은 회로의 프로젝트가 있습니다.</p>
-          <div className="duplicate-actions">
-            {duplicates.map((d) => (
-              <button
-                key={d.id}
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  setBusy(true);
-                  openWithQuestion(d.id, question).catch((e) => {
-                    setError(e as Error);
-                    setBusy(false);
-                  });
-                }}
-              >
-                {d.name} 프로젝트로 계속
-              </button>
-            ))}
-            <button type="button" disabled={busy} onClick={() => start(true)}>
-              새 프로젝트로 만들기
-            </button>
-          </div>
-        </div>
-      )}
+      <ErrorBox error={error} />
       <form
         className="composer"
         onSubmit={(e) => {

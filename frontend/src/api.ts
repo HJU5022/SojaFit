@@ -20,7 +20,8 @@ async function checked(response: Response) {
     body.error?.message ?? '요청을 처리하지 못했습니다.',
     response.status,
     body.error?.code,
-    body.error?.details,
+    // [왜] 서버 공통 오류는 details를 error 밖 맨 위에 둔다(backend/main.py error_response). error 안에서 읽으면 409 중복 목록이 늘 비었다(#48)
+    body.details,
   );
 }
 export async function api<T = any>(path: string, method = 'GET', body?: any): Promise<T> {

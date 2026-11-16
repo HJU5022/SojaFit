@@ -1061,8 +1061,7 @@ form {
   max-width: 760px;
   margin-inline: auto;
 }
-.new-chat > .error-box,
-.new-chat > .notice {
+.new-chat > .error-box {
   margin-bottom: 12px;
 }
 .new-chat-guide {
@@ -1108,12 +1107,6 @@ form {
 }
 .target-value {
   font-weight: 600;
-}
-.duplicate-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
 }
 .workbench-header {
   height: 92px;

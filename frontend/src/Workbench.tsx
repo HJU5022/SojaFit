@@ -57,8 +57,11 @@ const freshResult = (): Result => ({
 const pendingStart: {
   current: { tid: string; question: string; conditions: string; target: string } | null;
 } = { current: null };
-/** 프로젝트에 새 대화를 만들어 질문을 첫 질문으로 보낸다. 질문이 비면 그 회로의 작업대만 연다(빈 대화 화면이 무엇을 검토할지 묻는다). */
-export async function openWithQuestion(projectId: number | string, question: string) {
+// [왜] 새 대화 화면은 옮기면 사라지므로 작업대가 열릴 때 한 번 보일 한 줄 안내(#48 이미 있는 회로로 이어 가기)도 모듈에 둔다
+const startNotice: { current: { project: string; text: string } | null } = { current: null };
+/** 프로젝트에 새 대화를 만들어 질문을 첫 질문으로 보낸다. 질문이 비면 그 회로의 작업대만 연다(빈 대화 화면이 무엇을 검토할지 묻는다). notice는 열린 작업대 대화 위에 한 번 보인다. */
+export async function openWithQuestion(projectId: number | string, question: string, notice = '') {
+  startNotice.current = notice ? { project: String(projectId), text: notice } : null;
   if (!question.trim()) return navigate('/app?project=' + projectId);
   const created = await api<{ id: string }>(`/projects/${projectId}/threads`, 'POST');
   pendingStart.current = { tid: created.id, question, conditions: '', target: '' };
@@ -332,7 +335,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [showQuotes, setShowQuotes] = useState(false),
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
     [rename, setRename] = useState(false),
-    [reload, setReload] = useState(0);
+    [reload, setReload] = useState(0),
+    [notice, setNotice] = useState('');
   const controller = useRef<AbortController | null>(null),
     runId = useRef<string | null>(null),
     scope = useRef(0),
@@ -345,6 +349,11 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       const chosen = parts.find((p) => p.ref === target);
       return chosen ? unsupportedPartReason(chosen) : '';
     })();
+  useEffect(() => {
+    if (startNotice.current?.project !== projectId) return;
+    setNotice(startNotice.current.text);
+    startNotice.current = null;
+  }, [projectId]);
   useEffect(() => {
     let live = true;
     scope.current++;
@@ -739,6 +748,11 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               )}
             </div>
             <div className="conversation-scroll">
+              {notice && (
+                <div className="notice" role="status">
+                  <p>{notice}</p>
+                </div>
+              )}
               <ErrorBox
                 error={error}
                 retry={() => (threadId ? setReload((v) => v + 1) : project.reload())}

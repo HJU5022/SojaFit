@@ -62,3 +62,10 @@ export const NEEDS_CIRCUIT = '이 질문은 회로가 있어야 검토할 수 �
 export function projectNameFromQuestion(question: string) {
   return question.replace(/\s+/g, ' ').trim().slice(0, 30).trim() || '새 대화';
 }
+/** 넷리스트 업로드 409의 중복 후보(SPEC 4절 `details.duplicates`, 서버가 최근 순)로 할 일을 정한다(#48). 같은 넷리스트가 있으면 그 프로젝트로 이어 가고, 이름만 겹치면 새로 만든다. */
+export function duplicateAction(
+  duplicates: { id: number; name: string; matches: string[] }[],
+): { action: 'continue'; projectId: number; name: string } | { action: 'create' } {
+  const same = duplicates.find((d) => d.matches.includes('netlist'));
+  return same ? { action: 'continue', projectId: same.id, name: same.name } : { action: 'create' };
+}
