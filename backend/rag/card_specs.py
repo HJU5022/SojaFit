@@ -68,7 +68,7 @@ def make_specs(*, load_cards, read, chat, doc_meta, part_docs, shared=None):
     docs, meta = {}, {}
 
     def _load(keys):
-        new = [k for k in keys if k not in docs]
+        new = list(dict.fromkeys(k for k in keys if k not in docs))
         if new:
             docs.update(load_cards(new))
             meta.update(doc_meta(new))
@@ -99,11 +99,13 @@ def make_specs(*, load_cards, read, chat, doc_meta, part_docs, shared=None):
         """품번들의 codes(기본: 숫자 코드 전부)를 문서별로 묶어 동시에 읽어 둔다. 이미 읽은 코드는 다시 읽지 않는다."""
         codes = [c for c in (codes or NUMERIC) if c in SI]
         todo = {}  # 문서 키 → {품번: 더 읽을 코드}
-        for p in dict.fromkeys(x for x in parts if x):
+        plist = list(dict.fromkeys(x for x in parts if x))
+        part_keys = {p: part_docs(p) for p in plist}
+        _load([k for ks in part_keys.values() for k in ks])  # [왜] 품번마다 적재하면 DB 왕복이 품번 수만큼이다. 문서를 한 번에 적재한다
+        for p in plist:
             entry = cache.setdefault(p.upper(), {'codes': set(), 'rows': None})
             missing = [c for c in codes if c not in entry['codes']]
-            keys = part_docs(p)
-            _load(keys)
+            keys = part_keys[p]
             if entry['rows'] is None:  # 처음 보는 품번: 글로 정하는 행(PACKAGE · AEC)을 먼저 붙인다(LLM 없음)
                 entry['rows'] = [r for k in keys if k in docs for r in text_rows(p, docs[k], (meta.get(k) or {}).get('category'))]
             for k in keys:
@@ -153,10 +155,10 @@ def part_docs_index():
     index = None
 
     def load():
-        import psycopg
+        from backend.rag import db_pool
         from backend.rag.retrieve import COVER
         built = {}
-        with psycopg.connect(os.environ['DATABASE_URL']) as conn:
+        with db_pool.connection() as conn:  # [왜] 검색과 같은 풀. 읽기만 한다
             result = conn.execute('SELECT d.document_key, c.chunk_index, c.table_name, c.content FROM document_chunks c JOIN source_documents d'
                                   " ON d.id = c.document_id WHERE c.chunk_index = 0 OR c.table_name ILIKE '%ORDER%'"
                                   ' ORDER BY d.document_key, c.chunk_index')
@@ -195,7 +197,7 @@ def part_docs_index():
 def default_specs(chat=None):
     """실제 DB · 카드 읽기 · node_chat을 묶은 specs. 카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만 부른다.
     chat을 주면 node_chat 대신 쓴다(데모 응답 기록 · 재생, `backend/services/demo.py`)."""
-    from backend.rag.card_find import SHARED_READS, doc_meta, load_cards
+    from backend.rag.card_find import SHARED_READS, cached_doc_meta as doc_meta, cached_load_cards as load_cards
     from backend.rag.card_read import read_values
     from backend.services.llm import node_chat
     return make_specs(load_cards=load_cards, read=read_values, chat=chat or node_chat, doc_meta=doc_meta, part_docs=part_docs_index(),

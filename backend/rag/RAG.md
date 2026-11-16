@@ -13,6 +13,7 @@
 |---|---|
 | `RAG.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
+| `db_pool.py` | `connection()`: DSN별 psycopg 연결 풀(pgvector 등록, commit/rollback 뒤 반납). `retrieve.py`가 씀 |
 | `retrieve.py` | `retrieve(question, *, k=5, parts=None, method='hybrid')`: dense + BM25를 RRF로 합치고 `rerank-3`로 다시 세움. 표지 청크 제외, `parts` 필터, `corpus_known`. `DEMO_MODE=1`이면 BM25만 |
 | `spec_lookup.py` | 사양 코드 목록 `CODES`, 조건 자리 기본값 `DEFAULT_SLOT`, 삽입형 패키지 이름 `THT_PACKAGES`. DB를 읽지 않음 |
 | `card_read.py` | 카드 → 값·원문 인용. `pipeline/specs.py` 규칙(`read_card`)으로 먼저 읽고, 원하는 코드 값을 못 받았거나 검토 표시가 난 카드만 LLM(`card_read` 프롬프트)으로 읽음. 두 길 모두 같은 코드 확인(카드 번호·인용·숫자·단위 차원·품번)을 거침 |

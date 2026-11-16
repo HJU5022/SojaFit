@@ -299,3 +299,82 @@ def test_category_find_picks_by_code_and_calls_llm_only_when_code_cannot():
     assert calls == [] and w.calls['load'][-1] == ['a'] and w.calls['retrieve'] == []
     make([ov('a', 'Schottky Rectifier'), ov('b', 'ESD Rectifier')])([{'code': 'VRRM', 'gte': 40}], 'schottky')
     assert calls == ['card_pick'] and w.calls['load'][-1] == ['b']
+
+
+def test_concurrent_gathers_for_two_packages_read_each_document_once():
+    """패키지만 다른 찾기 둘이 동시에 같은 문서를 읽으려 하면 문서마다 읽기는 한 번이고, 둘 다 같은 행을 받는다(in-flight 공유)."""
+    import threading
+    docs = {k: doc(k, [k.upper()]) for k in 'ab'}
+    w = World(docs, rows=[row('A', 'VRRM', 'max', 40.0)])
+    start, release, n = threading.Barrier(2), threading.Event(), []
+    plain_read = w.read
+
+    def slow_read(cards, codes, doc_parts, *, chat):
+        n.append(1)
+        release.wait(2)  # 다른 gather가 같은 문서에 도착할 시간을 준다
+        return plain_read(cards, codes, doc_parts, chat=chat)
+    w.read = slow_read
+    find = w.find()
+    out = {}
+
+    def run(pkg):
+        start.wait()
+        out[pkg] = find([{'code': 'VRRM', 'gte': 1}], None, pkg)
+    ts = [threading.Thread(target=run, args=(p,)) for p in ('SMA', 'DO-214AC')]
+    [t.start() for t in ts]
+    threading.Timer(0.3, release.set).start()
+    [t.join() for t in ts]
+    assert len(n) == 2  # 문서 a · b 한 번씩(패키지마다 읽었다면 4)
+    # 조건이 다르면(코드 목록이 다르면) 재사용하지 않는다
+    find([{'code': 'VRRM', 'gte': 1}, {'code': 'IR', 'lte': 1}], None, None)
+    assert len(n) == 4
+
+
+def test_failed_read_is_not_cached():
+    """읽기가 실패하면 결과를 남기지 않아 다음 찾기가 다시 읽는다."""
+    w = World({'a': doc('a', ['A'])}, rows=[row('A', 'VRRM', 'max', 40.0)])
+    ok, fail = w.read, [True]
+
+    def flaky(cards, codes, doc_parts, *, chat):
+        if fail.pop() if fail else False:
+            raise RuntimeError('LLM down')
+        return ok(cards, codes, doc_parts, chat=chat)
+    w.read = flaky
+    find = w.find()
+    with pytest.raises(RuntimeError):
+        find([{'code': 'VRRM', 'gte': 1}], None, None)
+    assert [r['part'] for r in find([{'code': 'VRRM', 'gte': 1}], None, 'DO-214AC')] == []
+    assert [r['part'] for r in find([{'code': 'VRRM', 'gte': 1}], None, None)] == ['A']
+
+def test_shared_clear_forces_a_new_read():
+    """shared를 비우면(데모 질문 사이) 읽기 재사용이 끊겨 기록과 같은 호출이 나간다."""
+    docs = {'a': doc('a', ['A'])}
+    w = World(docs, rows=[row('A', 'VRRM', 'max', 40.0)])
+    shared = {}
+    find = card_find.make_find(retrieve=w.retrieve, load_cards=w.load_cards, read=w.read, chat='C', doc_meta=w.doc_meta, shared=shared)
+    find([{'code': 'VRRM', 'gte': 1}], None, None)
+    find([{'code': 'VRRM', 'gte': 1}], None, 'DO-214AC')
+    assert len(w.calls['read']) == 1
+    shared.clear()
+    find([{'code': 'VRRM', 'gte': 1}], None, 'SOD-123')
+    assert len(w.calls['read']) == 2
+
+
+def test_overview_lines_and_doc_caches_hit_the_db_once(monkeypatch):
+    """분류별 개요 줄 · 문서 · 문서 분류는 프로세스에서 한 번만 DB로 읽는다."""
+    monkeypatch.setattr(card_find, '_OVERVIEWS', {})
+    monkeypatch.setattr(card_find, '_DOCS', {})
+    monkeypatch.setattr(card_find, '_META', {})
+    n = {'ov': 0, 'load': [], 'meta': []}
+    monkeypatch.setattr(card_find, '_query_overviews', lambda c: n.__setitem__('ov', n['ov'] + 1) or [{'key': 'a', 'file': 'a.pdf', 'text': 't'}])
+    monkeypatch.setattr(card_find, 'load_cards', lambda ks: n['load'].append(list(ks)) or {k: {'file': k} for k in ks})
+    monkeypatch.setattr(card_find, 'doc_meta', lambda ks: n['meta'].append(list(ks)) or {k: {'category': 'c'} for k in ks})
+    assert card_find.overview_lines('c') == card_find.overview_lines('c') and n['ov'] == 1
+    assert card_find.cached_load_cards(['a', 'b']) == {'a': {'file': 'a'}, 'b': {'file': 'b'}}
+    assert card_find.cached_load_cards(['b', 'c', 'a']) == {'b': {'file': 'b'}, 'c': {'file': 'c'}, 'a': {'file': 'a'}}
+    assert n['load'] == [['a', 'b'], ['c']]
+    card_find.cached_doc_meta(['a']); card_find.cached_doc_meta(['a', 'b'])
+    assert n['meta'] == [['a'], ['b']]
+    monkeypatch.setattr(card_find, 'MAX_CACHED_DOCS', 2)
+    card_find.cached_load_cards(['x', 'y', 'z'])
+    assert len(card_find._DOCS) <= 3 and 'z' in card_find._DOCS  # 상한을 넘기면 오래된 것부터 버린다

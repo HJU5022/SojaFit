@@ -12,8 +12,10 @@
 [주의] 대상 필터(품번 등)는 결과를 받은 뒤 거르지 않고 검색 단계의 인자로 받는다. 후처리로 거르면 결과가 0~2개로 굶어
 "우연한 거절"이 생기고 점수가 실제보다 좋게 나온다. score의 뜻과 범위는 검색 방식마다 달라 거절 임계값도 방식마다 따로 정한다.
 """
+import contextvars
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from urllib.parse import unquote, urlparse
 
@@ -29,9 +31,13 @@ RRF_K = 60   # [왜] RRF 원 논문(Cormack 외 2009)의 기본값
 EMBED_MODEL = 'voyage-4-large'  # chunk_embeddings.embedding_model과 같아야 한다
 DIM = 1024  # voyage-4-large의 출력 차원(llm.voyage_embed가 output_dimension 1024로 부른다)
 _warmup_lock = Lock()
+_corpus = None  # (DSN, 그때의 _parts, corpus_known 결과). 코퍼스는 프로세스 동안 그대로라 한 번만 센다
+_corpus_lock = Lock()
 _bm25 = None  # (BM25Okapi, 청크 id 목록). warmup()이 한 번 만든다
 _parts = None  # (품번 소문자 → 문서 id 집합, 문서 id → 청크 id 목록). warmup()이 같이 만든다
+_runs = None  # (DSN, 표지 품번 대문자 집합, 모든 청크 본문·파일 이름의 `[A-Z0-9]+` 연속 집합). warmup()이 같이 만든다
 _nocover = None  # 표지 청크가 아닌 청크 id 집합. warmup()이 같이 만든다
+RUN = re.compile(r'[A-Z0-9]+')
 COVER = re.compile(r'\[.+?\] 이 데이터시트의 품번: (.*)')  # chunk.py doc_cards가 만드는 표지 청크(chunk_index 0)
 
 
@@ -75,18 +81,15 @@ def allowed_chunks(index, parts):
 
 
 def _connect():
-    """DATABASE_URL로 DB에 연결하고 pgvector 형식을 등록한 연결을 돌려준다(호출한 쪽이 닫는다)."""
-    import psycopg
-    from pgvector.psycopg import register_vector
-    conn = psycopg.connect(os.environ['DATABASE_URL'])
-    register_vector(conn)
-    return conn
+    """풀에서 연결을 빌리는 `with`용 컨텍스트 매니저를 돌려준다. 블록이 끝나면 commit(예외면 rollback)하고 연결을 풀에 돌려준다."""
+    from backend.rag import db_pool  # [왜] 함수 안에서 import: 서버 시작 스레드가 아닌 곳에서 첫 import가 멈추지 않게 psycopg 계열은 늦게 읽는다
+    return db_pool.connection()
 
 
 def warmup():
     """document_chunks 본문으로 BM25 색인과 품번 → 문서 색인을 메모리에 만든다."""
     # [주의] 첫 retrieve() 때 한 번 불린다. 분석 서비스를 켠 서버는 기동 직후 Conversations.warm()이 데몬 스레드로 미리 부른다
-    global _bm25, _parts, _nocover
+    global _bm25, _parts, _nocover, _runs
     with _warmup_lock:
         if _bm25 is not None and _parts is not None and _nocover is not None:
             return
@@ -97,18 +100,41 @@ def warmup():
         # [주의] 적재 전 빈 DB에서는 BM25Okapi가 0으로 나눈다. 청크가 없으면 키워드 후보 없이 dense만 쓴다
         index = (BM25Okapi([tokens(r[2]) for r in rows]) if rows else None, [r[0] for r in rows])
         _parts = part_index([r[:3] for r in rows])
+        with _connect() as conn:
+            names = [unquote(os.path.basename(urlparse(r[0]).path)) for r in conn.execute('SELECT source_url FROM source_documents').fetchall()]
+        _runs = (os.environ.get('DATABASE_URL'), {k.upper() for k in _parts[0]},
+                 {t for r in rows for t in RUN.findall(r[2].upper())} | {t for n in names for t in RUN.findall(n.upper())})
         _nocover = {r[0] for r in rows if r[3] is not None}  # [왜] 표지 청크는 품번 목록뿐이라 품번 질문에 BM25로 1위가 되고 근거 페이지가 없다(page_number가 없는 청크)
         _bm25 = index  # Publish readiness only after the part and page indexes are ready.
 
 
+def part_may_pass_exact(part: str) -> bool:
+    """retrieve()가 돌려줄 수 있는 어떤 카드가 `_mentions_exact_part(card, {part})`를 통과할 수 있는가. 모르면 True다."""
+    # [왜] 그 함수는 doc_parts(표지 품번) · file · content에서 품번을 찾는다(내부 카드에는 parts · title · row가 없다). 품번이 영문·숫자뿐이면 '앞뒤가 영문·숫자가 아님'은
+    #      '대문자 본문의 `[A-Z0-9]+` 연속 중 하나와 같음'과 같다. 어느 청크 본문·파일 이름에도 그 연속이 없고 표지에도 없으면 필터를 푼 검색도 0건이다
+    # [주의] 색인이 안 만들어졌거나 DSN이 바뀌었거나 품번에 영문·숫자 밖 글자가 있으면 True(예전 동작)
+    runs = _runs
+    if runs is None or runs[0] != os.environ.get('DATABASE_URL') or not (part.isascii() and part.isalnum()):
+        return True
+    part = part.upper()
+    return part in runs[1] or part in runs[2]
+
+
 def corpus_known():
     """코퍼스에 있는 (품번 소문자 집합, 개정 코드 집합)을 돌려준다. 개정 코드는 문서 파일 이름 끝(`..._H2104.pdf`)에서 읽는다."""
+    global _corpus
     if _parts is None:
         warmup()
-    with _connect() as conn:
-        urls = [r[0] for r in conn.execute('SELECT source_url FROM source_documents').fetchall()]
-    names = (unquote(os.path.basename(urlparse(u).path)) for u in urls)
-    return set(_parts[0]), {m.group(1) for m in map(re.compile(r'_([A-Z]\d{4})\.pdf$').search, names) if m}
+    dsn, parts = os.environ.get('DATABASE_URL'), _parts
+    with _corpus_lock:
+        # [왜] 질문마다 DB를 읽지 않는다. 평가 러너가 DSN·색인을 바꾸면 그때 다시 센다
+        if _corpus is None or _corpus[:2] != (dsn, parts):
+            with _connect() as conn:
+                urls = [r[0] for r in conn.execute('SELECT source_url FROM source_documents').fetchall()]
+            names = (unquote(os.path.basename(urlparse(u).path)) for u in urls)
+            _corpus = (dsn, parts, (set(parts[0]), {m.group(1) for m in map(re.compile(r'_([A-Z]\d{4})\.pdf$').search, names) if m}))
+    known_parts, known_revisions = _corpus[2]
+    return set(known_parts), set(known_revisions)  # [왜] 호출한 쪽이 고쳐도 캐시가 안 바뀌게 복사본을 준다
 
 
 def positive_top(scores, ids, n):
@@ -117,14 +143,15 @@ def positive_top(scores, ids, n):
     return [ids[j] for j in np.argsort(-np.asarray(scores), kind='stable')[:n] if scores[j] > 0]
 
 
-def _dense(conn, question, allowed=None, *, nocover_all=False):
+def _dense(conn, question, allowed=None, *, nocover_all=False, embedding=None):
     """질문 벡터와 코사인 거리가 가까운 청크 id를 N_CAND개까지 가까운 순으로 돌려준다(벡터 검색, dense)."""
     # allowed가 있으면 그 청크 안에서만 잰다. nocover_all이면 allowed 대신 표지 아닌 청크 전체(SQL로 거름, 아이디 5만 개를 보내지 않음). DEMO_MODE면 빈 목록(AC-11)
     # 허용 청크가 N_BIT장보다 많으면 1비트 Hamming 거리로 N_BIT장을 먼저 거르고(chunk_embedding_bits, db/009) 그 후보만 정확 코사인으로 세운다
     from backend.services import llm
     if llm.DEMO_MODE:  # [왜] 평가자에게는 키가 없다. 데모 모드는 임베딩 API 없이 BM25만 쓴다(SPEC 7절)
         return []
-    vec = np.asarray(llm.voyage_embed([question], 'query')[0], dtype=np.float32)  # 질문 하나를 임베딩해 첫 벡터를 꺼낸다
+    # [왜] embedding은 retrieve()가 미리 띄운 임베딩 Future. 없으면 여기서 부른다. 예외는 result()가 그대로 다시 던진다
+    vec = np.asarray((embedding.result() if embedding else llm.voyage_embed([question], 'query'))[0], dtype=np.float32)  # 질문 하나를 임베딩해 첫 벡터를 꺼낸다
     # [주의] nocover_all은 retrieve()가 allowed=_nocover일 때만 켠다. 이 JOIN의 표지 제외 규칙이 _nocover(page_number가 있는 청크)와 같아야 한다
     join = ' JOIN document_chunks dc ON dc.id = t.chunk_id AND dc.page_number IS NOT NULL' if nocover_all else ''
     by_id, by_id_args = (' AND t.chunk_id = ANY(%s)', [list(allowed)]) if allowed is not None and not nocover_all else ('', [])
@@ -181,18 +208,21 @@ def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, metho
     if not allowed:
         # [왜] 전체 코퍼스로 넘어가면 다른 부품의 수치를 인용하게 된다. 빈 결과를 받은 쪽이 "문서로 확인 안 됨"으로 판정한다
         return []
-    with _connect() as conn:
-        # [주의] DEMO_MODE=1에서 method='dense'는 dense 목록이 비어 늘 []를 돌려준다
-        dense = _dense(conn, question, allowed, nocover_all=parts is None) if method != 'bm25' else []
+    # [왜] 임베딩 HTTP(~0.3초)를 작업 스레드에 띄워 두고, 그 사이 BM25 점수 계산과 DB 연결 확보를 한다. 컨텍스트(평가 예산·추적)는 복사해 넘긴다
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        embedding = pool.submit(contextvars.copy_context().run, llm.voyage_embed, [question], 'query') if method != 'bm25' and not llm.DEMO_MODE else None
         keyword = _keyword(question, allowed) if method != 'dense' else []
-        fused = rrf(dense, keyword)  # 목록 하나만 있으면 RRF는 그 목록 순서를 그대로 둔다
-        # [왜] hybrid만 리랭크. RETRIEVE_RERANK=0이면 RRF 상위 k만(Voyage rerank API 생략, 속도 A/B용)
-        rerank = method == 'hybrid' and not llm.DEMO_MODE and os.getenv('RETRIEVE_RERANK', '1') != '0'
-        top = fused if rerank else fused[:k]  # 리랭크는 합친 후보 전부를 본문과 함께 넘기므로 k장으로 자르지 않는다
-        rows = conn.execute(
-            'SELECT dc.id, sd.document_key, sd.source_url, dc.page_number, dc.table_name, dc.content, dc.document_id'
-            ' FROM document_chunks dc JOIN source_documents sd ON sd.id = dc.document_id WHERE dc.id = ANY(%s)',
-            ([i for i, _ in top],)).fetchall()
+        with _connect() as conn:
+            # [주의] DEMO_MODE=1에서 method='dense'는 dense 목록이 비어 늘 []를 돌려준다
+            dense = _dense(conn, question, allowed, nocover_all=parts is None, embedding=embedding) if method != 'bm25' else []
+            fused = rrf(dense, keyword)  # 목록 하나만 있으면 RRF는 그 목록 순서를 그대로 둔다
+            # [왜] hybrid만 리랭크. RETRIEVE_RERANK=0이면 RRF 상위 k만(Voyage rerank API 생략, 속도 A/B용)
+            rerank = method == 'hybrid' and not llm.DEMO_MODE and os.getenv('RETRIEVE_RERANK', '1') != '0'
+            top = fused if rerank else fused[:k]  # 리랭크는 합친 후보 전부를 본문과 함께 넘기므로 k장으로 자르지 않는다
+            rows = conn.execute(
+                'SELECT dc.id, sd.document_key, sd.source_url, dc.page_number, dc.table_name, dc.content, dc.document_id'
+                ' FROM document_chunks dc JOIN source_documents sd ON sd.id = dc.document_id WHERE dc.id = ANY(%s)',
+                ([i for i, _ in top],)).fetchall()
     found = {r[0]: r for r in rows}  # SQL의 ANY(...)는 순서를 보장하지 않아 id로 찾을 사전을 만든다
     if rerank and top:
         # [왜] 후보 id를 오름차순으로 정렬해 넘긴다. 점수는 (질문, 청크) 쌍마다 따로 매겨져 순서와 무관하고, 동점 순서만 고정된다(측정 설정 SortedReranker)

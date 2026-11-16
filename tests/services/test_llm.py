@@ -638,3 +638,24 @@ def test_schematic_dialogue_keeps_daily_reservation_and_stops_after_three_calls(
     with pytest.raises(llm.EvaluationLimitError):
         limited.reserve('fourth', output_tokens=10)
     assert len(charges) == 3
+
+
+def test_voyage_reuses_one_client_with_per_request_timeout_and_headers(monkeypatch):
+    import httpx
+    made, seen = [], []
+
+    class Client:
+        def __init__(self):
+            made.append(self)
+
+        def post(self, url, **kw):
+            seen.append(kw)
+            return _reply(200, {"data": [{"index": 0, "embedding": [1.0]}]})
+
+    monkeypatch.setattr(httpx, "Client", Client)
+    monkeypatch.setattr(llm, "_voyage_client", None)
+    monkeypatch.setenv("VOYAGE_API_KEY", "fake-key")
+    llm.voyage_embed(["a"], "query")
+    llm.voyage_embed(["b"], "query")
+    assert len(made) == 1 and [k["timeout"] for k in seen] == [180, 180]  # client 하나를 재사용하고 요청마다 timeout을 준다
+    assert seen[0]["headers"] == {"Authorization": "Bearer fake-key"}

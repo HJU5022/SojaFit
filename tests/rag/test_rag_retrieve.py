@@ -147,6 +147,7 @@ def test_rerank_order_applied_then_top_k(monkeypatch):
     _fake_index(monkeypatch)
     monkeypatch.setattr(llm, 'DEMO_MODE', False)
     monkeypatch.setattr(R, '_dense', lambda conn, q, allowed=None, **kw: [4, 2])  # DB·API 없이 dense 후보만 정한다
+    monkeypatch.setattr(llm, 'voyage_embed', lambda texts, kind: [[0.1] * 1024])  # retrieve()가 임베딩을 미리 띄우므로 가짜로 막는다
     calls = []
 
     def fake_rerank(query, docs, model='rerank-3'):
@@ -220,17 +221,18 @@ def test_concurrent_first_reads_publish_all_indexes_together(monkeypatch):
             (2, 1, '[sample.pdf · 1쪽] reverse voltage 1000 V', 1)]
     reads = []
     class Connection:
-        def execute(self, *_):
+        def execute(self, sql, *_):
+            self.sql = sql
             reads.append(1)
             time.sleep(.02)
             return self
         def fetchall(self):
-            return rows
+            return [('https://x/sample.pdf',)] if 'source_documents' in self.sql else rows
     @contextmanager
     def connect():
         yield Connection()
     monkeypatch.setattr(R, '_connect', connect)
-    for key in ('_bm25', '_parts', '_nocover'):
+    for key in ('_bm25', '_parts', '_nocover', '_runs'):
         monkeypatch.setattr(R, key, None)
     start = threading.Barrier(4)
     def first_read(_):
@@ -239,4 +241,100 @@ def test_concurrent_first_reads_publish_all_indexes_together(monkeypatch):
         assert R._bm25 is not None and R._parts is not None and R._nocover == {2}
     with ThreadPoolExecutor(max_workers=4) as pool:
         list(pool.map(first_read, range(4)))
-    assert len(reads) == 1
+    assert len(reads) == 2  # 청크 읽기 1번 + 파일 이름 읽기 1번(스레드 4개가 불러도 한 번만)
+
+
+def test_retrieve_with_threaded_embed_equals_sequential_reference(monkeypatch):
+    """임베딩을 스레드로 미리 띄운 retrieve()가 순차로 부르는 기준 구현(_dense가 직접 임베딩)과 같은 결과를 낸다. 컨텍스트 변수도 넘어간다."""
+    import contextvars
+    _fake_index(monkeypatch)
+    monkeypatch.setattr(llm, 'DEMO_MODE', False)
+    seen = contextvars.ContextVar('seen', default=None)
+    def embed(texts, kind):
+        assert seen.get() == 'ctx'  # 작업 스레드에도 호출한 쪽 컨텍스트가 보인다
+        return [[float(len(texts[0]))] * 1024]
+    def dense(conn, q, allowed=None, *, nocover_all=False, embedding=None):
+        assert embedding.result()[0][0] == len(q)  # 미리 띄운 임베딩이 들어온다
+        return [4, 2]
+    monkeypatch.setattr(llm, 'voyage_embed', embed)
+    monkeypatch.setattr(llm, 'voyage_rerank', lambda q, docs, model='rerank-3': list(range(len(docs)))[::-1])
+    monkeypatch.setattr(R, '_dense', dense)
+    seen.set('ctx')
+    got = R.retrieve('SS310 2')
+    # 순차 기준: dense=[4, 2]를 직접 구하고, 같은 키워드 순위로 RRF → 오름차순 id를 뒤집는 가짜 리랭크
+    keyword = R._keyword('SS310 2', R._nocover)
+    fused = dict(rrf([4, 2], keyword))
+    expected = [(c, fused[c]) for c in sorted(fused)][::-1]
+    assert [(r['chunk_id'], r['score']) for r in got] == expected[:5]
+    assert [(r['dense_rank'], r['bm25_rank']) for r in got] == [([4, 2].index(c) + 1 if c in (4, 2) else None, keyword.index(c) + 1 if c in keyword else None) for c, _ in expected[:5]]
+
+
+def test_embed_error_surfaces_from_retrieve(monkeypatch):
+    _fake_index(monkeypatch)
+    monkeypatch.setattr(llm, 'DEMO_MODE', False)
+    def boom(texts, kind):
+        raise llm.UpstreamError('Voyage error 500')
+    monkeypatch.setattr(llm, 'voyage_embed', boom)
+    with pytest.raises(llm.UpstreamError, match='Voyage error 500'):
+        R.retrieve('SS310 2', method='dense')
+
+
+def test_corpus_known_is_computed_once_and_returns_copies(monkeypatch):
+    from contextlib import contextmanager
+    reads = []
+    class Conn:
+        def execute(self, sql):
+            reads.append(sql)
+            return self
+        def fetchall(self):
+            return [('https://x/a/SS32%20SERIES_Q2412.pdf',), ('https://x/b/none.pdf',)]
+    @contextmanager
+    def connect():
+        yield Conn()
+    monkeypatch.setattr(R, '_connect', connect)
+    monkeypatch.setattr(R, '_parts', part_index(ROWS))
+    monkeypatch.setattr(R, '_corpus', None)
+    first = R.corpus_known()
+    first[0].clear()
+    assert R.corpus_known() == ({'ss310', 'ss32', 'ss34', 'ss34l'}, {'Q2412'}) and len(reads) == 1
+
+
+def test_pool_connection_releases_and_reset_runs_even_on_error(monkeypatch):
+    from backend.rag import db_pool
+    events = []
+    class Conn:
+        def execute(self, sql, args=None):
+            events.append(sql)
+            if sql.startswith('SELECT'):
+                raise RuntimeError('db down')
+    class Pool:
+        def connection(self):
+            from contextlib import contextmanager
+            @contextmanager
+            def cm():
+                try:
+                    yield Conn()
+                    events.append('commit')
+                except BaseException:
+                    events.append('rollback')
+                    raise
+            return cm()
+    monkeypatch.setattr(db_pool, '_pool', lambda: Pool())
+    monkeypatch.setattr(llm, 'DEMO_MODE', False)
+    monkeypatch.setattr(llm, 'voyage_embed', lambda texts, kind: [[0.1] * 1024])
+    with pytest.raises(RuntimeError, match='db down'):
+        with db_pool.connection() as conn:
+            R._dense(conn, 'q', {1})
+    assert [e if not e.startswith('SELECT') else 'SELECT' for e in events] == ['SET enable_indexscan = off', 'SELECT', 'RESET enable_indexscan', 'rollback']  # 실패해도 RESET이 돌고 연결은 rollback으로 반납된다
+
+
+def test_part_may_pass_exact_is_false_only_when_no_card_can_name_it(monkeypatch):
+    """표지·본문·파일 이름 어디에도 없을 때만 False. 영문·숫자 밖 글자가 든 품번이나 색인 없음·다른 DSN은 True."""
+    monkeypatch.setenv('DATABASE_URL', 'dsn')
+    monkeypatch.setattr(R, '_runs', ('dsn', {'SS34'}, {'TS4148', 'F15'}))
+    assert [R.part_may_pass_exact(p) for p in ('ss34', 'TS4148', 'F15', '1N5408X', 'SS3')] == [True, True, True, False, False]
+    assert R.part_may_pass_exact('SMAJ6.5A') is True
+    monkeypatch.setenv('DATABASE_URL', 'other')
+    assert R.part_may_pass_exact('1N5408X') is True
+    monkeypatch.setattr(R, '_runs', None)
+    assert R.part_may_pass_exact('1N5408X') is True

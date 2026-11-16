@@ -242,10 +242,25 @@ def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
     return vectors, response.usage.total_tokens, provider, model
 
 
+_voyage_client = None
+_voyage_client_lock = threading.Lock()
+
+
+def _voyage_http():
+    """Voyage용 POST 함수. 프로세스 공용 httpx.Client 하나(연결·TLS 재사용, 스레드 안전)의 post를 돌려준다. 요청마다 timeout을 따로 준다."""
+    global _voyage_client
+    import httpx
+    # [왜] 평가 러너(run_injection_preflight·injection_baseline_runtime)와 시험이 httpx.post를 바꿔 Voyage 호출을 세거나 막는다. 바뀌었으면 그 함수를 그대로 쓴다
+    if httpx.post.__module__ != "httpx":
+        return httpx.post
+    with _voyage_client_lock:
+        if _voyage_client is None:
+            _voyage_client = httpx.Client()
+        return _voyage_client.post
+
+
 def _voyage_post(path: str, payload: dict) -> dict:
     """Voyage REST에 POST해 JSON 본문을 돌려준다. 429·5xx는 5번까지 늘려 가며 다시 부르고, 결제 신호(402)는 바로 멈춘다."""
-    import httpx
-
     key = os.getenv("VOYAGE_API_KEY")
     if not key:
         raise RuntimeError("VOYAGE_API_KEY is required")
@@ -253,7 +268,7 @@ def _voyage_post(path: str, payload: dict) -> dict:
         budget = _evaluation_budget.get()
         runtime = budget is not None and budget.on_reserve is not None
         timeout = budget.reserve(json.dumps(payload), output_tokens=0, embedding=True) if runtime else 180
-        r = httpx.post(f"https://api.voyageai.com/v1/{path}", timeout=timeout, headers={"Authorization": f"Bearer {key}"}, json=payload)
+        r = _voyage_http()(f"https://api.voyageai.com/v1/{path}", timeout=timeout, headers={"Authorization": f"Bearer {key}"}, json=payload)
         if r.status_code == 200:
             return r.json()
         if r.status_code == 402 or re.search("payment|billing", r.text, re.I):
