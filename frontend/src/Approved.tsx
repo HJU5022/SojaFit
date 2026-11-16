@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, FileText, Printer, Trash2 } from 'lucide-react';
 import { api } from './api';
+import { Amount } from './Candidate';
 import { formatAmount, opLabel, safeLink } from './display';
 import {
   Badge,
@@ -338,11 +339,14 @@ export function CaseReport({ id, email }: { id: number; email: string }) {
                       {c.checks.map((check, i) => (
                         <tr key={i}>
                           <th scope="row">{check.code}</th>
+                          {/* [왜] 화면의 후보 상세와 같은 표기: 긴 소수는 줄이고 받은 값은 title에 둔다(#44) */}
                           <td>
                             {check.op && opLabel(check.op) + ' '}
-                            {formatAmount(check.threshold, check.unit)}
+                            <Amount value={check.threshold} unit={check.unit} />
                           </td>
-                          <td>{formatAmount(check.value, check.unit)}</td>
+                          <td>
+                            <Amount value={check.value} unit={check.unit} />
+                          </td>
                           <td>{RESULTS[check.result.toLowerCase()] ?? '확인 안 됨'}</td>
                         </tr>
                       ))}

@@ -84,8 +84,8 @@ export function PriceLookup({ part, quantity }: { part: string; quantity?: numbe
     </div>
   );
 }
-/** 서버 숫자를 보기 좋게 줄여 보이고, 받은 값 그대로는 마우스를 올리면 보인다. */
-function Amount({ value, unit }: { value: any; unit?: string | null }) {
+/** 서버 숫자를 보기 좋게 줄여 보이고, 받은 값 그대로는 마우스를 올리면 보인다. 승인 사례 보고서도 쓴다. */
+export function Amount({ value, unit }: { value: any; unit?: string | null }) {
   const shown = formatAmount(value, unit);
   const raw = value == null ? '' : [value].flat().join(' ~ ') + (unit ? ' ' + unit : '');
   return <span title={raw && raw !== shown ? raw : undefined}>{shown}</span>;
