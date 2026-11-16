@@ -211,6 +211,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   async function send(demo?: DemoQuestion) {
+    // [왜] 실행 중에도 질문은 미리 쓸 수 있다. 보내기는 막는다(같은 대화의 두 번째 run은 서버가 409)
+    if (busy) return;
     setError(null);
     if (!demo && !question.trim() && !attachment) return;
     try {
@@ -370,12 +372,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             <div className="review-nav">
               <div>
                 <h2>검토 기록</h2>
-                <button
-                  className="icon-button"
-                  aria-label="새 검토"
-                  onClick={newReview}
-                  disabled={busy}
-                >
+                {/* [왜] 새 검토는 빈 대화를 만들고 옮겨 갈 뿐이다. 실행 중인 검토는 서버에서 계속된다(기록 링크와 같음) */}
+                <button className="icon-button" aria-label="새 검토" onClick={newReview}>
                   <Plus size={18} />
                 </button>
               </div>
@@ -574,7 +572,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   maxLength={4000}
-                  disabled={!!running || !!waiting}
+                  // [왜] 실행 중에도 다음 질문을 쓸 수 있게 막지 않는다. 조건 입력을 기다릴 때만 막는다
+                  disabled={!!waiting}
                   placeholder={
                     waiting
                       ? '위의 사용 조건을 입력하면 이어서 검토합니다.'
@@ -585,10 +584,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   <label className="attach-button">
                     <Paperclip size={17} />
                     <span>넷리스트</span>
+                    {/* 실행 중에도 파일은 고를 수 있다. 보내기는 아래 버튼이 막는다 */}
                     <input
                       type="file"
                       accept=".net,.txt"
-                      disabled={busy}
                       onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
                     />
                   </label>
@@ -604,6 +603,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                       />
                     </label>
                   </details>
+                  {running && (
+                    <small className="composer-hint">답변이 끝나면 보낼 수 있습니다.</small>
+                  )}
                   <button
                     className="primary send"
                     disabled={
