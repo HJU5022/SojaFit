@@ -1,0 +1,9 @@
+run,variant,present,pass,up_health_s,image_size_bytes,kicad,png_files,png_sha256,png_verified,missing_or_failure
+1,before,True,True,110.891,,9.0.2,1,c169f3c9afb5661e4145424572c505a23c248a9d05b9cc1864ea014ba449d85a,True,
+1,after,True,True,120.885,,9.0.2,1,c169f3c9afb5661e4145424572c505a23c248a9d05b9cc1864ea014ba449d85a,True,
+2,before,True,True,114.616,,9.0.2,1,c169f3c9afb5661e4145424572c505a23c248a9d05b9cc1864ea014ba449d85a,True,
+2,after,True,True,117.01,,9.0.2,1,c169f3c9afb5661e4145424572c505a23c248a9d05b9cc1864ea014ba449d85a,True,
+3,before,True,True,114.228,,9.0.2,1,c169f3c9afb5661e4145424572c505a23c248a9d05b9cc1864ea014ba449d85a,True,
+3,after,True,True,109.489,,9.0.2,1,c169f3c9afb5661e4145424572c505a23c248a9d05b9cc1864ea014ba449d85a,True,
+median,before,True,True,114.228,,,,,,
+median,after,True,True,117.01,,,,,,
