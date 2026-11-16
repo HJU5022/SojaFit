@@ -30,6 +30,10 @@ export function ConversationNav({
     return () => window.removeEventListener('projects-changed', fn);
   }, []);
   useEffect(() => {
+    // [왜] 작업대는 첫 질문의 분석이 끝나야 알린다. 새 대화로 옮겨 오면 분석 전에도 목록에 보이게 한 번 다시 읽는다
+    if (threadId && threads.data && !threads.data.some((t) => t.id === threadId)) threads.reload();
+  }, [threadId]);
+  useEffect(() => {
     if (!menu) return;
     const close = (e: Event) => {
       if (
