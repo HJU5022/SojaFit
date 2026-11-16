@@ -14,7 +14,7 @@
 ## 파일
 - `SRC.md` — 이 폴더 설명.
 - `main.tsx` — React 진입점·글꼴·스타일.
-- `App.tsx` — 경로 표와 세션 경계. 공개 경로(`/` · `/login` · `/signup` · `/password-reset`, 하단 고지 문서 `/terms` · `/privacy` · `/ai-notice` · `/licenses`, 메일 링크용 `/verify-email` · `/reset-password`)와 로그인 뒤 경로(`/app`: 인자 없으면 새 대화 화면, `?project=&thread=`는 작업대 · `/projects` · `/settings` · `/approved` · `/admin` · `/admin/users`). 사이드바 맨 위는 "새 대화"이고 대화 목록·프로젝트 폴더는 `Conversations.tsx`가 그린다. 사이드바 맨 아래에 하단 고지 줄(`Footer compact`)을 둔다.
+- `App.tsx` — 경로 표와 세션 경계. 공개 경로(`/` · `/login` · `/signup` · `/password-reset`, 하단 고지 문서 `/terms` · `/privacy` · `/ai-notice` · `/licenses`, 메일 링크용 `/verify-email` · `/reset-password`)와 로그인 뒤 경로(`/app`: 인자 없으면 새 대화 화면, `?project=&thread=`는 작업대 · `/settings` · `/approved` · `/admin` · `/admin/users`, 옛 `/projects`는 `/app`으로 바꿈). 사이드바 맨 위는 "새 대화"이고 프로젝트·대화 나무는 `Conversations.tsx`가 그린다. 사이드바 오른쪽 경계선으로 너비를 바꾼다. 사이드바 맨 아래에 하단 고지 줄(`Footer compact`)을 둔다.
 - `api.ts` — 쿠키 API fetch 경계·오류(`ApiError`)·SSE 연결, 판정 5종·실행 상태의 화면 표기(`verdicts` · `statuses`).
 - `types.ts` — 공개 API 자료형.
 - `stream.ts` — SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트).
@@ -30,7 +30,7 @@
 - `Admin.tsx` — 관리자 영역(`/admin`): 계정 목록(서버가 가린 이메일), 사유(5~500자)를 적은 가림 해제(원문은 60초만 화면 메모리에), 확인 창을 거치는 정지·탈퇴 처리(계정 번호 다시 입력), 재활성화, 작업 이력 표. 관리자 계정은 정지·탈퇴 버튼이 꺼져 있고 서버도 403이다.
 - `Legal.tsx` — 화면 맨 아래 고지 한 줄(`Footer`: 이용약관 · **개인정보처리방침** · AI 이용 안내 · 출처·라이선스 · 문의 메일 · ©)과 이용약관 · AI 이용 안내 · 출처·라이선스 본문. 보통 클릭은 작은 창(`Modal`), 주소로 바로 열면 `LegalPage`. 랜딩·로그인 계열 화면 맨 아래와 사이드바 맨 아래(`compact`)에 쓴다(#27).
 - `Conversations.tsx` — 대화가 먼저인 입구. 사이드바 나무(`ConversationNav`, #31 #36): "프로젝트 +"(새 프로젝트 창) 아래 회로가 있는 프로젝트마다 접고 펴는 줄과 그 대화(`GET /api/threads` 한 번을 프로젝트별로 나눔) · "이 회로로 새 대화", 회로 없는 프로젝트(`has_circuit=false`)의 대화와 빈 프로젝트는 나무 위 "대화"에 한 줄씩. 펼친 프로젝트는 localStorage에 남기고 열린 대화의 프로젝트는 주소가 바뀔 때마다 펼친다. 대화·프로젝트 줄 ⋯ 메뉴로 그 자리 이름 변경(`PATCH /api/threads/{id}` · `/api/projects/{id}`) · 확인 뒤 삭제. 이름을 바꾸면 `thread-renamed` · `project-renamed` 이벤트로 열린 작업대 제목도 고친다. 새 대화 화면(넷리스트 첨부 → 파일 이름으로 `POST /api/projects/upload`, 기존 프로젝트 · 데모 회로 고르기, 409 중복이면 기존 열기 · 새로 만들기). 대화(thread)는 작업대의 첫 질문 때 생긴다.
-- `Projects.tsx` — 프로젝트 목록(`/projects`: 줄마다 이름 변경 · 삭제 아이콘 버튼, 선택 칸과 일괄 삭제는 `DELETE /api/projects/{id}`를 하나씩 불러 실패만 모아 보임)과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 받기 링크). `/api/demo-circuits`가 404(운영, `DEMO_MODE=0`)면 데모 회로 탭을 숨기고 넷리스트 업로드로 시작한다.
+- `Projects.tsx` — 새 프로젝트 창(사이드바 "프로젝트 +"가 연다. 데모 회로·넷리스트 업로드·나중에 첨부·샘플 넷리스트 받기 링크)과 사이드바 목록 새로고침 알림(`refreshNavigation`). 프로젝트 목록 페이지는 사이드바 나무로 옮겼다(#34). `/api/demo-circuits`가 404(운영, `DEMO_MODE=0`)면 데모 회로 탭을 숨기고 넷리스트 업로드로 시작한다.
 - `Workbench.tsx` — 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전. 오른쪽 위 ⋯(프로젝트 메뉴)에서 이름 변경(작은 창)·삭제(확인 창).
 - `Reply.tsx` — 검토 결과 답과 조건 입력 카드. 답마다 "AI 생성" 표시(화면 낭독기에는 "생성형 AI를 이용해 만든 답변", #27)와 면책 문구를 붙인다.
 - `Schematic.tsx` — 원본 회로도 구역(작업대 왼쪽 열 "회로" 구역에서 연결 개념도 아래). 예제 프로젝트는 `/api/demo-circuits`의 저장된 도면(`/circuit-schematics/*.png`)과 출처·라이선스를 바로 보이고, 저장된 도면이 없고 넷리스트가 있는 프로젝트는 열 때 프로젝트 이름으로 `GET /api/external-circuits/schematics`(프로젝트·회로 버전·대화 문맥을 보내 서버가 부품·핀 연결이 같다고 확인한 도면만 받음)를 한 번 불러 결과를 바로 보인다. 찾는 중·찾지 못함(다른 이름으로 다시 찾기)·출처·라이선스를 보이고, 그림을 누르면 큰 창(`Modal`)으로 본다. 이미지는 같은 출처 경로만, 링크는 http(s)만 쓴다.

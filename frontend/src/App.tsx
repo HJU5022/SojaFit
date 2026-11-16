@@ -1,15 +1,6 @@
 /** 페이지·세션 경계. 로그아웃 때 업무 상태를 폐기한다. 사이드바는 대화가 먼저다(SPEC 2절). 출처: SPEC 8.6절. */
 import { useEffect, useState } from 'react';
-import {
-  CheckCheck,
-  Folder,
-  LogOut,
-  Menu,
-  Plus,
-  Settings as SettingsIcon,
-  Shield,
-  X,
-} from 'lucide-react';
+import { CheckCheck, LogOut, Menu, Plus, Settings as SettingsIcon, Shield, X } from 'lucide-react';
 import { api, ApiError } from './api';
 import { Brand, ErrorBox, followLink, Loading, navigate, ResizeHandle, useLocation } from './ui';
 import { Landing } from './Landing';
@@ -19,7 +10,6 @@ import { ApprovedCases } from './Approved';
 import { Admin } from './Admin';
 import { Footer, isLegalPath, LegalPage } from './Legal';
 import { ConversationNav, NewConversation } from './Conversations';
-import { ProjectList } from './Projects';
 import { Workbench } from './Workbench';
 import type { User } from './types';
 function Shell({
@@ -73,10 +63,6 @@ function Shell({
           <Plus size={17} />새 대화
         </button>
         <nav>
-          <a href="/projects" className={pathname === '/projects' ? 'nav-active' : ''}>
-            <Folder size={17} />
-            프로젝트
-          </a>
           <a href="/approved" className={path === '/approved' ? 'nav-active' : ''}>
             <CheckCheck size={17} />
             승인 사례
@@ -189,7 +175,9 @@ export default function App() {
     pathname === '/reset-password';
   useEffect(() => {
     if (!checking && !user && !publicPage && !error) navigate('/login', true);
-    if (!checking && user && pathname === '/login') navigate('/app', true);
+    // [왜] 프로젝트 목록 페이지는 사이드바 나무로 옮겼다(#34). 옛 주소 /projects는 새 대화 화면으로 바꾼다
+    if (!checking && user && (pathname === '/login' || pathname === '/projects'))
+      navigate('/app', true);
   }, [checking, user, publicPage, error, pathname]);
   if (pathname === '/') return <Landing />;
   if (isLegalPath(pathname)) return <LegalPage path={pathname} />;
@@ -235,9 +223,7 @@ export default function App() {
             <a href="/app">새 대화로</a>
           </div>
         )
-      ) : pathname === '/projects' ? (
-        <ProjectList />
-      ) : pathname === '/app' ? (
+      ) : pathname === '/app' || pathname === '/projects' ? (
         project ? (
           <Workbench key={project} projectId={project} threadId={thread} />
         ) : (
