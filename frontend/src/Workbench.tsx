@@ -5,6 +5,7 @@ import {
   Check,
   CornerDownLeft,
   LoaderCircle,
+  PanelRight,
   Paperclip,
   Pencil,
   Square,
@@ -20,6 +21,7 @@ import {
   Markdown,
   Modal,
   navigate,
+  ResizeHandle,
   RowMenu,
   useResource,
 } from './ui';
@@ -160,6 +162,15 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     window.addEventListener('project-renamed', fn);
     return () => window.removeEventListener('project-renamed', fn);
   }, []);
+  // 오른쪽 회로 패널(#39): 평소엔 닫혀 있고 "회로 보기"로 열거나, 회로가 처음 생기면(첨부 v0 → v1) 저절로 연다
+  const [panel, setPanel] = useState(false),
+    hadCircuit = useRef<boolean | null>(null),
+    version = project.data?.circuit_version;
+  useEffect(() => {
+    if (version === undefined) return; // [왜] 첨부 뒤 다시 읽는 동안은 값이 없다. 이전 값을 지우지 않는다
+    if (hadCircuit.current === false && version > 0) setPanel(true);
+    hadCircuit.current = version > 0;
+  }, [version]);
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
       questions.data?.filter(
@@ -337,6 +348,15 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
           <h1>{project.data?.name ?? '회로 불러오기'}</h1>
         </div>
         <div className="header-actions">
+          <button
+            aria-label="회로 보기"
+            title="회로 보기"
+            aria-expanded={panel}
+            onClick={() => setPanel(!panel)}
+          >
+            <PanelRight size={16} />
+            <span className="desktop-only">회로 보기</span>
+          </button>
           <button onClick={() => setShowQuotes(true)}>견적 목록</button>
           <RowMenu
             label="프로젝트 메뉴"
@@ -357,7 +377,27 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       ) : project.error ? (
         <ErrorBox error={project.error} retry={project.reload} />
       ) : (
-        <div className="workbench-grid">
+        <div className={'workbench-grid' + (panel ? ' panel-open' : '')}>
+          {/* [왜] 패널 머리(닫기 · 너비 조절)는 aside 밖 형제로 두고 CSS가 같은 오른쪽 칸에 겹친다(aside 내용과 따로 고친다) */}
+          {panel && (
+            <div className="panel-bar">
+              <ResizeHandle
+                name="panel-w"
+                label="회로 패널 너비 조절"
+                min={280}
+                max={640}
+                edge="left"
+              />
+              <button
+                className="icon-button"
+                aria-label="회로 패널 닫기"
+                title="회로 패널 닫기"
+                onClick={() => setPanel(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
           <aside className="context-panel">
             <div className="part-selector">
               <h2>검토할 부품</h2>

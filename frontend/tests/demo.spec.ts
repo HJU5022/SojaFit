@@ -28,18 +28,15 @@ test('데모 로그인 → 검토 → 조건 재개 → 승인·견적 → 기�
   await page.getByRole('link', { name: '내 회로 검토하기' }).first().click();
   await page.getByRole('button', { name: '데모 사용자 A' }).click();
   await expect(page).toHaveURL(/\/app/);
-  // 대화가 먼저: 프로젝트 창 없이 새 대화 화면에서 데모 회로를 고른다(이미 있으면 409 → 새 프로젝트로 만들기)
+  // 대화가 먼저(#30): 회로 없이 질문하면 에이전트가 대화 안에서 회로를 묻고, 데모 회로를 고르면 그 작업대가 열린다.
+  // 대상을 정하지 않으면 그 데모 회로의 기록 질문이 모두 보인다
   await page.getByRole('button', { name: '새 대화', exact: true }).click();
-  await page.getByLabel('회로 선택').selectOption('demo:attiny85_time_switch');
-  await page.getByRole('button', { name: '대화 시작' }).click();
-  await Promise.race([
-    page.getByLabel('검토할 다이오드').waitFor(),
-    page.getByRole('button', { name: '새 프로젝트로 만들기' }).waitFor(),
-  ]);
-  if (await page.getByRole('button', { name: '새 프로젝트로 만들기' }).isVisible())
-    await page.getByRole('button', { name: '새 프로젝트로 만들기' }).click();
-  await expect(page.getByLabel('검토할 다이오드')).toBeVisible();
-  await page.getByLabel('검토할 다이오드').selectOption('D1');
+  await page.getByLabel('새 대화 질문').fill('D1을 다른 부품으로 바꿔도 될까요?');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  await page
+    .getByTestId('circuit-request')
+    .getByRole('button', { name: 'ATtiny85 Time Switch' })
+    .click();
   await page.locator('[data-demo-id="v3-01"]').click();
   await expect(page.getByTestId('requires-input')).toBeVisible({ timeout: 45000 });
   // [왜] 서버가 요구하는 분석 호출 간격(기본 2초)을 실제 사용자 흐름에서도 지킨다.

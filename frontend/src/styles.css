@@ -1083,16 +1083,56 @@ form {
   font-size: 13px;
   white-space: nowrap;
 }
+/* 대화가 전체 너비를 쓰고, 회로 패널(aside.context-panel)은 평소엔 숨겼다가 오른쪽에 연다(#39).
+   aside가 DOM에서 대화보다 먼저라 칸을 직접 정하고, 패널 머리(.panel-bar: 닫기 · 너비 조절)는 같은 칸에 겹친다. */
 .workbench-grid {
   display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   min-height: calc(100vh - 110px);
 }
-.context-panel {
-  border-right: 1px solid var(--line);
+.workbench-grid > .conversation {
+  grid-column: 1;
+  grid-row: 1;
+}
+.workbench-grid > .context-panel {
+  display: none;
+}
+.workbench-grid.panel-open {
+  grid-template-columns: minmax(0, 1fr) min(var(--panel-w, 360px), 55%);
+}
+.workbench-grid.panel-open > .context-panel,
+.workbench-grid > .panel-bar {
+  grid-column: 2;
+  grid-row: 1;
+}
+.workbench-grid.panel-open > .context-panel {
+  display: block;
+  height: calc(100vh - 110px);
+  overflow: auto;
+  border-left: 1px solid var(--line);
   background: #fafcfc;
-  padding: 23px 18px;
+  padding: 52px 18px 23px;
   min-width: 0;
+  animation: panel-in 0.18s ease-out;
+}
+.panel-bar {
+  position: relative;
+  z-index: 2;
+  pointer-events: none; /* 아래 패널 내용을 가리지 않고 닫기 · 경계선만 누른다 */
+}
+.panel-bar > * {
+  pointer-events: auto;
+}
+.panel-bar > .icon-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
 }
 .circuit-section {
   margin-bottom: 26px;
@@ -2008,9 +2048,6 @@ form {
     padding-left: 6vw;
     padding-right: 6vw;
   }
-  .workbench-grid {
-    grid-template-columns: 290px minmax(0, 1fr);
-  }
 }
 @media (max-width: 1100px) {
   .sidebar {
@@ -2020,17 +2057,11 @@ form {
   .app-frame {
     margin-left: var(--sidebar-w, 190px);
   }
-  .workbench-grid {
-    grid-template-columns: 225px minmax(0, 1fr);
-  }
   .conversation-scroll {
     padding: 23px 20px;
   }
   .composer-area {
     padding: 14px 18px;
-  }
-  .context-panel {
-    padding: 20px 13px;
   }
   .page-content {
     padding: 30px;
@@ -2308,17 +2339,30 @@ form {
     padding: 7px;
     min-height: 32px;
   }
-  .workbench-grid {
+  .workbench-grid,
+  .workbench-grid.panel-open {
     display: block;
     min-height: 0;
   }
-  .context-panel {
-    padding: 19px 20px;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
+  /* 작은 화면의 회로 패널은 화면 전체를 덮는 시트(#39). 닫으면 없어서 가로 넘침도 없다 */
+  .workbench-grid.panel-open > .context-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    height: auto;
+    padding: 56px 20px 24px;
+    border: 0;
+    background: white;
     display: grid;
     grid-template-columns: 1fr;
+    align-content: start;
     gap: 10px;
+  }
+  .panel-bar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 36;
   }
   .part-selector h2 {
     display: none;
