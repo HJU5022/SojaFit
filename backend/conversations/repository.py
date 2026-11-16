@@ -11,6 +11,18 @@ def thread_title(content):
     return text[:60] + ('…' if len(text) > 60 else '') if text else '새 대화'
 
 
+def pinned_version(t, versions='project_circuit_versions'):
+    """대화(별칭 t의 threads 행)가 읽는 회로 버전 SQL 식. 회로 없이 시작한 대화(0)는 그 뒤 프로젝트에 처음 올린 회로(1 이상 중 가장 작은 버전)를 읽는다.
+
+    versions: 회로 버전 표 이름. search_path가 public이 아닌 연결(분석 서비스)은 `public.`을 붙여 넘긴다.
+
+    [왜] 고정 버전 칸은 트리거(db/031)가 바꾸지 못하게 막는다. 대화 안에서 넷리스트를 붙이면(SPEC 4절 netlist의 thread_id) 같은 대화가 그 회로를 이어 읽게 읽을 때 정한다.
+         가장 작은 버전이라 그 뒤 업로드가 이 대화를 다시 바꾸지 않는다. 회로가 아직 없으면 0(빈 회로)이다.
+    """
+    return (f'CASE WHEN {t}.circuit_version=0 THEN COALESCE((SELECT min(v0.version) FROM {versions} v0 '
+            f'WHERE v0.project_id={t}.project_id AND v0.version>0),0) ELSE {t}.circuit_version END')
+
+
 class ConversationNotFound(Exception):
     """없는 대화와 다른 사용자의 대화를 구분하지 않는다."""
 
@@ -88,7 +100,7 @@ class ConversationRepository:
 
     def get_thread(self, user_id, thread_id):
         with auth.connection() as conn:
-            row = conn.execute('SELECT t.id, t.project_id, c.connections, p.name FROM threads t JOIN projects p ON p.id=t.project_id JOIN project_circuit_versions c ON c.project_id=p.id AND c.version=t.circuit_version WHERE t.id=%s AND p.user_id=%s',
+            row = conn.execute(f"SELECT t.id, t.project_id, c.connections, p.name FROM threads t JOIN projects p ON p.id=t.project_id JOIN project_circuit_versions c ON c.project_id=p.id AND c.version={pinned_version('t')} WHERE t.id=%s AND p.user_id=%s",
                                (thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
@@ -103,7 +115,7 @@ class ConversationRepository:
             if row is None:
                 raise ConversationNotFound
             conn.execute("INSERT INTO messages(thread_id,run_id,role,content) VALUES (%s,%s,'user',%s)", (thread_id, run_id, data['question']))
-            circuit = conn.execute('SELECT c.connections FROM project_circuit_versions c JOIN threads t ON t.project_id=c.project_id AND t.circuit_version=c.version WHERE t.id=%s', (thread_id,)).fetchone()[0]
+            circuit = conn.execute(f"SELECT c.connections FROM project_circuit_versions c JOIN threads t ON t.project_id=c.project_id AND c.version={pinned_version('t')} WHERE t.id=%s", (thread_id,)).fetchone()[0]
         return str(run_id), circuit
 
     def finish(self, user_id, thread_id, run_id, status, result=None):
@@ -147,8 +159,8 @@ class ConversationRepository:
         with auth.connection() as conn:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id)).fetchone() is None:
                 raise ConversationNotFound
-            rows = conn.execute("""SELECT t.id,t.created_at,q.content,r.id,r.status,
-                greatest(t.created_at,m.last_at,r.last_at) AS activity,t.circuit_version,t.title
+            rows = conn.execute(f"""SELECT t.id,t.created_at,q.content,r.id,r.status,
+                greatest(t.created_at,m.last_at,r.last_at) AS activity,{pinned_version('t')},t.title
                 FROM threads t JOIN projects p ON p.id=t.project_id
                 LEFT JOIN LATERAL (SELECT content FROM messages WHERE thread_id=t.id AND role='user' ORDER BY id LIMIT 1) q ON true
                 LEFT JOIN LATERAL (SELECT max(created_at) AS last_at FROM messages WHERE thread_id=t.id) m ON true
@@ -173,7 +185,7 @@ class ConversationRepository:
 
     def thread_detail(self, user_id, thread_id, limit=50, before_message_id=None):
         with auth.connection() as conn:
-            row = conn.execute('SELECT t.id,t.project_id,t.circuit_version,t.title FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s', (thread_id, user_id)).fetchone()
+            row = conn.execute(f"SELECT t.id,t.project_id,{pinned_version('t')},t.title FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s", (thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
             title = conn.execute("SELECT m.content FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s AND m.role='user' ORDER BY m.id LIMIT 1", (thread_id, user_id)).fetchone()
@@ -188,8 +200,10 @@ class ConversationRepository:
             if conn.execute("SELECT to_regclass('sojafit_agent.threads')").fetchone()[0] is not None:
                 target = conn.execute('SELECT a.target FROM sojafit_agent.threads a JOIN threads t ON t.id=a.id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s AND a.user_id=%s', (thread_id, user_id, user_id)).fetchone()
         page = rows[:limit]
+        # [왜] 회로 없이 시작한 대화의 분석 대상은 빈 글자다(memory_service.ensure_thread). 아직 정하지 않은 대상으로 보이고 고정되지 않는다
+        ref = target[0] if target else None
         return {'id': str(row[0]), 'project_id': row[1], 'circuit_version': row[2], 'title': row[3] or thread_title(title[0] if title else ''),
-                'target_ref': target[0] if target else None, 'target_locked': latest is not None,
+                'target_ref': ref or None, 'target_locked': latest is not None and ref != '',
                 'latest_run': {'id': str(latest[0]), 'status': latest[1], 'message_id': latest[2]} if latest else None,
                 'messages': [{'id': r[0], 'run_id': str(r[1]), 'role': r[2], 'content': r[3], 'created_at': r[4]} for r in reversed(page)],
                 'next_before_message_id': page[-1][0] if len(rows) > limit else None}

@@ -82,6 +82,7 @@ class ApprovedCaseDetail(ApprovedCase):
     question: str  # 그 판정을 낸 질문(사용자가 쓴 글). 따로 적은 사용 조건은 run 기록에 없어 담지 않는다
     target_ref: str | None  # 바꿀 부품(D1 등). 분석 기록이 없으면 null
     target_value: str | None  # 그 부품의 넷리스트 값
+    circuit_version: int | None  # 그 대화가 읽은 회로 버전(0은 회로 없음). 회로 버전 행이 없으면 null. 보고서(#44) "검토 대상"에 쓴다
     answer: str  # 승인 때의 답
     candidate: dict | None  # 승인한 후보 판정 {part, verdict, checks: [{code, op, threshold, value, unit, result, citation…}], …}. 옛 기록이 허용 목록을 못 지나면 null
     evidence: list[dict]  # 근거 문서 위치 {document, page, table, row, section, source_url, …}

@@ -1,11 +1,14 @@
 /** 공통 상태·접근성·회로 표시. 서버 값을 시각화하며 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import {
   AlertCircle,
   ArrowUpRight,
   CircuitBoard,
   Ellipsis,
+  FileText,
   LoaderCircle,
+  Paperclip,
+  Plus,
   RotateCw,
   X,
 } from 'lucide-react';
@@ -13,7 +16,7 @@ import { api, verdicts } from './api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { explainAnswer, markdownUrl, safeLink } from './display';
-import { partsOf, pinsOf } from './circuit';
+import { acceptsFile, isSchematicFile, partsOf, pinsOf } from './circuit';
 import type { Citation, Project, Verdict } from './types';
 export function navigate(url: string, replace = false) {
   history[replace ? 'replaceState' : 'pushState']({}, '', url);
@@ -168,6 +171,9 @@ export function Modal({
         if (e.target === e.currentTarget) close();
       }}
     >
+      {wide && (
+        <ResizeHandle name="drawer-w" label="창 너비 조절" min={440} max={1100} edge="left" />
+      )}
       <div className="dialog-head">
         <h2>{title}</h2>
         <button aria-label="닫기" title="닫기" className="icon-button" onClick={close}>
@@ -178,13 +184,101 @@ export function Modal({
     </dialog>
   );
 }
-/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화 줄 · 작업대 상단이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자. */
+/**
+ * 옆 패널의 세로 경계선(#35): 끌거나 포커스 뒤 ←/→로 너비를 바꾼다. 너비는 문서 루트의 `--{name}` CSS 변수와 localStorage에 둔다.
+ * edge="right"는 패널 오른쪽 경계(사이드바), "left"는 왼쪽 경계(오른쪽 패널·창)라 끄는 방향이 반대다. 760px 이하에서는 CSS가 숨긴다.
+ */
+export function ResizeHandle({
+  name,
+  label,
+  min,
+  max,
+  edge,
+}: {
+  name: string;
+  label: string;
+  min: number;
+  max: number;
+  edge: 'left' | 'right';
+}) {
+  const ref = useRef<HTMLDivElement>(null),
+    drag = useRef<{ x: number; w: number } | null>(null),
+    key = 'sojafit.' + name;
+  // [왜] 사용자가 바꾸기 전에는 null로 두어 CSS 기본 너비(화면 폭마다 다름)를 그대로 쓴다
+  const [width, setWidth] = useState<number | null>(() => {
+      try {
+        const v = Number(localStorage.getItem(key));
+        return v >= min && v <= max ? v : null;
+      } catch {
+        return null;
+      }
+    }),
+    [seen, setSeen] = useState(min);
+  useEffect(() => {
+    if (width === null) return;
+    document.documentElement.style.setProperty('--' + name, width + 'px');
+    try {
+      localStorage.setItem(key, String(width));
+    } catch {
+      // 저장소를 못 써도(사생활 보호 창 등) 이번 화면에는 적용된다
+    }
+  }, [width]);
+  const current = () => width ?? ref.current?.parentElement?.offsetWidth ?? min,
+    resize = (w: number) => setWidth(Math.round(Math.min(max, Math.max(min, w)))),
+    sign = edge === 'right' ? 1 : -1;
+  return (
+    <div
+      ref={ref}
+      className={'resize-handle ' + edge}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={width ?? seen}
+      tabIndex={0}
+      onFocus={() => setSeen(current())}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        e.preventDefault(); // 끄는 동안 글자가 선택되지 않게
+        // [왜] 포인터를 잡아 두어야 창 바깥(배경)에서 놓아도 그 클릭이 창을 닫지 않는다(Modal의 배경 클릭 닫기)
+        e.currentTarget.setPointerCapture(e.pointerId);
+        drag.current = { x: e.clientX, w: current() };
+      }}
+      onPointerMove={(e) => {
+        if (drag.current) resize(drag.current.w + sign * (e.clientX - drag.current.x));
+      }}
+      onPointerUp={() => (drag.current = null)}
+      onPointerCancel={() => (drag.current = null)}
+      onKeyDown={(e) => {
+        const step = e.key === 'ArrowRight' ? 16 : e.key === 'ArrowLeft' ? -16 : 0;
+        if (!step) return;
+        e.preventDefault();
+        resize(current() + sign * step);
+      }}
+    />
+  );
+}
+/** ⋯ 버튼 아래 작은 메뉴(사이드바 대화·프로젝트 줄 · 작업대 상단 · 입력창 + 단추 · 사이드바 계정 줄이 같이 쓴다). 바깥을 누르거나 Esc면 닫고, danger 항목은 빨간 글자, strong은 굵게, sep은 항목 위에 구분선. up이면 단추 위로 편다. */
 export function RowMenu({
   label,
   items,
+  icon = <Ellipsis size={16} />,
+  up = false,
+  className = '',
 }: {
   label: string;
-  items: { label: string; icon: ReactNode; danger?: boolean; onSelect: () => void }[];
+  items: {
+    label: string;
+    icon?: ReactNode;
+    danger?: boolean;
+    strong?: boolean;
+    sep?: boolean;
+    onSelect: () => void;
+  }[];
+  icon?: ReactNode;
+  up?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false),
     ref = useRef<HTMLDivElement>(null);
@@ -205,8 +299,10 @@ export function RowMenu({
     };
   }, [open]);
   return (
-    <div className="row-menu" ref={ref}>
+    <div className={['row-menu', up && 'up', className].filter(Boolean).join(' ')} ref={ref}>
+      {/* [왜] type="button": 입력창 form 안에서 눌러도 보내기(submit)가 되지 않게 한다 */}
       <button
+        type="button"
         className="icon-button"
         aria-label={label}
         title={label}
@@ -214,28 +310,119 @@ export function RowMenu({
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        <Ellipsis size={16} />
+        {icon}
       </button>
       {open && (
         <div role="menu" aria-label={label}>
           {items.map((item) => (
-            <button
-              key={item.label}
-              role="menuitem"
-              className={item.danger ? 'danger' : undefined}
-              onClick={() => {
-                setOpen(false);
-                item.onSelect();
-              }}
-            >
-              {item.icon}
-              {item.label}
-            </button>
+            <Fragment key={item.label}>
+              {item.sep && <div role="separator" />}
+              <button
+                type="button"
+                role="menuitem"
+                className={item.danger ? 'danger' : undefined}
+                onClick={() => {
+                  setOpen(false);
+                  item.onSelect();
+                }}
+              >
+                {item.icon}
+                {item.strong ? <strong>{item.label}</strong> : item.label}
+              </button>
+            </Fragment>
           ))}
         </div>
       )}
     </div>
   );
+}
+/** 입력창 안 첨부 카드(#49, Claude 입력창처럼 글 줄 위 왼쪽): 파일 아이콘 · 말줄임한 이름 · 종류만 보이고 미리보기는 없다. ×는 올리거나 초점이 갈 때 보인다. 새 대화 · 작업대가 같이 쓴다. */
+export function AttachmentCard({ file, onRemove }: { file: File; onRemove: () => void }) {
+  return (
+    <div className="attachment">
+      <FileText size={22} aria-hidden />
+      <div>
+        <strong title={file.name}>{file.name}</strong>
+        <small>
+          {isSchematicFile(file.name) ? 'KiCad 회로도' : 'KiCad 넷리스트'} ·{' '}
+          {file.name.match(/\.[^.]*$/)?.[0].toLowerCase()}
+        </small>
+      </div>
+      <button type="button" aria-label="첨부 제거" title="첨부 제거" onClick={onRemove}>
+        <X size={12} />
+      </button>
+    </div>
+  );
+}
+/** 입력창 넷리스트 · 회로도 첨부(#40 #52): + 단추가 위로 여는 메뉴(파일 고르기)와 영역 어디든 끌어 놓기. 새 대화 · 작업대가 같이 쓴다.
+ *  accept 밖의 파일은 붙이지 않고 짧게 알린다(서버도 다시 검사한다). */
+export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
+  const input = useRef<HTMLInputElement>(null),
+    [over, setOver] = useState(false),
+    [rejected, setRejected] = useState(false);
+  function pick(file: File | undefined) {
+    if (!file) return;
+    const ok = acceptsFile(file.name, accept);
+    setRejected(!ok);
+    if (ok) onFile(file);
+  }
+  const hasFiles = (e: DragEvent) => e.dataTransfer.types.includes('Files');
+  return {
+    input,
+    dropZone: {
+      onDragEnter: (e: DragEvent) => {
+        if (hasFiles(e)) setOver(true);
+      },
+      onDragOver: (e: DragEvent) => {
+        if (hasFiles(e)) e.preventDefault();
+      },
+      onDrop: (e: DragEvent) => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        setOver(false);
+        pick(e.dataTransfer.files[0]);
+      },
+    },
+    // [왜] 덮개가 영역 전체를 덮고 끌기 이벤트를 혼자 받는다. 자식 요소 사이를 지날 때 깜빡이지 않고, 덮개를 벗어날 때만 닫힌다
+    overlay: over && (
+      <div className="drop-overlay" onDragLeave={() => setOver(false)}>
+        여기에 놓으면 넷리스트·회로도를 첨부해요
+      </div>
+    ),
+    button: (
+      <div className="attach-button">
+        {/* 파일 입력은 메뉴 밖에 두어 메뉴가 닫혀도 남는다(작업대 넷리스트 요청 카드가 ref로 연다) */}
+        <input
+          ref={input}
+          type="file"
+          accept={accept}
+          tabIndex={-1}
+          aria-hidden
+          onChange={(e) => {
+            pick(e.target.files?.[0]);
+            e.target.value = ''; // 같은 파일을 다시 고를 수 있게
+          }}
+        />
+        <RowMenu
+          label="첨부 메뉴"
+          icon={<Plus size={18} />}
+          up
+          items={[
+            {
+              label: '넷리스트·회로도 첨부 (.net, .kicad_sch)',
+              icon: <Paperclip size={14} />,
+              onSelect: () => input.current?.click(),
+            },
+          ]}
+        />
+        {rejected && (
+          <small className="composer-hint" role="alert">
+            {accept.replaceAll(',', ' · ')} 파일만 첨부할 수 있어요.
+          </small>
+        )}
+      </div>
+    ),
+  };
 }
 export function Source({ cite }: { cite: Citation }) {
   return (

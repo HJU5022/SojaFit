@@ -13,7 +13,7 @@
 
 | 환경변수 | 쓰는 시험 |
 |---|---|
-| `TEST_AUTH_DATABASE_URL` | `tests/api`(`test_auth.py`, `test_projects.py`, `test_email_auth.py`, `test_google_users.py`, `test_public_grants.py`, `test_full_service_flow.py`), `tests/conversations/test_repository.py`, `tests/projects/test_project_repository.py`, `tests/projects/test_service_schema.py`, `tests/db/test_schema_docs.py` |
+| `TEST_AUTH_DATABASE_URL` | `tests/api`(`test_auth.py`, `test_projects.py`, `test_email_auth.py`, `test_google_users.py`, `test_public_grants.py`, `test_full_service_flow.py`, `test_datasheets.py`), `tests/conversations/test_repository.py`, `tests/projects/test_project_repository.py`, `tests/projects/test_service_schema.py`, `tests/db/test_schema_docs.py` |
 | `TEST_THREAD_DATABASE_URL` | `tests/api/test_threads.py`, `tests/api/test_deletion.py`, `tests/conversations/test_profile.py`, `tests/evals/test_approval_wait_report.py` |
 | `TEST_DATABASE_URL` | `tests/rag/test_rag_retrieve.py`, `tests/rag/test_rag_storage.py`, `tests/rag/test_rag_ingest.py`, `tests/graph/test_graph_mcp_stdio.py` |
 | `TEST_GOOGLE_DATABASE_URL` | `tests/api/test_google_users.py`(없으면 `TEST_AUTH_DATABASE_URL`을 씀) |
@@ -28,7 +28,7 @@
 | `conversations/` | 대화 저장소·공개 DTO·사용자 사실 기억 시험. [CONVERSATIONS.md](conversations/CONVERSATIONS.md) |
 | `db/` | 서비스 DB 문서 생성 도구와 커밋된 문서-DB 일치 시험. [DB.md](db/DB.md) |
 | `evals/` | 동결 감시·평가 실행기·채점기·인젝션 기준선 시험. [EVALS.md](evals/EVALS.md) |
-| `fixtures/` | 단위 테스트용 가공 회로(설명 파일 없음). `netlists/minimal.net`과 `netlists/invalid.net`은 합성 KiCad export 정상/미완성 표본 |
+| `fixtures/` | 단위 테스트용 가공 회로(설명 파일 없음). `netlists/minimal.net`과 `netlists/invalid.net`은 합성 KiCad export 정상/미완성 표본, `netlists/minimal.kicad_sch`는 합성 KiCad 회로도 한 장(#52) |
 | `graph/` | 단일 그래프 노드·MCP 검색기 시험. [GRAPH.md](graph/GRAPH.md) |
 | `judge/` | 판정 코드 시험. [JUDGE.md](judge/JUDGE.md) |
 | `mcp_skill/` | MCP 서버 도구 시험. [MCP_SKILL.md](mcp_skill/MCP_SKILL.md) |

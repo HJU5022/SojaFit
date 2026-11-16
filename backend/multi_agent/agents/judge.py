@@ -24,8 +24,8 @@ from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
-from backend.multi_agent.agents.part_names import MAKER, ground_part_names
-from backend.multi_agent.facts import ORDER_CODE
+from backend.multi_agent.agents.part_names import MAKER, ground_part_names, part_tokens
+from backend.multi_agent.facts import ORDER_CODE, refs_of
 from backend.multi_agent.revisions import document_revision, requested_revisions, revisions_for_part
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.spec_lookup import THT_PACKAGES
@@ -220,6 +220,18 @@ def judge_read_agent(state: dict, *, chat) -> dict:
     read = _validate_circuit_role(read, state.get('target_part') or {})
     # [왜] 읽기가 같은 질문에서 품번을 'SS34'(넷리스트)·'SS26'(사용 조건), '1N5231'·'TSC 1N5231B'로 회차마다 다르게 적었다(11-10 6회 반복). 사용자 글의 품번으로 코드가 맞춘다
     original, candidates = ground_part_names(read.original_part, read.candidates, state)
+    task, part = state.get('task') or {}, state.get('target_part') or {}
+    if not candidates and task.get('kind') == 'candidate_judge':
+        # [왜] 판정 뒤 조건만 준 말("입력 전압은 5V, 부하 전류는 1.5A야")은 후보가 Supervisor 지시서 목표에만 있다(#64).
+        #      읽기가 후보를 비우면 목표의 품번(원래 부품 · 대상 값 제외)을 후보로 쓴다. 회로 값은 그대로 지금 말에서만 읽는다
+        skip = {original.upper(), str(part.get('value') or '').upper()}
+        candidates = [p for p in part_tokens(task.get('goal', ''), refs_of(part)) if p.upper() not in skip]
+        # [왜] "D1을 SS34로 그대로 둬도 돼?"(D1 = SS34)는 원래 부품의 품번이 곧 후보다. 읽기는 원래 부품을 후보에 넣지 않고(judge_read.md)
+        #      위 목표 대체도 원래 품번을 빼서 후보가 비었다. 그래서 동일품 건너뛰기(#65)가 돌지 않아 조건 카드를 묻고, 재개 뒤 후보 0개로 not_found 거절이었다(11-17 실측)
+        # [주의] 지금 질문의 품번이 원래 품번 하나뿐일 때만이다. 주문 코드(SS34 R0G) · 다른 품번이 함께 있으면 그대로 둔다(#65 주문 코드는 묻는다)
+        # shortcut: 원래 품번만 적은 판정 할 일을 모두 같은 품번 질문으로 본다("D1 SS34 바꿔도 돼?"도 동일품), 읽기가 '그대로 둠'을 따로 낼 때 그 칸으로 가린다
+        if not candidates and original and {p.upper() for p in part_tokens(state.get('question', ''), refs_of(part))} == {original.upper()}:
+            candidates = [original]
     read = read.model_copy(update={'original_part': original, 'candidates': candidates})
     return {'judge_read': read.model_dump(mode='json'), 'path': ['판정 읽기']}
 
@@ -893,15 +905,10 @@ def _original_from_text(read: JudgeRead, text: str) -> str:
 def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason, str] | None:
     """사용자가 꼭 요구한 것이 코퍼스 밖이면 (거절 사유, 요약). 이름 · 항목만 대조한다(숫자 판단 없음, SPEC 8.3)."""
     maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
-    supported_makers = {
-        # TSC is supported by the internal corpus and verified official PDFs.
-        'TSC', 'VISHAY', 'VISHAYSEMICONDUCTORS', 'INFINEON',
-        'TI', 'TEXASINSTRUMENTS', 'ONSEMI',
-        'ST', 'STMICROELECTRONICS', 'ADI', 'ANALOGDEVICES',
-    }
-    if (maker and maker not in supported_makers
-            and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON')):
-        return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not a supported Grade 2 manufacturer'
+    # [왜] #146이 Vishay · TI · ST · ADI · onsemi를 통과시켰지만 아래 판정은 TSC 내부 카드 행을 그대로 써
+    #      "비셰이 1N5817"에 TSC 1N5817.pdf로 판정 답이 나갔다. 9c87ba36처럼 TSC · Infineon만 통과시키고 나머지는 maker_missing으로 거절한다
+    if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON'):
+        return Reason.MAKER_MISSING, f'required maker {read.maker_wanted} is not a supported Grade 2 manufacturer'  # 품번 문구가 아닌 제조사 문구(#63)
     # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
     #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)
     missing = {name.upper() for name, ok in (facts.get('parts') or {}).items() if not ok}
@@ -1013,7 +1020,14 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         asked = list(dict.fromkeys(_required_missing(rules[roles[0]], set(values) | set(conds))))
     else:
         asked = list(dict.fromkeys(n for r in roles for n in C.needed(rules[r], set(values) | set(conds))))
-    if asked or len(roles) > 1:
+    read = read.model_copy(update={'original_part': _original_from_text(read, text)})
+    # [왜] 후보가 모두 원래 부품과 같은 품번이면 회로 값 · 역할과 상관없이 동일품이다(SPEC 3절). 6개 값을 물은 뒤 동일품을 냈다(#65).
+    #      주문 코드만 다른 품번은 문서 행을 찾아야 동일품이라 묻고, 원래 부품의 제조사가 다르거나 모르면 근거가 없어 묻는다(EC-05)
+    same_part = (state.get('question_type') != 'candidate_find' and bool(read.candidates) and not original_not_tsc(read.original_part, text)
+                 and all(_identical(None, read.original_part, c)[0] for c in read.candidates))
+    if same_part:
+        asked = []
+    elif asked or len(roles) > 1:
         # [주의] 인터럽트는 문항당 한 번이다(AC-08). 재개하면 이 노드가 처음부터 다시 돌지만, 읽기는 앞 노드에 남아 있어 LLM을 다시 부르지 않는다
         # [주의] 재개 값은 {'answers': {...}, 'role': ...} 모양이다. 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다(11-06 실측)
         reply = interrupt({'missing': asked, 'role_choices': roles if len(roles) > 1 else [], 'question': _ask_text(asked, roles, rules)}) or {}
@@ -1057,7 +1071,6 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         return not (any(C.orig_codes(b) for b in bases) or any(values.get(n) is None for b in bases for n in C.names(b)))
     rules = {r: ({**rules[r], 'conditions': [c for c in rules[r]['conditions'] if 'any' in c or keep(c)] + extra} if extra else rules[r])
              for r in roles}
-    read = read.model_copy(update={'original_part': _original_from_text(read, text)})
     # [왜] 카드에서 판정 값을 읽는 specs(backend/rag/card_specs.py)는 읽을 코드를 알면 덜 읽는다. prefetch가 없는 specs(데모 · 시험 가짜)는 건너뛴다
     prefetch = getattr(specs, 'prefetch', None)
     need = sorted(_rule_codes([rules[r] for r in roles]) | {x.code for x in read.required_specs})
@@ -1144,7 +1157,12 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         if prefetch and candidates:
             # 후보들을 문서별로 묶어 한 번에 읽어 둔다(후보마다 차례로 읽으면 LLM 호출이 후보 수만큼 이어진다)
             prefetch([n for c in candidates for n in (_part(c[0]), _part(c[0]).split(' ')[0])], need)
-        for name, category, packages in candidates:
+        # [왜] _identical은 후보마다 검색 1~2번(각 1.2~1.5초)을 차례로 불러 v3-06에서 4~6초였다. 읽기만 하고 서로 영향이 없어(후보 이름 · 원래 품번만 입력)
+        #      후보마다 동시에 시작해 두고 아래 루프가 원래 순서대로 결과를 꺼낸다. 오류는 꺼내는 자리에서 그대로 올라간다(원래 호출 자리와 같음)
+        ident_pool = ThreadPoolExecutor(max_workers=4)
+        idents = [ident_pool.submit(contextvars.copy_context().run, _identical, retriever, read.original_part, c[0]) for c in candidates]
+        ident_pool.shutdown(wait=False)
+        for (name, category, packages), ident in zip(candidates, idents):
             part_editions = revisions_for_part(revision_text, _part(name)) if editions else set()
             if editions and not part_editions:
                 continue  # An ambiguous part/edition association must not borrow another part's edition.
@@ -1192,7 +1210,7 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                 continue
             packages = packages if packages is not None else [x['text'] for x in rows if x['code'] == 'PACKAGE' and x.get('text')]
             category = category or next((x['category'] for x in rows if x.get('category')), '')  # 판정 질문은 행의 분류로
-            same, same_cite = _identical(retriever, read.original_part, name)
+            same, same_cite = ident.result()
             if editions and same_cite and (document_revision(same_cite.get('document')) not in part_editions
                                            or document_revision(same_cite.get('document')) not in (original_editions or set())):
                 same, same_cite = False, None
@@ -1204,6 +1222,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
     except RetrievalUnavailableError as error:
         return {'judgement': {**base, 'kind': 'judge'}, 'path': ['판정'],
                 'reports': (state.get('reports') or []) + [_report('fail', f'spec table tool failed: {error.kind}', reason=Reason.SEARCH_ERROR)]}
+    if same_part:
+        # [왜] 묻지 않은 값을 빠진 값으로 남기면 동일품 답 아래에 '알려 주시면 판정할 수 있어요'가 붙고 재계획에도 missing으로 간다(#65)
+        results = [j.model_copy(update={'missing': []}) for j in results]
     if state.get('question_type') == 'candidate_find':
         # 후보 찾기 질문은 상위 몇 개를 고르는 판정 질문과 달리, 사용자가
         # 명시한 구매 규격을 만족하는 전체 목록을 요구한다. 불충족 후보는

@@ -24,7 +24,7 @@ def client(monkeypatch):
     ("GET", "/api/projects", None), ("POST", "/api/projects", {"demo_id": "breadboard_supply", "name": "회로"}),
     ("GET", "/api/projects/1", None), ("PATCH", "/api/projects/1", {"name": "수정"}),
     ("DELETE", "/api/projects/1", None), ("GET", "/api/demo-circuits", None),
-    ("POST", "/api/projects/1/netlist", None),
+    ("POST", "/api/projects/1/netlist", None), ("GET", "/api/projects/1/parts?circuit_version=1", None),
 ])
 def test_projects_require_session(client, method, path, body):
     response = client.request(method, path, json=body, headers={"origin": "http://testserver"})
@@ -87,6 +87,7 @@ def test_empty_creation_works_outside_demo_mode(client, monkeypatch):
     response = client.post("/api/projects", json={"name": "빈 프로젝트"}, headers={"origin": "http://testserver"})
     assert response.status_code == 201, response.text
     assert response.json()["circuit_version"] == 0 and response.json()["connections"]["parts"] == []
+    assert response.json()["has_circuit"] is False
 
 
 @pytest.mark.parametrize('kind', ['empty', 'demo', 'upload'])
@@ -149,8 +150,8 @@ def test_chat_netlist_uses_bounded_parser_and_creates_new_thread(upload_boundary
 
 @pytest.mark.parametrize("path,data,expected", [
     ("/api/projects/upload", b"\xff", "UTF-8로 다시 저장하거나 KiCad에서 넷리스트(.net)로 다시 내보내 주세요."),
-    ("/api/projects/upload", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다."),
-    ("/api/projects/5/netlist", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다."),
+    ("/api/projects/upload", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지 파일은 사용할 수 없습니다."),
+    ("/api/projects/5/netlist", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지 파일은 사용할 수 없습니다."),
 ])
 def test_netlist_failure_messages_distinguish_encoding_and_syntax(upload_boundary, path, data, expected):
     client, payloads, uploads, _ = upload_boundary
@@ -383,7 +384,7 @@ def test_upload_requires_nonempty_net_filename_and_closes(upload_boundary, filen
                            headers={"origin": "http://testserver", "content-type": "multipart/form-data; boundary=boundary"})
     assert response.status_code == 400
     assert response.headers["X-Request-ID"]
-    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": ".net 확장자의 KiCad 넷리스트 파일이 필요합니다.",
+    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": ".net 넷리스트나 .kicad_sch 회로도 파일이 필요합니다.",
                                           "request_id": response.headers["X-Request-ID"]}}
     assert payloads == [] and reads == []
     assert uploads and all(upload.file.closed for upload in uploads)
@@ -487,5 +488,230 @@ def test_owned_crud_and_foreign_admin_404_use_real_database(client, monkeypatch)
             client.cookies.set(auth.COOKIE, "owner-token")
             assert client.delete(f"/api/projects/{project_id}", headers={"origin": "http://testserver"}).status_code == 204
             assert client.get(f"/api/projects/{project_id}").status_code == 404
+        finally:
+            admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+
+
+SCHEMATIC = Path("tests/fixtures/netlists/minimal.kicad_sch").read_bytes()
+HIERARCHICAL = SCHEMATIC.replace(b"(sheet_instances", b'(sheet (property "Sheetfile" "child.kicad_sch")) (sheet_instances', 1)
+
+
+def png():
+    import io
+    from PIL import Image
+    stream = io.BytesIO()
+    Image.new("RGB", (8, 8), "white").save(stream, format="PNG")
+    return stream.getvalue()
+
+
+@pytest.fixture
+def fake_renderer(monkeypatch):
+    """KiCad 렌더러 자리의 가짜 HTTP 서버(#52). mode: ok · invalid(422) · down(503) · offline(연결 실패) · garbage(넷리스트 아님)."""
+    import base64
+    import functools
+    import json
+    import httpx
+    from backend.projects import external_schematic, schematic
+    state = {"mode": "ok", "bodies": []}
+
+    def respond(request):
+        state["bodies"].append(json.loads(request.content))
+        if state["mode"] == "offline":
+            raise httpx.ConnectError("renderer offline")
+        if state["mode"] in ("invalid", "down"):
+            return httpx.Response(422 if state["mode"] == "invalid" else 503, json={"detail": "x"})
+        netlist = "(not-export)" if state["mode"] == "garbage" else Path("tests/fixtures/netlists/minimal.net").read_text()
+        return httpx.Response(200, json={"sheets": [base64.b64encode(png()).decode()], "netlist": netlist})
+    monkeypatch.setenv("KICAD_RENDERER_URL", "http://renderer.test")
+    monkeypatch.delenv("K_SERVICE", raising=False)
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(schematic, "export_uploaded_kicad", functools.partial(schematic.export_uploaded_kicad, client=client))
+    # [주의] 그림 캐시는 프로세스 전체가 같이 쓴다. 시험마다 업로드 그림을 비운다
+    external_schematic._SERVICE.images.delete_matching(lambda key: isinstance(key, tuple) and key[:1] == ("upload",))
+    yield state
+    client.close()
+
+
+def test_schematic_upload_takes_the_netlist_path_with_the_schematic_hash(upload_boundary, fake_renderer):
+    import hashlib
+    client, payloads, uploads, reads = upload_boundary
+    response = client.post("/api/projects/upload", data={"name": "보드"}, files={"file": ("../dir/board.kicad_sch", SCHEMATIC)},
+                           headers={"origin": "http://testserver"})
+    assert response.status_code == 201, response.text
+    (user_id, name, payload), = payloads
+    assert (user_id, name) == (7, "보드")
+    assert set(payload) == {"connections", "source_sha256", "parser_version", "schematic"}
+    assert [part["ref"] for part in payload["connections"]["parts"]] == ["D1", "R1"]  # 렌더러가 내보낸 넷리스트를 .net과 같이 정규화
+    # [왜] 내보낸 넷리스트에는 임시 경로 · 시각이 들어가 해시가 매번 다르다. 409 중복은 회로도 파일 해시로 본다
+    assert payload["source_sha256"] == hashlib.sha256(SCHEMATIC).hexdigest()
+    assert payload["schematic"] == ("board.kicad_sch", SCHEMATIC.decode())
+    assert fake_renderer["bodies"] == [{"schematic": SCHEMATIC.decode()}]  # 사용자 경로 · 이름은 렌더러에 가지 않는다
+    assert reads == [5 * 1024 * 1024 + 1] and all(upload.file.closed for upload in uploads)
+
+
+@pytest.mark.parametrize("raw,mode,status,message,calls", [
+    (HIERARCHICAL, "ok", 422, "하위 시트가 있는 회로도는 아직 지원하지 않아요. 넷리스트(.net)를 함께 올려 주세요.", 0),
+    (b"(export (components))", "ok", 422, "회로도를 읽지 못했어요. KiCad 6 이상에서 저장한 .kicad_sch인지 확인해 주세요.", 0),
+    (b"\xff", "ok", 422, "회로도를 읽지 못했어요. KiCad 6 이상에서 저장한 .kicad_sch인지 확인해 주세요.", 0),
+    (SCHEMATIC, "invalid", 422, "회로도를 읽지 못했어요. KiCad 6 이상에서 저장한 .kicad_sch인지 확인해 주세요.", 1),
+    (SCHEMATIC, "garbage", 422, "회로도를 읽지 못했어요. KiCad 6 이상에서 저장한 .kicad_sch인지 확인해 주세요.", 1),
+    (SCHEMATIC, "down", 503, "회로도 그림 서버에 연결하지 못했어요. 넷리스트(.net)로 올려 주세요.", 1),
+    (SCHEMATIC, "offline", 503, "회로도 그림 서버에 연결하지 못했어요. 넷리스트(.net)로 올려 주세요.", 1),
+    (SCHEMATIC, "unset", 503, "회로도 그림 서버에 연결하지 못했어요. 넷리스트(.net)로 올려 주세요.", 0),
+])
+@pytest.mark.parametrize("path", ["/api/projects/upload", "/api/projects/5/netlist"])
+def test_schematic_upload_errors_never_reach_storage(upload_boundary, fake_renderer, monkeypatch, path, raw, mode, status, message, calls):
+    client, payloads, uploads, _ = upload_boundary
+    fake_renderer["mode"] = mode
+    if mode == "unset":
+        monkeypatch.delenv("KICAD_RENDERER_URL")
+    response = client.post(path, data={"name": "보드"} if path.endswith("/upload") else None,
+                           files={"file": ("board.kicad_sch", raw)}, headers={"origin": "http://testserver"})
+    assert response.status_code == status, response.text
+    assert response.json()["error"]["message"] == message
+    assert len(fake_renderer["bodies"]) == calls
+    assert payloads == [] and all(upload.file.closed for upload in uploads)
+
+
+def test_uploaded_schematic_is_owner_scoped_versioned_and_rendered_on_demand(client, fake_renderer, monkeypatch):
+    from backend.projects import external_schematic
+    url = os.getenv("TEST_AUTH_DATABASE_URL")
+    if not url:
+        pytest.skip("requires an isolated authentication test database")
+    schema = "projects_schematic_" + uuid4().hex
+    origin = {"origin": "http://testserver"}
+    clear = lambda: external_schematic._SERVICE.images.delete_matching(lambda key: isinstance(key, tuple) and key[:1] == ("upload",))
+    with psycopg.connect(url, autocommit=True) as admin:
+        admin.execute(sql.SQL("CREATE SCHEMA {} AUTHORIZATION CURRENT_USER").format(sql.Identifier(schema)))
+        connect = lambda: psycopg.connect(url, options=f"-csearch_path={schema}")
+        monkeypatch.setattr(auth, "connection", connect)
+        try:
+            with connect() as conn:
+                apply_service_schema(conn)
+                users = [row[0] for row in conn.execute("INSERT INTO users (login_id,password_hash,role) VALUES ('a@example.test','fake','user'),('b@example.test','fake','user') RETURNING id").fetchall()]
+                for token, user_id in zip(("owner-token", "other-token"), users):
+                    conn.execute("INSERT INTO auth_sessions (token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')", (auth.session_token_hash(token), user_id))
+            client.cookies.set(auth.COOKIE, "owner-token")
+            created = client.post("/api/projects/upload", data={"name": "보드"}, files={"file": ("board.kicad_sch", SCHEMATIC)}, headers=origin)
+            assert created.status_code == 201, created.text
+            project = created.json()
+            pid = project["id"]
+            assert (project["circuit_version"], project["schematic_file"]) == (1, "board.kicad_sch")
+            assert client.get(f"/api/projects/{pid}").json()["schematic_file"] == "board.kicad_sch"
+            # 같은 회로도는 .net과 같은 409 규칙(같은 파일 내용 = netlist)
+            duplicate = client.post("/api/projects/upload", data={"name": "다른 이름"}, files={"file": ("copy.kicad_sch", SCHEMATIC)}, headers=origin)
+            assert duplicate.status_code == 409
+            assert duplicate.json()["details"]["duplicates"] == [{"id": pid, "name": "보드", "matches": ["netlist"]}]
+            # 업로드 때 받은 그림을 캐시에서 쓰고, 캐시가 비면 저장한 원문으로 다시 그린다
+            calls = len(fake_renderer["bodies"])
+            image = client.get(f"/api/projects/{pid}/schematic?circuit_version=1")
+            assert image.status_code == 200 and image.content == png() and image.headers["content-type"] == "image/png"
+            assert image.headers["cache-control"] == "private, no-store" and len(fake_renderer["bodies"]) == calls
+            clear()
+            assert client.get(f"/api/projects/{pid}/schematic?circuit_version=1").content == png()
+            assert fake_renderer["bodies"][-1] == {"schematic": SCHEMATIC.decode()} and len(fake_renderer["bodies"]) == calls + 1
+            clear()
+            fake_renderer["mode"] = "down"
+            assert client.get(f"/api/projects/{pid}/schematic?circuit_version=1").status_code == 503
+            fake_renderer["mode"] = "ok"
+            assert client.get(f"/api/projects/{pid}/schematic").status_code == 422  # 회로 버전은 꼭 준다
+            # 넷리스트로 바꾼 버전에는 회로도가 없고, 회로도로 바꾼 버전에는 있다. 이전 버전 그림은 그대로
+            net = client.post(f"/api/projects/{pid}/netlist", files={"file": ("c.net", Path("tests/fixtures/netlists/minimal.net").read_bytes())}, headers=origin)
+            assert net.status_code == 201 and (net.json()["project"]["circuit_version"], net.json()["project"]["schematic_file"]) == (2, None)
+            assert client.get(f"/api/projects/{pid}/schematic?circuit_version=2").status_code == 404
+            sch = client.post(f"/api/projects/{pid}/netlist", files={"file": ("v3.kicad_sch", SCHEMATIC)}, headers=origin)
+            assert sch.status_code == 201 and (sch.json()["project"]["circuit_version"], sch.json()["project"]["schematic_file"]) == (3, "v3.kicad_sch")
+            thread = net.json()["thread_id"]
+            assert client.get(f"/api/projects/{pid}?thread_id={thread}").json()["schematic_file"] is None  # 대화가 고정한 버전 기준
+            assert client.get(f"/api/projects/{pid}/schematic?circuit_version=3").status_code == 200
+            assert client.get(f"/api/projects/{pid}/schematic?circuit_version=1").status_code == 200
+            # 다른 사용자는 프로젝트도 그림도 404
+            client.cookies.set(auth.COOKIE, "other-token")
+            for version in (1, 3):
+                denied = client.get(f"/api/projects/{pid}/schematic?circuit_version={version}")
+                assert denied.status_code == 404 and denied.json()["error"]["code"] == "NOT_FOUND"
+            assert client.get(f"/api/projects/{pid}").status_code == 404
+            # 프로젝트를 지우면 원문도 함께 지워진다(FK CASCADE)
+            client.cookies.set(auth.COOKIE, "owner-token")
+            assert client.delete(f"/api/projects/{pid}", headers=origin).status_code == 204
+            with connect() as conn:
+                assert conn.execute("SELECT count(*) FROM circuit_schematics").fetchone()[0] == 0
+        finally:
+            admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+
+
+# 부품 점검표(#68) 시험 회로: 다이오드 둘(D1 · D10) · LED(D2) · 저항 둘 · IC. 순서를 섞어 자연 정렬도 본다
+PARTS_CIRCUIT = {"parts": [
+    {"ref": "U1", "value": "ATtiny85-20SU", "footprint": "Package_SO:SOIC-8", "symbol": "MCU_Microchip_ATtiny:ATtiny85-20SU"},
+    {"ref": "D10", "value": "BAT54", "footprint": "Package_TO_SOT_SMD:SOT-23", "symbol": "Device:D_Schottky"},
+    {"ref": "R2", "value": "1k", "footprint": "Resistor_SMD:R_0603", "symbol": "Device:R"},
+    {"ref": "D2", "value": "LED", "footprint": "LED_SMD:LED_0805", "symbol": "Device:LED"},
+    {"ref": "D1", "value": "1N4148", "footprint": "Diode_SMD:D_SOD-123", "symbol": "Device:D"},
+    {"ref": "R1", "value": "10k", "footprint": "Resistor_SMD:R_0603", "symbol": "Device:R"},
+], "nets": []}
+
+
+def test_parts_check_reuses_kind_support_and_corpus_rules_owner_only(client, monkeypatch):
+    """종류 · 개수는 part_kind, 판정 지원은 _require_supported_target, 데이터시트는 corpus_known 대조와 같다. 남의 프로젝트 · 없는 버전은 404."""
+    from fastapi import HTTPException
+    from backend.conversations.memory_service import _require_supported_target
+    from backend.projects.repository import ProjectRepository
+    from backend.rag import retrieve
+    url = os.getenv("TEST_AUTH_DATABASE_URL")
+    if not url:
+        pytest.skip("requires an isolated authentication test database")
+    looked = []
+    def corpus_known():  # [왜] 진짜는 검색 색인(DB 전체 청크)을 만든다. 사실 확인 도구(check_corpus)가 쓰는 소문자 품번 집합만 흉내 낸다
+        looked.append(1)
+        return {"1n4148"}, {"K2301"}
+    monkeypatch.setattr(retrieve, "corpus_known", corpus_known)
+    schema = "projects_parts_" + uuid4().hex
+    with psycopg.connect(url, autocommit=True) as admin:
+        admin.execute(sql.SQL("CREATE SCHEMA {} AUTHORIZATION CURRENT_USER").format(sql.Identifier(schema)))
+        connect = lambda: psycopg.connect(url, options=f"-csearch_path={schema}")
+        monkeypatch.setattr(auth, "connection", connect)
+        try:
+            with connect() as conn:
+                apply_service_schema(conn)
+                users = [row[0] for row in conn.execute("INSERT INTO users (login_id,password_hash,role) VALUES ('a@example.test','fake','user'),('b@example.test','fake','user') RETURNING id").fetchall()]
+                for token, user_id in zip(("owner-token", "other-token"), users):
+                    conn.execute("INSERT INTO auth_sessions (token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')", (auth.session_token_hash(token), user_id))
+            repo = ProjectRepository()
+            pid = repo.create_upload(users[0], "부품 회로", connections=PARTS_CIRCUIT, source_sha256="a" * 64, parser_version="test").id
+            empty = repo.create_empty(users[0], "빈 프로젝트").id
+            client.cookies.set(auth.COOKIE, "owner-token")
+            response = client.get(f"/api/projects/{pid}/parts?circuit_version=1")
+            assert response.status_code == 200, response.text
+            body = response.json()
+            rows = {row["ref"]: row for row in body["parts"]}
+            assert [row["ref"] for row in body["parts"]] == ["D1", "D2", "D10", "R1", "R2", "U1"]
+            assert {ref: (row["kind"], row["kind_name"]) for ref, row in rows.items()} == {
+                "D1": ("diode", "다이오드"), "D2": ("led", "LED"), "D10": ("diode", "다이오드"),
+                "R1": ("resistor", "저항"), "R2": ("resistor", "저항"), "U1": ("ic", "IC")}
+            assert body["counts"] == [{"kind": "diode", "name": "다이오드", "count": 2}, {"kind": "resistor", "name": "저항", "count": 2},
+                                      {"kind": "led", "name": "LED", "count": 1}, {"kind": "ic", "name": "IC", "count": 1}]
+            # 판정 지원은 판정이 대상을 받는지와 같다(서버 422를 그대로 따른다)
+            for ref, row in rows.items():
+                try:
+                    _require_supported_target(PARTS_CIRCUIT, ref)
+                    supported = True
+                except HTTPException:
+                    supported = False
+                assert row["judge_supported"] is supported, ref
+            assert {ref: row["judge_reason"] for ref, row in rows.items()} == {
+                "D1": None, "D10": None, "D2": "LED라서", "R1": "다이오드가 아니라서", "R2": "다이오드가 아니라서", "U1": "다이오드가 아니라서"}
+            assert {ref: row["datasheet"] for ref, row in rows.items()} == {
+                "D1": "1N4148", "D2": None, "D10": None, "R1": None, "R2": None, "U1": None}
+            assert rows["U1"] == {"ref": "U1", "value": "ATtiny85-20SU", "footprint": "Package_SO:SOIC-8", "symbol": "MCU_Microchip_ATtiny:ATtiny85-20SU",
+                            "kind": "ic", "kind_name": "IC", "judge_supported": False, "judge_reason": "다이오드가 아니라서", "datasheet": None}
+            # 회로 없는 v0은 빈 표이고 코퍼스를 읽지 않는다
+            calls = len(looked)
+            assert client.get(f"/api/projects/{empty}/parts?circuit_version=0").json() == {"circuit_version": 0, "parts": [], "counts": []}
+            assert len(looked) == calls
+            assert client.get(f"/api/projects/{pid}/parts?circuit_version=2").status_code == 404  # 없는 버전
+            assert client.get(f"/api/projects/{pid}/parts").status_code == 422  # 회로 버전은 꼭 준다
+            client.cookies.set(auth.COOKIE, "other-token")
+            denied = client.get(f"/api/projects/{pid}/parts?circuit_version=1")
+            assert denied.status_code == 404 and denied.json()["error"]["code"] == "NOT_FOUND"
         finally:
             admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))

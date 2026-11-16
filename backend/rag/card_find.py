@@ -17,7 +17,8 @@ import contextvars
 import json
 import os
 import re
-from concurrent.futures import ThreadPoolExecutor
+import threading
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -227,6 +228,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
     - shared: 주면 문서마다 읽은 행을 담아 둔다(card_specs가 같은 dict를 받아 다시 읽지 않는다).
     """
     memo = {}  # (조건, 분류, 패키지) → (rows, keys, docs, meta)
+    reads, reads_lock = {}, threading.Lock()  # (문서 키, 읽은 코드) → Future(행). 같은 문서 · 같은 코드의 카드 읽기를 한 번만 한다
 
     def gather(conditions, category, package):
         """검색 → 문서 고르기 → 카드 적재 → 카드 읽기(코드가 먼저, 못 읽은 카드만 LLM). 같은 (조건, 분류, 패키지)는 한 번만 읽는다."""
@@ -262,12 +264,32 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
             cards = [c for c in doc['cards'] if mentions(c['content'], codes)][:MAX_CARDS]
             if not cards:
                 return []
-            got, _ = read(cards, codes, {doc['file']: doc['parts']}, chat=chat)
-            got += h_copies(got, doc)
-            got += bi_copies(got, doc)  # [주의] H 다음에 양방향: CAH는 AH(H로 붙인 단방향) 값을 받는다
-            if shared is not None and not set(codes) < (shared.get(k) or {}).get('codes', set()):
-                shared[k] = {'codes': set(codes), 'rows': got}  # 더 많은 코드로 읽은 것은 덮지 않는다
-            return got
+            # [왜] 'SMA(DO-214AC)'처럼 패키지가 둘로 갈리면 패키지마다 gather가 같은 문서의 카드를 LLM으로 또 읽었다(v3-15 찾기 5.6초 → 10.4초).
+            #      같은 문서 · 같은 코드 목록이면 카드 목록(mentions 거르기 · MAX_CARDS 자르기)도 같아 행이 같다. 먼저 온 쪽이 읽고 나머지는 같은 결과를 기다린다
+            # [주의] 코드가 더 많거나 적은 읽기는 재사용하지 않는다(행이 달라진다). 데모가 shared를 비우면 그 문서의 재사용도 끊는다(기록과 같은 호출을 내려고)
+            rk = (k, tuple(codes))
+            with reads_lock:
+                fut = reads.get(rk)
+                if fut is not None and fut.done() and shared is not None and k not in shared:
+                    fut = None
+                mine = fut is None
+                if mine:
+                    fut = reads[rk] = Future()
+            if not mine:
+                return list(fut.result())
+            try:
+                got, _ = read(cards, codes, {doc['file']: doc['parts']}, chat=chat)
+                got += h_copies(got, doc)
+                got += bi_copies(got, doc)  # [주의] H 다음에 양방향: CAH는 AH(H로 붙인 단방향) 값을 받는다
+                if shared is not None and not set(codes) < (shared.get(k) or {}).get('codes', set()):
+                    shared[k] = {'codes': set(codes), 'rows': got}  # 더 많은 코드로 읽은 것은 덮지 않는다
+            except BaseException as e:
+                with reads_lock:
+                    reads.pop(rk, None)  # 실패는 남기지 않는다(다음 찾기가 다시 읽는다)
+                fut.set_exception(e)
+                raise
+            fut.set_result(got)
+            return list(got)
         # [왜] 문서를 한 번에 읽히면 읽기가 150개를 넘어 느리고 출력 상한(4096)에 잘린다(h4-11 148개, 11-08). 문서마다 나눠 동시에 부른다
         with ThreadPoolExecutor(max_workers=max(1, len(keys))) as pool:
             # [주의] 스레드마다 문맥(contextvars)을 복사해 넘긴다(judge.py 읽기와 같은 방법). 안 넘기면 Langfuse 추적에서 카드 읽기가 빠졌다(11-09 실측)
@@ -317,8 +339,9 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
 
 
 def _connect():
-    import psycopg
-    return psycopg.connect(os.environ['DATABASE_URL'])
+    # [왜] 카드 읽기마다 새 연결을 맺지 않고 검색과 같은 풀을 쓴다. 여기서는 SET · 세션 상태를 바꾸지 않아 연결을 돌려줘도 새지 않는다
+    from backend.rag import db_pool
+    return db_pool.connection()
 
 
 def load_cards(keys):
@@ -402,6 +425,33 @@ def h_copies(rows, doc):
     return out
 
 
+# [왜] 코퍼스는 프로세스가 도는 동안 바뀌지 않는다. 찾기와 판정 값 읽기가 같은 문서를 DB에서 다시 읽지 않게 프로세스 하나가 문서 키별로 들고 있는다
+# [주의] 1 GiB Cloud Run이라 문서 수를 MAX_CACHED_DOCS로 막는다(넘으면 오래된 것부터 버린다). 문서 dict는 읽기만 하고 고치지 않는다
+MAX_CACHED_DOCS = 64
+_DOCS, _META = {}, {}
+
+
+def cached_load_cards(keys):
+    """load_cards와 같은 결과(문서 키 → 문서). 이미 읽은 문서는 DB를 안 부르고, 나머지는 한 번에 적재한다."""
+    keys = list(dict.fromkeys(keys))
+    new = [k for k in keys if k not in _DOCS]
+    if new:
+        for k, d in load_cards(new).items():
+            while len(_DOCS) >= MAX_CACHED_DOCS:
+                _DOCS.pop(next(iter(_DOCS)), None)
+            _DOCS[k] = d
+    return {k: _DOCS[k] for k in keys if k in _DOCS}
+
+
+def cached_doc_meta(keys):
+    """doc_meta와 같은 결과. 이미 알아낸 문서는 DB를 안 부른다(열이 없어 빈 dict였던 결과는 남기지 않는다)."""
+    keys = list(dict.fromkeys(keys))
+    new = [k for k in keys if k not in _META]
+    if new:
+        _META.update(doc_meta(new))
+    return {k: _META[k] for k in keys if k in _META}
+
+
 def doc_meta(keys):
     """문서 키 → {'category'}. category 열(db/012)이 아직 없으면 빈 dict다(분류로 거르지 않음)."""
     import psycopg
@@ -414,8 +464,18 @@ def doc_meta(keys):
     return {k: {'category': c} for k, c in rows}
 
 
+_OVERVIEWS = {}
+
+
 def overview_lines(category):
-    """분류 하나의 문서마다 개요 카드(PDF 1쪽 제목 줄, 청킹이 만든 '제품 개요' 카드) [{'key', 'file', 'text'}]."""
+    """분류 하나의 문서마다 개요 카드(PDF 1쪽 제목 줄, 청킹이 만든 '제품 개요' 카드) [{'key', 'file', 'text'}]. 분류마다 한 번만 읽는다."""
+    # [왜] 찾기마다 모든 청크를 LIKE로 훑었다. 코퍼스는 프로세스 동안 그대로라 분류별로 한 번이면 된다. 읽는 쪽은 줄을 고치지 않는다
+    if category not in _OVERVIEWS:
+        _OVERVIEWS[category] = _query_overviews(category)
+    return list(_OVERVIEWS[category])
+
+
+def _query_overviews(category):
     with _connect() as conn:
         rows = conn.execute("SELECT d.document_key, d.source_url, dc.content FROM document_chunks dc"
                             " JOIN source_documents d ON d.id = dc.document_id"
@@ -435,5 +495,5 @@ def default_find(n_docs=None, chat=None):
     from backend.rag.card_read import read_values
     from backend.rag.retrieve import retrieve
     from backend.services.llm import node_chat
-    return make_find(retrieve=retrieve, load_cards=load_cards, read=read_values, chat=chat or node_chat, doc_meta=doc_meta, n_docs=n_docs,
+    return make_find(retrieve=retrieve, load_cards=cached_load_cards, read=read_values, chat=chat or node_chat, doc_meta=cached_doc_meta, n_docs=n_docs,
                      overviews=overview_lines, shared=SHARED_READS)

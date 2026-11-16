@@ -39,7 +39,7 @@ curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.ru
 D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오드로 바꿔도 되나?
 ```
 
-공개 ATtiny85 계열 KiCad 회로의 다이오드 554개 중 1N4148(100V)이 53개, 1N4007(1000V)이 11개였다. 5V 회로에 과한 정격이 그대로 이어진다. 제조사 대체품 조회 도구는 동등성을 보증하지 않는다고 고지한다. 같은 50문항을 범용 코딩 에이전트(Codex)에 넣은 팀 측정은 45/50(우리 50/50은 `DEMO_MODE` 미기록 측정, 아래 4절 표)이고, 없는 품번을 내놓은 사례는 없었다(비관련 25건 모두 올바른 거절). 오답 4건은 넷리스트를 읽지 못한 역할 질문 3건과 시험 조건 차이를 놓친 승인 1건이다. 한계: 정답 초안을 같은 도구가 썼고 Codex 답의 원본 로그가 없다([EVAL_REPORT.md](EVAL_REPORT.md) 10장, [TALLY.md](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)). 근거와 조사 출처는 [`docs/TOPIC.md`](docs/TOPIC.md).
+공개 ATtiny85 계열 KiCad 회로의 다이오드 554개 중 1N4148(100V)이 53개, 1N4007(1000V)이 11개였다. 5V 회로에 과한 정격이 그대로 이어진다. 제조사 대체품 조회 도구는 동등성을 보증하지 않는다고 고지한다. 같은 50문항을 범용 코딩 에이전트(Codex)에 넣은 팀 측정은 45/50(우리 50/50은 `DEMO_MODE` 미기록 측정, 아래 4절 표)이고, 없는 품번을 내놓은 사례는 없었다(비관련 25건 모두 올바른 거절). 오답 4건은 넷리스트를 읽지 못한 역할 질문 3건과 시험 조건 차이를 놓친 승인 1건이다. 한계: 정답 초안을 같은 도구가 썼고 Codex 답의 원본 로그가 없다([EVAL_REPORT.md](EVAL_REPORT.md) 10장, [TALLY.md](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)). 원본 로그를 남기고 우리와 같은 입력(문항 글 + 넷리스트 전체, 저장소 맥락 없음)을 문항마다 넣은 다른 범용 모델 기준선(GPT-6.1 Terra + 웹 검색, 11-16)은 41/50이었다. 역할 4문항은 모두 맞혔고, 범위 밖 6문항에서는 서비스 범위를 모른 채 다이오드가 아닌 부품을 추천했다([TALLY.md](evals/results/graph/2026-11-16-terra-v3-50-isolated-web/TALLY.md)). 근거와 조사 출처는 [`docs/TOPIC.md`](docs/TOPIC.md).
 
 ---
 
@@ -58,7 +58,7 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 | 불충족 | 필수 조건이 하나라도 만족하지 않음 |
 | 문서로 확인 안 됨 | 필요한 값이 문서에 없거나 시험 조건이 다름 |
 
-- **사람이 승인한 판정만 견적서로 남긴다**: 동일품 · 사양 동등 · 역할상 충분인 후보를 사람이 승인한 뒤에만 견적을 저장하고, 가격·재고는 저장하지 않는다. 같은 동작은 보장하지 않으며, 답마다 그 사실을 밝힌다.
+- **사람이 승인한 판정만 견적서로 남긴다**: 동일품 · 사양 동등 · 역할상 충분인 후보를 사람이 승인한 뒤에만 견적을 저장하고, 가격·재고는 저장하지 않는다. 같은 동작은 보장하지 않으며, 판정 답마다 그 사실을 밝힌다.
 
 ---
 
@@ -78,6 +78,7 @@ graph TD;
 	기억_읽기(기억 읽기)
 	품번_판_확인(품번·판 확인)
 	Supervisor(Supervisor)
+	대상_확인(대상 확인)
 	RAG_에이전트(RAG 에이전트)
 	답_모으기(답 모으기)
 	답_정리(답 정리)
@@ -86,15 +87,12 @@ graph TD;
 	끝내기(끝내기)
 	거절(거절)
 	가격_안내(가격 안내)
+	부품_목록(부품 목록)
+	견적_안내(견적 안내)
 	__end__([<p>__end__</p>]):::last
 	RAG_에이전트 --> 답_모으기;
 	Spec_에이전트_대체_부품_판정 --> 답_모으기;
-	Supervisor -.-> RAG_에이전트;
-	Supervisor -.-> Spec_에이전트_회로_읽기;
-	Supervisor -.-> 가격_안내;
-	Supervisor -.-> 거절;
-	Supervisor -.-> 끝내기;
-	Supervisor -.-> 답_모으기;
+	Supervisor --> 대상_확인;
 	__start__ --> 입력_읽기;
 	기억_읽기 --> 품번_판_확인;
 	답_검사 -.-> 거절;
@@ -104,12 +102,22 @@ graph TD;
 	답_모으기 -.-> 답_정리;
 	답_모으기 -.-> 종합;
 	답_정리 --> 답_검사;
+	대상_확인 -.-> RAG_에이전트;
+	대상_확인 -.-> Spec_에이전트_회로_읽기;
+	대상_확인 -.-> 가격_안내;
+	대상_확인 -.-> 거절;
+	대상_확인 -.-> 견적_안내;
+	대상_확인 -.-> 끝내기;
+	대상_확인 -.-> 답_모으기;
+	대상_확인 -.-> 부품_목록;
 	입력_읽기 --> 기억_읽기;
 	종합 --> 답_검사;
 	품번_판_확인 --> Supervisor;
 	가격_안내 --> __end__;
 	거절 --> __end__;
+	견적_안내 --> __end__;
 	끝내기 --> __end__;
+	부품_목록 --> __end__;
 	subgraph Spec 에이전트
 	Spec_에이전트_회로_읽기(회로 읽기)
 	Spec_에이전트_대체_부품_판정(대체 부품 판정)
@@ -129,7 +137,7 @@ LLM을 부르는 노드와 코드만 도는 노드(모델의 정본은 `backend/
 | LLM | `회로 읽기` (Spec 에이전트 안) | Haiku (`judge_read`) | `agents/judge.py:125` |
 | LLM | `종합` | `anthropic/claude-sonnet-5.5` (`synth`). 쓰는 조건은 SPEC 2절 | `supervisor.py:303` |
 | 코드, 드물게 LLM | `대체 부품 판정` | 코드가 못 읽은 카드가 있을 때만 Haiku (`card_read`). 비교와 판정은 코드 | `rag/card_read.py:251`, `rag/card_specs.py:93` |
-| 코드 | `입력 읽기` `기억 읽기` `품번·판 확인` `답 모으기` `답 정리` `답 검사` `끝내기` `거절` `가격 안내` | 없음 | `build.py:26-50`, `supervisor.py:146 · 257 · 312`, `facts.py:107`, `graph/nodes.py:124 · 209`, `graph/memory.py:26` |
+| 코드 | `입력 읽기` `기억 읽기` `품번·판 확인` `대상 확인` `답 모으기` `답 정리` `답 검사` `끝내기` `거절` `가격 안내` `부품 목록` `견적 안내` | 없음 | `build.py:26-50`, `supervisor.py:146 · 257 · 312`, `facts.py:107`, `graph/nodes.py:124 · 209`, `graph/memory.py:26` |
 
 **개념도(손으로 그린 요약, 노드 이름과 화살표는 위 그래프가 기준)**
 
@@ -143,9 +151,10 @@ KiCad 넷리스트 + 질문
   ├─ 입력 읽기       넷리스트에서 대상 부품 주변 연결을 뽑는다 (LLM 없음)
   ├─ 기억 읽기       내 설정의 선호 실장 방식 한 칸만 Store에서 읽는다 (LLM 없음, SPEC 8.5)
   ├─ 품번·판 확인    질문의 품번·개정판이 코퍼스 목록에 있는지 대조한다 (LLM 없음, MCP check_corpus)
-  ├─ Supervisor      질문 종류 8가지(일상 대화 · 범위 밖 · 다른 부품 · 가격 · 역할 · 후보 찾기 · 후보 판정 · 정격),
+  ├─ Supervisor      질문 종류 10가지(일상 대화 · 범위 밖 · 다른 부품 · 가격 · 부품 목록 · 견적 · 역할 · 후보 찾기 · 후보 판정 · 정격),
   │    │             거절 여부, 할 일 최대 3개와 지시서를 계획한다 (LLM 1번)
-  │    ├─ 끝내기 · 가격 안내 · 거절   일상 대화 · 가격·재고(값은 화면이 그래프 밖에서 Mouser로, 저장 안 함) · 범위 밖 · 코퍼스 밖
+  │    ├─ 대상 확인     대상이 빈 대화에서 할 일이 대상 부품을 써야 할 때만 고를 부품을 묻는다 (LLM 없음, 인터럽트, SPEC 8.9)
+  │    ├─ 끝내기 · 가격 안내 · 부품 목록 · 견적 안내 · 거절   일상 대화 · 가격·재고(값은 화면이 그래프 밖에서 Mouser로, 저장 안 함) · 회로 부품 표(넷리스트를 코드가 옮기고 종류로 거름) · 견적 만드는 화면 길(고정 문구) · 범위 밖 · 코퍼스 밖
   │    └─ 할 일마다 Send로 동시에
   │         ├─ RAG 에이전트        검색 → 근거 채점 + 답 쓰기(LLM 1번) → 근거가 없거나 일부면 다른 검색어로 1번 더 → 인용 검사(코드)
   │         └─ Spec 에이전트  회로 읽기(LLM 1번, 읽은 뒤 코드가 부품 이름을 질문 글과 대조해 정리) → 대체 부품 판정(코퍼스 밖 관문 · 빠진 값 한 번 묻기 · 카드 값을 코드로 비교, ADR 0016)
@@ -156,7 +165,7 @@ KiCad 넷리스트 + 질문
 
 **왜 그래프인가**
 
-- 질문 종류마다 가는 길이 다르다. 일상 대화 · 가격 · 거절은 Supervisor에서 바로 끝나고, 문서 할 일과 판정 할 일은 두 에이전트에 동시에 간다(SPEC 2절 "그래프").
+- 질문 종류마다 가는 길이 다르다. 일상 대화 · 가격 · 부품 목록 · 견적 · 거절은 Supervisor에서 바로 끝나고, 문서 할 일과 판정 할 일은 두 에이전트에 동시에 간다(SPEC 2절 "그래프").
 - 판정에 필요한 회로 값이 질문에 없으면 판정 노드가 interrupt로 한 번 묻고, PostgreSQL 체크포인트에서 같은 대화로 이어 간다. 판정은 하위 그래프라 재개할 때 읽기 LLM을 다시 부르지 않는다(SPEC 2절, `build.py`의 `judge_subgraph`).
 - 한 방향 흐름은 실패를 고칠 길이 없어 실패하면 계획으로 되돌아간다. 대신 재계획 1번 · 할 일 3개 · Supervisor LLM 4번 · 서브에이전트 실행 6번 · 문서 할 일마다 검색 2번으로 막는다(`backend/multi_agent/contracts.py`의 `MAX_*`, [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) "구조 결정", AGENTS.md 지킬 것 6).
 
@@ -291,9 +300,10 @@ KiCad 원본 회로도를 그림(PNG)으로 바꾸는 일만 하는 별도 서�
 | 로컬에서 같이 띄우기 | compose profile `schematic`: `docker compose --profile schematic up --build` | [`docker-compose.yml`](docker-compose.yml) `renderer` |
 | API가 렌더러를 찾는 주소 | 환경변수 `KICAD_RENDERER_URL`. compose의 api는 값이 없으면 `http://renderer:8000`을 쓴다. 그래서 profile 없이 띄우면 그 주소에 서비스가 없어 KiCad 원본 회로도 렌더가 `KiCad 렌더러에 연결할 수 없습니다`로 실패한다 `[추정]`(코드 `render_remote_kicad`를 읽은 것이고 compose에서 실행해 보지는 않았다) | [`docker-compose.yml`](docker-compose.yml), `backend/projects/schematic.py` |
 | Cloud Run | 주소는 HTTPS여야 하고 API가 메타데이터 서버의 ID token을 붙여 부른다(`_renderer_headers`). 운영 리비전에는 `KICAD_RENDERER_URL`이 설정돼 있다(조장 전달, 직접 확인 못 함) | `backend/projects/schematic.py` |
+| 회로도 업로드(#52) | `.kicad_sch`를 올리면 API가 원문을 `POST /render` `{schematic}`로 보내 넷리스트와 그림을 받는다(`backend/api/projects.py` `read_schematic`, SPEC 8.10). 이 경로는 API 안 `kicad-cli`로 대신하지 않아 렌더러가 없으면 503이다 | `backend/projects/schematic.py` `export_uploaded_kicad` |
 | 렌더러 없이 | `INCLUDE_KICAD=1`로 API 이미지를 빌드해 `kicad-cli`를 넣고 `KICAD_RENDERER_URL`을 비워 두면 API 프로세스가 직접 부른다(실행 파일은 `KICAD_CLI`로 지정). compose의 api는 위 기본 주소가 있어 이 방식은 compose 밖에서 쓴다 | [`Dockerfile`](Dockerfile), `backend/projects/external_schematic.py` |
 
-렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)뿐이다 `[실측: grep]`. 분석 그래프 · 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 다만 분리(`renderer` target 추가) 뒤의 코드로 키 없는 새 clone 기동과 스모크를 다시 재지는 않았다([GATES](docs/GATES.md) G2).
+렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)와 회로도 업로드(아래 표 줄)뿐이다. 분석 그래프 · `.net` 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 다만 분리(`renderer` target 추가) 뒤의 코드로 키 없는 새 clone 기동과 스모크를 다시 재지는 않았다([GATES](docs/GATES.md) G2).
 
 ### 화면 개발 서버
 

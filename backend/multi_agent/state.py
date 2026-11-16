@@ -32,6 +32,7 @@ class MultiState(TypedDict, total=False):
     conditions: str
     question: str
     target_part: dict
+    target_choices: list[dict]  # 대상이 비었을 때 고를 지원 다이오드 [{ref, value}]. 서비스가 넣고 '대상 확인'이 묻는다(#62)
     # ── 기억 읽기 노드가 채운다 ──
     mount_preference: str  # 내 설정의 선호 실장 방식 'smd' · 'tht' · ''(없음). 찾기 후보 순서에만 쓴다(SPEC 8.5)
 

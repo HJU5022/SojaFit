@@ -1,7 +1,7 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
 - 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 11개).
-  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다.
+  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다. 부품 목록(`parts_list_answer`, #55) · 견적 안내(`quote_answer`, #60) · 대상 확인(`target_choice`, #62)은 멀티 그래프만 붙인다.
   사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
@@ -14,16 +14,18 @@ import hashlib
 import json
 import math
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Literal
 
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field, model_validator
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
 from backend.graph.memory import memory_context, memory_sources
 from backend.multi_agent.contracts import QuestionType, Reason
-from backend.multi_agent.messages import price_message, refusal_for, render_judgement
+from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST, QUOTE_GUIDE, price_message, refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
 from backend.rag.units import PREFIX, to_si
 from backend.services import llm
@@ -156,7 +158,7 @@ REFUSED_TYPES = {"out_of_scope": Reason.OUT_OF_SCOPE, "other_part": Reason.NOT_F
 
 
 class Route(BaseModel):
-    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 멀티 Supervisor와 같은 8가지다."""
+    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 route.md의 8가지다(멀티 Supervisor는 부품 목록 parts_list(#55) · 견적 quote(#60)를 더 고른다)."""
     # Literal로 정한 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
     question_type: QuestionType = Field(description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
     reason: FirstStageReason | None = Field(default=None, description="검색 전에 거절할 때만 거절 사유. 거절하지 않으면 비운다")
@@ -221,6 +223,105 @@ def price_answer(state: AgentState) -> dict:
     # [왜] check · skill도 비운다(짧은 답과 같은 이유). 멀티 메모장에는 skill 칸이 없어 LangGraph가 그 칸을 버린다
     return {"price_parts": parts, "answer": price_message(parts), "check": {},
             "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["가격 안내"]}
+
+
+def circuit_parts(state: dict) -> list[dict]:
+    """지금 회로(넷리스트)의 부품 목록. 없으면 빈 목록. 부품 목록 노드와 Supervisor 입력 글(`Circuit attached`)이 같이 쓴다(#59)."""
+    connections = state.get("connections")
+    if connections is None and state.get("netlist_path"):  # 평가 실행기는 회로 칸 없이 넷리스트 경로만 준다(read_input과 같은 파일)
+        found = _connections_file(state["netlist_path"])
+        connections = json.loads(found.read_text(encoding="utf-8")) if found else None
+    c = connections or {}
+    return c.get("components", c.get("parts")) or []
+
+
+# 부품 종류(contracts.PartKind) → 답에 쓰는 이름. 순서는 종류별 개수 줄에서 개수가 같을 때의 순서다
+KIND_NAMES = {"diode": "다이오드", "led": "LED", "resistor": "저항", "capacitor": "커패시터", "inductor": "인덕터",
+              "transistor": "트랜지스터", "ic": "IC", "connector": "커넥터", "switch": "스위치", "crystal": "크리스털",
+              "fuse": "퓨즈", "other": "기타 부품"}
+# [왜] 심볼 이름(`:` 뒤)을 첫 글자만으로 가르면 실제 넷리스트의 DS18B20 · CY62128(메모리) · RELAY · L78L05(레귤레이터)가 다이오드 · 커패시터 · 저항 · 인덕터가 된다.
+#      그래서 이름 전체를 맞춘다(대소문자 무시). 샘플 넷리스트(data/circuits/collected/**/*.net)의 심볼로 맞춰 봤다
+SYMBOL_KINDS = {"led": r"LED.*", "diode": r"D|D_.*|DIODE.*", "resistor": r"R|R_.*|RESISTOR.*", "capacitor": r"CP?|CP?[_-].*|CAP.*",
+                "inductor": r"L|L_.*|INDUCTOR.*", "transistor": r"Q|Q_.*", "switch": r"SW.*|TACTILE.*", "crystal": r"CRYSTAL.*",
+                "fuse": r".*FUSE.*", "connector": r"CONN.*"}
+# 심볼로 못 가르면 기호의 영문 앞부분 전체(RESET1 → RESET, RV1 → RV)로 가른다. 앞 글자만 보면 RESET이 저항이 된다
+REF_KINDS = {"D": "diode", "LED": "led", "R": "resistor", "C": "capacitor", "L": "inductor", "Q": "transistor", "U": "ic", "IC": "ic",
+             "J": "connector", "P": "connector", "SW": "switch", "Y": "crystal", "F": "fuse"}
+
+
+def part_kind(part: dict) -> str:
+    """넷리스트 부품 하나의 종류(contracts.PartKind): 심볼 이름 → 기호 앞부분 → other 순서로 정한다. 순수 함수(#59)."""
+    name = str(part.get("symbol") or "").rpartition(":")[2]
+    kind = next((k for k, pattern in SYMBOL_KINDS.items() if re.fullmatch(pattern, name, re.I)), None)
+    return kind or REF_KINDS.get(re.match(r"[A-Za-z]*", str(part.get("ref") or ""))[0].upper(), "other")
+
+
+def _final(word: str) -> bool:
+    """끝 글자에 받침이 있나(은/는 · 이/가 고르기). 영문 이름(LED · IC)은 받침 없이 읽는다."""
+    return "가" <= word[-1] <= "힣" and (ord(word[-1]) - 0xAC00) % 28 > 0
+
+
+def parts_list_answer(state: dict) -> dict:
+    """부품 목록 노드: 지금 회로(넷리스트)의 부품을 기호 · 값 · 풋프린트 표로 답한다. LLM을 부르지 않는다(#55).
+
+    [왜] Supervisor는 넷리스트 전체를 보지 않아 "부품 리스트" 요청을 일상 대화로 보내 지어낸 거절을 썼다. 값은 넷리스트 글자를 그대로 옮긴다.
+    계획에 부품 종류(`part_kinds`)가 있으면 그 종류만 심볼 칸을 더한 표로 답하고, 없으면 전체 표 위에 종류별 개수 한 줄을 둔다(#59).
+    """
+    parts = circuit_parts(state)
+    if not parts:
+        # [왜] 회로 없는 대화: 거절 노드와 같은 문구 · 코드라 화면이 넷리스트 첨부 카드를 붙인다(SPEC 8.9)
+        return {"answer": NEED_NETLIST, "check": {}, "refusal": {"code": CIRCUIT_MISSING, "message": NEED_NETLIST}, "path": ["부품 목록"]}
+    cell = lambda v: str(v or "").replace("|", "\\|").replace("\n", " ")  # 표 칸을 깨는 글자만 막는다
+    rows = sorted(parts, key=lambda p: re.sub(r"\d+", lambda m: m[0].zfill(10), str(p.get("ref", ""))))  # 자연 정렬: D1 · D2 · D10 · R1
+    kinds = list(dict.fromkeys((state.get("plan") or {}).get("part_kinds") or []))
+    if not kinds:
+        counts = Counter(map(part_kind, rows))
+        by_kind = " · ".join(f"{KIND_NAMES[k]} {counts[k]}" for k in sorted((k for k in KIND_NAMES if counts[k]), key=lambda k: -counts[k]))
+        table = ["| 기호 | 값 | 풋프린트 |", "|---|---|---|",
+                 *(f"| {cell(p.get('ref'))} | {cell(p.get('value'))} | {cell(p.get('footprint'))} |" for p in rows)]
+        return {"answer": f"이 회로의 부품은 {len(rows)}개입니다.\n\n종류별: {by_kind}\n\n" + "\n".join(table), "check": {}, "path": ["부품 목록"]}
+    # [왜] 이 서비스에서 "다이오드"는 LED도 포함한다(#59). 요청 이름에는 LED를 따로 쓰지 않고 첫 줄에 몇 개가 LED인지 밝힌다
+    wanted = set(kinds) | ({"led"} if "diode" in kinds else set())
+    names = " · ".join(KIND_NAMES[k] for k in kinds if not (k == "led" and "diode" in kinds))
+    rows = [p for p in rows if part_kind(p) in wanted]
+    if not rows:
+        return {"answer": f"이 회로에는 {names}{'이' if _final(names) else '가'} 없습니다.", "check": {}, "path": ["부품 목록"]}
+    leds = sum(part_kind(p) == "led" for p in rows) if "diode" in kinds else 0
+    lead = f"이 회로의 {names}{'은' if _final(names) else '는'} {len(rows)}개입니다" + (f"(LED {leds}개 포함)." if leds else ".")
+    table = ["| 기호 | 값 | 심볼 | 풋프린트 |", "|---|---|---|---|",
+             *(f"| {cell(p.get('ref'))} | {cell(p.get('value'))} | {cell(p.get('symbol'))} | {cell(p.get('footprint'))} |" for p in rows)]
+    return {"answer": f"{lead}\n\n" + "\n".join(table), "check": {}, "path": ["부품 목록"]}
+
+
+def quote_answer(state: dict) -> dict:
+    """견적 안내 노드: 견적 · 견적서 요청에 견적을 만드는 화면 길을 고정 문구로 답한다. LLM · DB를 부르지 않는다(#60).
+
+    [왜] Supervisor가 견적 요청을 범위 밖(주문 · 결제)으로 보내 "회로나 부품에 관한 질문을 해 주세요"라고 답했다. 견적은 판정 → 승인 → 수량 화면이 만든다.
+    승인 기록은 그래프에 넘기지 않아(`approved_memories`는 늘 빈 목록) 승인 여부로 가르지 않는다.
+    """
+    return {"answer": QUOTE_GUIDE, "check": {}, "path": ["견적 안내"]}
+
+
+TARGET_KINDS = {"role", "candidate_judge", "candidate_find"}  # 대상 부품의 회로 · 값을 읽는 할 일
+
+
+def target_choice(state: dict) -> dict:
+    """대상 확인 노드: 대상이 빈 대화(지원 다이오드가 여럿)에서 계획의 할 일이 대상 부품을 써야 할 때만 고를 부품을 묻는다. LLM을 부르지 않는다(#62).
+
+    [왜] 계획보다 먼저 물으면 일상 대화 · 부품 목록 · 품번 정격까지 부품 선택 카드에 막혔다. 계획 뒤에 묻고, 재개하면 이 노드만 다시 돌아 Supervisor를 다시 부르지 않는다.
+    대상이 필요한 할 일: 역할 · 대체 판정 · 후보 찾기, 그리고 품번 · 정격 없이 "이 다이오드"의 정격을 묻는 정격 할 일.
+    """
+    plan, choices = state.get("plan") or {}, state.get("target_choices") or []
+    if state.get("target") or not choices or state.get("refusal_reason") or plan.get("next") != "tasks":
+        return {}
+    numbers = (state.get("facts") or {}).get("parts")  # 질문에 적힌 품번
+    if not any(t["kind"] in TARGET_KINDS or (t["kind"] == "rating" and not (numbers or t.get("parts") or t.get("specs"))) for t in plan["tasks"]):
+        return {}
+    # [주의] 재개 값은 서비스가 고정한 대상을 담은 {'answers', 'role', 'target'}이다(memory_service.resume). 질문 문장은 화면 DTO가 후보로 다시 만든다
+    ref = (interrupt({"target_choices": choices, "question": "어떤 부품을 바꿀까요?"}) or {}).get("target")
+    if ref not in {c["ref"] for c in choices}:
+        raise ValueError("제시하지 않은 대상 부품으로 재개했습니다")
+    return {"target": ref, "target_part": circuit_around(state["connections"], ref), "path": ["대상 확인"]}
 
 
 def search(state: AgentState, retriever) -> dict:
@@ -515,7 +616,7 @@ def refuse(state: AgentState) -> dict:
     """거절 노드: 이유 코드(`refusal`)와 안내문, 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절).
 
     이유 코드는 멀티 그래프와 같은 `contracts.Reason` 값이다: 라우팅이 정한 사유(out_of_scope · part_missing · revision_missing ·
-    not_found), 판정이 코퍼스 밖 요구로 정한 사유(part_missing · revision_missing · not_found), 검색 장애(search_error),
+    not_found), 판정이 코퍼스 밖 요구로 정한 사유(part_missing · maker_missing · revision_missing · not_found), 검색 장애(search_error),
     검색 고리에서 못 찾음(not_found). 평가 실행기가 이 코드로 거절 종류를 센다.
     """
     skill_info = {"enabled": False, "applied": False, "sha256": None}  # 이전 턴의 Skill 적용 정보도 비운다

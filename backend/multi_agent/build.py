@@ -1,9 +1,10 @@
-"""멀티 에이전트 조립: 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 · Spec 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
+"""멀티 에이전트 조립: 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → 대상 확인 → RAG 에이전트 · Spec 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
 
 - 역할: 노드와 연결을 정하고 compile한다. 노드 이름은 강의처럼 한국어로 달아 `get_graph().draw_mermaid()` 그림이 그대로 읽히게 한다.
   답 모으기 → Supervisor 되돌림(재계획, 설계 v2)이 유일한 고리다. 서브에이전트는 RAG 에이전트(`agents/docs.py`, 노드 하나)와
   Spec 에이전트(회로 읽기 → 대체 부품 판정 두 노드의 하위 그래프, 인터럽트 재개 때 읽기 LLM을 다시 부르지 않게)다.
-  일상 대화는 계획의 reply로 끝, 가격 · 재고는 가격 안내(단일 그래프와 같은 노드)로 끝, 범위 밖 · 코퍼스 밖은 거절로 끝난다.
+  일상 대화는 계획의 reply로 끝, 가격 · 재고는 가격 안내(단일 그래프와 같은 노드)로 끝, 회로 부품 목록은 부품 목록(코드, #55)으로 끝,
+  견적 요청은 견적 안내(코드 고정 문구, #60)로 끝, 범위 밖 · 코퍼스 밖은 거절로 끝난다.
   LLM · 검색기 · 사양 표 도구는 인자로 받아 시험에서 가짜로 바꾼다. 기억 읽기는 compile에 넘긴 Store에서 선호 실장 방식만 읽는다(`graph/memory.py`).
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 외부 검색 구현(`backend/services/exa.py`), 체크포인터 만들기(부르는 쪽이 넘긴다).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/build.py(조립 방식을 따름)
@@ -22,7 +23,7 @@ from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import Reason, TaskReport
-from backend.multi_agent.messages import refusal_for
+from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, refusal_for
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
 from backend.services.llm import is_llm_failure
@@ -63,6 +64,8 @@ def chat_reply_is_safe(state: dict, reply: str) -> bool:
 def finish_node(state: dict) -> dict:
     """끝내기: 일상 대화는 계획의 reply가 답이다. 서브에이전트를 거친 답은 이미 answer에 있다."""
     if not state.get('reports'):
+        if (state.get('plan') or {}).get('reply_kind') == 'earlier_answer':
+            return {'answer': EARLIER_ANSWER, 'path': ['끝']}  # 앞 답 · 근거 다시 보기는 LLM 글 대신 고정 안내(#64)
         reply = (state.get('plan') or {}).get('reply', '')
         if '승인사례:' in reply:
             reason = Reason.VERIFY_FAILED
@@ -73,6 +76,8 @@ def finish_node(state: dict) -> dict:
             reason = Reason.OUT_OF_SCOPE
             message = refusal_for(reason, state.get('facts') or {})
             return {'answer': message, 'refusal': {'code': reason.value, 'message': message}, 'memory_refs': [], 'path': ['끝']}
+        if (state.get('plan') or {}).get('reply_kind') == 'general':
+            reply = f'{reply.rstrip().removesuffix(GENERAL_NOTE).rstrip()} {GENERAL_NOTE}'  # 고정 문장은 코드가 붙인다(#66)
         return {'answer': reply, 'path': ['끝']}
     return {'path': ['끝']}
 
@@ -117,9 +122,9 @@ def guarded(node, agent: str, path: str, *, skip_after_failure: bool = False):
 
 def refuse_node(state: dict) -> dict:
     """거절: 이유 코드는 `refusal`에 남기고(Langfuse로), 사용자에게는 일상어 문구를 답으로 준다."""
-    reason = Reason(state.get('refusal_reason') or Reason.LIMIT_REACHED.value)
-    message = refusal_for(reason, state.get('facts') or {})
-    return {'answer': message, 'check': {}, 'refusal': {'code': reason.value, 'message': message}, 'path': ['거절']}
+    code = state.get('refusal_reason') or Reason.LIMIT_REACHED.value
+    message = NEED_NETLIST if code == CIRCUIT_MISSING else refusal_for(Reason(code), state.get('facts') or {})
+    return {'answer': message, 'check': {}, 'refusal': {'code': code, 'message': message}, 'path': ['거절']}
 
 
 def judge_subgraph(*, chat, specs, find, retriever, web_search=None, web_search_fallback=None):
@@ -153,6 +158,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_node('기억 읽기', read_profile)  # Store(사용자 사실)에서 선호 실장 방식만 읽는다. Store 없이 compile하면(평가 실행기) 선호 없음
     g.add_node('품번·판 확인', partial(facts_step, lookup=lookup))
     g.add_node('Supervisor', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled, web_enabled=web_enabled))  # 계획(LLM 1번)
+    g.add_node('대상 확인', nodes.target_choice)  # [왜] 대상이 빈 대화는 계획을 본 뒤 대상이 필요한 할 일일 때만 고를 부품을 묻는다(인터럽트, #62)
     g.add_node('RAG 에이전트', guarded(partial(docs_agent, retriever=retriever, chat=chat, find=find,
                                        web_search=web_search if web_enabled else None,
                                        web_search_fallback=web_search_fallback if web_enabled else None), 'docs', '문서'))  # find: 품번 없이 정격만 준 질문의 품번 찾기
@@ -164,10 +170,13 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_node('거절', refuse_node)
     # [왜] 가격 안내는 단일 그래프 노드를 그대로 쓴다. Mouser는 그래프 밖 /api/prices만 부른다(ADR 0009)
     g.add_node('가격 안내', nodes.price_answer)
+    g.add_node('부품 목록', nodes.parts_list_answer)  # [왜] 넷리스트 전체를 코드가 표로 옮긴다. Supervisor는 종류만 고른다(#55)
+    g.add_node('견적 안내', nodes.quote_answer)  # [왜] 견적은 승인 · 수량 화면이 만든다. 코드가 그 길을 고정 문구로 알려 준다(#60)
     g.add_edge(START, '입력 읽기')
     g.add_edge('입력 읽기', '기억 읽기')
     g.add_edge('기억 읽기', '품번·판 확인')
     g.add_edge('품번·판 확인', 'Supervisor')
+    g.add_edge('Supervisor', '대상 확인')
     agents = ['RAG 에이전트']
     if judge_enabled:
         g.add_node('Spec 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever,
@@ -175,7 +184,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
                                                        web_search_fallback=judge_web_search_fallback if web_enabled else None))
         agents.append('Spec 에이전트')
     # [왜] 목록(path_map)의 이름 = 노드 이름이라 그림에 라벨이 붙지 않는다. 할 일이 둘이면 두 에이전트에 동시에 Send
-    g.add_conditional_edges('Supervisor', sup.after_plan, ['끝내기', '가격 안내', '거절', '답 모으기', *agents])  # 답 모으기: 재계획이 '있는 답으로'
+    g.add_conditional_edges('대상 확인', sup.after_plan, ['끝내기', '가격 안내', '부품 목록', '견적 안내', '거절', '답 모으기', *agents])  # 답 모으기: 재계획이 '있는 답으로'
     for agent in agents:
         g.add_edge(agent, '답 모으기')  # [왜] 같은 단계에서 동시에 돈 서브에이전트가 모두 끝나야 모으기가 한 번 돈다
     # [왜] 설계 v2(11-07): 모으기가 다시 해 볼 만한 실패를 보면 Supervisor로 한 번 되돌린다(MAX_REPLANS). 이 간선만 키가 노드 이름과 달라 그림에 조건이 라벨로 보인다
@@ -186,4 +195,6 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_edge('끝내기', END)
     g.add_edge('거절', END)
     g.add_edge('가격 안내', END)
+    g.add_edge('부품 목록', END)
+    g.add_edge('견적 안내', END)
     return g.compile(checkpointer=checkpointer, store=store)

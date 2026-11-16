@@ -220,7 +220,8 @@ def test_roles_own_names_reach_the_thresholds(monkeypatch):
 # ── 코퍼스 밖 요구 거절(SPEC 8.3): 규칙 · 조건을 만들기 전에 코드가 대조해 거절한다 ──
 GATE = [  # (읽기 칸, 사실 확인, 거절 사유)
     ({'required_specs': [{'words': '55°C에서 고장률 10FIT 이하', 'code': 'none'}]}, {}, 'not_found'),
-    ({'maker_wanted': 'ROHM'}, {}, 'part_missing'),
+    ({'maker_wanted': 'ROHM'}, {}, 'maker_missing'),  # 품번 문구가 아닌 제조사 문구(#63)
+    ({'maker_wanted': 'Vishay'}, {}, 'maker_missing'),  # TSC 내부 행으로 다른 제조사 후보를 판정하지 않는다(#146 회귀)
     ({'revision_wanted': '2027년판'}, {}, 'revision_missing'),
     ({'revision_wanted': 'G2710'}, {'revisions': {'G2710': False}}, 'revision_missing'),
 ]
@@ -608,3 +609,19 @@ def test_power_role_guard_requires_complete_typed_power_connections(change):
     read = J.JudgeRead(role='R08')
     out = J.judge_read_agent({**STATE, 'target_part': part}, chat=lambda *args: read)['judge_read']
     assert out['role'] == 'R08'
+
+
+@pytest.mark.parametrize('question,goal,candidates', [
+    ('D1을 SS34로 그대로 둬도 돼?', 'Judge whether SS34 can stay in place as D1 in the circuit.', ['SS34']),  # 같은 품번 질문(#65)
+    ('D1을 SS34로 그대로 둬도 돼?', 'Judge whether D1 can keep its part.', ['SS34']),                    # 목표에 품번이 없어도 질문으로
+    ('D1을 SS34 R0G로 받아도 돼?', 'Judge whether this ordering code can be used for D1.', []),         # 주문 코드만 다름: 동일품으로 몰지 않는다
+    ('입력 전압은 5V, 부하 전류는 1.5A야', 'Re-judge whether SS14 can replace D1.', ['SS14']),         # #64 조건만 준 말은 목표의 후보
+    ('입력 전압은 5V야', 'Re-judge D1 with the conditions in the question.', []),                       # 지금 말에 품번이 없으면 원래 품번을 후보로 만들지 않는다
+])
+def test_empty_read_candidates_take_the_original_only_when_the_question_names_just_that_part(question, goal, candidates):
+    """#65 회귀: 읽기가 원래 부품을 후보에서 빼(candidates=[]) 같은 품번 질문이 조건 카드 → not_found 거절로 끝났다(11-17 thread 54ca8d98)."""
+    part = {'ref': 'D1', 'value': 'SS34', 'nets': [{'name': 'VBUS', 'nodes': ['D1.A(SS34)', 'D2.A(SS34)'], 'more': 0}]}
+    state = {**STATE, 'question': question, 'conditions': '', 'target': 'D1', 'target_part': part,
+             'task': {'id': 1, 'agent': 'judge', 'kind': 'candidate_judge', 'goal': goal}}
+    out = J.judge_read_agent(state, chat=lambda *args: J.JudgeRead(role='R02', original_part='SS34'))['judge_read']
+    assert out['original_part'] == 'SS34' and out['candidates'] == candidates

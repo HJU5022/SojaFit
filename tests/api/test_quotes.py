@@ -164,6 +164,7 @@ def test_case_detail_is_owner_only_and_shows_only_the_public_allowlist(monkeypat
             assert (body['project_id'], body['project_name'], body['thread_id'], body['message_id']) == (project, '전원부', thread, message)
             assert body['question'] == body['thread_title'] == 'D1을 SS34로 바꿔도 되나요?'
             assert (body['target_ref'], body['target_value']) == (('D1', 'SS34') if agent else (None, None))
+            assert body['circuit_version'] == 1  # 회로를 올린 뒤 만든 대화는 그 버전을 읽는다(보고서 #44)
             assert body['candidate']['verdict'] == 'ROLE_SUFFICIENT' and body['candidate']['checks'][0]['result'] == 'pass'
             assert body['candidate']['checks'][0]['citation']['row'] == 'VRRM' and body['evidence'][0]['document'] == 'tsc-ss34.pdf'
             assert [q['quantity'] for q in body['quotes']] == [10] and mine.headers['cache-control'] == 'no-store'

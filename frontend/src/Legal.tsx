@@ -24,6 +24,17 @@ export function LegalPage({ path }: { path: string }) {
     </div>
   );
 }
+/** 고지 문서 경로와 제목(하단 줄 · 사이드바 계정 메뉴 순서). */
+export const legalDocs = Object.entries(docs).map(([path, doc]) => [path, doc.title] as const);
+/** 고지 문서 작은 창. 하단 줄 링크와 사이드바 계정 메뉴(#43)가 같이 연다. */
+export function LegalModal({ path, close }: { path: string; close: () => void }) {
+  const doc = docs[path];
+  return (
+    <Modal title={doc.title} close={close}>
+      <doc.body />
+    </Modal>
+  );
+}
 function LegalLink({ path }: { path: string }) {
   const [open, setOpen] = useState(false),
     doc = docs[path];
@@ -40,19 +51,14 @@ function LegalLink({ path }: { path: string }) {
         {/* [왜] 개인정보처리방침은 국내 관행대로 굵게 보인다 */}
         {path === '/privacy' ? <strong>{doc.title}</strong> : doc.title}
       </a>
-      {open && (
-        <Modal title={doc.title} close={() => setOpen(false)}>
-          <doc.body />
-        </Modal>
-      )}
+      {open && <LegalModal path={path} close={() => setOpen(false)} />}
     </>
   );
 }
-/** 랜딩·로그인 계열 화면 맨 아래 한 줄. compact는 사이드바 맨 아래용(좁아서 줄을 바꿈). */
-export function Footer({ compact = false }: { compact?: boolean }) {
+/** 랜딩·로그인 계열 화면 맨 아래 한 줄. 로그인한 화면은 사이드바 계정 메뉴가 같은 항목을 연다(#43). */
+export function Footer() {
   return (
-    // [왜] <nav>로 감싸지 않는다. 사이드바의 `.sidebar nav a`(메뉴 단추 모양)가 이 링크에 걸린다
-    <footer className={compact ? 'site-footer compact' : 'site-footer'}>
+    <footer className="site-footer">
       {Object.keys(docs).map((path) => (
         <LegalLink key={path} path={path} />
       ))}

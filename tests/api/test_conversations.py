@@ -100,7 +100,7 @@ def test_thread_rename_uses_safe_errors(web, monkeypatch, failure_kind, status):
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None, refuse=None):
-        self.calls, self.targets, self.version, self.hints, self.nodes, self.choices = [], {}, 1, [], [], None
+        self.calls, self.targets, self.version, self.hints, self.nodes = [], {}, 1, [], []
         self.state, self.interrupt, self.error, self.refuse = state or {'answer': 'ok'}, interrupt, error, refuse
         self.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values=self.state))
     def config(self, thread): return {'configurable': {'thread_id': thread}}
@@ -109,8 +109,11 @@ class FakeAnalysis:
             raise self.refuse
     def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
         self.calls.append(('ensure', thread, filename, target, question, conditions))
-        if target is None and self.choices:  # 실제 서비스처럼 대상을 못 정하면 분석 thread를 만들지 않고 후보를 돌려준다
-            return self.choices
+        if target is None:  # 실제 서비스처럼 이미 정한 대상을 쓰고, 없으면 대상 없이(빈 글자) 만든다(#62. 추론은 real_target_service 시험)
+            self.targets.setdefault(thread, '')
+            return
+        if self.targets.get(thread) == '':  # 빈 대상은 처음 고른 부품으로 고정한다
+            self.targets[thread] = target
         if self.targets.setdefault(thread, target) != target:
             raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
     def _run(self, *call):
@@ -368,29 +371,79 @@ def test_run_streams_a_status_frame_per_new_stage_before_the_last_frame(web):
     assert all(data['status'] == 'running' and data['answer'] == '' for name, data in frames if name == 'status')
 
 
+def test_keyless_demo_answers_a_circuitless_question_with_the_netlist_request_without_the_graph(web):
+    """키 없는 데모에는 회로 없는 질문의 기록이 없다. 분석 thread · 그래프 없이 넷리스트를 달라는 거절로 끝난다(SPEC 8.9)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
+    analysis.mode = 'demo'
+    repo.get_thread = lambda user, thread_id: (thread_id, 1, {'parts': [], 'nets': []}, '회로 없는 질문')
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': 'D1을 1N5819로 바꿔도 돼?'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'refused'
+    assert frames[-1][1]['answer'] == '이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요.'
+    assert analysis.calls == [] and repo.calls == ['start', ('commit', 'refused')]
+
+
 CHOICES = [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': 'SS34'}]
 
 
-def test_start_without_target_asks_which_part_then_resume_runs_the_first_question(web):
-    """대상을 못 정하면 그래프 없이 requires_input(target_choices)로 묻고, 고른 부품으로 재개하면 그 부품 · 처음 질문 · 사용 조건으로 분석한다(SPEC 8.9)."""
+def test_target_question_comes_from_the_graph_and_resume_continues_it_without_a_new_message(web):
+    """대상을 못 정한 대화는 그래프를 돌리고, 계획이 대상을 써야 할 때 그래프의 interrupt(target_choices)로 묻는다.
+    고른 부품을 분석 thread에 고정한 뒤 멈춘 그래프를 재개한다. 처음 질문을 다시 보내지 않는다(Supervisor 한 번, SPEC 8.9 · #62)."""
     from backend.conversations.models import SafeResult
     thread, run = str(uuid4()), str(uuid4())
-    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
-    analysis.choices = CHOICES
+    analysis, repo = FakeAnalysis(interrupt={'target_choices': CHOICES, 'question': '어떤 부품을 바꿀까요?'}), FakeRepo(thread, run)
     with web(analysis, repo) as client:
         asked = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': '1N5819로 바꿔도 돼?', 'conditions': '입력 12 V'}, headers=ORIGIN).text)
-        assert [name for name, _ in asked] == ['run_started', 'status', 'requires_input']
-        interrupt = asked[-1][1]['interrupt']
-        assert interrupt == {'target_choices': CHOICES, 'question': '넷리스트에서 다이오드 D1(1N4007), D3(SS34)를 찾았어요. 어떤 부품을 바꿀까요?'}
-        assert analysis.calls == [('ensure', thread, '프로젝트', None, '1N5819로 바꿔도 돼?', '입력 12 V')]  # 그래프를 돌리지 않았다
+        assert asked[-1][0] == 'requires_input'
+        assert asked[-1][1]['interrupt'] == {'target_choices': CHOICES, 'question': '넷리스트에서 다이오드 D1(1N4007), D3(SS34)를 찾았어요. 어떤 부품을 바꿀까요?'}
+        assert analysis.calls[-1] == ('message', thread, '1N5819로 바꿔도 돼?', '입력 12 V')
         assert repo.status == 'requires_input' and SafeResult.model_validate(repo.result).interrupt.target_choices[1].ref == 'D3'
-        saved = client.get(f'/api/runs/{run}')
-        assert saved.json()['result']['interrupt']['target_choices'] == CHOICES
-        assert 'pending_start' not in saved.text and '입력 12 V' not in saved.text  # 처음 질문 · 조건은 run 기록에만 둔다
+        assert 'pending_start' not in repo.result
+        analysis.interrupt = None
         done = sse_frames(client.post(f'/api/runs/{run}/resume', json={'answers': {}, 'target': 'D3'}, headers=ORIGIN).text)
     assert done[-1][0] == 'completed' and repo.status == 'completed'
-    assert analysis.calls[1:] == [('ensure', thread, '프로젝트', 'D3', '1N5819로 바꿔도 돼?', '입력 12 V'), ('message', thread, '1N5819로 바꿔도 돼?', '입력 12 V')]
-    assert ('claim', thread, run) in repo.calls
+    assert analysis.calls[2:] == [('ensure', thread, '프로젝트', 'D3', None, ''), ('resume', thread, {}, '', 1)]
+    assert analysis.targets[thread] == 'D3' and ('claim', thread, run) in repo.calls
+
+
+def test_a_target_question_saved_before_62_still_starts_the_first_question(web):
+    """#62 전에 그래프 없이 물은 run(pending_start)은 고른 부품으로 분석 thread를 만들고 처음 질문 · 사용 조건으로 분석한다."""
+    thread, run = str(uuid4()), str(uuid4())
+    saved = {'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': '1N5819로 바꿔도 돼?', 'conditions': '입력 12 V'}}
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run, status='requires_input', result=saved)
+    with web(analysis, repo) as client:
+        done = sse_frames(client.post(f'/api/runs/{run}/resume', json={'answers': {}, 'target': 'D3'}, headers=ORIGIN).text)
+    assert done[-1][0] == 'completed'
+    assert analysis.calls == [('ensure', thread, '프로젝트', 'D3', '1N5819로 바꿔도 돼?', '입력 12 V'), ('message', thread, '1N5819로 바꿔도 돼?', '입력 12 V')]
+
+
+TWO_DIODES = [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'SS34'}, {'ref': 'R1', 'value': '10k'}]
+
+
+def test_start_naming_a_diode_the_circuit_lacks_is_answered_by_code_without_the_graph(web):
+    """질문이 회로에 없는 다이오드 기호(D9)만 적으면 카드 없이 코드가 그 사실과 회로의 다이오드를 답한다. 분석 thread · 그래프는 없다(#62)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, inserted, questions = real_target_service(TWO_DIODES)
+    repo = FakeRepo(thread, run)
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': 'D9 바꿔도 돼?'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'completed'
+    assert frames[-1][1]['answer'] == '이 회로에 D9는 없어요. 넷리스트에서 다이오드 D1(SS34), D2(SS34)를 찾았어요.'
+    assert inserted == [] and questions == [] and repo.calls == ['start', ('commit', 'completed')]
+
+
+def test_naming_two_diodes_reviews_the_first_and_says_the_other_needs_a_new_conversation(web):
+    """'D1 D2 둘 다'는 앞에 적은 D1을 대상으로 고정하고, 답 끝에 D2는 새 대화에서 물어 달라고 붙인다(대상은 대화마다 하나, #62)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, inserted, questions = real_target_service(TWO_DIODES)
+    question = 'D1 D2 둘 다 SS14로 바꾸면 어때?'
+    analysis.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values={
+        'answer': 'D1 판정', 'question': question, 'target': inserted[0], 'connections': {'components': TWO_DIODES, 'nets': []}}))
+    with web(analysis, FakeRepo(thread, run)) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': question}, headers=ORIGIN).text)
+    assert inserted == ['D1'] and questions == [question]
+    assert frames[-1][1]['answer'] == 'D1 판정\n\n이 대화는 D1만 검토해요. D2는 새 대화에서 따로 물어봐 주세요.'
 
 
 def real_target_service(parts):

@@ -6,7 +6,7 @@
 - 넣지 않는 것: HTTP 라우트와 multipart 수신(`backend/api/`), 원본 넷리스트·가격 저장, 분석 실행(`backend/multi_agent/`).
 - 담당: 서비스·운영
 
-저장소는 `auth.connection()`과 `db/020_service_baseline.sql`·`db/031_circuit_versions.sql`의 표를 쓴다. 모든 조회·변경·삭제에 `user_id` 조건이 붙고 관리자 예외는 없다. 빈 프로젝트는 v0, 데모 복제·처음 업로드는 v1이다. 기존 프로젝트에 업로드하면 프로젝트 잠금 아래 새 불변 버전과 새 대화를 한 트랜잭션으로 저장한다. `circuits`는 최신 버전이고 `project_circuit_versions`는 과거 회로를 보존한다. 삭제는 FK cascade를 쓴다. 업로드 정규화의 크기·깊이·개수 상한과 파서 버전은 `netlist.py` 상수(`MAX_BYTES`, `MAX_DEPTH`, `MAX_TOKENS`, `MAX_COMPONENTS`, `MAX_NETS`, `PARSER_VERSION`)가 정본이다. 데모 회로의 출처와 라이선스는 [CIRCUITS.md](../../data/circuits/CIRCUITS.md)를 따른다.
+저장소는 `auth.connection()`과 `db/020_service_baseline.sql`·`db/031_circuit_versions.sql`의 표를 쓴다. 모든 조회·변경·삭제에 `user_id` 조건이 붙고 관리자 예외는 없다. 빈 프로젝트는 v0, 데모 복제·처음 업로드는 v1이다. 기존 프로젝트에 업로드하면 프로젝트 잠금 아래 새 불변 버전과 새 대화를 한 트랜잭션으로 저장한다. 회로가 없던 프로젝트에 그 프로젝트의 버전 0 대화 `thread_id`를 주면 새 대화 대신 그 대화를 돌려주고, 그 대화는 처음 올린 회로를 읽는다(SPEC 8.9). `circuits`는 최신 버전이고 `project_circuit_versions`는 과거 회로를 보존한다. 삭제는 FK cascade를 쓴다. 업로드 정규화의 크기·깊이·개수 상한과 파서 버전은 `netlist.py` 상수(`MAX_BYTES`, `MAX_DEPTH`, `MAX_TOKENS`, `MAX_COMPONENTS`, `MAX_NETS`, `PARSER_VERSION`)가 정본이다. 데모 회로의 출처와 라이선스는 [CIRCUITS.md](../../data/circuits/CIRCUITS.md)를 따른다.
 
 외부 다이오드 회로 검색은 공식·공개 웹 후보를 먼저 검증하고, 확인된 자료가 없으면 BOM 색인과 독립 GitHub 검색 경로로 저장소 후보를 최대 24개 검증한다. discovery는 최대 128파일·파일당 4MiB·총 25MiB까지 현대 KiCad 파일을 먼저 읽는다. 렌더링은 검증한 선택 계층만 고정 commit에서 직접 다운로드하며 파일당 10MiB·총 25MiB·최대 20시트로 제한한다. 검색과 무관한 다른 프로젝트의 손상 파일을 격리하되 선택한 계층의 누락·순환은 거부한다. 품번은 실제 배치 심벌에서 확인하고, 구형 KiCad의 instance 값은 배치 UUID·참조번호가 일치할 때만 사용한다. 사용자 정의 다이오드는 설명과 양극/음극 핀 구조를 함께 검사한다. 저장소의 여러 완전한 회로가 일치하면 서로 섞지 않고 고정 commit·root별 선택 URL을 제공한다. 전체 시트 PNG 변환까지 통과한 후보와 이미지를 15분 캐시하며, 선택 실패를 다른 회로로 대체하지 않는다. 일부 저장소의 검사나 원본 렌더링이 한도·외부 오류로 실패하면 오류와 재시도 정보를 캐시에 보존한다. 정상 후보 선택은 유지하되 Retry-After 경과 후(일반 외부 오류는 60초 후) 같은 검색의 후보·검증·선택 캐시를 비우고 재검사한다. 후보 선택으로 이 재검사 시점을 연장하지 않는다.
 
@@ -38,12 +38,12 @@ GitHub 라이선스 metadata의 deprecated GPL 식별자는 canonical SPDX 표�
 | `catalog.py` | `catalog.json`의 안전한 ID·이름·저장소 내부 연결 경로를 검증하고 immutable catalog 제공(`load_catalog`, `catalog_by_id`) |
 | `models.py` | 목록 메타데이터 `ProjectSummary`와 정규화 연결 정보를 포함한 상세 `Project` DTO |
 | `netlist.py` | `normalize_netlist(bytes)`: KiCad export에서 연결 정보(parts/nets)만 제한된 메모리로 읽고 SHA-256과 함께 `NormalizedCircuit`으로 반환. `circuit_fingerprint`는 참조를 보존한 캐시/서명 식별, `same_circuit`는 확정 net·핀 역색인으로 후보를 좁히고 끝 숫자가 바뀐 부품의 전체 핀 연결 일대일 대응을 제한된 탐색으로 증명. 원본·경로·파일 핸들은 남기지 않음 |
-| `repository.py` | `ProjectRepository`: `create_empty`, `create_demo`, `create_upload`, `import_netlist`(새 버전·대화 원자 생성), `list_owned`, `get_owned`(선택적 대화 버전), `rename_owned`, `delete_owned` |
+| `repository.py` | `ProjectRepository`: `create_empty`, `create_demo`, `create_upload`, `import_netlist`(새 버전·대화 원자 생성, 회로 없는 대화면 그 대화 유지. 두 업로드는 올린 회로도 원문을 같은 트랜잭션에서 그 버전에 저장, #52), `uploaded_schematic`(소유자 조건으로 회로도 원문), `circuit_connections`(소유자 조건으로 그 회로 버전의 연결, 부품 점검표 #68), `list_owned`, `get_owned`(선택적 대화 버전), `rename_owned`, `delete_owned` |
 | `visuals.py` | `load_demo_visuals()`가 데모 catalog의 회로도 출처 정본(HTTPS, commit, 원본·배포 hash, PNG 경로)을 검증. 누락·추가 ID나 손상 자산은 예외. 외부 다운로드 없음 |
 | `external_circuit_search.py` | Exa 공개 웹 결과에서 회로도 이름과 파일을 확인하고 제조사·비공식 출처 후보를 정제. GitHub 저장소 후보 검색과 단일 버튼의 TSC/다이오드/공개 보드/원본 문맥 구분도 담당 |
-| `external_schematic.py` | 공개 원본 후보를 검증·변환·메모리 캐시하고 서명 token으로 시트 조회. 같은 검색의 다른 후보 선택을 검증 |
+| `external_schematic.py` | 공개 원본 후보를 검증·변환·메모리 캐시하고 서명 token으로 시트 조회. 같은 검색의 다른 후보 선택을 검증. 올린 회로도 그림도 같은 캐시(원문 해시 키)에 두고 없으면 다시 그림(#52) |
 | `schematic_dialogue.py` | 검증된 후보의 공개 정보로 LLM 소개를 조립. 후보 ID·사실값·질문 모드를 검사하며 검색·원본 선택은 하지 않음 |
-| `schematic.py` | 제한된 KiCad CLI PDF·netlist export와 별도 renderer HTTP 경계. 프로젝트 원본은 반환된 실제 후보 연결을 API에서 전체 대조 |
+| `schematic.py` | 제한된 KiCad CLI PDF·netlist export와 별도 renderer HTTP 경계. 프로젝트 원본은 반환된 실제 후보 연결을 API에서 전체 대조. 올린 회로도는 `export_uploaded_kicad` → `/render {schematic}`이 (넷리스트, PNG 한 장)을 돌려줌(#52) |
 | `schematic_discovery.py` | GitHub tree에서 EDA 원본과 연결된 전체 회로도 자산 찾기 |
-| `schematic_render.py` | 공개 PDF/SVG/PNG의 해시·회로도 페이지를 확인하고 제한된 크기와 해상도의 PNG로 렌더링 |
+| `schematic_render.py` | 공개 PDF/SVG/PNG의 해시·회로도 페이지를 확인하고 제한된 크기와 해상도의 PNG로 렌더링. 올린 회로도 한 장의 사전 검사(`uploaded_schematic_text`: `(kicad_sch ...)` · 내장 라이브러리 · 하위 시트 없음)와 렌더러 쪽 변환(`render_uploaded_schematic`, #52) |
 | `schematic_source.py` | 검증된 외부 회로도 source DTO·서비스 오류와 호스트/인증별 제한 해제 시각. 제한 중 새 다운로드를 차단하며 최대128건의 프로세스 메모리만 사용 |

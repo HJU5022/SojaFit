@@ -93,3 +93,17 @@ def test_a_file_name_revision_must_belong_to_the_named_parts_documents():
     specs = lambda part, codes=None: [{'citation': {'document': 'US1A SERIES_N2102.pdf'}}]
     facts = make_lookup(check, specs)(state('TSC US1J를 US1A SERIES_N2602.pdf에서 확인해 줘'))
     assert facts.revisions['N2602'] is False  # 그 품번 문서는 N2102뿐이다(h4-47)
+
+
+def test_lookup_never_sends_circuit_refs_as_part_numbers():
+    """대상 주변 넷 밖(D2)이나 대상이 빈 대화의 회로 기호도 품번으로 보내지 않는다. 'D2: 코퍼스에 없음'으로 거절하지 않게 한다(#62)."""
+    calls = []
+
+    def check(parts, revisions):
+        calls.append(parts)
+        return {'parts': {p: True for p in parts}, 'revisions': {}}
+
+    circuit = {'components': [{'ref': 'D1'}, {'ref': 'D2'}], 'nets': []}
+    make_lookup(check)({**state('D1 D2 둘 다 SS14로 바꾸면 어때?', ref='D1'), 'connections': circuit})
+    make_lookup(check)({'question': 'D1 D2 둘 다 SS14로 바꾸면 어때?', 'target_part': {}, 'connections': circuit})
+    assert calls == [['SS14'], ['SS14']]

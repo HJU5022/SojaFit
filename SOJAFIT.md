@@ -77,7 +77,7 @@ SojaFit (proj3-b)
 │   │       ├── product/    <- 랜딩이 쓰는 실제 데모 화면 캡처
 │   │       │   ├── condition-evidence.png <- 조건 행과 데이터시트 근거(쪽·표·행)를 보인 검토 화면 캡처
 │   │       │   └── missing-condition.png <- 추가 조건을 물어보는 검토 화면 캡처
-│   │       ├── samples/    <- 새 프로젝트 창의 "샘플 넷리스트 받기"가 내려 주는 공개 라이선스 넷리스트
+│   │       ├── samples/    <- 공개 라이선스 넷리스트(화면 입구는 #58에서 뺐고 파일만 둠)
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
 │   │       └── sojafit-icon.svg <- 다이오드 기호 아이콘(파비콘, 앱 로고와 같은 기호)
@@ -88,17 +88,20 @@ SojaFit (proj3-b)
 │   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기, LED·표시기·비다이오드 판정 대상 제외 시험
 │   │   ├── schematicSearch.test.ts <- 원본 회로도 검색 재사용(14분·실패는 다시 시도할 때만·직접 찾기 실패에도 찾은 결과 유지) 시험
 │   │   ├── approval.test.ts <- 승인 목록에서 후보의 승인 상태(own·other)와 사례 삭제 뒤 재승인 시험
+│   │   ├── report.test.ts  <- 대체 검토 보고서 ECO 칸 값(변경 내용 문장·변경 영향 통과 수·영향받는 품목 줄·값 없으면 빈칸) 시험(#56)
+│   │   ├── libraryQuery.test.ts <- 데이터시트 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번 시험(#67)
 │   │   ├── demo.spec.ts    <- Playwright: 데모 로그인부터 승인·견적·설정까지의 브라우저 흐름(키 없는 데모 서버 필요)
 │   │   └── account.spec.ts <- Playwright: 설정 저장·A/B 격리·관리자 차단·첨부 넷리스트의 회로 버전
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- React 진입점·글꼴·스타일
-│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·새 대화·작업대·프로젝트 목록·설정·승인 사례·관리자)
+│       ├── App.tsx         <- 경로 표와 세션 경계(랜딩·로그인 계열·메일 링크·새 대화·작업대·설정·승인 사례·관리자)
 │       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·판정 5종과 실행 상태의 화면 표기
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
-│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유
+│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유, 부품 점검표 거르기·검토 질문
 │       ├── approval.ts     <- 승인 목록에서 후보의 승인 상태(이 후보 승인·다른 후보 승인) 가르기
+│       ├── report.ts       <- 대체 검토 보고서 ECO 칸 값을 저장한 사례에서만 만든다(#56)
 │       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄)
 │       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내
 │       ├── ui.tsx          <- 경로 이동·자원 훅·공통 조각(로고·상태·판정 배지·창·근거 출처)·회로 도식·마크다운
@@ -106,12 +109,15 @@ SojaFit (proj3-b)
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
 │       ├── Account.tsx     <- 내 설정·개인정보처리방침 본문
 │       ├── Approved.tsx    <- 승인 사례 목록과 사례 하나의 기록(원래 대화·질문·조건별 판정·근거·견적, 다시 판정하지 않음)
+│       ├── Library.tsx     <- 데이터시트 서재(/library): 품번·시리즈·제조사 검색·분류·원문 PDF 링크 표와 쪽 이동, 읽기만(#67)
+│       ├── libraryQuery.ts <- 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번(#67)
 │       ├── Admin.tsx       <- 관리자 영역: 계정 목록(이메일 가림)·사유를 적은 가림 해제·정지·재활성화·탈퇴 처리·작업 이력
 │       ├── Legal.tsx       <- 화면 맨 아래 고지 한 줄(이용약관·개인정보처리방침·AI 이용 안내·출처·라이선스·문의·©)과 문서 창·페이지
-│       ├── Conversations.tsx <- 사이드바 대화 목록(이름 변경·삭제)·프로젝트 폴더와 새 대화 화면(넷리스트 첨부·기존 회로 고르기)
-│       ├── Projects.tsx    <- 프로젝트 목록(이름 변경·삭제·일괄 삭제)과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 링크)
+│       ├── Conversations.tsx <- 사이드바 프로젝트·대화 나무(이름 변경·삭제)와 새 대화 화면(넷리스트 첨부·기존 회로 고르기)
+│       ├── Projects.tsx    <- 새 프로젝트 창(데모 회로·넷리스트 업로드·나중에 첨부)
 │       ├── Workbench.tsx   <- 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전
 │       ├── Reply.tsx       <- 검토 결과 답과 조건 입력 카드
+│       ├── Parts.tsx       <- 부품 점검표 창: 종류별 개수 칩·판정 지원·데이터시트 유무 표(#68)
 │       ├── Schematic.tsx   <- 원본 회로도 구역: 예제 프로젝트의 저장된 도면, 그 밖의 프로젝트는 열 때 한 번 하는 공개 웹 검색(external-circuits), 눌러 큰 창
 │       ├── schematicSearch.ts <- 원본 회로도 검색을 (프로젝트, 회로 버전)마다 한 번만 보내는 탭 메모리
 │       ├── Candidate.tsx   <- 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회
@@ -133,6 +139,7 @@ SojaFit (proj3-b)
 │   │   ├── auth.py         <- 로그인·이메일 가입·비밀번호 재설정·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 가입·로그인 경로
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(GET /api/demo-questions). run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── health.py       <- 서비스 생존 확인 GET /health
+│   │   ├── datasheets.py   <- 데이터시트 서재 API(GET /api/datasheets, 품번·제목·제조사 검색·분류·쪽 나눔, 읽기만, #67)
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory, 탈퇴 DELETE /api/me
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
@@ -213,6 +220,7 @@ SojaFit (proj3-b)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── db_pool.py      <- 검색용 DB 연결 풀(DSN별, pgvector 등록)
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
 │   │   ├── spec_lookup.py  <- 사양 코드 목록 · 찾기 순서 규칙(카드 도구 · 판정 import). 사양 표와 SQL 조회는 11-10에 지움(ADR 0016)
 │   │   ├── card_read.py    <- 카드(표 행 청크)에서 값 · 원문 인용 읽기(코드 먼저, 못 읽은 카드만 LLM)와 코드 확인
@@ -337,6 +345,7 @@ SojaFit (proj3-b)
 │   ├── 032_approval_reselection.sql <- 승인·견적 이력을 보존한 사례 삭제 후 재승인용 제약 변경
 │   ├── 033_thread_titles.sql <- 사용자가 고친 대화 이름 칸(threads.title, NULL이면 첫 질문 이름)
 │   ├── 034_admin_audit.sql <- 관리자 작업 이력 표 admin_audit(가림 해제 사유 · 정지 · 재활성화 · 탈퇴 처리, 앱은 INSERT만)
+│   ├── 035_circuit_schematics.sql <- 회로 버전에 붙은 업로드 KiCad 회로도 원문 표 circuit_schematics(그림은 저장 안 함, #52)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -537,6 +546,7 @@ SojaFit (proj3-b)
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
 │   │   ├── test_injection_http.py  <- 배포 HTTP 인젝션 시험 스크립트를 가짜 서버로: 정상 통과, 공격에서 판정이 바뀌면 실패 · 정상 실패는 결론 못 냄 · 하루 한도에서 멈춤, 결과 파일에 비밀번호 · 답 글 · 공격문 없음
 │   │   ├── test_http_smoke.py  <- HTTP 점검 스크립트(scripts/smoke/)를 가짜 서버로: 전체 통과 · 두 번째 승인 409 통과, requires_input 없으면 실패 · 뒤 단계 건너뜀, 결과 파일에 비밀번호 · 쿠키 · 이메일 없음
+│   │   ├── test_datasheets.py <- 데이터시트 서재 API: 로그인 필요, 표지 품번·제목·제조사 검색, 분류, 쪽 나눔, 폐기 문서 숨김(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   │   └── test_external_circuits.py <- 완성 회로도 manifest·PNG API
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
@@ -557,6 +567,7 @@ SojaFit (proj3-b)
 │   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
+│   │   ├── test_charge_pool.py <- 예산 차감이 공용 연결 풀을 쓰고, 풀이 0.5초 안에 못 주면 새 연결로 같은 트랜잭션을 도는지(가짜 풀)
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
 │   │   ├── test_profile.py <- 사용자 사실 기억: 칸 검사·틀 문장·version·지우기·의미 순위(가짜 임베딩)·설정 API, 격리 DB 색인 표
 │   │   └── test_repository.py  <- 소유권·원자성·접근 권한·삭제 잠금 시험
@@ -608,6 +619,7 @@ SojaFit (proj3-b)
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_datasheet_rows.py <- 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
 │   │   ├── test_document_language.py <- 영어·한국어 허용과 다른 언어·판독 불가 본문 거절 검증
+│   │   ├── test_exa_parallel.py <- 웹 PDF 후보 동시 내려받기·순서 유지, 요청 개정과 다른 파일 건너뜀
 │   │   ├── test_exa_prefetch.py <- 웹 근거 미리 출발: 기본 꺼짐, 받아 둔 같은 PDF 재사용, 실패 시 원래 경로
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
@@ -669,6 +681,7 @@ SojaFit (proj3-b)
 │   └── fixtures/           <- 단위 테스트용 가공 데이터
 │       └── netlists/        <- 외부 원본을 쓰지 않은 합성 KiCad 업로드 표본
 │           ├── minimal.net <- 연결 정보와 버릴 원본 marker가 있는 최소 정상 표본
+│           ├── minimal.kicad_sch <- D1 · R1을 선 하나로 이은 합성 KiCad 회로도 한 장(KiCad 10 kicad-cli 변환 확인, #52)
 │           └── invalid.net <- 괄호가 닫히지 않은 잘못된 표본
 │
 ├── scripts/                <- 서비스 코드 밖에서 손으로 돌리는 일회성 측정·점검 스크립트, 주제별 하위 폴더
@@ -831,6 +844,7 @@ SojaFit (proj3-b)
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
     │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
     │   ├── market-user-journey.md  <- 문제와 시장 근거
+    │   ├── demand-evidence-pricing-2026-11-16.md  <- 수요 근거와 유사 서비스 공개 가격(심태현 조사)
     │   ├── db-redesign/    <- 서비스 DB 재설계(11-11) 설계 문서(현재·목표 구조, 영향 지도). 검증 스크립트는 scripts/db/verify_redesign/
     │   │   ├── summary.md      <- 검토용 요약 · 결정 항목(옛 REdesign.md)
     │   │   ├── as-is-erd.md    <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)

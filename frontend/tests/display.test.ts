@@ -16,7 +16,14 @@ import {
   validQuantity,
   pricesPath,
   estimateRows,
+  isSendKey,
+  addStep,
+  stepMs,
+  seconds,
+  replyCandidates,
+  type Step,
 } from '../src/display.ts';
+import type { Candidate } from '../src/types.ts';
 import { inputPlaceholder } from '../src/inputLabels.ts';
 
 test('formatNumber는 긴 소수만 줄이고 정수·짧은 소수는 그대로 둔다', () => {
@@ -181,4 +188,52 @@ test('estimateRows는 구간·단가·금액 줄을 만들고 estimate가 없으
     assert.equal(rows.length, 1);
     assert.match(rows[0][1], /계산을 보류/);
   }
+});
+test('Enter는 보내고 Shift+Enter와 한글 조합 중 Enter는 보내지 않는다(#38)', () => {
+  const key = (over: Partial<Parameters<typeof isSendKey>[0]>) =>
+    isSendKey({ key: 'Enter', shiftKey: false, isComposing: false, keyCode: 13, ...over });
+  assert.equal(key({}), true);
+  assert.equal(key({ shiftKey: true }), false);
+  assert.equal(key({ isComposing: true }), false);
+  assert.equal(key({ keyCode: 229 }), false); // 조합 확정 Enter를 isComposing 없이 알리는 브라우저
+  assert.equal(key({ key: 'a', keyCode: 65 }), false);
+});
+
+test('진행 단계 시간: 프레임 도착 시각으로 단계마다 재고, 재계획은 같은 줄에 이어 더한다(#42)', () => {
+  let steps: Step[] = [];
+  steps = addStep(steps, '입력 확인', 0);
+  steps = addStep(steps, '품번 확인', 400);
+  steps = addStep(steps, '질문 분석', 1500);
+  assert.deepEqual(
+    steps.map((s) => s.stage),
+    ['입력 확인', '품번 확인', '질문 분석'],
+  );
+  assert.equal(seconds(stepMs(steps, 0, 2000)), '0.4초');
+  assert.equal(seconds(stepMs(steps, 1, 2000)), '1.1초');
+  assert.equal(seconds(stepMs(steps, 2, 2000)), '0.5초'); // 지금 단계는 now까지 늘어난다
+  assert.equal(seconds(stepMs(steps, 2, 3700)), '2.2초');
+  // 재계획: 품번 확인이 다시 오면 끝으로 옮기고 앞서 쓴 1.1초에 이어 센다
+  steps = addStep(steps, '품번 확인', 3000);
+  assert.deepEqual(
+    steps.map((s) => s.stage),
+    ['입력 확인', '질문 분석', '품번 확인'],
+  );
+  assert.equal(seconds(stepMs(steps, 1, 3000)), '1.5초');
+  assert.equal(seconds(stepMs(steps, 2, 3500)), '1.6초');
+  assert.equal(seconds(-5), '0.0초');
+});
+
+test('면책 문구는 판정 후보가 있는 답에만: 판정 없는 답(일상 대화 · 부품 목록)은 후보가 비고, 같은 후보는 한 번만 센다(#55)', () => {
+  assert.deepEqual(replyCandidates({}), []);
+  assert.deepEqual(replyCandidates({ roles: ['reverse_protection'], capped: false }), []);
+  const ss14 = {
+    part: 'SS14',
+    role: 'reverse_protection',
+    verdict: 'SPEC_EQUIVALENT',
+  } as Candidate;
+  const ss16 = { ...ss14, part: 'SS16', verdict: 'NOT_VERIFIED' } as Candidate;
+  assert.deepEqual(
+    replyCandidates({ results: [ss14], shown: [ss14], unverified: [ss16] }).map((c) => c.part),
+    ['SS14', 'SS16'],
+  );
 });

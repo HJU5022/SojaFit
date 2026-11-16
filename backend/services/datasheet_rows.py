@@ -431,17 +431,23 @@ def extract(raw, url, parts, terms, *, grade=None):
     found = []
     with pdfplumber.open(io.BytesIO(raw)) as pdf:
         all_pages = list(pdf.pages)
-        all_texts = [page.extract_text(x_tolerance=1) or '' for page in all_pages]
-        if grade == 2 and _language_for_pages(all_texts) not in {'en', 'ko', 'en-ko'}:
-            return []
         pages = all_pages[:MAX_PAGES]
+        # [왜] 행을 읽는 앞 32쪽만 본다. 전체 쪽을 다 읽으면 긴 PDF에서 시간만 든다
+        all_texts = [page.extract_text(x_tolerance=1) or '' for page in pages]
+        host = urlsplit(url).hostname
+        # [왜] #146 언어 검사가 TSC 열 기호 RӨJA(키릴 Ө)·θ·ψ나 langid 오판으로 TSC PDF 1,360개 중 58개만 통과시켰다(VRRM 행 60개 중 28→3).
+        #      #146 전부터 허용한 TSC · Infineon은 9c87ba36처럼 언어 검사를 건너뛰고, 새로 더한 제조사에만 건다
+        if (grade == 2 and host not in {'services.taiwansemi.com', 'www.infineon.com'}
+                and _language_for_pages(all_texts) not in {'en', 'ko', 'en-ko'}):
+            return []
         slug = Path(urlsplit(url).path).stem.upper()
         def named_sheet(page):
             heading = page.crop((0, 0, page.width, min(page.height, 165))).extract_text(x_tolerance=1) or ''
             return slug in {line.strip().upper() for line in heading.splitlines()}
 
-        host = urlsplit(url).hostname
-        document_part = _covered_part(parts, all_texts) if grade == 2 else ''
+        # [왜] #146의 문서 품번 · 글 행 읽기도 TSC에서는 9c87ba36에 없던 행(기호 없는 '6.8 V' 등)을 더한다. 새 제조사에만 쓴다
+        document_part = (_covered_part(parts, all_texts)
+                         if grade == 2 and host not in {'services.taiwansemi.com', 'www.infineon.com'} else '')
         # A family PDF is allowed to answer a single part only when its first
         # page names that exact part. This is used by TI and Vishay PDFs whose
         # filename is the product identity; never infer a related suffix.

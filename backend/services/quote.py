@@ -6,7 +6,7 @@ from psycopg.types.json import Jsonb
 
 from backend import auth
 from backend.conversations.dto import result_dto
-from backend.conversations.repository import thread_title
+from backend.conversations.repository import pinned_version, thread_title
 
 FORBIDDEN = {'price', 'price_breaks', 'stock', 'availability', 'product_url', 'fetched_at'}
 APPROVABLE = {'IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'}
@@ -146,10 +146,10 @@ class QuoteService:
                     c.created_at,a.snapshot,a.message_id,t.id,t.title,p.id,p.name,cv.connections,
                     (SELECT q.content FROM messages q WHERE q.run_id=m.run_id AND q.role='user' ORDER BY q.id LIMIT 1),
                     (SELECT q.content FROM messages q WHERE q.thread_id=t.id AND q.role='user' ORDER BY q.id LIMIT 1),
-                    to_regclass('sojafit_agent.threads') IS NOT NULL
+                    to_regclass('sojafit_agent.threads') IS NOT NULL,cv.version
                 FROM approved_cases c JOIN approvals a ON a.id=c.approval_id AND a.user_id=c.user_id
                 JOIN messages m ON m.id=a.message_id JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id
-                LEFT JOIN project_circuit_versions cv ON cv.project_id=t.project_id AND cv.version=t.circuit_version
+                LEFT JOIN project_circuit_versions cv ON cv.project_id=t.project_id AND cv.version=""" + pinned_version('t') + """
                 WHERE c.id=%(c)s AND c.user_id=%(u)s AND p.user_id=%(u)s""", {'c': case_id, 'u': user_id}).fetchone()
             if row is None:
                 raise QuoteNotFound
@@ -166,7 +166,7 @@ class QuoteService:
         part = next((p for p in parts if isinstance(p, dict) and p.get('ref') == target), {}) if target else {}
         return {'id': row[0], 'approval_id': row[1], 'candidate_part': row[2], 'verdict': row[3], 'created_at': row[4],
                 'message_id': row[6], 'thread_id': str(row[7]), 'thread_title': row[8] or thread_title(row[13]), 'project_id': row[9], 'project_name': row[10],
-                'question': row[12] or '', 'target_ref': target, 'target_value': part.get('value'),
+                'question': row[12] or '', 'target_ref': target, 'target_value': part.get('value'), 'circuit_version': row[15],
                 'answer': public.answer, 'candidate': (public.judgement.get('results') or [None])[0], 'evidence': public.evidence,
                 'quotes': [{'id': q[0], 'approval_id': q[1], 'part_number': q[2], 'quantity': q[3], 'created_at': q[4]} for q in quotes]}
 

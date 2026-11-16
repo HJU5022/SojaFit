@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react';
 import {
   CheckCheck,
-  Folder,
+  ChevronsUpDown,
+  LibraryBig,
   LogOut,
+  Mail,
   Menu,
   Plus,
   Settings as SettingsIcon,
@@ -11,15 +13,24 @@ import {
   X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { Brand, ErrorBox, followLink, Loading, navigate, useLocation } from './ui';
+import {
+  Brand,
+  ErrorBox,
+  followLink,
+  Loading,
+  navigate,
+  ResizeHandle,
+  RowMenu,
+  useLocation,
+} from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
-import { Settings } from './Account';
-import { ApprovedCases } from './Approved';
+import { contactEmail, Settings } from './Account';
+import { ApprovedCases, CaseReport } from './Approved';
 import { Admin } from './Admin';
-import { Footer, isLegalPath, LegalPage } from './Legal';
+import { Library } from './Library';
+import { isLegalPath, LegalModal, LegalPage, legalDocs } from './Legal';
 import { ConversationNav, NewConversation } from './Conversations';
-import { ProjectList } from './Projects';
 import { Workbench } from './Workbench';
 import type { User } from './types';
 function Shell({
@@ -34,7 +45,11 @@ function Shell({
   onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false),
+    [legal, setLegal] = useState<string | null>(null),
     [error, setError] = useState<Error | null>(null);
+  const demo = user.email.startsWith('demo-'),
+    initial = (demo ? user.email[5] : user.email[0]).toUpperCase(),
+    name = demo ? '데모 사용자 ' + initial : user.email;
   const params = new URLSearchParams(path.split('?')[1]),
     pathname = path.split('?')[0];
   useEffect(() => setOpen(false), [path]);
@@ -73,65 +88,88 @@ function Shell({
           <Plus size={17} />새 대화
         </button>
         <nav>
-          <a href="/projects" className={pathname === '/projects' ? 'nav-active' : ''}>
-            <Folder size={17} />
-            프로젝트
-          </a>
           <a href="/approved" className={path === '/approved' ? 'nav-active' : ''}>
             <CheckCheck size={17} />
             승인 사례
+          </a>
+          <a href="/library" className={pathname === '/library' ? 'nav-active' : ''}>
+            <LibraryBig size={17} />
+            데이터시트 서재
           </a>
         </nav>
         {/* [왜] 내 설정·사용자 관리는 계정 화면이라 대화·프로젝트 목록을 보이지 않는다(#21). 돌아가기는 위 "새 대화"·메뉴로 한다 */}
         {pathname !== '/settings' && !pathname.startsWith('/admin') && (
           <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
         )}
+        {/* [왜] Claude 앱처럼 맨 아래는 계정 줄 하나만 두고, 설정 · 관리 · 고지 · 문의 · 로그아웃은 위로 여는 계정 메뉴에 모은다(#43) */}
         <div className="sidebar-bottom">
-          <a href="/settings">
-            <SettingsIcon size={17} />내 설정
-          </a>
-          {user.role === 'admin' && (
-            <a href="/admin">
-              <Shield size={17} />
-              사용자 관리
-            </a>
-          )}
-          <div className="account-info">
-            <span className="avatar">
-              {user.email.startsWith('demo-')
-                ? user.email[5].toUpperCase()
-                : user.email[0].toUpperCase()}
-            </span>
-            <span>
-              {user.email.startsWith('demo-')
-                ? '데모 사용자 ' + user.email[5].toUpperCase()
-                : user.email}
-            </span>
-            <button
-              className="icon-button"
-              aria-label="로그아웃"
-              title="로그아웃"
-              onClick={async () => {
-                try {
-                  await api('/auth/logout', 'POST');
-                  onLogout();
-                } catch (e) {
-                  setError(e as Error);
-                }
-              }}
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+          <RowMenu
+            label={name + ' 계정 메뉴'}
+            className="account-menu"
+            up
+            icon={
+              <>
+                <span className="avatar">{initial}</span>
+                <span className="account-name">{name}</span>
+                <ChevronsUpDown size={15} />
+              </>
+            }
+            items={[
+              {
+                label: '내 설정',
+                icon: <SettingsIcon size={15} />,
+                onSelect: () => navigate('/settings'),
+              },
+              ...(user.role === 'admin'
+                ? [
+                    {
+                      label: '사용자 관리',
+                      icon: <Shield size={15} />,
+                      sep: true,
+                      onSelect: () => navigate('/admin'),
+                    },
+                  ]
+                : []),
+              ...legalDocs.map(([doc, title], i) => ({
+                label: title,
+                strong: doc === '/privacy', // 개인정보처리방침은 국내 관행대로 굵게
+                sep: i === 0,
+                onSelect: () => setLegal(doc),
+              })),
+              {
+                label: '문의',
+                icon: <Mail size={15} />,
+                sep: true,
+                onSelect: () => (location.href = 'mailto:' + contactEmail),
+              },
+              {
+                label: '로그아웃',
+                icon: <LogOut size={15} />,
+                sep: true,
+                onSelect: async () => {
+                  try {
+                    await api('/auth/logout', 'POST');
+                    onLogout();
+                  } catch (e) {
+                    setError(e as Error);
+                  }
+                },
+              },
+            ]}
+          />
           <ErrorBox error={error} />
-          <Footer compact />
         </div>
+        <ResizeHandle
+          name="sidebar-w"
+          label="사이드바 너비 조절"
+          min={200}
+          max={420}
+          edge="right"
+        />
       </aside>
+      {legal && <LegalModal path={legal} close={() => setLegal(null)} />}
       <div className="app-frame">
-        <div className="app-topbar">
-          <span>부품 교체 검토</span>
-          <span>지금 지원: 다이오드</span>
-        </div>
+        {/* [왜] 상단 "지금 지원" 문구는 뺐다. 지원 범위는 내 설정에 따로 둔다(#37) */}
         <main className="app-sheet">{children}</main>
       </div>
     </div>
@@ -182,7 +220,9 @@ export default function App() {
     pathname === '/reset-password';
   useEffect(() => {
     if (!checking && !user && !publicPage && !error) navigate('/login', true);
-    if (!checking && user && pathname === '/login') navigate('/app', true);
+    // [왜] 프로젝트 목록 페이지는 사이드바 나무로 옮겼다(#34). 옛 주소 /projects는 새 대화 화면으로 바꾼다
+    if (!checking && user && (pathname === '/login' || pathname === '/projects'))
+      navigate('/app', true);
   }, [checking, user, publicPage, error, pathname]);
   if (pathname === '/') return <Landing />;
   if (isLegalPath(pathname)) return <LegalPage path={pathname} />;
@@ -210,6 +250,9 @@ export default function App() {
       />
     );
   if (!user) return null;
+  // 인쇄용 보고서는 사이드바 없이 화면 전체에 그린다(#44)
+  const report = pathname.match(/^\/approved\/(\d+)\/report$/);
+  if (report) return <CaseReport id={Number(report[1])} email={user.email} />;
   const params = new URLSearchParams(path.split('?')[1]),
     project = params.get('project'),
     thread = params.get('thread');
@@ -219,6 +262,8 @@ export default function App() {
         <Settings user={user} onLogout={logout} />
       ) : pathname === '/approved' ? (
         <ApprovedCases />
+      ) : pathname === '/library' ? (
+        <Library search={params.toString()} />
       ) : pathname === '/admin' || pathname === '/admin/users' ? (
         user.role === 'admin' ? (
           <Admin />
@@ -228,9 +273,7 @@ export default function App() {
             <a href="/app">새 대화로</a>
           </div>
         )
-      ) : pathname === '/projects' ? (
-        <ProjectList />
-      ) : pathname === '/app' ? (
+      ) : pathname === '/app' || pathname === '/projects' ? (
         project ? (
           <Workbench key={project} projectId={project} threadId={thread} />
         ) : (

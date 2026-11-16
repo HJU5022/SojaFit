@@ -6,7 +6,7 @@
 """
 import re
 
-from backend.graph.nodes import REVISION, WORD, find_parts
+from backend.graph.nodes import REVISION, WORD, circuit_parts, find_parts
 from backend.multi_agent.supervisor import Facts
 from backend.multi_agent.revisions import requested_revisions
 
@@ -68,7 +68,8 @@ def make_lookup(check, specs=None):
     """
     def lookup(state: dict) -> Facts:
         question = state['question']
-        parts = find_parts(question, refs_of(state.get('target_part') or {}))
+        # [왜] 대상 주변 넷 밖의 회로 기호도 품번이 아니다. 'D1 D2 둘 다'의 D2 · 대상이 빈 대화의 기호를 코퍼스에 없는 품번으로 보고 거절할 수 있었다(#62)
+        parts = find_parts(question, refs_of(state.get('target_part') or {}) | {p.get('ref', '') for p in circuit_parts(state)})
         revisions = revisions_in(question)
         if not parts and not revisions:
             years = year_editions(question, [], {}, None)

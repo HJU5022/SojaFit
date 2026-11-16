@@ -1,8 +1,8 @@
 /** 검토 결과 답·조건 입력 카드. 서버가 보낸 상태를 그리고 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
 import { useState } from 'react';
-import { ArrowRight, MessageSquare } from 'lucide-react';
+import { ArrowRight, MessageSquare, PanelRight } from 'lucide-react';
 import { statuses } from './api';
-import { withoutCorpusCitations } from './display';
+import { replyCandidates, withoutCorpusCitations } from './display';
 import { inputLabel, inputPlaceholder } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
@@ -103,20 +103,32 @@ export function MissingInput({
   );
 }
 /** 서버가 대상 부품을 정하지 못했을 때 넷리스트의 후보 중 하나를 고르는 카드(조건 카드와 같은 모양). */
+/** 닫힌 회로 패널을 열고 회로 구역으로 내리는 작은 글자 단추(#47). 회로에 관한 답 머리에 둔다 */
+function CircuitLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" className="circuit-link" onClick={onClick}>
+      <PanelRight size={14} />
+      회로 보기
+    </button>
+  );
+}
 export function TargetChoice({
   result,
   busy,
   onResume,
+  onCircuit,
 }: {
   result: Result;
   busy: boolean;
   onResume: (body: any) => void;
+  onCircuit?: () => void;
 }) {
   return (
     <div className="missing-input" data-testid="target-choice">
       <div className="inline-heading">
         <MessageSquare size={20} />
         <h2>바꿀 부품을 골라 주시면 이어서 검토합니다.</h2>
+        {onCircuit && <CircuitLink onClick={onCircuit} />}
       </div>
       <p>{result.interrupt.question}</p>
       <div className="actions">
@@ -138,25 +150,25 @@ export function TargetChoice({
 export function Reply({
   run,
   onCandidate,
+  onCircuit,
 }: {
   run: Run;
   onCandidate: (c: Candidate, r: Run) => void;
+  /** 회로에 관한 답일 때만 준다(#47) */
+  onCircuit?: () => void;
 }) {
   const r = run.result,
-    candidates = [
-      ...(r.judgement.results ?? []),
-      ...(r.judgement.shown ?? []),
-      ...(r.judgement.unverified ?? []),
-    ].filter((c, i, all) => all.findIndex((x) => x.part === c.part && x.role === c.role) === i);
+    candidates = replyCandidates(r.judgement);
   return (
     <div className="assistant-reply">
       <div className="reply-label">
         <span className="mini-mark">↳</span> SojaFit{' '}
-        {/* [왜] AI 기본법 제31조 생성물 표시(#27). 판정 답 틀·가격 안내도 AI가 길을 정한 결과라 답마다 붙인다. 상태 칸(span:last-child)보다 앞에 둔다 */}
+        {/* [왜] AI 기본법 제31조 생성물 표시(#27). 판정 답 틀·가격 안내도 AI가 길을 정한 결과라 답마다 붙인다. 상태 칸보다 앞에 둔다 */}
         <small className="ai-label">
           AI 생성<span className="sr-only">: 생성형 AI를 이용해 만든 답변입니다</span>
         </small>{' '}
-        <span>{statuses[r.status] ?? r.stage}</span>
+        <span className="reply-status">{statuses[r.status] ?? r.stage}</span>
+        {onCircuit && <CircuitLink onClick={onCircuit} />}
       </div>
       {/* [왜] 웹 검색 장애를 "못 찾음"과 구별해 알린다(#28) */}
       {r.web_search_unavailable && (
@@ -211,7 +223,8 @@ export function Reply({
       {r.price_parts.map((p) => (
         <PriceLookup key={p} part={p} />
       ))}
-      <Disclaimer />
+      {/* [왜] 면책 문구는 후보 판정이 든 답에만 둔다. 일상 대화 · 부품 목록에 붙으면 하지 않은 판정을 한 것처럼 읽힌다(#55). "AI 생성" 표시는 답마다 그대로 */}
+      {candidates.length > 0 && <Disclaimer />}
     </div>
   );
 }

@@ -106,6 +106,9 @@ def test_terminal_public_result_preserves_safe_graph_fields_only():
     from backend.conversations.dto import public_state
     result = public_state({'answer': 'ok', 'question_type': 'candidate_judge', 'price_parts': ['1N5819', 'https://private'], 'facts': {'x': 'secret'}, 'reports': [{'secret': 1}]})
     assert result == {'answer': 'ok', 'question_type': 'candidate_judge', 'price_parts': ['1N5819']}
+    from backend.conversations.dto import result_dto  # 견적 안내(#60)의 질문 종류도 저장 · 화면 결과의 허용 목록 두 곳에 있다
+    assert public_state({'answer': 'ok', 'question_type': 'quote'})['question_type'] == 'quote'
+    assert result_dto({'answer': 'ok', 'question_type': 'quote'}, request_id='r').question_type == 'quote'
 
 
 def test_docs_evidence_selects_only_cited_metadata():

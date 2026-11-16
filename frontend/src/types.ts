@@ -68,7 +68,11 @@ export type Project = {
   source_kind: string;
   demo_id: string | null;
   circuit_version: number;
+  /** 회로가 있는지(circuit_version > 0). 사이드바가 회로 없는 대화를 프로젝트 나무 밖에 모은다(#31) */
+  has_circuit: boolean;
   connections: { components?: Component[]; nets?: any[]; [key: string]: any };
+  /** 이 회로 버전에 올린 회로도(.kicad_sch) 파일 이름. 있으면 원본 회로도 창이 웹 검색 대신 이 그림을 보인다(#52) */
+  schematic_file?: string | null;
 };
 type Component = {
   value?: string;
@@ -150,6 +154,7 @@ export type ApprovedCaseDetail = {
   question: string;
   target_ref: string | null;
   target_value: string | null;
+  circuit_version: number | null;
   answer: string;
   candidate: Candidate | null;
   evidence: Citation[];
@@ -199,4 +204,42 @@ export type ExternalSchematic = {
   images: { sheet: number; url: string }[];
   choices: SchematicChoice[];
   circuit_version: number | null;
+};
+/** GET /api/projects/{id}/parts?circuit_version= 의 한 줄(#68). 종류 · 판정 지원 · 데이터시트는 서버가 에이전트와 같은 규칙으로 정한다. */
+export type PartCheck = {
+  ref: string;
+  value: string;
+  footprint: string;
+  symbol: string;
+  kind: string;
+  kind_name: string;
+  judge_supported: boolean;
+  /** 판정이 받지 않는 이유 구절("LED라서" · "다이오드가 아니라서"). 받으면 null */
+  judge_reason: string | null;
+  /** 코퍼스에 데이터시트가 있는 품번. 없으면 null */
+  datasheet: string | null;
+};
+export type PartsCheck = {
+  circuit_version: number;
+  parts: PartCheck[];
+  counts: { kind: string; name: string; count: number }[];
+};
+/** GET /api/datasheets 한 줄: 서재(폐기 제외 코퍼스)의 데이터시트 하나. parts는 표지에 적힌 품번(#67). */
+export type Datasheet = {
+  id: number;
+  title: string;
+  publisher: string;
+  revision: string | null;
+  category: string | null;
+  source_url: string;
+  collected_at: string;
+  parts: string[];
+};
+/** GET /api/datasheets 응답. categories는 검색과 상관없는 서재 전체의 분류별 수(많은 순). */
+export type DatasheetPage = {
+  items: Datasheet[];
+  total: number;
+  page: number;
+  page_size: number;
+  categories: { category: string; count: number }[];
 };

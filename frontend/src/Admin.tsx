@@ -195,9 +195,14 @@ export function Admin() {
             </label>
             <p className="muted">{reasonLength(reason)}/500</p>
             <ErrorBox error={error} />
-            <button className="primary" disabled={busy || reasonLength(reason) < 5}>
-              사유 남기고 해제
-            </button>
+            <div className="dialog-actions">
+              <button type="button" onClick={() => setPending(null)}>
+                취소
+              </button>
+              <button className="primary" disabled={busy || reasonLength(reason) < 5}>
+                사유 남기고 해제
+              </button>
+            </div>
           </form>
         </Modal>
       )}
@@ -208,9 +213,12 @@ export function Admin() {
             활성화해도 예전 세션은 돌아오지 않습니다.
           </p>
           <ErrorBox error={error} />
-          <button className="primary" disabled={busy} onClick={() => setActive(target, false)}>
-            정지
-          </button>
+          <div className="dialog-actions">
+            <button onClick={() => setPending(null)}>취소</button>
+            <button className="primary" disabled={busy} onClick={() => setActive(target, false)}>
+              정지
+            </button>
+          </div>
         </Modal>
       )}
       {pending?.kind === 'delete' && target && (
@@ -228,18 +236,21 @@ export function Admin() {
             />
           </label>
           <ErrorBox error={error} />
-          <button
-            className="primary"
-            disabled={busy || confirmId.trim() !== String(target.id)}
-            onClick={() =>
-              run(
-                () => api(`/admin/users/${target.id}`, 'DELETE'),
-                `#${target.id} 계정을 탈퇴 처리했습니다.`,
-              )
-            }
-          >
-            계정과 모든 기록 삭제
-          </button>
+          <div className="dialog-actions">
+            <button onClick={() => setPending(null)}>취소</button>
+            <button
+              className="primary"
+              disabled={busy || confirmId.trim() !== String(target.id)}
+              onClick={() =>
+                run(
+                  () => api(`/admin/users/${target.id}`, 'DELETE'),
+                  `#${target.id} 계정을 탈퇴 처리했습니다.`,
+                )
+              }
+            >
+              계정과 모든 기록 삭제
+            </button>
+          </div>
         </Modal>
       )}
     </div>

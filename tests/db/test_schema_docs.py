@@ -1,10 +1,10 @@
 """scripts/db/gen_schema_docs.py 시험: 일회용 PostgreSQL에 서비스 스키마를 적용하고 생성한 표 정의서 · ERD를 확인한다.
 
-- 역할: ① 서비스 표 26개가 모두 문서에 있고 FK 선 · 제약이 DB와 같고(승인당 견적 UNIQUE도, 032 이후 approvals.message_id UNIQUE도 없음)
+- 역할: ① 서비스 표 27개가 모두 문서에 있고 FK 선 · 제약이 DB와 같고(승인당 견적 UNIQUE도, 032 이후 approvals.message_id UNIQUE도 없음)
   ② `--out-dir`로 임시 위치에 쓰고 `--check`가 같은 DB에서 0 · 칸 기본값을 바꾼 DB에서 1을 내고
   ③ 설명이 없는 새 칸이 생기면 멈추고 ④ 커밋된 db/schema 문서가 생성물이면 DB와 글자까지 같아야 한다(어긋남 시험).
 - 하지 않는 일: 운영 DB 접속(DATABASE_URL은 시험이 만든 DB로만 둔다), 코퍼스 · LangGraph 표 확인.
-- 출처: scripts/db/gen_schema_docs.py, tests/db_schema.py, db/027~034.
+- 출처: scripts/db/gen_schema_docs.py, tests/db_schema.py, db/027~035.
 [주의] ④는 db/schema 문서에 자동 생성 표시(MARKER)가 있을 때만 검사한다. 손으로 쓴 옛 문서는 건너뛴다 — 통합 단계가 처음 생성해 넣은 뒤부터 강제된다.
 시험 DB는 시험 모듈마다 새로 만들고 지운다.
 """
@@ -52,7 +52,7 @@ def docs_of(url):
 def test_every_service_table_is_documented(dsn):
     docs = docs_of(dsn)
     erd, definition = docs['erd.md'], docs['table-definition.md']
-    assert len(gen.TABLES) == 26
+    assert len(gen.TABLES) == 27
     for table in gen.TABLES:
         assert f'## `{table}`' in definition
         assert f'    {gen.entity(table)} {{' in erd

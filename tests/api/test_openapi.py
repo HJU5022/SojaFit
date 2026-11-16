@@ -3,7 +3,7 @@
 - 역할: 요청 본문 모델마다 예시가 있고 그 예시가 실제로 통과하는지, 모르는 칸 금지, 업로드의 multipart 칸 문서,
   SSE 두 경로의 `text/event-stream` 설명, 204 · SSE가 아닌 성공 응답의 스키마가 비지 않았는지,
   응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/types.ts의 타입)을 지우지 않는지 본다.
-  동작 57개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
+  동작 60개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
 - 하지 않는 일: 오류 응답 모양(test_health.py · test_errors.py), 가격 응답의 실제 칸(test_prices.py),
   업로드 수신 상한 · 오류 코드(test_projects.py), Swagger 화면 자체(서버를 띄우지 않는다).
 - 출처: SPEC.md 4절 엔드포인트 표, backend/api/API.md.
@@ -78,7 +78,7 @@ def test_no_success_response_has_an_empty_schema():
     assert empty == []
 
 
-# (메서드, 경로) 57개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
+# (메서드, 경로) 60개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
 ROUTES = {
     ('POST', '/api/auth/signup/confirm'), ('POST', '/api/auth/password-reset'), ('POST', '/api/auth/password-reset/confirm'),
     ('GET', '/api/auth/google/onboarding'), ('POST', '/api/auth/google/signup'), ('POST', '/api/auth/google/link'),
@@ -89,10 +89,11 @@ ROUTES = {
     ('GET', '/api/auth/google/callback'), ('GET', '/api/auth/google/pending'),
     ('GET', '/api/admin/users'), ('PATCH', '/api/admin/users/{target_id}'),
     ('POST', '/api/admin/users/{target_id}/unmask'), ('DELETE', '/api/admin/users/{target_id}'), ('GET', '/api/admin/audit'),
-    ('GET', '/api/prices'),
+    ('GET', '/api/prices'), ('GET', '/api/datasheets'),
     ('DELETE', '/api/me'), ('GET', '/api/me/memory'), ('PATCH', '/api/me/memory'), ('DELETE', '/api/me/memory'),
     ('GET', '/api/demo-circuits'), ('GET', '/api/projects'), ('POST', '/api/projects'), ('POST', '/api/projects/upload'),
-    ('POST', '/api/projects/{project_id}/netlist'),
+    ('POST', '/api/projects/{project_id}/netlist'), ('GET', '/api/projects/{project_id}/schematic'),
+    ('GET', '/api/projects/{project_id}/parts'),
     ('GET', '/api/projects/{project_id}'), ('PATCH', '/api/projects/{project_id}'), ('DELETE', '/api/projects/{project_id}'),
     ('POST', '/api/messages/{message_id}/approvals'), ('POST', '/api/approvals/{approval_id}/quotes'),
     ('GET', '/api/messages/{message_id}/approvals'),
@@ -108,7 +109,7 @@ ROUTES = {
 
 
 def test_routes_are_pinned_and_live_only_in_api_routers():
-    """동작(메서드, 경로) 57개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
+    """동작(메서드, 경로) 60개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
     # [왜] main.py에 @app.get 같은 경로를 두면 app.routes에 APIRoute로 바로 들어온다
     assert [r.path for r in app.routes if isinstance(r, APIRoute)] == []
     # [주의] FastAPI 0.162는 include_router한 라우터를 `original_router`를 가진 묶음 하나로 app.routes에 둔다
@@ -140,7 +141,7 @@ ACCOUNT = {'id', 'email', 'role', 'is_active'}
 APPROVAL = {'id', 'message_id', 'candidate_part', 'part_number', 'verdict', 'case_id', 'created_at'}
 QUOTE = {'id', 'approval_id', 'part_number', 'quantity', 'created_at'}
 CASE = {'id', 'approval_id', 'candidate_part', 'verdict', 'created_at'}
-CASE_DETAIL = CASE | {'message_id', 'project_id', 'project_name', 'thread_id', 'thread_title', 'question', 'target_ref', 'target_value',
+CASE_DETAIL = CASE | {'message_id', 'project_id', 'project_name', 'thread_id', 'thread_title', 'question', 'target_ref', 'target_value', 'circuit_version',
                       'answer', 'candidate', 'evidence', 'quotes'}
 AUDIT = {'id', 'actor_id', 'actor_email', 'target_id', 'target_email', 'action', 'fields', 'reason', 'created_at'}
 SNAPSHOT = {'answer': '대체할 수 있습니다.', 'question_type': 'candidate_judge', 'evidence': [],
@@ -167,8 +168,10 @@ CASES = [
     ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [('1N5819', '1N5819'), (5, NOW)], QUOTE),
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW, THREAD)]], QUOTE | {'thread_id'}),
     ('get', '/api/approved-cases', None, {}, [[(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW)]], CASE),
+    ('get', '/api/datasheets?q=SS34', None, {}, [(1,), [(5, 'SS32 SERIES', 'Taiwan Semiconductor', 'O2104', 'schottky-rectifier', 'https://a.example/SS32.pdf', NOW, 'SS32, SS34')],
+                                                 [('schottky-rectifier', 1)]], {'items', 'total', 'page', 'page_size', 'categories'}),
     ('get', '/api/approved-cases/4', None, {}, [(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW, SNAPSHOT, 9, THREAD, None, 1, '전원부',
-                                                 {'parts': [{'ref': 'D1', 'value': 'SS34'}]}, '바꿔도 되나요?', '바꿔도 되나요?', True),
+                                                 {'parts': [{'ref': 'D1', 'value': 'SS34'}]}, '바꿔도 되나요?', '바꿔도 되나요?', True, 1),
                                                 [(5, 3, '1N5819', 100, NOW)], ('D1',)], CASE_DETAIL),
     ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW, 1, None)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status', 'circuit_version'}),
     ('get', '/api/threads', None, {}, [[(THREAD, 1, '전원부', None, '저장 질문', NOW, NOW)]], THREAD_ITEM),

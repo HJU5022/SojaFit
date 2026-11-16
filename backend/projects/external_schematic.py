@@ -1,6 +1,7 @@
-"""공개 완성 회로도의 검색, 15분 메모리 재사용, 서명된 시트 조회."""
+"""공개 완성 회로도의 검색, 15분 메모리 재사용, 서명된 시트 조회. 업로드한 회로도(#52)의 그림도 같은 메모리 캐시에 둔다."""
 import base64
 import binascii
+import hashlib
 import hmac
 import json
 import logging
@@ -9,7 +10,7 @@ import re
 import time
 from collections import OrderedDict
 from concurrent.futures import Future, ThreadPoolExecutor
-from contextvars import copy_context
+from contextvars import ContextVar, copy_context
 from dataclasses import dataclass, replace
 from math import ceil
 from threading import Lock
@@ -25,6 +26,9 @@ from backend.projects.schematic_source import (
 
 TTL = 900
 LOGGER = logging.getLogger(__name__)
+# [왜] 회로 연결이 있는 찾기(작업대가 프로젝트를 열 때 자동으로 부름)는 #146 공식 제조사 갈래를 건너뛰고 9c87ba36 길(GitHub 대체 포함)로 간다.
+#      search · fallback_search가 (query, limit)만 받아 시험 가짜와 맞추려고 이 값으로 알린다
+_CONNECTED_LOOKUP = ContextVar('connected_schematic_lookup', default=False)
 
 
 @dataclass(frozen=True)
@@ -499,7 +503,8 @@ class ExternalSchematicService:
                     verified.append(result)
             return tuple(verified)
 
-        candidates = self.candidates.get(query, lambda: self.search(query, _community_candidate_limit()))
+        search_key = ('connected', query) if connections is not None else query  # 연결 찾기와 공식 갈래 후보를 섞지 않는다
+        candidates = self.candidates.get(search_key, lambda: self.search(query, _community_candidate_limit()))
         community_candidates = bool(candidates) and not any(isinstance(candidate, WebSchematicRef) for candidate in candidates)
         if community_candidates and known_board:
             return _SearchFailure('validation_failed')
@@ -644,10 +649,10 @@ class ExternalSchematicService:
             return result
         # Official candidates are authoritative only after rendering and hash
         # validation. If that validation fails, lazily spend the grade-3 slot.
-        if not is_tsc_query(query) and semiconductor_manufacturer(query) is None and not official_part_candidates and not known_board and self.fallback_search and any(isinstance(candidate, WebSchematicRef) for candidate in candidates):
+        if (connections is not None or (not is_tsc_query(query) and semiconductor_manufacturer(query) is None)) and not official_part_candidates and not known_board and self.fallback_search and any(isinstance(candidate, WebSchematicRef) for candidate in candidates):
             repositories = self.candidates.get(('community', query), lambda: self.fallback_search(query, _community_candidate_limit()))
             if repositories and all(isinstance(candidate,GitHubRepositoryRef) for candidate in repositories):
-                self.candidates.replace(query,repositories)
+                self.candidates.replace(search_key,repositories)
                 return self._find(query,connections,selected_url)
             result = try_candidates(repositories)
             if result:
@@ -679,8 +684,12 @@ class ExternalSchematicService:
                 raise limited
             try:
                 from backend.projects.schematic_render import official_pdf_request
-                with official_pdf_request():
-                    return self._find(normalized, connections)
+                connected = _CONNECTED_LOOKUP.set(connections is not None)
+                try:
+                    with official_pdf_request():
+                        return self._find(normalized, connections)
+                finally:
+                    _CONNECTED_LOOKUP.reset(connected)
             except ExternalSchematicRateLimited as error:
                 self._set_retry_deadline(lookup_key, self.wall() + error.retry_after, error)
                 raise
@@ -777,15 +786,16 @@ def _search(query, limit):
     try:
         # TSC is an official datasheet-only path. Never mix its results with
         # community/GitHub fallback candidates.
-        if is_tsc_query(query):
+        connected = _CONNECTED_LOOKUP.get()
+        if not connected and is_tsc_query(query):
             candidates = search_tsc_schematics(query, min(3, limit))
             LOGGER.info('schematic_search_route', extra={'phase': 'tsc_official', 'candidate_count': len(candidates)})
             return candidates
-        if semiconductor_manufacturer(query) is not None:
+        if not connected and semiconductor_manufacturer(query) is not None:
             candidates = search_semiconductor_schematics(query, min(5, limit))
             LOGGER.info('schematic_search_route', extra={'phase': 'semiconductor_official', 'candidate_count': len(candidates)})
             return candidates
-        if semiconductor_part_query(query):
+        if not connected and semiconductor_part_query(query):
             candidates = search_semiconductor_schematics(query, min(5, limit))
             LOGGER.info('schematic_search_route', extra={'phase': 'semiconductor_part_official', 'candidate_count': len(candidates)})
             if candidates:
@@ -856,7 +866,7 @@ def _search_community(query, limit):
         ExternalCircuitSearchError, search_github_repositories, search_component_repositories, component_context,
         is_tsc_query, semiconductor_manufacturer,
     )
-    if is_tsc_query(query) or semiconductor_manufacturer(query) is not None:
+    if not _CONNECTED_LOOKUP.get() and (is_tsc_query(query) or semiconductor_manufacturer(query) is not None):
         return ()
     try:
         return search_component_repositories(query,limit) if component_context(query)=='diode' else search_github_repositories(query,limit)
@@ -938,3 +948,22 @@ def find_external_schematic(query: str, selected_url: str | None = None, compone
 def load_external_schematic_sheet(token: str, sheet_index: int, *, connections=None) -> bytes:
     _enabled()
     return _SERVICE.load(token, sheet_index, connections=connections)
+
+
+def _uploaded_key(source: str):
+    return ("upload", hashlib.sha256(source.encode("utf-8")).hexdigest())
+
+
+def remember_uploaded_sheets(source: str, sheets: tuple[bytes, ...]) -> None:
+    """업로드 때 렌더러가 함께 준 그림을 캐시에 넣어 첫 화면이 다시 그리지 않게 한다."""
+    _SERVICE.images.replace(_uploaded_key(source), sheets)
+
+
+def uploaded_schematic_sheet(source: str) -> bytes:
+    """업로드한 회로도 원문의 PNG. 15분 캐시에 없으면(만료 · 다른 인스턴스) 렌더러로 다시 그린다.
+
+    [주의] 소유 확인은 호출자가 원문을 DB에서 읽을 때 이미 했다. 키가 원문 해시라 같은 파일은 그림 하나를 같이 쓴다.
+    외부 검색이 아니므로 Exa 설정(_enabled)과 서명 키를 보지 않는다.
+    """
+    from backend.projects.schematic import export_uploaded_kicad
+    return _SERVICE.images.get(_uploaded_key(source), lambda: export_uploaded_kicad(source)[1])[0]

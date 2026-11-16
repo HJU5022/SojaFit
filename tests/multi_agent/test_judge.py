@@ -140,7 +140,8 @@ def test_vishay_vrrm_equality_row_is_verified_without_borrowing_vrm(maker, symbo
     assert rows[0]['citation']['source_url'] == doc['source_url']
     for symbol in ('VR', 'VRM', 'VRM = VR', 'VRRM or VR', 'VRRM / VRWM / VR', 'VRRM VRWM VR'):
         assert J._grade2_rows(lambda *a: [{**doc, 'symbol': symbol}], 'BAS16', {'VRRM'}, maker) == []
-    assert J.outside_corpus(J.JudgeRead(role='R01', maker_wanted=maker), {}) is None
+    # [왜] 판정은 아직 TSC 내부 행만 쓴다. 다른 제조사 지정은 등급2 행 어댑터와 별개로 maker_missing으로 거절한다(#146 회귀)
+    assert J.outside_corpus(J.JudgeRead(role='R01', maker_wanted=maker), {})[0] == J.Reason.MAKER_MISSING
 
 
 @pytest.mark.parametrize(('maker', 'host'), [
@@ -670,3 +671,84 @@ def test_displayed_conditions_drop_ungrounded_reads_and_use_resume_values(monkey
     rows = {x['code']: x['value'] for x in result['judgement']['input_conditions']}
     assert rows['i_max'] == '0.25 A' and rows['v_drop_allowed'] == '0.8 V'
     assert '999' not in str(rows)
+
+
+def test_identical_checks_run_concurrently_but_are_consumed_in_candidate_order(monkeypatch):
+    """_identical를 후보마다 동시에 시작해도 결과 순서 · 판정은 차례로 부른 것과 같다."""
+    import threading
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {'1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
+    cands = ['1N4148 R0G', '1N4148 T0G', '1N4148 A0G']
+    read = dict(READ, original_part='1N4148 A0G', candidates=cands)
+    docs = [{'chunk_id': 7, 'content': 'A0G, R0G and T0G are physically identical.'}]
+    running, peak, lock = [0], [0], threading.Lock()
+
+    def retriever(q, parts=None):
+        with lock:
+            running[0] += 1
+            peak[0] = max(peak[0], running[0])
+        threading.Event().wait(0.05)
+        with lock:
+            running[0] -= 1
+        return docs
+    out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=retriever)
+    assert [x['part'] for x in out['judgement']['results']] == cands and peak[0] > 1
+    serial = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=lambda q, parts=None: docs)
+    assert out['judgement']['results'] == serial['judgement']['results']
+
+
+def test_identical_error_surfaces_at_the_failing_candidates_turn(monkeypatch):
+    """검색 오류는 원래처럼 판정 도구 실패 보고로 끝난다."""
+    from backend.graph.mcp_retriever import RetrievalUnavailableError
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {'1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
+    read = dict(READ, original_part='1N4148 A0G', candidates=['1N4148 R0G'])
+
+    def boom(q, parts=None):
+        raise RetrievalUnavailableError('down')
+    out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=boom)
+    assert out['path'] == ['판정'] and 'spec table tool failed' in out['reports'][-1]['message' if 'message' in out['reports'][-1] else 'summary']
+
+
+# #65: 원래 부품과 같은 품번을 물으면 회로 값 · 역할을 묻지 않고 동일품이다
+SAME_SPECS = {**SPECS, 'SS34': [r('SS34', 'VRRM', 40.0), r('SS34', 'IF_AV', 3.0, 'A'), r('SS34', 'PACKAGE', None, None, text='SMA')]}
+SAME = {**STATE, 'question': 'D1을 SS34로 그대로 둬도 돼?', 'conditions': '', 'target_part': {**STATE['target_part'], 'value': 'SS34'}}
+SAME_READ = J.JudgeRead(role='R01', role_alt='R02', original_part='SS34', candidates=['SS34']).model_dump(mode='json')
+
+
+@pytest.mark.parametrize('original,candidate', [('SS34', 'SS34'), ('TSC SS34', 'SS34'), ('SS34', 'tsc ss34')])
+def test_same_part_is_identical_without_asking_values_or_role(monkeypatch, original, candidate):
+    """같은 품번(제조사 이름 · 대소문자만 다름)이면 인터럽트 없이 동일품이고, 빠진 값을 남기지 않으며 사양 표 행 인용은 그대로다."""
+    from backend.multi_agent.messages import render_judgement
+    monkeypatch.setattr(J, 'interrupt', no_interrupt)
+    out = J.judge_agent({**SAME, 'judge_read': dict(SAME_READ, original_part=original, candidates=[candidate])},
+                        specs=specs_of(SAME_SPECS), find=None, retriever=None)
+    j = out['judgement']
+    res = j['results'][0]
+    assert res['verdict'] == 'IDENTICAL' and res['missing'] == [] and out['reports'][-1]['missing'] == []
+    assert j['asked'] == [] and j['roles'] == ['R01', 'R02']  # 역할을 고르지 않으면 두 역할로 판정한다(EC-02)
+    assert any(c.get('citation') for c in res['checks'])
+    assert '알려 주시면' not in render_judgement(j)
+
+
+@pytest.mark.parametrize('original,candidates,conditions', [
+    ('SS34', ['SS14'], ''),               # 다른 품번
+    ('SS34', ['SS34 R0G'], ''),           # 주문 코드만 다름: 주문 정보 표 행을 찾아야 동일품이라 지금처럼 묻는다
+    ('', ['SS34'], ''),                   # 원래 품번을 모름(EC-05)
+    ('SS34', ['SS34'], '현재 SS34의 제조사는 모르고 기판은 그대로다.'),  # 원래 부품의 제조사를 모름(EC-05)
+])
+def test_not_same_part_still_asks_values_and_role(monkeypatch, original, candidates, conditions):
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
+    J.judge_agent({**SAME, 'conditions': conditions, 'judge_read': dict(SAME_READ, original_part=original, candidates=candidates)},
+                  specs=specs_of(SAME_SPECS), find=None, retriever=None)
+    assert len(asked) == 1 and asked[0]['missing'] and asked[0]['role_choices'] == ['R01', 'R02']
+
+
+def test_mixed_same_and_other_part_asks_once_and_keeps_identical(monkeypatch):
+    """같은 품번과 다른 품번을 함께 물으면 지금처럼 한 번 묻는다(묻는 값은 역할마다 같다). 같은 품번은 그대로 동일품이다."""
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
+    out = J.judge_agent({**SAME, 'judge_read': dict(SAME_READ, candidates=['SS34', 'SS14'])}, specs=specs_of(SAME_SPECS), find=None, retriever=None)
+    verdicts = {x['part']: x['verdict'] for x in out['judgement']['results']}
+    assert len(asked) == 1 and verdicts['SS34'] == 'IDENTICAL' and verdicts['SS14'] != 'IDENTICAL'

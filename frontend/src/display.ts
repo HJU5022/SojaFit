@@ -1,10 +1,10 @@
 /**
- * 서버가 준 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수.
+ * 서버가 준 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수와 입력창 키 판정(`isSendKey`).
  * 하지 않는 일: 값 비교·판정(backend/judge가 한다), 받은 값의 변경(보이는 글만 만든다), 네트워크.
  * 출처: SPEC.md 3절(화면 표기), backend/judge/conditions.py(기준식 문법).
  */
 import { inputLabel, INPUT_LABELS } from './inputLabels.ts';
-import type { PriceEstimate } from './types.ts';
+import type { Candidate, PriceEstimate, Result } from './types.ts';
 
 /** 기준식의 kV · kI 여유 계수. backend/judge/conditions.py의 MARGINS와 같은 값이다. */
 const MARGIN_LABELS: Record<string, string> = {
@@ -154,6 +154,15 @@ export function withoutCorpusCitations(
   });
 }
 
+/** 답의 판정 후보(결과 · 보인 후보 · 미확인)를 같은 품번 · 역할이면 한 번만 모은다. 비면 판정이 없는 답이라 면책 문구를 붙이지 않는다(#55). */
+export function replyCandidates(judgement: Result['judgement']): Candidate[] {
+  return [
+    ...(judgement.results ?? []),
+    ...(judgement.shown ?? []),
+    ...(judgement.unverified ?? []),
+  ].filter((c, i, all) => all.findIndex((x) => x.part === c.part && x.role === c.role) === i);
+}
+
 /** 견적 수량이 서버가 받는 범위(1~100000 정수)인지 본다. 수량을 안 정했으면(undefined) 괜찮다. */
 export function validQuantity(quantity?: number): boolean {
   return (
@@ -176,3 +185,36 @@ export function estimateRows(estimate: PriceEstimate | null | undefined): [strin
     [`예상 금액 (${estimate.quantity}개)`, `${estimate.total} ${estimate.currency}`],
   ];
 }
+/** 질문 입력창에서 보내기 키인가: Enter는 보내고 Shift+Enter는 줄을 바꾼다. 한글 조합 중(isComposing · keyCode 229)의 Enter는 글자 확정이라 보내지 않는다(#38). */
+export function isSendKey(e: {
+  key: string;
+  shiftKey: boolean;
+  isComposing: boolean;
+  keyCode: number;
+}) {
+  return e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229;
+}
+
+/** 검토 진행 한 단계(#42). ms는 앞서 끝난 구간 시간의 합, since는 지금 구간이 시작된 시각(performance.now()). */
+export type Step = { stage: string; ms: number; since: number };
+
+/**
+ * status 프레임이 오면 단계 목록에 붙인다(#42). 마지막(지금) 단계는 now까지의 시간을 더해 닫는다.
+ * 재계획으로 같은 단계가 다시 오면 앞의 줄을 빼고 끝에 붙이되 쓴 시간은 이어서 더한다(마지막이 늘 지금 단계).
+ */
+export function addStep(steps: Step[], stage: string, now: number): Step[] {
+  const closed = steps.map((s, i) =>
+    i === steps.length - 1 ? { ...s, ms: s.ms + now - s.since } : s,
+  );
+  const before = closed.find((s) => s.stage === stage);
+  return [...closed.filter((s) => s.stage !== stage), { stage, ms: before?.ms ?? 0, since: now }];
+}
+
+/** 단계에 쓴 시간. 마지막 단계는 now(진행 중이면 지금, 끝났으면 끝난 시각)까지 센다. */
+export function stepMs(steps: Step[], i: number, now: number) {
+  const s = steps[i];
+  return i === steps.length - 1 ? s.ms + now - s.since : s.ms;
+}
+
+/** 밀리초를 "1.4초"로. */
+export const seconds = (ms: number) => `${(Math.max(0, ms) / 1000).toFixed(1)}초`;

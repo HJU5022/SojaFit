@@ -243,7 +243,7 @@ def test_spec_table_failure_ends_as_a_search_error_refusal(monkeypatch):
 
 @pytest.mark.parametrize("extra, revisions, code", [
     ({"required_specs": [{"words": "1kHz 순방향 전류 잡음 밀도", "code": "none"}]}, {}, "not_found"),
-    ({"maker_wanted": "Toshiba"}, {}, "part_missing"),
+    ({"maker_wanted": "Toshiba"}, {}, "maker_missing"),  # 품번 문구가 아닌 제조사 문구(#63)
     ({"revision_wanted": "2027년판"}, {}, "revision_missing"),
     ({"revision_wanted": "G2710"}, {"G2710": False}, "revision_missing"),  # 라우팅이 사실을 놓쳐 판정 길로 와도 거절
 ])

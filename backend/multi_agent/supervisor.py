@@ -24,7 +24,7 @@ from backend.graph.memory import memory_context, memory_sources
 from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
-from backend.multi_agent.messages import refusal_for, render_judgement
+from backend.multi_agent.messages import CIRCUIT_MISSING, refusal_for, render_judgement
 from backend.multi_agent.revisions import requested_revisions, revision_matches
 from backend.services.llm import is_llm_failure
 
@@ -34,7 +34,7 @@ SYNTH_PROMPT = (PROMPTS / 'synth.md').read_text(encoding='utf-8')
 NUMBER = re.compile(r'\d+(?:\.\d+)?')
 # [왜] 그래프 노드 이름은 강의처럼 한국어다(build.py가 이 이름으로 노드를 단다). 갈림 함수는 다음 노드 이름을 그대로 돌려줘
 #      draw_mermaid 그림에 영어 라벨이 붙지 않는다. 계획서 · 모으기의 값(docs · finish · single 등)은 그대로 두고 여기서만 옮긴다
-NODE = {'docs': 'RAG 에이전트', 'judge': 'Spec 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'refuse': '거절',
+NODE = {'docs': 'RAG 에이전트', 'judge': 'Spec 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'parts_list': '부품 목록', 'quote': '견적 안내', 'refuse': '거절',
         'collect': '답 모으기', 'single': '답 정리', 'synth': '종합'}
 REPLAN = '다시 해 볼 실패 · 다시 계획(최대 1번)'  # 답 모으기 → Supervisor 되돌림만 노드 이름이 아닌 키라 그림에 이 라벨이 붙는다
 
@@ -65,11 +65,22 @@ _REFERENCE_WORDS = re.compile(
 )
 
 
+def _conditions_only(state: dict) -> bool:
+    """회로 조건 값만 준 말인가: 숫자+단위가 있고 품번 · 물음표가 없다("입력 전압은 5V, 부하 전류는 1.5A야")."""
+    from backend.graph.nodes import QUANTITY_CLAIM, find_parts  # [왜] nodes.py가 이 파일을 import해 함수 안에서 가져온다
+    from backend.multi_agent.facts import refs_of
+    question = str(state.get('question') or '')
+    return (bool(QUANTITY_CLAIM.search(question)) and not re.search(r'[?？]', question)
+            and not find_parts(question, refs_of(state.get('target_part') or {})))
+
+
 def _history_for_reference(state: dict) -> list[str]:
     """Resolve explicit deictic references without making history current evidence."""
     question = str(state.get('question') or '')
     history = state.get('conversation_history') or []
-    if not history or not _REFERENCE_WORDS.search(question):
+    # [왜] 판정 뒤 조건만 준 말이 후보 없는 candidate_judge로 가 "자료를 찾지 못했어요"로 거절됐다(#64).
+    #      앞 후보 요청을 이 조건으로 다시 하려면 이전 사용자 입력이 있어야 한다. 무엇을 할지는 계획(LLM)이 정한다
+    if not history or not (_REFERENCE_WORDS.search(question) or _conditions_only(state)):
         return []
     # The conversation service already applies the shared 20,000-character
     # bound. Do not add a message-count cutoff here: early user corrections
@@ -78,12 +89,17 @@ def _history_for_reference(state: dict) -> list[str]:
 
 
 def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> str:
-    """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
+    """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 회로가 붙었는지(부품 수) · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
     part = state.get('target_part') or {}
     # Footprint annotations are untrusted metadata, not planning or role instructions.
     target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')}".strip() or state.get('target', '')
     agents = ['docs'] + (['judge'] if judge_enabled else [])
-    lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}', f"Conditions: {state.get('conditions', '')}",
+    # [왜] "다이오드는 뭐뭐 있어"가 회로의 부품 목록(parts_list)인지 일반 설명(chat)인지 가르려면 회로가 붙었는지 알아야 한다(#59).
+    #      부품 목록 노드와 같은 함수로 개수만 준다(부품 글자는 주지 않는다). nodes.py가 이 파일을 import해 citations처럼 함수 안에서 가져온다
+    from backend.graph.nodes import circuit_parts
+    count = len(circuit_parts(state))
+    lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}',
+             f'Circuit attached: {f"yes ({count} parts)" if count else "no"}', f"Conditions: {state.get('conditions', '')}",
              *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents),
              f'External web fallback: {"enabled" if web_enabled else "disabled"}']
     if state.get('reports'):
@@ -140,7 +156,17 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
         out['question_type'] = plan.question_type  # [왜] 질문 종류는 첫 계획이 정한다(채점기가 읽는다)
     if plan.next == 'refuse':
         out['refusal_reason'] = plan.reason.value
+    elif plan.next == 'tasks' and circuit_missing(state) and any(t.kind != 'rating' for t in plan.tasks):
+        # [왜] 회로 없이 시작한 대화에서 회로 역할 · 대체 판정 · 후보 찾기는 할 수 없다. 계획의 할 일 종류로 가르고(LLM 추가 호출 없음)
+        #      서브에이전트를 부르지 않고 넷리스트를 달라는 거절로 끝낸다(SPEC 8.9). 정격 · 문서 질문(rating)은 그대로 돈다
+        out.update(plan={}, round=state.get('round') or 0, refusal_reason=CIRCUIT_MISSING)
     return out
+
+
+def circuit_missing(state: dict) -> bool:
+    """서비스가 부품 없는 회로를 넘겼다(회로 없이 시작한 대화). [주의] 평가 실행기는 회로 칸 없이 글만 넘겨 해당하지 않는다(evals/runners/run_graph.py)."""
+    connections = state.get('connections')
+    return isinstance(connections, dict) and not connections.get('components')
 
 
 def payload(state: dict, task: dict) -> dict:
@@ -151,6 +177,8 @@ def payload(state: dict, task: dict) -> dict:
             'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
     if state.get('approved_memories'):
         base['approved_memories'] = state['approved_memories']
+    if task['agent'] == 'docs':
+        base['facts'] = state.get('facts') or {}  # [왜] 요청한 개정판이 코퍼스에 없다고 확인됐으면 문서 에이전트가 필터 해제 재검색을 건너뛴다
     if task['agent'] == 'judge':
         base.update(conditions=state.get('conditions', ''), target=state.get('target', ''), facts=state.get('facts') or {},
                     question_type=task['kind'],  # [왜] 판정 코드는 question_type으로 판정 · 찾기를 가른다. 할 일 종류가 그 값이다
@@ -159,7 +187,7 @@ def payload(state: dict, task: dict) -> dict:
 
 
 def after_plan(state: dict):
-    """계획 뒤 갈림길: 일상 대화 → 끝내기, 가격 → 가격 안내, 거절 → 거절, 할 일 → 서브에이전트에 동시에 Send. 노드 이름을 돌려준다."""
+    """계획 뒤 갈림길: 일상 대화 → 끝내기, 가격 → 가격 안내, 부품 목록 → 부품 목록, 견적 → 견적 안내, 거절 → 거절, 할 일 → 서브에이전트에 동시에 Send. 노드 이름을 돌려준다."""
     plan = state.get('plan') or {}
     if state.get('refusal_reason') or not plan:
         return NODE['refuse']

@@ -870,3 +870,15 @@ def test_verify_subprocess_failure_logs_class_and_last_stderr_line_only(web_env,
     assert verified_rows(b'%PDF-1.4', TSC_PDF, ['SS34'], ['reverse']) == []
     assert 'datasheet_verify_failed' in web_env.text and needle in web_env.text
     assert 'Traceback' not in web_env.text and 'services.taiwansemi.com' not in web_env.text and 'SS34' not in web_env.text
+
+
+def test_grade2_tsc_pdf_skips_language_check_like_before_146():
+    """TSC 열 기호 RӨJA(키릴 Ө)가 있는 TSC 공식 PDF도 VRRM 행을 읽는다(#146 전처럼 TSC · Infineon은 언어 검사를 건너뜀)."""
+    from pathlib import Path
+    raw = (Path(__file__).resolve().parents[2] / 'data/corpus/tsc/1N5817-SERIES_H2104.pdf').read_bytes()
+    url = 'https://services.taiwansemi.com/storage/resources/datasheet/1N5817-SERIES_H2104.pdf'
+    assert _language_for_pages(['Thermal resistance RӨJA junction to ambient for the type part voltage rating']) is None
+    rows = extract(raw, url, ['1N5817'], ['peak', 'repetitive', 'reverse', 'voltage', 'vrrm'], grade=2)
+    assert rows  # #146 언어 검사는 이 PDF를 통째로 버려 []였다(9c87ba36은 VF 행 1개)
+    # 새로 더한 제조사 주소는 언어 검사를 그대로 받는다
+    assert extract(raw, 'https://www.vishay.com/docs/88525/1n5817.pdf', ['1N5817'], ['vrrm'], grade=2) == []

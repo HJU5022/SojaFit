@@ -11,8 +11,8 @@
 
 | 대상 | 서비스(요청 처리)가 쓰는가 | 사용처 |
 |---|---|---|
-| `nodes.py`의 `read_input`(내부에서 `parse_input` 호출), `price_answer` | 쓴다 | `backend/multi_agent/build.py:78-95`가 멀티 그래프의 `입력 읽기`·`가격 안내` 노드로 붙인다. `parse_input`은 평가 스크립트(`run_skill_pair.py`, `check_retrieval_db.py`)도 직접 부른다 |
-| `nodes.py`의 `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`와 상수 `NOT_FOUND`, `REVISION`, `WORD`, `QUANTITY`, `STANDARD` | 쓴다 | `multi_agent/agents/docs.py:27`, `multi_agent/facts.py:9`, `multi_agent/agents/part_names.py:10`, `multi_agent/supervisor.py:314`(`citations`) |
+| `nodes.py`의 `read_input`(내부에서 `parse_input` 호출), `price_answer`, `parts_list_answer`, `quote_answer`, `target_choice` | 쓴다 | `backend/multi_agent/build.py`가 멀티 그래프의 `입력 읽기`·`가격 안내`·`부품 목록`·`견적 안내`·`대상 확인` 노드로 붙인다(`부품 목록`(#55)·`견적 안내`(#60)·`대상 확인`(#62)은 멀티만). `parse_input`은 평가 스크립트(`run_skill_pair.py`, `check_retrieval_db.py`)도 직접 부른다 |
+| `nodes.py`의 `find_parts`, `search`, `citations`, `circuit_parts`, `other_part_row`, `netlist_block`, `circuit_mechanism`와 상수 `NOT_FOUND`, `REVISION`, `WORD`, `QUANTITY`, `STANDARD` | 쓴다 | `multi_agent/agents/docs.py:27`, `multi_agent/facts.py:9`, `multi_agent/agents/part_names.py:10`, `multi_agent/supervisor.py`(`citations`, 계획 입력의 회로 부품 수 `circuit_parts`, #59) |
 | `nodes.py`의 `_connections_file` | 쓴다 | `services/demo.py:111,124` |
 | `nodes.py`의 `circuit_around` | MCP 서버만 쓴다. 서비스는 MCP 도구 중 `check_corpus`만 부르므로 서비스 경로에서는 호출되지 않는다 | `mcp_skill/mcp_server/server.py:12`(`get_circuit_info`), `evals/runners/run_input_surfaces.py` |
 | `nodes.py`의 노드 함수 `route`, `short_reply`, `grade`, `rewrite`, `generate`, `judge`, `judgement_answer`, `refuse` | 쓰지 않는다 | `backend/graph/build.py`가 붙이고, 평가 실행기와 스크립트(`evals/runners/run_skill_pair.py`, `eval_grader.py`, `run_retrieval_layers.py`, `run_retrieval_r1.py`, `run_retrieval_service.py`, `run_retrieval_v3.py`, `scripts/langfuse/langfuse_skill_check.py`)가 `route`·`grade`·`rewrite`·`generate`·`refuse`를 직접 부른다 |
@@ -50,7 +50,7 @@ Supervisor V0(`supervisor.py`, `backend/prompts/supervisor_v0.md`)는 후보 모
 | `GRAPH.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
 | `state.py` | 단일 그래프 상태 `AgentState`(덮어쓰기 칸과 쌓이는 칸 `tries`·`path`) |
-| `nodes.py` | 노드 함수(`read_input`, `route`, `short_reply`, `price_answer`, `search`, `grade`, `rewrite`, `generate`, `judge`, `judgement_answer`, `refuse`)와 서비스 공용 도우미(`find_parts`, `citations`, `other_part_row`, `circuit_around` 등) |
+| `nodes.py` | 노드 함수(`read_input`, `route`, `short_reply`, `price_answer`, `parts_list_answer`(멀티만, 부품 종류 `part_kind`로 거름), `quote_answer`(멀티만, 견적 요청의 고정 안내), `search`, `grade`, `rewrite`, `generate`, `judge`, `judgement_answer`, `refuse`)와 서비스 공용 도우미(`find_parts`, `citations`, `other_part_row`, `circuit_around` 등) |
 | `build.py` | 갈림길 `after_route`·`after_search`·`after_grade`·`after_judge`와 `build_graph` |
 | `supervisor.py` | Supervisor V0의 네 필드 출력, 입력 envelope, 상태별 의미 검증, Jev typed-question 계약 |
 | `memory.py` | 사용자별 Store namespace와 승인 사례 입력 도우미(`memory_context`, `memory_sources`), 멀티 그래프의 `기억 읽기` 노드 `read_profile`(사용자 사실 중 선호 실장 방식만 읽음, Store가 없거나 읽기가 실패하면 빈 값) |
