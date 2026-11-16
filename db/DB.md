@@ -25,6 +25,7 @@
 | `031_circuit_versions.sql` | 초기화·기존 DB 추가 SQL | 불변 `project_circuit_versions`와 대화별 회로 고정. 기존 회로·대화를 v1으로 backfill(빈 회로 v0), 새 버전·대화 트리거, RLS·공개 권한 회수. 재실행 가능하며 적용 호출자가 트랜잭션을 연다 |
 | `032_approval_reselection.sql` | 초기화·기존 DB 추가 SQL | 승인 snapshot/견적을 보존하고 사례 삭제 뒤 새 승인 이력을 허용. message_id UNIQUE를 조회 인덱스로 전환. 활성 승인 1건은 새 QuoteService의 run 행 잠금과 활성 사례 검사로 직렬화 |
 | `033_thread_titles.sql` | 초기화·기존 DB 추가 SQL | 대화 이름 칸 `threads.title`(NULL 허용, 공백 제거 1~200자 CHECK `ck_threads_title`)만 더함. NULL이면 화면은 첫 질문으로 만든 이름을 보임. 기존 행은 바꾸지 않고 재실행 가능 |
+| `034_admin_audit.sql` | 초기화·기존 DB 추가 SQL | 관리자 작업 이력 표 `admin_audit`(처리한 관리자 FK, 대상 id와 가린 이메일(FK 없음, 탈퇴 처리 뒤에도 남음), 작업 unmask·deactivate·activate·delete, 연 칸, 가림 해제 사유 5~500자). 앱은 INSERT·SELECT만. RLS ON·공개 역할 권한 회수, 재실행 가능 |
 | `legacy/` | 하위 폴더 | 기준선 이전의 옛 증분 SQL 이력. [LEGACY.md](legacy/LEGACY.md) |
 | `migrations/` | 하위 폴더 | 이미 서비스 표가 있는 운영 DB용 이전·점검·되돌리기 SQL. [MIGRATIONS.md](migrations/MIGRATIONS.md) |
 | `manual/` | 하위 폴더 | 자동 실행하지 않는 수동 SQL. [MANUAL.md](manual/MANUAL.md) |
@@ -34,13 +35,13 @@
 
 | 분류 | 위치 | 어떻게 실행되나 | 파일 수 |
 |---|---|---|---:|
-| 자동 | `db/*.sql` (이 폴더 바로 아래) | `docker-compose.yml`의 `db` 서비스가 `./db`를 `/docker-entrypoint-initdb.d`(읽기 전용)로 마운트한다(`docker-compose.yml:66-67`). Postgres 이미지는 데이터 폴더가 비어 있을 때 첫 기동에만 이 폴더 바로 아래의 `.sql`을 파일 이름순으로 실행한다 | 14 |
+| 자동 | `db/*.sql` (이 폴더 바로 아래) | `docker-compose.yml`의 `db` 서비스가 `./db`를 `/docker-entrypoint-initdb.d`(읽기 전용)로 마운트한다(`docker-compose.yml:66-67`). Postgres 이미지는 데이터 폴더가 비어 있을 때 첫 기동에만 이 폴더 바로 아래의 `.sql`을 파일 이름순으로 실행한다 | 15 |
 | 수동(운영 이전) | `db/migrations/` | `psql`로 사람이 단계마다 직접 실행. 새 DB는 쓰지 않는다 | 10 |
 | 수동(기타) | `db/manual/` | `.sql`(1)은 사람이 직접 실행, `.draft`·`.manual`(2)은 실행하지 않는 이력 | 3 |
 | 이력 | `db/legacy/` | 실행하지 않는다. `scripts/db/verify_chain/verify_chain.sh`와 `migrate_prod_4_rollback.sql`이 읽는다 | 21 |
 
 - 하위 폴더의 SQL은 마운트된 폴더 안에 있어도 이미지가 건너뛴다. 확장자 `.draft`·`.manual`은 실행 대상이 아니다.
-- 자동 실행 순서(이름순): `000_init` → `002_rag_corpus` → `008_multi_dim_embeddings` → `009_chunk_embedding_bits` → `012_document_category` → `020_service_baseline` → `026_projects_catalog_demo` → `026_revoke_public_grants_and_rls` → `027_google_user_login` → `029_email_account_security` → `030_google_onboarding` → `031_circuit_versions` → `032_approval_reselection` → `033_thread_titles`.
+- 자동 실행 순서(이름순): `000_init` → `002_rag_corpus` → `008_multi_dim_embeddings` → `009_chunk_embedding_bits` → `012_document_category` → `020_service_baseline` → `026_projects_catalog_demo` → `026_revoke_public_grants_and_rls` → `027_google_user_login` → `029_email_account_security` → `030_google_onboarding` → `031_circuit_versions` → `032_approval_reselection` → `033_thread_titles` → `034_admin_audit`.
 - 이 폴더에 없는 번호: `001`, `003`~`007`, `010`, `011`, `013`~`019`, `021`~`025`, `028`. 서비스 표는 기준선이 대체했고(옛 파일은 `legacy/`), `007` 데모 시드는 앱으로 옮겼고, `011` 사양 표는 ADR 0016으로 폐기했고, `004`는 `manual/`의 초안이다.
 - 같은 번호를 쓰는 파일(번호 `020`, `026`, `027`, `029`). 번호는 종류가 다른 파일끼리 겹친다. 어느 쪽이 현행인지는 위치로 구분한다.
 
@@ -56,6 +57,8 @@
 - 승인 재선택032는 새 QuoteService 코드를 먼저 반영한 뒤 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/032_approval_reselection.sql`로 적용한다. 행은 보존되며 재실행 가능하다. 이미 여러 승인 이력을 만든 메시지가 있으면 옛 UNIQUE를 무조건 복원할 수 없다. 기준선의 승인 제약은032 이후 상태를 포함한다.
 
 - 대화 이름033은 칸 하나를 더하는 추가 변경이라 코드보다 먼저 적용해도 된다. 기존 DB에는 `psql -1 -v ON_ERROR_STOP=1 -f db/033_thread_titles.sql`로 적용하고, 되돌릴 때는 `ALTER TABLE threads DROP COLUMN IF EXISTS title;`(고친 이름만 사라진다). 새 코드는 이 칸이 없는 DB에서 대화 목록·상세를 읽지 못하므로 코드 배포 전에 적용한다.
+
+- 관리자 작업 이력034는 새 표 하나를 더하는 추가 변경이다. 새 코드(활성 상태 변경 · 가림 해제 · 탈퇴 처리가 이 표에 쓴다)보다 먼저 기존 DB에 `psql -1 -v ON_ERROR_STOP=1 -f db/034_admin_audit.sql`로 적용한다. 되돌릴 때는 `DROP TABLE IF EXISTS admin_audit; DELETE FROM app_migrations WHERE version='034-admin-audit';`(관리자 작업 이력이 사라진다).
 
 - 새 DB의 서비스 표는 증분 파일이 아니라 기준선 한 파일(`020_service_baseline.sql`)이 만든다. 기준선은 옛 체인에 운영 이전 SQL을 적용한 결과와 구조가 같다(`scripts/db/verify_chain/verify_chain.sh`가 차이 0줄을 확인). [결정] 11-11 재설계 M 단계.
 - `020_service_baseline.sql` 80행의 주석("`auth_google_pending`은 만들지 않는다")은 `030_google_onboarding.sql` 적용 전의 상태다. 새 DB는 `030`이 `auth_google_pending`을 만든다.

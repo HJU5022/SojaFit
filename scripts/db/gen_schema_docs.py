@@ -163,6 +163,16 @@ TABLES = {
         'approval_id': '근거 승인(고유). 후보 이름 · 판정은 approvals에서 읽는다',
         'created_at': '시각',
     }),
+    'public.admin_audit': ('관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT만', {
+        'id': '이력 번호',
+        'actor_id': '처리한 관리자',
+        'target_id': '대상 계정 번호. 탈퇴 처리 뒤에도 이력이 남도록 FK 없음',
+        'target_email_masked': '대상 이메일을 가린 값(auth.mask_email)',
+        'action': 'unmask | deactivate | activate | delete',
+        'fields': '가림 해제로 연 칸(지금은 email뿐)',
+        'reason': '가림 해제 사유 5~500자(가림 해제에는 필수)',
+        'created_at': '처리 시각',
+    }),
     'public.app_migrations': ('마이그레이션 적용 이력(우리 것)', {
         'version': '적용한 변경의 이름',
         'applied_at': '적용 시각',

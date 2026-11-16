@@ -163,6 +163,20 @@ export type PriceEstimate = {
 };
 export type Fact = { kind: string; value: string; text: string };
 export type User = { user_id: number; role: 'admin' | 'user'; email: string };
+/** GET /api/admin/users 한 줄. email은 서버가 가린 값이다. */
+export type Account = { id: number; email: string; role: 'admin' | 'user'; is_active: boolean };
+/** GET /api/admin/audit 한 줄: 관리자 작업 이력. 이메일은 모두 가린 값이다. */
+export type AuditEntry = {
+  id: number;
+  actor_id: number;
+  actor_email: string;
+  target_id: number;
+  target_email: string;
+  action: 'unmask' | 'deactivate' | 'activate' | 'delete';
+  fields: string[];
+  reason: string | null;
+  created_at: string;
+};
 type SchematicChoice = {
   title: string;
   source_url: string;

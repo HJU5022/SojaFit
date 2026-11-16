@@ -3,7 +3,7 @@
 <!-- 자동 생성: scripts/db/gen_schema_docs.py. 직접 고치지 않는다(표 설명은 그 파일의 TABLES, 구조는 DB). -->
 
 - 구조(타입 · NULL · 기본값 · 제약 · 인덱스)는 실제 DB에서 읽은 값이고, 목적 · 칸 의미는 `scripts/db/gen_schema_docs.py`의 `TABLES`에 있다. 그림은 [erd.md](erd.md).
-- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 25개.
+- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 26개.
 
 | 스키마.표 | 목적 |
 |---|---|
@@ -26,6 +26,7 @@
 | `public.approvals` | 사람의 후보 승인(스냅샷의 유일한 사본) |
 | `public.quotes` | 승인에서 만든 가격 없는 견적 |
 | `public.approved_cases` | 화면의 승인 사례 목록(사용자가 지울 수 있는 표시 행) |
+| `public.admin_audit` | 관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT만 |
 | `public.app_migrations` | 마이그레이션 적용 이력(우리 것) |
 | `sojafit_agent.threads` | 분석 서비스의 대화 상태 기계 |
 | `sojafit_agent.messages` | 분석 문맥용 사용자 입력 + 어시스턴트 답 |
@@ -507,6 +508,34 @@
 | `approved_cases_approval_id_key` | `UNIQUE btree (approval_id)` |
 | `approved_cases_pkey` | `UNIQUE btree (id)` |
 | `ix_approved_cases_user` | `btree (user_id)` |
+
+## `public.admin_audit`
+
+- **목적**: 관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT만
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | bigint | NOT NULL | nextval('admin_audit_id_seq'::regclass) | 이력 번호 |
+| `actor_id` | bigint | NOT NULL |  | 처리한 관리자 |
+| `target_id` | bigint | NOT NULL |  | 대상 계정 번호. 탈퇴 처리 뒤에도 이력이 남도록 FK 없음 |
+| `target_email_masked` | text | NOT NULL |  | 대상 이메일을 가린 값(auth.mask_email) |
+| `action` | text | NOT NULL |  | unmask \| deactivate \| activate \| delete |
+| `fields` | text[] | NOT NULL | '{}'::text[] | 가림 해제로 연 칸(지금은 email뿐) |
+| `reason` | text | NULL |  | 가림 해제 사유 5~500자(가림 해제에는 필수) |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 처리 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `admin_audit_pkey` | PK | `PRIMARY KEY (id)` |
+| `admin_audit_actor_id_fkey` | FK | `FOREIGN KEY (actor_id) REFERENCES users(id)` |
+| `admin_audit_action_check` | CHECK | `CHECK ((action = ANY (ARRAY['unmask'::text, 'deactivate'::text, 'activate'::text, 'delete'::text])))` |
+| `admin_audit_check` | CHECK | `CHECK (((action <> 'unmask'::text) OR ((reason IS NOT NULL) AND (cardinality(fields) > 0))))` |
+| `admin_audit_fields_check` | CHECK | `CHECK ((fields <@ ARRAY['email'::text]))` |
+| `admin_audit_reason_check` | CHECK | `CHECK (((reason IS NULL) OR ((char_length(reason) >= 5) AND (char_length(reason) <= 500))))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `admin_audit_pkey` | `UNIQUE btree (id)` |
 
 ## `public.app_migrations`
 

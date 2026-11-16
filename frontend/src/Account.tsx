@@ -1,4 +1,4 @@
-/** 설정·관리자·개인정보 안내. 승인 사례는 Approved.tsx. 출처: SPEC 8.5·8.6절. */
+/** 설정·개인정보 안내. 승인 사례는 Approved.tsx, 관리자는 Admin.tsx. 출처: SPEC 8.5·8.6절. */
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import {
@@ -191,55 +191,6 @@ export function Settings({ user, onLogout }: { user: User; onLogout: () => void 
             모든 기록과 계정 삭제
           </button>
         </Modal>
-      )}
-    </div>
-  );
-}
-export function Admin() {
-  const users = useResource<{ users: any[] }>('/admin/users'),
-    [error, setError] = useState<Error | null>(null),
-    [busy, setBusy] = useState(false);
-  return (
-    <div className="page-content">
-      <h1>사용자 관리</h1>
-      <p className="page-intro">계정을 비활성화하면 기존 세션도 종료됩니다.</p>
-      <ErrorBox error={error} />
-      {users.loading ? (
-        <Loading />
-      ) : users.error ? (
-        <ErrorBox error={users.error} retry={users.reload} />
-      ) : users.data?.users.length ? (
-        <div className="case-list">
-          {users.data.users.map((u) => (
-            <article key={u.id}>
-              <div>
-                <h2>{u.email}</h2>
-                <p>
-                  {u.role === 'admin' ? '관리자' : '일반 사용자'} ·{' '}
-                  {u.is_active ? '활성' : '비활성'}
-                </p>
-              </div>
-              <button
-                disabled={u.role === 'admin' || busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    await api(`/admin/users/${u.id}`, 'PATCH', { is_active: !u.is_active });
-                    users.reload();
-                  } catch (e) {
-                    setError(e as Error);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                {u.is_active ? '비활성화' : '활성화'}
-              </button>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <Empty title="사용자 목록이 없습니다." />
       )}
     </div>
   );

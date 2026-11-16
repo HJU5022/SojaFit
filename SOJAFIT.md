@@ -104,8 +104,9 @@ SojaFit (proj3-b)
 │       ├── ui.tsx          <- 경로 이동·자원 훅·공통 조각(로고·상태·판정 배지·창·근거 출처)·회로 도식·마크다운
 │       ├── Landing.tsx     <- 공개 랜딩
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
-│       ├── Account.tsx     <- 내 설정·관리자 계정·개인정보 안내
+│       ├── Account.tsx     <- 내 설정·개인정보 안내
 │       ├── Approved.tsx    <- 승인 사례 목록과 사례 하나의 기록(원래 대화·질문·조건별 판정·근거·견적, 다시 판정하지 않음)
+│       ├── Admin.tsx       <- 관리자 영역: 계정 목록(이메일 가림)·사유를 적은 가림 해제·정지·재활성화·탈퇴 처리·작업 이력
 │       ├── Conversations.tsx <- 사이드바 대화 목록(이름 변경·삭제)·프로젝트 폴더와 새 대화 화면(넷리스트 첨부·기존 회로 고르기)
 │       ├── Projects.tsx    <- 프로젝트 목록(이름 변경·삭제·일괄 삭제)과 새 프로젝트 창(데모 회로·넷리스트 업로드·샘플 넷리스트 링크)
 │       ├── Workbench.tsx   <- 회로 선택·검토 대화·실시간 진행·조건 재개·첨부 버전
@@ -127,7 +128,7 @@ SojaFit (proj3-b)
 │   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). 화면 쪽 짝은 frontend/src/api.ts 하나
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── admin.py        <- 관리자 계정 목록·활성 상태 변경 API(/api/admin/users)
+│   │   ├── admin.py        <- 관리자 계정 목록·활성 상태 변경·이메일 가림 해제·탈퇴 처리·작업 이력 API(/api/admin/*)
 │   │   ├── auth.py         <- 로그인·이메일 가입·비밀번호 재설정·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 가입·로그인 경로
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(GET /api/demo-questions). run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── health.py       <- 서비스 생존 확인 GET /health
@@ -331,6 +332,7 @@ SojaFit (proj3-b)
 │   ├── 031_circuit_versions.sql <- 프로젝트 회로 버전 보존·기존 대화 backfill·대화별 버전 고정
 │   ├── 032_approval_reselection.sql <- 승인·견적 이력을 보존한 사례 삭제 후 재승인용 제약 변경
 │   ├── 033_thread_titles.sql <- 사용자가 고친 대화 이름 칸(threads.title, NULL이면 첫 질문 이름)
+│   ├── 034_admin_audit.sql <- 관리자 작업 이력 표 admin_audit(가림 해제 사유 · 정지 · 재활성화 · 탈퇴 처리, 앱은 INSERT만)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -517,6 +519,7 @@ SojaFit (proj3-b)
 │   │   ├── test_errors.py  <- 오류 코드 16개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
 │   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   │   ├── test_admin.py   <- 관리자 가림 해제 사유 422 · 이력 · 정지 세션 폐기 · 관리자와 자기 자신 탈퇴 처리 거절(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_email_auth.py <- 가짜 SMTP·격리 DB의 인증 가입·암호 재설정·토큰 경합·한도 시험
 │   │   ├── test_google_users.py <- 일반 Google 가입·비밀번호 재확인 연결·관리자 승인·충돌·한도·마이그레이션 시험
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험, 데모 질문 목록(재생 모드에서만, 기록한 답 · 판정 비노출)
