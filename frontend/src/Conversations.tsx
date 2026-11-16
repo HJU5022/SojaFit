@@ -36,8 +36,10 @@ export function ConversationNav({
     setRenaming(null);
     if (!title.trim() || title.trim() === t.title) return;
     try {
-      await api('/threads/' + t.id, 'PATCH', { title });
+      const saved = await api<ThreadListItem>('/threads/' + t.id, 'PATCH', { title });
       threads.reload();
+      // [왜] 열린 작업대 제목도 새로고침 없이 바뀌게 서버가 정리한 이름을 알린다(Workbench가 받는다)
+      window.dispatchEvent(new CustomEvent('thread-renamed', { detail: saved }));
     } catch (e) {
       setError(e as Error);
     }

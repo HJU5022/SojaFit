@@ -142,6 +142,15 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     };
   }, [threadId, projectId, reload]);
   useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => {
+    // [왜] 사이드바에서 대화 이름을 바꾸면 제목만 고친다. 다시 읽으면 불러온 이전 메시지와 실행 중 수신이 끊긴다
+    const fn = (e: Event) => {
+      const t = (e as CustomEvent<{ id: string; title: string }>).detail;
+      setDetail((d) => (d && d.id === t.id ? { ...d, title: t.title } : d));
+    };
+    window.addEventListener('thread-renamed', fn);
+    return () => window.removeEventListener('thread-renamed', fn);
+  }, []);
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
       questions.data?.filter(
