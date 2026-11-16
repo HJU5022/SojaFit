@@ -427,7 +427,7 @@ def test_new_analysis_cleanup_deletes_admin_audit_older_than_one_year(world):
             conn.execute('DELETE FROM public.admin_audit WHERE id = ANY(%s)', (ids,))
 
 
-# --- 028의 DB 규칙: 소유자 FK CASCADE · 화면 thread FK · 체크포인트 삭제 트리거(D9) ---
+# --- 028의 DB 규칙: 소유자 FK CASCADE · 체크포인트 삭제 트리거(D9). 화면 thread FK 거부는 tests/projects/test_service_schema.py ---
 
 def test_deleting_a_react_thread_row_removes_analysis_records_and_checkpoints_by_trigger(world):
     """[왜] 앱 코드가 아니라 DB가 보장한다: 어떤 경로(운영자의 직접 DELETE 포함)로 화면 thread가 지워져도 질문 · 답이 든 checkpoint가 안 남는다."""
@@ -445,13 +445,6 @@ def test_deleting_a_react_thread_row_removes_analysis_records_and_checkpoints_by
     skip = ('approvals', 'quotes', 'approved_cases')  # 사용자 단위 개수라 지운 thread의 승인이 빠진다
     assert {k: v for k, v in remaining(dsn, a, kept).items() if k not in skip} == {k: v for k, v in before_kept.items() if k not in skip}  # 다른 thread의 checkpoint는 그대로
     assert remaining(dsn, b, other['threads']) == before_other
-
-
-def test_analysis_thread_requires_its_react_thread(world):
-    _, (a, _, _), dsn = world
-    with psycopg.connect(dsn) as conn:
-        with pytest.raises(psycopg.errors.ForeignKeyViolation):
-            conn.execute("INSERT INTO sojafit_agent.threads(id,user_id,target) VALUES (%s,%s,'D1')", (uuid4(), a))
 
 
 def test_deleting_a_user_row_cascades_to_every_owned_record_without_orphans(world):
