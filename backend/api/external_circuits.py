@@ -1,6 +1,6 @@
 """외부 원본 회로도 HTTP 경계: 인증·입력 검증·공개 오류만 처리한다.
 
-검색 공급자 호출과 결과 정제는 backend/projects/external_circuit_search.py에 맡긴다.
+검색 · 검증 · 변환은 backend/projects/external_schematic.py(find_external_schematic)에 맡기고, 후보 정제는 그 아래 external_circuit_search.py가 한다.
 검색 결과는 저장하지 않으며 성공과 오류 응답 모두 no-store로 전달한다.
 """
 import re
