@@ -540,7 +540,6 @@ SojaFit (proj3-b)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
 │   │   ├── test_http_restart.py <- 격리 DB·합성 그래프의 HTTP 서버 재시작 후 재개·두 계정 차단 재현 시험
-│   │   ├── test_public_grants.py <- 026 SQL 시험(공개 권한 0 · RLS ON · 두 번 실행 · 역할 없는 DB · 소유자 동작 · LangGraph 표)
 │   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409, 보관 기간 청소(60일 · 30일 · 묶음) 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
@@ -562,8 +561,9 @@ SojaFit (proj3-b)
 │   │   ├── test_official_schematic.py <- 등록 제조사 원본 URL·출처 등급·SHA-256 렌더 검증
 │   │   ├── test_schematic_discovery.py <- 완성 회로도 자산 판정
 │   │   └── test_schematic_render.py <- PDF/SVG/PNG 렌더링·픽셀 제한
-│   ├── db/                 <- DB 문서 · 스키마 도구 시험(일회용 PostgreSQL)
+│   ├── db/                 <- DB SQL · 문서 · 스키마 도구 시험(일회용 PostgreSQL)
 │   │   ├── DB.md           <- 폴더 설명
+│   │   ├── test_public_grants.py <- 026 SQL 시험(공개 권한 0 · RLS ON · 두 번 실행 · 역할 없는 DB · 소유자 동작 · LangGraph 표)
 │   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
