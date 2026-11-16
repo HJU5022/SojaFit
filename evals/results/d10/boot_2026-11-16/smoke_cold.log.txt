@@ -1,0 +1,29 @@
+[pass] 1 생존 확인 (-) GET /health → 200   7ms
+[pass] 1 OpenAPI 경로 수 (-) GET /openapi.json → 200   139ms
+[pass] 2 A 데모 로그인 (A) POST /api/auth/demo-login → 200   22ms
+[pass] 2 A 세션 확인 (A) GET /api/auth/me → 200   17ms
+[pass] 3 데모 회로 목록 (A) GET /api/demo-circuits → 200   12ms
+[pass] 3 프로젝트 만들기(v3-01) (A) POST /api/projects → 201   20ms
+[pass] 3 프로젝트 읽기 (A) GET /api/projects/{id} → 200   13ms
+[pass] 4 thread 만들기 (A) POST /api/projects/{id}/threads → 201   19ms
+[pass] 4 run 시작(v3-01) (A) POST /api/threads/{id}/runs → 200  run_started>status>requires_input 890ms
+[pass] 5 조건 재개 (A) POST /api/runs/{id}/resume → 200  run_started>status>completed 271ms
+[pass] 6 run 읽기(message_id) (A) GET /api/runs/{id} → 200   38ms
+[pass] 6 승인 (A) POST /api/messages/{id}/approvals → 201   54ms
+[pass] 6 같은 승인 다시 (A) POST /api/messages/{id}/approvals → 409 ALREADY_APPROVED  21ms
+[pass] 7 견적 저장 (A) POST /api/approvals/{id}/quotes → 201   26ms
+[pass] 7 견적 목록 (A) GET /api/projects/{id}/quotes → 200   16ms
+[pass] 8 B 데모 로그인 (B) POST /api/auth/demo-login → 200   12ms
+[pass] 8 B가 A의 프로젝트 읽기 (B) GET /api/projects/{A} → 404 NOT_FOUND  17ms
+[pass] 8 B가 A의 thread 목록 읽기 (B) GET /api/projects/{A}/threads → 404 NOT_FOUND  20ms
+[pass] 8 B가 A의 run 읽기 (B) GET /api/runs/{A} → 404 NOT_FOUND  28ms
+[pass] 8 B 프로젝트 목록 (B) GET /api/projects → 200   34ms
+[pass] 8 B가 A의 견적 목록 읽기 (B) GET /api/projects/{A}/quotes → 404 NOT_FOUND  27ms
+[pass] 8 B가 A의 메시지 승인 (B) POST /api/messages/{A}/approvals → 404 NOT_FOUND  17ms
+[pass] 8 B가 A의 승인으로 견적 저장 (B) POST /api/approvals/{A}/quotes → 404 NOT_FOUND  22ms
+[pass] 8 A 승인 사례 목록 (A) GET /api/approved-cases → 200   14ms
+[pass] 8 B 승인 사례 목록 (B) GET /api/approved-cases → 200   15ms
+[pass] 9 프로젝트 만들기(v3-30) (A) POST /api/projects → 201   18ms
+[pass] 9 thread 만들기 (A) POST /api/projects/{id}/threads → 201   13ms
+[pass] 9 run 시작(v3-30) (A) POST /api/threads/{id}/runs → 200  run_started>status>refused 151ms
+통과 28 · 실패 0 · 건너뜀 0. 결과: /work/proj3-b/scripts/results/smoke/smoke_localhost-8000_2026-11-16_100030.json

@@ -49,7 +49,7 @@ def test_unsupported_target_rejected_before_analysis_writes_or_model_calls(monke
         service.ensure_thread(1, str(uuid4()), 'test.net', {}, part['ref'], '대체 후보를 찾아 주세요.')
     assert caught.value.status_code == 422
     assert part['ref'] in caught.value.detail
-    assert '지원하지 않습니다' in caught.value.detail or '판정 범위 밖' in caught.value.detail
+    assert '아직 교체 검토를 지원하지 않아요' in caught.value.detail
 
 
 @pytest.mark.parametrize('part', [
@@ -60,6 +60,101 @@ def test_unsupported_target_rejected_before_analysis_writes_or_model_calls(monke
 def test_generic_diodes_remain_supported(part):
     from backend.conversations.memory_service import _require_supported_target
     _require_supported_target({'components': [part]}, 'D1')
+
+
+PARTS = [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D2', 'value': 'RED', 'description': 'Light emitting diode'},
+         {'ref': 'D3', 'value': 'SS34'}, {'ref': 'D10', 'value': '1N4148'}, {'ref': 'R1', 'value': '10k'}]
+
+
+@pytest.mark.parametrize('parts, question, refs', [
+    (PARTS, 'D3을 SS14로 바꿔도 돼?', ['D3']),  # 질문에 적은 부품(한글 조사가 붙어도)
+    (PARTS, 'd1 대신 1N5819는?', ['D1']),  # 대소문자는 가리지 않고 넷리스트의 ref를 돌려준다
+    (PARTS, 'D10을 바꾸고 싶어', ['D10']),  # D10 안의 D1은 D1이 아니다
+    (PARTS, 'D1N4148 대체품', ['D1', 'D3', 'D10']),  # 품번 안의 D1도 아니다 → 회로의 지원 다이오드 전부
+    (PARTS, 'D2 옆의 D3을 바꿔도 돼?', ['D3']),  # 지원 다이오드를 적었으면 함께 적은 LED는 상관없다
+    (PARTS, 'D1과 D3 중 뭘 바꿔야 해?', ['D1', 'D3']),  # 둘 다 적으면 둘 중에서 묻는다
+    ([{'ref': 'D1', 'value': 'SS34'}, {'ref': 'R1', 'value': '10k'}], '대체 후보를 찾아 주세요.', ['D1']),  # 회로 ref가 없으면 유일한 다이오드
+])
+def test_target_choices_read_the_question_then_the_circuit(parts, question, refs):
+    from backend.conversations.memory_service import target_choices
+    assert [c['ref'] for c in target_choices({'parts': parts}, question)] == refs
+
+
+@pytest.mark.parametrize('question, ref', [('D2를 바꿔도 돼?', 'D2'), ('r1 대신 다른 저항은?', 'R1')])
+def test_target_choices_reject_a_named_unsupported_part_like_an_explicit_target(question, ref):
+    """질문이 회로의 미지원 부품만 가리키면 유일한 다이오드로 넘어가지 않고, 그 부품을 직접 지정한 것과 같은 422 · 문구다(SPEC 8.9)."""
+    from backend.conversations.memory_service import _require_supported_target, target_choices
+    circuit = {'parts': [{'ref': 'D1', 'value': 'SS34'}, *PARTS[1:2], {'ref': 'R1', 'value': '10k'}]}  # 지원 다이오드는 D1 하나
+    with pytest.raises(HTTPException) as named:
+        target_choices(circuit, question)
+    with pytest.raises(HTTPException) as explicit:
+        _require_supported_target(circuit, ref)
+    assert (named.value.status_code, named.value.detail) == (explicit.value.status_code, explicit.value.detail) == (422, explicit.value.detail)
+    assert ref in named.value.detail
+
+
+@pytest.mark.parametrize('ref, part, detail', [
+    ('D2', {'value': 'LED'}, 'D2는 LED라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.'),
+    ('D3', {'value': 'LED'}, 'D3은 LED라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.'),
+    ('D10', {'value': 'LED'}, 'D10은 LED라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.'),
+    ('LED1', {'value': 'X'}, 'LED1은 LED라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.'),
+    ('D5', {'value': '7-Segment'}, 'D5는 표시기라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.'),
+    ('R1', {'value': '10k'}, 'R1은 다이오드가 아니라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.'),
+    ('Q1A', {'value': 'X'}, 'Q1A는 다이오드가 아니라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.'),
+])
+def test_unsupported_target_message_names_the_part_with_the_right_particle(ref, part, detail):
+    """#29 문구(11-16)와 은/는. 화면(frontend/tests/circuit.test.ts)과 같은 값이다."""
+    from backend.conversations.memory_service import _require_supported_target
+    with pytest.raises(HTTPException) as caught:
+        _require_supported_target({'parts': [{'ref': ref, **part}]}, ref)
+    assert (caught.value.status_code, caught.value.detail) == (422, detail)
+
+
+def target_service(monkeypatch, parts, locked=None):
+    """DB 없이 ensure_thread만 돈다. 고정 회로 · 기존 분석 thread 대상 · INSERT를 가짜 연결이 받는다."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    inserted = []
+
+    class Connection:
+        def execute(self, query, params):
+            if query.startswith('INSERT'):
+                inserted.append(params[0])
+                return None
+            if query.startswith('SELECT target'):  # 이미 만든 분석 thread의 대상
+                row = {'target': locked} if locked else None
+            elif query.startswith('SELECT t.*'):  # _owned
+                row = {'target': (inserted or [locked])[0], 'connections': {'parts': parts}}
+            else:  # 고정 회로 버전
+                row = {'connections': {'parts': parts, 'nets': []}}
+            return SimpleNamespace(fetchone=lambda: row)
+
+    @contextmanager
+    def connection():
+        yield Connection()
+
+    service = object.__new__(Conversations)
+    service.mode = 'live'
+    monkeypatch.setattr(service, 'connection', connection)
+    monkeypatch.setattr(service, '_hold_account', lambda *args: None)
+    return service, inserted
+
+
+def test_ensure_thread_without_target_infers_or_returns_choices(monkeypatch):
+    service, inserted = target_service(monkeypatch, PARTS)
+    assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, 'D3을 바꿔도 돼?') is None
+    assert inserted == ['D3']  # 질문에 적은 부품으로 분석 thread를 만든다
+    service, inserted = target_service(monkeypatch, PARTS)
+    assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, '1N5819로 바꿔도 돼?') == [
+        {'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': 'SS34'}, {'ref': 'D10', 'value': '1N4148'}]
+    assert inserted == []  # 못 정하면 분석 thread를 만들지 않는다(대상은 NOT NULL)
+    service, inserted = target_service(monkeypatch, PARTS, locked='D1')
+    assert service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, 'D3도 볼까?') is None
+    assert inserted == ['D1']  # 이미 고정한 대상이 있으면 다시 정하지 않는다(INSERT는 ON CONFLICT로 그대로)
+    service, _ = target_service(monkeypatch, [{'ref': 'R1', 'value': '10k'}])
+    with pytest.raises(HTTPException) as caught:
+        service.ensure_thread(1, str(uuid4()), 'test.net', {}, None, '바꿔도 돼?')
+    assert caught.value.status_code == 422
 
 
 @pytest.mark.parametrize('method', ['message', 'resume'])
@@ -214,7 +309,7 @@ def test_demo_replay_takes_only_recorded_first_questions_and_recorded_resume(run
     circuit = demo.connections(q['netlist'])
     thread = seed_thread(app, a, connections=circuit)
     # [왜] #139: 다이오드가 아닌 부품(C1)과 LED(LED2)는 기록 대조 전에 지원 대상 검사가 거른다. 기록하지 않은 다이오드 대상은 tests/services/test_demo_replay.py가 본다
-    for target, reason in (('C1', '현재 판정 범위 밖'), ('LED2', 'LED로 식별')):
+    for target, reason in (('C1', 'C1은 다이오드가 아니라서'), ('LED2', 'LED2는 LED라서')):
         with pytest.raises(HTTPException) as error:
             app.ensure_thread(a, thread, '프로젝트', circuit, target)
         assert error.value.status_code == 422 and reason in error.value.detail
@@ -685,7 +780,7 @@ def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
         app.message(a, thread, 'PRIVATE_CONDITION', request_id='synthetic-request-id')
     detail=app.detail(a,thread)
     assert detail['status']=='FAILED' and not detail['answer']
-    assert error.value.status_code == 504
+    assert error.value.status_code == 504 and error.value.detail == '답변 시간이 너무 길어져 멈췄어요. 질문을 나눠 다시 시도해 주세요.'
     record = next(r for r in caplog.records if r.name == 'backend.conversations' and r.getMessage() == 'analysis_failed')
     assert record.request_id == 'synthetic-request-id' and record.error_type == 'EvaluationLimitError'
     assert 'PRIVATE_CONDITION' not in str(vars(record))

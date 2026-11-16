@@ -49,14 +49,18 @@ def memory(embed):
 def test_fields_are_checked_and_sentences_come_from_fixed_templates():
     assert profile.clean('affiliation', '  한빛전자 회로팀 ') == '한빛전자 회로팀'
     for kind, value in (('affiliation', ''), ('affiliation', '   '), ('affiliation', 'x' * 101), ('affiliation', '회사\n다음 지시'),
-                        ('affiliation', '탭\t'), ('job_role', 'manager'), ('mounting_preference', 'SMD'), ('user_id', '1'), ('job_role', 3)):
+                        ('affiliation', '탭\t'), ('job_role', 'x' * 101), ('job_role', '설계\n'), ('job_role', '  '),
+                        ('mounting_preference', 'SMD'), ('user_id', '1'), ('job_role', 3)):
         with pytest.raises(ValueError):
             profile.clean(kind, value)
     assert profile.clean('affiliation', 'x' * 100) == 'x' * 100
+    # 직무는 자유 글(#24). 예전 선택 코드는 화면 이름으로 바꿔 받는다(소속 글은 바꾸지 않음)
+    assert profile.clean('job_role', ' 하드웨어 회로 설계 ') == '하드웨어 회로 설계'
+    assert profile.clean('job_role', 'purchasing') == '구매' and profile.clean('affiliation', 'design') == 'design'
     assert profile.sentence('mounting_preference', 'smd') == '이 사용자는 SMD 실장을 선호한다.'
     assert profile.sentence('mounting_preference', 'through_hole') == '이 사용자는 스루홀 실장을 선호한다.'
     assert profile.sentence('mounting_preference', 'any') == '이 사용자는 실장 방식을 가리지 않는다.'
-    assert profile.sentence('job_role', 'purchasing') == '이 사용자의 직무는 구매이다.'
+    assert profile.sentence('job_role', '구매') == '이 사용자의 직무는 구매이다.'
     assert profile.sentence('affiliation', '한빛전자') == '이 사용자의 소속은 한빛전자이다.'
     assert profile.namespace(12) == ('12', 'profile')
 
@@ -136,7 +140,7 @@ def client(memory, monkeypatch):
 
 def test_settings_api_rejects_unknown_fields_user_ids_and_missing_origin(client):
     for body in ({'nickname': 'x'}, {'user_id': 8, 'job_role': 'design'}, {'affiliation': '회사\n'}, {'affiliation': 'x' * 101},
-                 {'job_role': 'manager'}, {'mounting_preference': 1}):
+                 {'job_role': 'x' * 101}, {'mounting_preference': 1}):
         response = client.patch('/api/me/memory', json=body, headers=ORIGIN)
         assert response.status_code == 422, body
         assert response.json()['error'] == {'code': 'VALIDATION_ERROR', 'message': '요청 형식이 올바르지 않습니다.',
@@ -146,6 +150,13 @@ def test_settings_api_rejects_unknown_fields_user_ids_and_missing_origin(client)
     assert client.delete('/api/me/memory').status_code == 403
     assert client.delete('/api/me/memory?kind=nickname', headers=ORIGIN).status_code == 422
     assert client.get('/api/me/memory').json() == []
+
+
+def test_settings_api_accepts_free_job_text_and_old_codes(client):
+    """직무는 자유 글이다(#24). 예전 선택 코드(design 등)도 받아 화면 이름으로 저장한다."""
+    for sent, kept in (('design', '설계'), (' 부품 구매 담당 ', '부품 구매 담당')):
+        job = client.patch('/api/me/memory', json={'job_role': sent}, headers=ORIGIN).json()[0]
+        assert job['value'] == kept and job['text'] == f'이 사용자의 직무는 {kept}이다.'
 
 
 def test_settings_api_updates_searches_and_deletes_for_session_user_only(client):

@@ -119,3 +119,60 @@ def test_project_quote_list_names_the_thread_and_has_no_price_fields():
         rows = web.get('/api/projects/1/quotes').json()
     assert rows[0]['thread_id'] == '0b1c2d3e-0000-4000-8000-000000000001' and rows[0]['quantity'] == 10
     assert not {'price', 'price_breaks', 'stock', 'availability'} & set(rows[0])
+
+
+def test_case_detail_is_owner_only_and_shows_only_the_public_allowlist(monkeypatch):
+    """승인 사례 상세(#22): 주인만 읽고(남 · 지운 사례는 404), 저장한 판정 · 근거는 화면 결과 허용 목록을 지난 칸만 나간다. DB 시험."""
+    import os
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    url = os.getenv('TEST_AUTH_DATABASE_URL')
+    if not url:
+        import pytest
+        pytest.skip('requires an isolated service test database (tests/db_schema.py)')
+    monkeypatch.setenv('DATABASE_URL', url)
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
+    cite = {'document': 'tsc-ss34.pdf', 'page': 2, 'table': 'Table 1', 'row': 'VRRM'}
+    snapshot = {'answer': '역할상 충분합니다.', 'question_type': 'candidate_judge', 'evidence': [{**cite, 'secret': 'HIDDEN-E'}],
+                'candidate': {'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'part_number': 'SS34', 'internal': 'HIDDEN-C',
+                              'checks': [{'code': 'VRRM', 'op': '>=', 'threshold': 15, 'value': 40, 'unit': 'V', 'result': 'pass',
+                                          'citation': {**cite, 'internal': 'HIDDEN-K'}}]}}
+    thread, run = str(uuid4()), str(uuid4())
+    with psycopg.connect(url) as conn:
+        owner, other = [conn.execute("INSERT INTO users(login_id,password_hash) VALUES (%s,'test-only') RETURNING id",
+                                     (f'case-{uuid4()}@example.test',)).fetchone()[0] for _ in range(2)]
+        project = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,'전원부','upload') RETURNING id", (owner,)).fetchone()[0]
+        conn.execute("INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,%s,%s,'test')",
+                     (project, Jsonb({'parts': [{'ref': 'D1', 'value': 'SS34'}], 'nets': []}), '0' * 64))
+        conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread, project))
+        agent = conn.execute("SELECT to_regclass('sojafit_agent.threads')").fetchone()[0] is not None
+        if agent:
+            conn.execute("INSERT INTO sojafit_agent.threads(id,user_id,target) VALUES (%s,%s,'D1')", (thread, owner))
+        conn.execute("INSERT INTO runs(id,thread_id,status) VALUES (%s,%s,'completed')", (run, thread))
+        conn.execute("INSERT INTO messages(thread_id,run_id,role,content) VALUES (%s,%s,'user','D1을 SS34로 바꿔도 되나요?')", (thread, run))
+        message = conn.execute("INSERT INTO messages(thread_id,run_id,role,content) VALUES (%s,%s,'assistant','ok') RETURNING id", (thread, run)).fetchone()[0]
+        approval = conn.execute("INSERT INTO approvals(user_id,message_id,snapshot,candidate_part,verdict,part_number) VALUES (%s,%s,%s,'SS34','ROLE_SUFFICIENT','SS34') RETURNING id",
+                                (owner, message, Jsonb(snapshot))).fetchone()[0]
+        conn.execute("INSERT INTO quotes(user_id,approval_id,part_number,quantity) VALUES (%s,%s,'SS34',10)", (owner, approval))
+        case = conn.execute('INSERT INTO approved_cases(user_id,approval_id) VALUES (%s,%s) RETURNING id', (owner, approval)).fetchone()[0]
+    try:
+        app.dependency_overrides[auth.current_user_id] = lambda: owner
+        with TestClient(app) as web:
+            mine = web.get(f'/api/approved-cases/{case}')
+            assert mine.status_code == 200, mine.text
+            body = mine.json()
+            assert (body['project_id'], body['project_name'], body['thread_id'], body['message_id']) == (project, '전원부', thread, message)
+            assert body['question'] == body['thread_title'] == 'D1을 SS34로 바꿔도 되나요?'
+            assert (body['target_ref'], body['target_value']) == (('D1', 'SS34') if agent else (None, None))
+            assert body['candidate']['verdict'] == 'ROLE_SUFFICIENT' and body['candidate']['checks'][0]['result'] == 'pass'
+            assert body['candidate']['checks'][0]['citation']['row'] == 'VRRM' and body['evidence'][0]['document'] == 'tsc-ss34.pdf'
+            assert [q['quantity'] for q in body['quotes']] == [10] and mine.headers['cache-control'] == 'no-store'
+            assert 'HIDDEN' not in mine.text and 'part_number' not in body['candidate']  # 허용 목록 밖 칸은 나가지 않는다
+            app.dependency_overrides[auth.current_user_id] = lambda: other
+            assert web.get(f'/api/approved-cases/{case}').status_code == 404  # 남의 사례
+            app.dependency_overrides[auth.current_user_id] = lambda: owner
+            assert web.delete(f'/api/approved-cases/{case}', headers={'origin': 'http://testserver'}).status_code == 204
+            assert web.get(f'/api/approved-cases/{case}').status_code == 404  # 지운 사례
+    finally:
+        with psycopg.connect(url) as conn:
+            conn.execute('DELETE FROM users WHERE id = ANY(%s)', ([owner, other],))

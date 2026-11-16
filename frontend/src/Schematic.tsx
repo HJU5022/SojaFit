@@ -1,13 +1,17 @@
 /**
- * 원본 회로도 구역: 예제(데모) 프로젝트의 저장된 원본 그림과, 누를 때만 하는 공개 웹 검색(GET /api/external-circuits/schematics).
- * 하지 않는 일: 회로 일치 판단(서버가 부품·핀 연결 대조로 승인한 도면만 돌려준다), 검색 결과 저장, 자동 검색.
- * [왜] 검색은 외부 검색 서비스를 부를 수 있어 버튼을 누를 때만 보낸다. 출처: SPEC 4절(external-circuits), README 외부 공개 회로도.
+ * 원본 회로도 구역(작업대 왼쪽 "회로" 구역 안): 예제(데모) 프로젝트는 저장된 원본 그림을, 넷리스트가 있는 그 밖의 프로젝트는
+ * 열 때 한 번 공개 웹 검색(GET /api/external-circuits/schematics)한 결과를 바로 보인다. 그림을 누르면 큰 창으로 본다.
+ * 하지 않는 일: 회로 일치 판단(서버가 부품·핀 연결 대조로 승인한 도면만 돌려준다), 검색 결과를 서버·브라우저 저장소에 저장.
+ * [왜] 검색은 유료 외부 검색과 3~20초 렌더를 거치므로 같은 (프로젝트, 회로 버전)은 다시 보내지 않는다(`schematicSearch.ts`).
+ * 출처: SPEC 4절(external-circuits), README 외부 공개 회로도.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
-import { api } from './api';
+import { api, ApiError } from './api';
+import { partsOf } from './circuit';
 import { safeLink, sameOriginImage } from './display';
-import { ErrorBox, Loading, useResource } from './ui';
+import { searchOnce } from './schematicSearch';
+import { ErrorBox, Loading, Modal, useResource } from './ui';
 import type { Demo, ExternalSchematic, Project } from './types';
 
 const SOURCE = {
@@ -16,7 +20,19 @@ const SOURCE = {
   public_web: '공개 웹 자료 · 제조사 공식 여부 미확인',
 };
 
-/** 도면 한 장(또는 여러 장)과 출처·라이선스. 이미지를 누르면 새 탭에서 크게 봅니다. */
+type FigureProps = {
+  name: string;
+  images: string[];
+  attribution: string;
+  license: string;
+  originalUrl?: string | null;
+  note?: string;
+};
+
+/**
+ * 도면과 출처·라이선스. onOpen이 있으면(왼쪽 열) 첫 장만 작게 보이고 누르면 큰 창을 연다.
+ * 없으면(큰 창) 모든 장을 보이고 각 장을 누르면 새 탭에서 원래 크기로 연다.
+ */
 function Figure({
   name,
   images,
@@ -24,29 +40,36 @@ function Figure({
   license,
   originalUrl,
   note,
-}: {
-  name: string;
-  images: string[];
-  attribution: string;
-  license: string;
-  originalUrl?: string | null;
-  note?: string;
-}) {
+  onOpen,
+}: FigureProps & { onOpen?: () => void }) {
   const link = safeLink(originalUrl);
+  const alt = (i: number) => `${name} 원본 회로도${images.length > 1 ? ` ${i + 1}쪽` : ''}`;
   return (
     <figure className="schematic-figure">
-      {images.map((src, i) => (
-        <a
-          key={src}
-          href={src}
-          target="_blank"
-          rel="noreferrer noopener"
-          title="새 탭에서 크게 보기"
+      {onOpen ? (
+        <button
+          type="button"
+          className="zoom-button"
+          aria-label="원본 회로도 크게 보기"
+          onClick={onOpen}
         >
-          <img src={src} alt={`${name} 원본 회로도${images.length > 1 ? ` ${i + 1}쪽` : ''}`} />
-        </a>
-      ))}
+          <img src={images[0]} alt={alt(0)} />
+        </button>
+      ) : (
+        images.map((src, i) => (
+          <a
+            key={src}
+            href={src}
+            target="_blank"
+            rel="noreferrer noopener"
+            title="새 탭에서 원래 크기로 보기"
+          >
+            <img src={src} alt={alt(i)} />
+          </a>
+        ))
+      )}
       <figcaption>
+        {onOpen && images.length > 1 && <span>전체 {images.length}쪽 · 누르면 모두 봅니다</span>}
         <span>출처: {attribution || '미제공'}</span>
         <span>
           라이선스: {!license || license === '미확인' ? '이용·재배포 조건 미확인' : license}
@@ -69,96 +92,143 @@ export function SchematicSection({
   project: Project;
   threadId: string | null;
 }) {
-  // [왜] 저장된 그림은 데모 모드의 예제 프로젝트에만 있다. 목록이 404인 운영에서는 오류를 보이지 않고 검색만 둔다.
+  // [왜] 저장된 그림은 데모 모드의 예제 프로젝트에만 있다. 목록이 404인 운영에서는 오류를 보이지 않고 웹 검색으로 넘어간다.
   const demos = useResource<Demo[]>(project.demo_id ? '/demo-circuits' : null);
   const saved = demos.data?.find((d) => d.id === project.demo_id)?.schematic;
   const savedImage = sameOriginImage(saved?.image_url);
+  const hasNetlist = partsOf(project).length > 0;
+  const key = `${project.id}:${project.circuit_version}`;
+  // [주의] 늦게 끝난 검색이 회로 버전이 바뀐 뒤의 화면을 덮지 않도록 지금 보이는 키를 둔다.
+  const shown = useRef(key);
+  shown.current = key;
   const [query, setQuery] = useState(project.name);
   const [result, setResult] = useState<ExternalSchematic | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [busy, setBusy] = useState(false);
-  async function search(sourceUrl?: string) {
+  const [open, setOpen] = useState(false);
+  function search(q: string, fresh: boolean, sourceUrl?: string) {
+    const params = new URLSearchParams({
+      q: q.trim(),
+      project_id: String(project.id),
+      circuit_version: String(project.circuit_version),
+    });
+    if (threadId) params.set('thread_id', threadId);
+    if (sourceUrl) params.set('source_url', sourceUrl);
     setBusy(true);
     setError(null);
-    try {
-      const params = new URLSearchParams({
-        q: query.trim(),
-        project_id: String(project.id),
-        circuit_version: String(project.circuit_version),
+    searchOnce(key, () => api<ExternalSchematic>('/external-circuits/schematics?' + params), fresh)
+      .then((r) => {
+        if (shown.current === key) setResult(r);
+      })
+      .catch((e) => {
+        if (shown.current !== key) return;
+        setResult(null);
+        setError(e as Error);
+      })
+      .finally(() => {
+        if (shown.current === key) setBusy(false);
       });
-      if (threadId) params.set('thread_id', threadId);
-      if (sourceUrl) params.set('source_url', sourceUrl);
-      setResult(await api<ExternalSchematic>('/external-circuits/schematics?' + params));
-    } catch (e) {
-      setResult(null);
-      setError(e as Error);
-    } finally {
-      setBusy(false);
-    }
   }
-  const images = result?.images.map((i) => sameOriginImage(i.url)).filter(Boolean) as string[];
+  // [왜] 데모 목록을 다 받은 뒤에 판단해야 저장된 그림이 있는 예제 프로젝트가 유료 검색을 부르지 않는다.
+  // 프로젝트 이름이 2자 미만이면 서버가 422로 거절하므로 자동으로 보내지 않고 검색 칸만 보인다.
+  const auto = !demos.loading && !savedImage && hasNetlist && project.name.trim().length >= 2;
+  useEffect(() => {
+    setResult(null);
+    setError(null);
+    setBusy(false);
+    if (auto) search(project.name, false);
+    // [주의] threadId는 넣지 않는다. 같은 회로 버전이면 대화를 옮겨도 같은 결과를 쓴다.
+  }, [key, auto]);
+  const images = (result?.images.map((i) => sameOriginImage(i.url)).filter(Boolean) ??
+    []) as string[];
+  const figure: FigureProps | null =
+    saved && savedImage
+      ? {
+          name: project.name,
+          images: [savedImage],
+          attribution: saved.attribution,
+          license: saved.license,
+          originalUrl: saved.original_url,
+        }
+      : result && images.length
+        ? {
+            name: result.model ?? project.name,
+            images,
+            attribution: result.attribution,
+            license: result.license,
+            originalUrl: result.source_url,
+            note: [SOURCE[result.source_type], result.manufacturer, result.model, result.revision]
+              .filter(Boolean)
+              .join(' · '),
+          }
+        : null;
+  const missing = error instanceof ApiError && error.code === 'SCHEMATIC_NOT_FOUND';
   return (
-    <details className="schematic-section">
-      <summary>원본 회로도</summary>
-      {demos.loading && <Loading />}
-      {saved && savedImage && (
-        <Figure
-          name={project.name}
-          images={[savedImage]}
-          attribution={saved.attribution}
-          license={saved.license}
-          originalUrl={saved.original_url}
-        />
+    <div className="schematic-section">
+      <div className="circuit-label">원본 회로도</div>
+      {figure && <Figure {...figure} onOpen={() => setOpen(true)} />}
+      {demos.loading || busy ? (
+        <Loading label={busy ? '원본 회로도를 찾는 중 · 최대 20초' : undefined} />
+      ) : figure ? (
+        result &&
+        result.choices.length > 0 && (
+          <details className="schematic-choices">
+            <summary>다른 후보 {result.choices.length}개</summary>
+            <p>하나를 고르면 그 자료로 다시 찾습니다.</p>
+            {result.choices.map((c) => (
+              <button
+                type="button"
+                key={c.source_url}
+                disabled={!safeLink(c.source_url)}
+                onClick={() => search(query, true, c.source_url)}
+              >
+                {c.title} · {SOURCE[c.source_type]}
+                {c.revision ? ` · ${c.revision}` : ''}
+              </button>
+            ))}
+          </details>
+        )
+      ) : !hasNetlist ? (
+        <p className="muted">넷리스트를 올리면 원본 회로도를 찾습니다.</p>
+      ) : error instanceof ApiError && error.status === 503 ? (
+        // [왜] 데모 모드·검색 키 없음·외부 요청 한도에서는 다시 찾아도 같으므로 검색 칸 없이 안내만 둔다
+        <p className="muted">{error.message}</p>
+      ) : (
+        <>
+          {missing ? (
+            <p className="schematic-missing">
+              <strong>찾지 못함</strong>
+              <span>{error?.message}</span>
+            </p>
+          ) : (
+            <ErrorBox error={error} retry={() => search(query, true)} />
+          )}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (query.trim().length >= 2) search(query, true);
+            }}
+          >
+            <label>
+              다른 이름으로 찾기
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                minLength={2}
+                maxLength={200}
+                required
+              />
+            </label>
+            <small>업로드한 회로와 부품·핀 연결이 같다고 확인된 도면만 보입니다.</small>
+            <button disabled={query.trim().length < 2}>찾기</button>
+          </form>
+        </>
       )}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (query.trim().length >= 2) void search();
-        }}
-      >
-        <label>
-          웹에서 원본 회로도 찾기
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            minLength={2}
-            maxLength={200}
-            required
-          />
-        </label>
-        <small>
-          누를 때만 검색합니다. 업로드한 회로와 부품·핀 연결이 같다고 확인된 도면만 보입니다.
-        </small>
-        <button disabled={busy || query.trim().length < 2}>{busy ? '찾는 중…' : '찾기'}</button>
-      </form>
-      <ErrorBox error={error} />
-      {result && images.length > 0 && (
-        <Figure
-          name={result.model ?? project.name}
-          images={images}
-          attribution={result.attribution}
-          license={result.license}
-          originalUrl={result.source_url}
-          note={[SOURCE[result.source_type], result.manufacturer, result.model, result.revision]
-            .filter(Boolean)
-            .join(' · ')}
-        />
+      {open && figure && (
+        <Modal title="원본 회로도" close={() => setOpen(false)} wide>
+          <Figure {...figure} />
+        </Modal>
       )}
-      {result && result.choices.length > 0 && (
-        <div className="schematic-choices">
-          <p>여러 후보가 있습니다. 하나를 고르면 그 자료로 다시 찾습니다.</p>
-          {result.choices.map((c) => (
-            <button
-              key={c.source_url}
-              disabled={busy || !safeLink(c.source_url)}
-              onClick={() => void search(c.source_url)}
-            >
-              {c.title} · {SOURCE[c.source_type]}
-              {c.revision ? ` · ${c.revision}` : ''}
-            </button>
-          ))}
-        </div>
-      )}
-    </details>
+    </div>
   );
 }

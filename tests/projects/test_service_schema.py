@@ -171,6 +171,31 @@ def test_circuit_version_migration_backfills_existing_data_and_repeats_safely(co
         conn.execute('UPDATE threads SET circuit_version=0 WHERE id=%s', (thread,))
 
 
+def test_thread_title_migration_keeps_rows_repeats_safely_and_bounds_titles(conn):
+    """033: 기존 대화는 이름이 NULL(첫 질문 이름을 그대로 보임)로 남고, 두 번 적용해도 같으며, 고친 이름은 공백 제거 1~200자만 받는다."""
+    from psycopg import sql
+    from tests.db_schema import baseline_sql, DB_DIR
+    schema = 'titles_' + uuid4().hex
+    conn.execute(sql.SQL('CREATE SCHEMA {}').format(sql.Identifier(schema)))
+    conn.execute(sql.SQL('SET LOCAL search_path TO {}').format(sql.Identifier(schema)))
+    conn.execute(baseline_sql())
+    conn.execute((DB_DIR / '031_circuit_versions.sql').read_text(encoding='utf-8'))
+    owner = conn.execute("INSERT INTO users(login_id,password_hash) VALUES ('title@example.test','fake') RETURNING id").fetchone()[0]
+    project = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,'p','upload') RETURNING id", (owner,)).fetchone()[0]
+    thread = uuid4()
+    conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread, project))
+    migration = (DB_DIR / '033_thread_titles.sql').read_text(encoding='utf-8')
+    conn.execute(migration)
+    conn.execute(migration)
+    assert conn.execute('SELECT title FROM threads WHERE id=%s', (thread,)).fetchone()[0] is None
+    for bad in ('', ' 앞 공백', '뒤 공백 ', 'x' * 201):
+        with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
+            conn.execute('UPDATE threads SET title=%s WHERE id=%s', (bad, thread))
+    # [왜] 회로 버전 고정 트리거(031)는 project_id · circuit_version만 막는다. 이름 변경은 지나가야 한다
+    conn.execute('UPDATE threads SET title=%s WHERE id=%s', ('x' * 200, thread))
+    assert conn.execute('SELECT char_length(title) FROM threads WHERE id=%s', (thread,)).fetchone()[0] == 200
+
+
 def test_approval_columns_are_required_and_checked(conn):
     # approvals의 승인 칸 3개는 NOT NULL + 형식 CHECK, quotes · approved_cases에는 snapshot 칸이 없다
     user = make_user(conn)

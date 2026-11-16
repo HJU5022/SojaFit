@@ -21,6 +21,7 @@ erDiagram
     threads ||--o{ runs : "thread_id (CASCADE)"
     threads ||--o| agent_threads : "id (CASCADE)"
     users |o--o{ auth_email_challenges : "user_id (CASCADE)"
+    users ||--o{ admin_audit : "actor_id (NO ACTION)"
     users ||--o{ agent_analysis_usage : "user_id (CASCADE)"
     users ||--o{ agent_threads : "user_id (CASCADE)"
     users ||--o{ approvals : "user_id (CASCADE)"
@@ -127,6 +128,7 @@ erDiagram
         bigint project_id FK
         timestamptz created_at
         int circuit_version FK
+        text title
     }
     runs {
         uuid id PK
@@ -166,6 +168,16 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint approval_id FK, UK
+        timestamptz created_at
+    }
+    admin_audit {
+        bigint id PK
+        bigint actor_id FK
+        bigint target_id
+        text target_email_masked
+        text action
+        text[] fields
+        text reason
         timestamptz created_at
     }
     app_migrations {

@@ -26,7 +26,7 @@
 1. 같은 출처에서 로그인하고 새로고침해도 서버 세션으로 인증 상태가 복원된다.
 2. 프로젝트를 만든다. 업로드(UTF-8 KiCad `.net`, 최대 5 MiB)가 기본이다. 공개 데모 회로 5종 중 하나로 만드는 길은 서버가 데모 모드(`DEMO_MODE=1`)일 때만 열린다.
 3. 업로드는 구조와 부품·넷 존재를 확인해 정규화한다. 처리가 끝나면 성공·실패와 관계없이 원본 참조를 버리고, 원본 바이트는 D5 입력·실행 상태·checkpoint로 전달하지 않는다. 저장하는 것은 정규화 JSON, 원본 SHA-256, 파서 버전(`kicad-export-v2`), 생성 시각이다.
-4. 프로젝트와 대상 부품을 고른 뒤 질문하면 서버가 같은 thread에서 D5를 실행하고 허용된 진행 상태를 SSE로 보낸다.
+4. 프로젝트를 고르고 질문하면 서버가 같은 thread에서 D5를 실행하고 허용된 진행 상태(그래프 단계)를 SSE로 보낸다. 대상 부품은 직접 지정하지 않아도 되고, 서버가 질문 · 회로로 정하지 못하면 고를 부품을 묻는다(SPEC 8.9).
 5. 판정에 회로 값이 더 필요하면 thread/checkpoint에 interrupt를 두고 `requires_input`으로 끝낸다. 사용자의 입력은 같은 run을 재개한다.
 6. 가격·재고가 필요하면 `/api/prices`를 별도 호출하고 화면 메모리에만 둔다. 판정을 사람이 승인한 뒤에만 견적과 승인 사례를 저장한다.
 
@@ -36,7 +36,7 @@
 |---|---|---|
 | EC-01 | 비로그인 또는 만료 세션 | 401이면 로그인 화면으로 보내고 토큰을 브라우저 저장소에 두지 않는다 |
 | EC-02 | 업로드가 5 MiB 초과 또는 UTF-8·넷리스트 형식 오류 | 413 또는 400으로 거절하고 프로젝트를 만들지 않으며 원본을 보존하지 않는다 |
-| EC-03 | 같은 thread에서 실행 중 중복 질문 | 409(`run_in_progress`). 화면은 중복 실행을 막고 기존 run 상태만 조회한다 |
+| EC-03 | 같은 thread에서 실행 중 중복 질문 | 409(`run_in_progress`). 화면은 중복 실행을 막고 기존 run 상태만 조회한다. 실행 중에도 질문 입력창 · 넷리스트 파일 고르기 · 새 검토는 쓸 수 있고, 보내기 · 데모 질문 · 대화 삭제 · 대상 부품 바꾸기만 막는다(보내기 옆에 "답변이 끝나면 보낼 수 있습니다", 11-16) |
 | EC-04 | SSE 연결 끊김 | `GET /api/runs/{run_id}`로 저장 상태를 조회하고 질문을 자동 재전송하지 않는다 |
 | EC-05 | 다른 사용자의 프로젝트·thread·승인 자료 접근 | 404로 거절하고 내용을 반환하지 않는다 |
 | EC-06 | 승인 전 견적 저장 요청 | 409로 거절하고 견적·승인 사례를 저장하지 않는다 |
@@ -55,7 +55,7 @@
 | 대화 API | thread 생성·목록·상세·삭제, `POST /api/threads/{id}/runs`, `GET /api/runs/{id}`, `POST /api/runs/{id}/recover`, `POST /api/runs/{id}/resume`, `GET /api/judge/roles`(역할 이름), `GET /api/demo-questions`(키 없는 데모 재생 모드만). 한 thread에 동시 run 하나. run·재개는 `THREADS_ENABLED=1`의 분석 서비스(`backend/conversations/memory_service.py`)를 같은 UUID thread로 거치고, 대상 부품은 고정되며 서비스가 없으면 503. 표·요청 모델·오류는 SPEC 4절이 정본 | `backend/api/conversations.py` |
 | SSE 이벤트 | `run_started`, `status`, `requires_input`, `completed`, `refused`, `failed`. 토큰 단위 출력은 보내지 않는다. 이벤트별 칸은 SPEC 4절 표 | `backend/api/conversations.py` |
 | 진행 단계 | 서버가 보내는 값은 `입력 확인`(시작), `판정`(추가 정보 대기), `완료`(완료·거절, 거절은 상태 `refused`), `오류`(상태 `failed`) | `backend/api/conversations.py` `STAGES` |
-| 브라우저 결과 DTO | 허용 칸 `answer, status, stage, question_type, evidence, judgement, price_parts, refusal, interrupt, request_id, profile_hints`. Plan·TaskReport 전문, 내부 추론, 서버 경로, 내부 예외, prompt·업로드 본문·모델 원문은 반환하지 않는다 | `backend/conversations/dto.py` `BrowserResult` |
+| 브라우저 결과 DTO | 허용 칸 `answer, status, stage, question_type, evidence, judgement, price_parts, refusal, interrupt, request_id, profile_hints, web_search_unavailable`(#28). Plan·TaskReport 전문, 내부 추론, 서버 경로, 내부 예외, prompt·업로드 본문·모델 원문은 반환하지 않는다 | `backend/conversations/dto.py` `BrowserResult` |
 | 승인·견적·사례 API | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}`. 승인·견적은 판정 메시지의 immutable snapshot을 참조 | `backend/api/quotes.py` |
 | 승인 차단·안내 | 후보의 필수 입력이 `missing`이거나 required check가 `unverified`면 승인 API와 화면 모두 막는다. 승인 버튼 바로 아래에 입력할 회로 조건(한글 항목명·형식 예시)과 확인할 필수 사양(이름/코드·미확인 이유·요구값/기록된 시험 조건·필요한 문서 근거)을 구분한다. 회로값/원래 부품/후보 문서의 확인 대상을 서버 이유에 맞춰 안내하고 보완 후 새 검토를 요청한다. 기본 접힘인 native details의 제목에는 입력/사양 항목 수를 표시하고 펼치면 상세 안내를 확인한다. 접기/펼치기는 질문 초안·승인 상태를 유지하며 API 쓰기를 하지 않는다. 중복 missing을 제거하고 모르는 코드의 값·단위를 추정하지 않는다. 안내 영역을 버튼의 aria-describedby에 연결하며 정상·조건부 미확인 후보의 기존 동작은 유지한다 | `backend/services/quote.py`(서버 차단). 화면의 승인 버튼 아래 안내 · 접기는 새 화면에 아직 없다(`frontend/src/Candidate.tsx`는 문서에 없는 값을 보이기만 하고, 「필수 조건 미확인 승인 안내」는 11-16 통합에서 미뤘다) |
 | 견적 복원·저장 | 프로젝트 견적 GET으로 이력을 복원하고 현재 승인 id의 견적만 선택한다. 프로젝트 전체 이력에는 이전 승인 견적도 남는다. 선택/재진입은 GET만 수행하며 별도 ‘새 견적 작성→견적 저장’에서만 POST한다. 이력 조회 실패 때 저장을 막고 재조회한다. 저장 응답이 끊기면 GET으로 결과를 확인한다 | `frontend/src/Candidate.tsx`, `frontend/src/approval.ts` |

@@ -1,0 +1,7 @@
+# 동결 평가셋 검사
+date: 2026-11-16 10:11 KST
+commit: 4c5afc1e676ba5986cb2f9cac54653d82e5f87c4
+command: uv run --no-sync python evals/runners/freeze.py --check
+---
+동결 이후 바뀐 파일: 없음
+exit=0

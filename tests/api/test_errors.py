@@ -221,7 +221,7 @@ class FailingAnalysis:
     def __init__(self, error): self.error = error
     def admission(self, user): pass
     def ensure_thread(self, *args, **kwargs): pass  # run은 질문 · 조건도 키워드로 넘긴다(키 없는 데모의 스트림 전 확인)
-    def message(self, user, thread, text, conditions='', request_id=''):
+    def message(self, user, thread, text, conditions='', request_id='', progress=None):
         logging.getLogger('backend.conversations').warning('fake_step')
         raise self.error
 
@@ -245,8 +245,8 @@ def run_failure(web, error):
 @pytest.mark.parametrize('error, code', [
     (ApiError(409, '먼저 요청한 조건에 답해주세요.', code='CONDITION_PENDING'), 'CONDITION_PENDING'),
     (ApiError(429, '하루 분석 예약 예산에 도달했습니다.', code='LIMIT_EXCEEDED'), 'LIMIT_EXCEEDED'),
-    (HTTPException(502, 'LLM · 검색 서비스가 응답하지 않습니다.'), 'UPSTREAM_ERROR'),
-    (HTTPException(504, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.'), 'TIMEOUT'),
+    (HTTPException(502, '답변을 만들지 못했어요. 잠시 후 다시 시도해 주세요.'), 'UPSTREAM_ERROR'),
+    (HTTPException(504, '답변 시간이 너무 길어져 멈췄어요. 질문을 나눠 다시 시도해 주세요.'), 'TIMEOUT'),
     (psycopg.OperationalError('db down'), 'UNAVAILABLE'),  # 분석 전 잠금 · 예산 확인의 DB 장애도 보통 요청과 같은 코드
 ])
 def test_sse_failed_frame_uses_the_same_table(web, error, code):

@@ -26,3 +26,6 @@ d5138a76c2bb7aa784a62b8ede3dc19e62ac3f7d:evals/results/d10/secrets/extra_checks.
 
 # docs/GATES.md: 되돌리기 리비전 표의 Cloud Run 리비전 이름 `--to-revisions=sojafit-api-...`(비밀 아님) 1건
 ce0df254dec0974c2629ad9e7b67765eba527bfe:docs/GATES.md:generic-api-key:40
+
+# Terra 기준선 원시 응답의 모델 응답 id(키 아님) 1건, 3fa245fc
+3fa245fcf8bfa413e9a74407d866d01caea19f5a:evals/results/graph/2026-11-16-terra-v3-50-isolated-web/raw/v3-38.response.json:generic-api-key:27

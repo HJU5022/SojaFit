@@ -40,14 +40,20 @@ _analysis = ContextVar('analysis_timings', default=None)
 
 
 class AnalysisTimings(BaseCallbackHandler):
-    """그래프 노드 이름·시간·결과만 수집한다. 입력/출력/오류 본문은 보관하지 않는다."""
-    def __init__(self):
-        self.starts, self.stages, self.lock = {}, [], Lock()
+    """그래프 노드 이름·시간·결과만 수집한다. 입력/출력/오류 본문은 보관하지 않는다.
+
+    on_node: 노드가 시작할 때 노드 이름 하나로 부를 함수(React run의 SSE 진행 단계, backend/api/conversations.py). 없으면 부르지 않는다.
+    [주의] 동시 실행(Send)이면 여러 스레드에서 불린다. 받는 쪽이 스레드에 안전해야 한다(API는 loop.call_soon_threadsafe로 넘긴다).
+    """
+    def __init__(self, on_node=None):
+        self.starts, self.stages, self.lock, self.on_node = {}, [], Lock(), on_node
 
     def on_chain_start(self, serialized, inputs, *, run_id, name=None, metadata=None, **kwargs):
         if name and (metadata or {}).get('langgraph_node') == name:
             with self.lock:
                 self.starts[run_id] = (name, time.monotonic())
+            if self.on_node:
+                self.on_node(name)
 
     def _end(self, run_id, status):
         with self.lock:

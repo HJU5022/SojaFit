@@ -260,7 +260,7 @@ def test_ensure_thread_refuses_other_targets_and_questions_before_the_stream_ope
     # LED(D2)는 기록 대조에 가기 전에 지원 대상 검사가 먼저 거른다(#139)
     with pytest.raises(HTTPException) as error:
         app.ensure_thread(1, 'thread', '이름', caller_circuit, 'D2', question=None, conditions=q['conditions'])
-    assert error.value.status_code == 422 and 'D2은(는) LED로 식별됩니다' in error.value.detail
+    assert error.value.status_code == 422 and 'D2는 LED라서' in error.value.detail
     assert not any(any(word in query.upper() for word in ('INSERT', 'UPDATE', 'DELETE')) for query in conn.queries)
 
 

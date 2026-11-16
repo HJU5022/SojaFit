@@ -11,14 +11,18 @@
   requests    칸마다 리랭크할 후보 묶음을 모으고 Voyage는 병렬로 미리 부르고, Qwen 요청 파일을 쓴다
   gpu-rerank  Qwen3-Reranker-0.6B 요청을 GPU에서 처리(desktop-gpu)
   run         264칸 고르기 → test 세트 비교 → 결과 JSON
+  steps       S0 → S4 한 단계씩 짝 비교(사전 등록 #28)
+  cands       S4에서 방식별 후보 수 n만 50 → --n-after로 바꿔 84문항 짝 비교 · 후보 회수 · 리랭크 토큰(사전 등록 2026-11-16)
 """
 import argparse
 import ast
 import json
+import math
 import os
 import sys
 import threading
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -334,9 +338,84 @@ def steps(args):
     print('결과', args.out)
 
 
+# 사전 등록 2026-11-16 jeongun · 리랭크 전 후보 수: S4에서 방식마다 가져오는 후보 수 n 하나만 바꾼다
+S4 = dict(BASE, Q='Q3', F='part+kind', rerank='rerank-3', model='v4large')  # #28 S4 = #25 1위 칸 = 서비스 설정
+POOL_NS = (50, 100, 200, 400, 800)  # 후보 회수를 리랭크 없이(무료) 세는 n
+CAND_CALLS, CAND_TOKENS = 40, 3_000_000  # [주의] 사전 등록 예산: 새 리랭크 호출 · 토큰 상한(100만 토큰당 0.05달러 → 0.15달러)
+
+
+def cands(args):
+    """S4(n=50)와 S4(n=--n-after)를 dev · test에서 재고 84문항을 합쳐 짝 비교한다. 후보 회수 · 리랭크 토큰 · 새 리랭크 기록도 남긴다."""
+    import hashlib
+    pct = lambda v, p: sorted(v)[max(0, math.ceil(p / 100 * len(v)) - 1)] if v else None  # noqa: E731  가까운 순위 백분위
+    keys = ('page_recall@5', 'page_hit@5', 'all_evidence@5', 'page_mrr')
+    arms = {'before': dict(S4), 'after': dict(S4, n=args.n_after)}
+    rows, toks, pool, rr = {a: {'dev': [], 'test': []} for a in arms}, {a: [] for a in arms}, [], None
+    for split in ('dev', 'test'):
+        ctx = context(args, split)
+        if rr is None:  # [왜] 두 세트가 같은 리랭커(캐시 · 새 호출 수 · 상한)를 쓰게 첫 것을 계속 쓴다
+            rr, seen, raw = ctx['rr'], set(ctx['rr'].cache), ctx['rr'].voyage
+
+            def voyage(model, text, docs):
+                if rr.new_calls >= CAND_CALLS or rr.new_tokens >= CAND_TOKENS:
+                    raise SystemExit(f'새 리랭크 {rr.new_calls}회 · {rr.new_tokens}토큰으로 상한에 닿아 멈춘다')
+                return raw(model, text, docs)
+            rr.voyage = voyage
+        ctx['rr'] = rr
+        index = ctx['index']['C']
+        page_cards = {}
+        for i, c in enumerate(index.cards):
+            page_cards.setdefault((c['doc'], c['page']), set()).add(i)
+        for a, cfg in arms.items():
+            for q, r in zip(ctx['qs'], D3.run_cell(cfg, ctx)['rows']):
+                if r['candidates']:  # 리랭크 호출 하나의 토큰: SortedReranker와 같은 키(정렬한 후보의 본문 sha)로 캐시 기록을 찾는다
+                    key = D3.sha(json.dumps([cfg['rerank'], q['text'][cfg['Q']], [index.cards[c]['sha256'] for c in r['candidates']]]))
+                    toks[a].append(rr.cache[key]['tokens'])
+                rows[a][split].append({'id': r['id'], 'pdf': r['pdf'], **{k: r[k] for k in keys}, 'fail': r.get('fail'),
+                                       'top5': [t[2:] for t in r['top'][:5]], 'n_candidates': len(r['candidates']),
+                                       'candidates_sha': hashlib.sha256(json.dumps(r['candidates']).encode()).hexdigest()[:16]})
+        for q in ctx['qs']:  # 후보 회수: 정답 쪽 청크가 리랭크 전 후보(dense ∪ BM25)에 하나라도 있는가
+            gold = set().union(*(page_cards.get(g, set()) for g in q['gold']))
+            pool.append({'id': q['id'], 'split': split, 'group': q['group'],
+                         **{f'cand_hit@{n}': bool(gold & D3.search(dict(S4, n=n, rerank=None), q, ctx)[1]) for n in POOL_NS}})
+    for split in ('dev', 'test'):  # [주의] 후보가 같으면 리랭크 결과도 같아야 한다(캐시 키가 같음). 어긋나면 실행기 결함이라 멈춘다
+        for x, y in zip(rows['before'][split], rows['after'][split]):
+            assert x['candidates_sha'] != y['candidates_sha'] or x['top5'] == y['top5'], x['id']
+    by = {'all': {a: {'rows': rows[a]['dev'] + rows[a]['test']} for a in arms},  # dev 다음 test 순으로 합친다(사전 등록)
+          **{s: {a: {'rows': rows[a][s]} for a in arms} for s in ('dev', 'test')}}
+    summary = {a: {s: {k: round(sum(r[k] for r in d[a]['rows']) / len(d[a]['rows']), 4) for k in keys}
+                   | {'fails': dict(Counter(r['fail'] for r in d[a]['rows'] if r['fail']))} for s, d in by.items()} for a in arms}
+    compare = {s: {m: D3.compare(d['before'], d['after'], m) for m in keys} for s, d in by.items()}
+    both = by['all']
+    shown = (*keys, 'fail', 'top5', 'n_candidates')
+    changes = [{'id': x['id'], 'group': p['group'], 'before': {k: x[k] for k in shown}, 'after': {k: y[k] for k in shown}}
+               for x, y, p in zip(both['before']['rows'], both['after']['rows'], pool) if any(x[k] != y[k] for k in (*keys, 'fail', 'top5'))]
+    outside = [p for p, x in zip(pool, both['before']['rows']) if x['fail'] == 'outside_candidates']
+    pool_summary = {'all': {n: sum(p[f'cand_hit@{n}'] for p in pool) for n in POOL_NS},
+                    'before_outside_candidates': {'ids': [p['id'] for p in outside], **{n: sum(p[f'cand_hit@{n}'] for p in outside) for n in POOL_NS}}}
+    new = [rr.cache[k] for k in rr.cache if k not in seen]
+    out = {'meta': {'preregister': '2026-11-16 jeongun · 리랭크 전 후보 수(N_CAND) 50 → 200', 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                    'dataset_sha256': hashlib.sha256(DATA.read_bytes()).hexdigest(), 'rewrite_sha256': hashlib.sha256(REWRITE.read_bytes()).hexdigest(),
+                    'cards_sha256': hashlib.sha256(Path(args.cards).read_bytes()).hexdigest(), 'arms': {a: D3.name(c) for a, c in arms.items()},
+                    'new_rerank_calls': rr.new_calls, 'new_rerank_tokens': rr.new_tokens},
+           'summary': summary, 'compare': compare, 'pool': pool_summary,
+           'rerank_tokens_per_call': {a: {'calls': len(v), 'p50': pct(v, 50), 'p95': pct(v, 95), 'max': max(v)} for a, v in toks.items()},
+           'changes': changes, 'rows': {a: both[a]['rows'] for a in arms}, 'pool_rows': pool}
+    D3.jdump(out, args.out)
+    if new:  # [주의] 캐시만으로 다시 돌리면 new가 비어 있다. 빈 파일로 이전 기록을 덮지 않는다
+        with open(Path(args.out).parent / f'rerank_new_{time.strftime("%Y-%m-%d")}.jsonl', 'w') as f:  # 바꾼 팔을 API 없이 다시 재게 새 리랭크 기록을 남긴다
+            f.writelines(json.dumps(r) + '\n' for r in new)
+    for s in ('all', 'dev', 'test'):
+        r = compare[s]['page_recall@5']
+        print(f"{s}: 회수율@5 {summary['before'][s]['page_recall@5']} → {summary['after'][s]['page_recall@5']} {r['W']}승 {r['L']}패 {r['T']}동 "
+              f"{r['mean_diff']:+.4f} {r['ci95']} {r['verdict']} | 실패 {summary['before'][s]['fails']} → {summary['after'][s]['fails']}")
+    print('후보 회수', pool_summary, '| 리랭크 토큰', out['rerank_tokens_per_call'], '| 새 호출', rr.new_calls, rr.new_tokens, '| 결과', args.out)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    p.add_argument('cmd', choices=['rewrite', 'qvec-api', 'gpu-qvec', 'requests', 'gpu-rerank', 'run', 'steps'])
+    p.add_argument('cmd', choices=['rewrite', 'qvec-api', 'gpu-qvec', 'requests', 'gpu-rerank', 'run', 'steps', 'cands'])
+    p.add_argument('--n-after', type=int, default=200, help='cands: 바꾼 팔의 방식별 후보 수(기준 팔은 50)')
     p.add_argument('--cards', default=str(OUTSIDE / 'corpus/tsc/chunks/chunks.jsonl'))
     p.add_argument('--vectors', default=str(OUTSIDE / '전자_데이터시트/evidence/full_grid/vectors'))
     p.add_argument('--qvec-dir', default=str(WORK / 'qvec'))
@@ -348,7 +427,7 @@ def main():
     sys.path.insert(0, str(ROOT))
     from dotenv import load_dotenv
     load_dotenv(ROOT / '.env')
-    {'rewrite': rewrite, 'qvec-api': qvec_api, 'gpu-qvec': gpu_qvec, 'requests': requests, 'gpu-rerank': gpu_rerank, 'run': run, 'steps': steps}[a.cmd](a)
+    {'rewrite': rewrite, 'qvec-api': qvec_api, 'gpu-qvec': gpu_qvec, 'requests': requests, 'gpu-rerank': gpu_rerank, 'run': run, 'steps': steps, 'cands': cands}[a.cmd](a)
 
 
 if __name__ == '__main__':

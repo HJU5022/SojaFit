@@ -102,6 +102,39 @@ export function MissingInput({
     </div>
   );
 }
+/** 서버가 대상 부품을 정하지 못했을 때 넷리스트의 후보 중 하나를 고르는 카드(조건 카드와 같은 모양). */
+export function TargetChoice({
+  result,
+  busy,
+  onResume,
+}: {
+  result: Result;
+  busy: boolean;
+  onResume: (body: any) => void;
+}) {
+  return (
+    <div className="missing-input" data-testid="target-choice">
+      <div className="inline-heading">
+        <MessageSquare size={20} />
+        <h2>바꿀 부품을 골라 주시면 이어서 검토합니다.</h2>
+      </div>
+      <p>{result.interrupt.question}</p>
+      <div className="actions">
+        {result.interrupt.target_choices?.map((c) => (
+          <button
+            key={c.ref}
+            type="button"
+            disabled={busy}
+            onClick={() => onResume({ answers: {}, target: c.ref })}
+          >
+            {c.ref}
+            {c.value ? ` · ${c.value}` : ''}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 export function Reply({
   run,
   onCandidate,
@@ -118,8 +151,19 @@ export function Reply({
   return (
     <div className="assistant-reply">
       <div className="reply-label">
-        <span className="mini-mark">↳</span> SojaFit <span>{statuses[r.status] ?? r.stage}</span>
+        <span className="mini-mark">↳</span> SojaFit{' '}
+        {/* [왜] AI 기본법 제31조 생성물 표시(#27). 판정 답 틀·가격 안내도 AI가 길을 정한 결과라 답마다 붙인다. 상태 칸(span:last-child)보다 앞에 둔다 */}
+        <small className="ai-label">
+          AI 생성<span className="sr-only">: 생성형 AI를 이용해 만든 답변입니다</span>
+        </small>{' '}
+        <span>{statuses[r.status] ?? r.stage}</span>
       </div>
+      {/* [왜] 웹 검색 장애를 "못 찾음"과 구별해 알린다(#28) */}
+      {r.web_search_unavailable && (
+        <p role="status" className="notice">
+          웹 검색을 잠시 쓸 수 없어 등록된 자료로만 답했어요.
+        </p>
+      )}
       {candidates.length ? (
         <>
           <h2>후보별 검토 결과입니다.</h2>

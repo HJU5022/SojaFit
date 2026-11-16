@@ -99,7 +99,7 @@ def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
     assert calls == [(REWRITTEN, ["1N5817"])]
     assert out["retrieval_error"] == {"kind": "timeout"}
     assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "거절"]
-    assert "검색 도구" in out["answer"]
+    assert "자료를 확인할 수 없어요" in out["answer"]
     assert "데이터시트를 찾지 못" not in out["answer"]
 
 
