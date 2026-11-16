@@ -532,7 +532,7 @@ SojaFit (proj3-b)
 │   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   │   ├── test_errors.py  <- 오류 코드 16개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
 │   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
-│   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API, Google OAuth(state · PKCE · ID 토큰)(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_admin.py   <- 관리자 가림 해제 사유 422 · 이력 · 정지 세션 폐기 · 관리자와 자기 자신 탈퇴 처리 거절(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_email_auth.py <- 가짜 SMTP·격리 DB의 인증 가입·암호 재설정·토큰 경합·한도 시험
 │   │   ├── test_google_users.py <- 일반 Google 가입·비밀번호 재확인 연결·관리자 승인·충돌·한도·마이그레이션 시험
@@ -548,9 +548,9 @@ SojaFit (proj3-b)
 │   │   ├── test_datasheets.py <- 데이터시트 서재 API: 로그인 필요, 표지 품번·제목·제조사 검색, 분류, 쪽 나눔, 폐기 문서 숨김(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   │   └── test_external_circuits.py <- 완성 회로도 manifest·PNG API
-│   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
+│   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약, KiCad 정규화, 데모 · 외부 회로도 검색 · 렌더 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
-│   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
+│   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화, 회로 지문(번호 바꿈 대조) 시험
 │   │   ├── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
 │   │   ├── test_service_schema.py  <- 서비스 표 재설계 규칙 시험: 삭제 연쇄 · 승인 칸 · 단순 CHECK · 견적 제약(일회용 DB, 기준선 적용)
 │   │   ├── test_catalog.py <- 회로 catalog 15종·안전한 ID·연결 경로 검증
@@ -576,7 +576,7 @@ SojaFit (proj3-b)
 │   │   ├── test_graph_supervisor.py  <- Supervisor V0 입력·출력·상태별 의미 계약
 │   │   ├── test_graph_state.py  <- 상태 칸의 덮어쓰기·쌓기
 │   │   ├── test_agent_netlist.py  <- 에이전트용 KiCad 업로드의 형식·참조·자원 제한 시험
-│   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기, 저장소 밖 경로 차단
+│   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기(주변 핀 기능 · 부스트 · 플라이백 기구), 저장소 밖 경로 차단
 │   │   ├── test_graph_route.py  <- 라우팅 노드
 │   │   ├── test_graph_search.py  <- 검색 노드의 품번 고르기
 │   │   ├── test_graph_grade.py  <- 채점 노드의 품번·개정판 거르기
@@ -593,10 +593,10 @@ SojaFit (proj3-b)
 │   │   ├── test_facts_lookup.py  <- 사실 확인이 MCP 도구 응답으로 Facts를 만드는 길(가짜 도구)
 │   │   ├── test_readme_graph.py  <- README 3절 mermaid 블록 = 코드가 조립한 그래프인지 비교
 │   │   ├── test_agents.py  <- RAG 에이전트(검색 · 근거 채점+답 쓰기 · 다시 찾기 · 인용 검사), 사실 확인, 거절 문구, 판정 답 틀
-│   │   ├── test_docs_agent.py  <- RAG 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
+│   │   ├── test_docs_agent.py  <- RAG 에이전트: 인용 처리(허용 번호 · 교정 상한 · 미인용 문장 제거), 2등급 공식 PDF의 제조사 도메인 제한, 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
 │   │   ├── test_judge.py   <- Spec 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
 │   │   ├── test_part_names.py  <- 읽기 뒤 품번 바로잡기: 글의 품번으로 맞추기 · 지금 달린 부품 · 지어내지 않는 음성 사례
-│   │   ├── test_judge_read.py  <- 판정 읽기: 역할별 값 이름·다른 이름 버리기, 코퍼스 밖 요구 거절과 멀티 그래프 거절 끝(가짜 LLM·사양 표)
+│   │   ├── test_judge_read.py  <- 판정 읽기: 역할별 값 이름·다른 이름 버리기, 이전 대화 값 불러오기 범위, 코퍼스 밖 요구 거절과 멀티 그래프 거절 끝(가짜 LLM·사양 표)
 │   │   └── test_build.py   <- 조립 길 시험: 바로 끝내는 길·할 일 1개와 2개(동시 실행 → 종합)·답 검사 거절·재계획·판정 길(인터럽트 1번), 그림의 한국어 노드 이름과 재계획 라벨
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
@@ -623,7 +623,7 @@ SojaFit (proj3-b)
 │   │   ├── test_exa_prefetch.py <- 웹 근거 미리 출발: 기본 꺼짐, 받아 둔 같은 PDF 재사용, 실패 시 원래 경로
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
-│   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
+│   │   ├── test_llm.py     <- LLM 호출 입구: 형식 검증 · 재시도 상한, 노드별 모델, Voyage 임베딩 · 재시도, 평가 예산 · provider 정책
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   ├── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
 │   │   └── test_service_trace.py  <- 서비스 분석 추적: 본문 미전송, 토큰·모델·공급자 비용 유지, 같은 trace_id
@@ -669,9 +669,9 @@ SojaFit (proj3-b)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
-│   │   ├── test_judge_pricing.py <- 가상 가격의 구간·정확한 곱셈·모호한 값 거절 시험
 │   │   ├── JUDGE.md        <- 폴더 설명
-│   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산
+│   │   ├── test_judge_pricing.py <- 가상 가격의 구간·정확한 곱셈·모호한 값 거절 시험
+│   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산·요구 사양 글의 조건 읽기
 │   │   ├── test_judge_rules_file.py  <- 실제 규칙 파일 23개 검사
 │   │   ├── test_judge_sheet_conditions.py  <- 시험 조건 읽기·비교
 │   │   └── test_judge_verdict.py  <- 판정 5종 순서·찾기·정렬
