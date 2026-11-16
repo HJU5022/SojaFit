@@ -672,7 +672,7 @@ def _inspect(ref, query, client):
         except UnicodeError:
             raise ExternalSchematicInvalidSource() from None
 
-    graph, evidence, evidence_by_path, symbols, wires = {}, [], {}, {}, {}
+    graph, evidence_by_path, symbols, wires = {}, {}, {}, {}
     has_wire = False
     remaining = MAX_DISCOVERY_BYTES
     for path in eda:
@@ -701,7 +701,6 @@ def _inspect(ref, query, client):
         evidence_by_path[path] = placed_values
         wires[path] = sheet_has_wire
         has_wire |= sheet_has_wire
-        evidence.extend(placed_values)
     readme = ""
     readme_path = next((p for p in sorted(files) if p.casefold() in {"readme", "readme.md", "readme.rst"}), None)
     if readme_path:
@@ -718,7 +717,6 @@ def _inspect(ref, query, client):
             return ()
     if license_path:
         license_evidence_url = f"{raw}{quote(license_path)}"
-    part_evidence = " ".join(evidence)
     if query:
         selections = _select_query_root(
             graph, evidence_by_path, symbols, wires, query, readme)
@@ -731,8 +729,6 @@ def _inspect(ref, query, client):
             placed += symbols[sheet]
             pending.extend(graph[sheet])
         if placed < 2 or not has_wire:
-            return ()
-        if not _matches_query(query, part_evidence, readme):
             return ()
         selections = ((root, sheet_count, selected_paths),)
     linked = _readme_links(readme)

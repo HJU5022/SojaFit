@@ -31,7 +31,7 @@ SojaFit (proj3-b)
 ├── .gitleaksignore         <- 제외할 오탐의 커밋·파일·규칙·줄 fingerprint: 시험용 가짜 값 10건과 소스 SHA-256 한 건. 새 시험 값은 커밋 뒤 `gitleaks git --redact -v` 출력의 `Fingerprint:` 줄을 붙여 등록
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
-├── Dockerfile              <- API 이미지. Node 단계에서 React 화면(frontend/)을 빌드해 넣고 backend/ · data/ · db/를 복사 (고정)
+├── Dockerfile              <- API 이미지. Node 단계에서 React 화면(frontend/)을 빌드해 넣고 backend/ · data/ · db/를 복사. `renderer` 단계는 KiCad 변환 서버(backend.projects.schematic:app) 이미지 (고정)
 ├── docker-compose.yml      <- 서비스 4개(api · thread-setup · corpus-load · db) 한 줄 실행, 키 없는 데모 모드 (고정)
 ├── docker-compose.local.yml <- 별도 DB·볼륨의 로컬 실제 API, localhost:8010, 데모·운영 설정과 분리
 ├── pyproject.toml          <- uv 의존성 (고정)
@@ -127,10 +127,10 @@ SojaFit (proj3-b)
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
-│   ├── main.py             <- FastAPI 진입점: 앱 조립만(수명·공통 오류 처리기·요청 ID·대화 본문 한도 미들웨어·api/ 라우터 등록·React 연결). 경로 함수는 api/에 (고정: Dockerfile이 실행)
+│   ├── main.py             <- FastAPI 진입점: 앱 조립만(수명·공통 오류 처리기·요청 ID·보안 헤더·`/api/` 변경 요청 본문 한도 미들웨어·api/ 라우터 등록·React 연결). 경로 함수는 api/에 (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금·가입 한도, 데모 로그인, Google 가입·로그인과 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── auth_email.py       <- 이메일 소유 확인 가입·암호 재설정 토큰·발송 한도·세션 폐기
-│   ├── errors.py           <- 오류 응답 error.code 16개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
+│   ├── errors.py           <- 오류 응답 error.code 16개(ADR 0019의 15개 + SCHEMATIC_NOT_FOUND): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
 │   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
 │   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). 화면 쪽 짝은 frontend/src/api.ts 하나
 │   │   ├── API.md          <- 폴더 설명
@@ -143,8 +143,8 @@ SojaFit (proj3-b)
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory, 탈퇴 DELETE /api/me
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
-│   │   ├── external_circuits.py <- 공개 저장소 완성 회로도 manifest·PNG 시트 API
-│   │   └── projects.py     <- 사용자 프로젝트 CRUD(삭제는 같은 UUID 분석 기록까지)·공개 데모 카탈로그 API
+│   │   ├── external_circuits.py <- 외부 완성 회로도 manifest·PNG 시트·후보 대화(POST .../dialogue) API
+│   │   └── projects.py     <- 사용자 프로젝트 CRUD(삭제는 같은 UUID 분석 기록까지)·넷리스트 · 회로도 업로드·올린 회로도 그림·부품 점검표·데모 회로 목록(로그인 · DEMO_MODE=1) API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
@@ -153,17 +153,17 @@ SojaFit (proj3-b)
 │   │   ├── catalog.py      <- 단일 회로 catalog의 ID·이름·연결 경로 검증과 안전한 조회
 │   │   ├── repository.py   <- 데모 회로 카탈로그(DEMOS)와 파일 경로(demo_path), 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
 │   │   ├── visuals.py      <- 검증된 데모 회로도 catalog·원본/배포 해시 검증과 공개 metadata
-│   │   ├── external_circuit_search.py <- Exa 결과에서 안전한 GitHub 저장소 루트 후보만 정제
+│   │   ├── external_circuit_search.py <- Exa 공개 웹 · 공식 제조사(TSC · 반도체 6사) · GitHub 검색 결과에서 안전한 외부 회로도 후보만 정제
 │   │   ├── schematic_source.py <- 검증된 외부 회로도 source DTO
-│   │   ├── external_schematic.py <- 공개 저장소 출처·라이선스·commit 검증과 bounded cache
+│   │   ├── external_schematic.py <- 외부 회로도 검색 · 검증 · 변환 순서 조립, 서명 token, bounded cache(올린 회로도 그림 포함)
 │   │   ├── schematic_dialogue.py <- 검증된 다중 회로도 후보의 설명·선택 질문과 LLM 출력 검증
-│   │   ├── schematic.py <- shell 없는 KiCad PDF export 경계
+│   │   ├── schematic.py <- shell 없는 KiCad PDF · netlist export 경계, 원격 렌더러 호출과 렌더러 서버 app(/health · /render)
 │   │   ├── schematic_render.py <- PDF/SVG/PNG를 제한된 해상도 PNG로 변환
 │   │   └── schematic_discovery.py <- EDA 원본에 대응하는 전체 회로도 자산 판정
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고·하루 토큰 상한·탈퇴 잠금과 분석 기록 삭제·새 분석 때 보관 기간 청소·준비 명령. React 대화도 같은 UUID thread로 실행. 키 없는 데모(DEMO_REPLAY=1)는 같은 그래프에 재생 chat을 넣고 기록한 질문 · 재개 답만 받음
+│   │   ├── memory_service.py <- thread 소유권·DB 체크포인트·질문별 사용자 사실 참고·하루 토큰 상한·탈퇴 잠금과 분석 기록 삭제·새 분석 때 보관 기간 청소·준비 명령. React 대화도 같은 UUID thread로 실행. 키 없는 데모(DEMO_REPLAY=1)는 같은 그래프에 재생 chat을 넣고 기록한 질문 · 재개 답만 받음
 │   │   ├── profile.py      <- 사용자 사실 3칸 장기 기억(Store): 칸 검사·틀 문장·덮어쓰기·지우기·Voyage 의미 검색
 │   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록, 그래프 상태의 공개 값 고르기(public_state)
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
@@ -173,27 +173,27 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
 │   │   ├── supervisor.py   <- Supervisor Prompt V0 네 필드 출력·입력 envelope·상태별 의미 검증 계약(현재 그래프에는 미연결)
-│   │   ├── nodes.py        <- 노드 11개: 입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀)
+│   │   ├── nodes.py        <- 노드 11개: 입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀). 멀티 전용 노드(부품 목록 · 견적 안내 · 대상 확인)와 공용 도우미
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 단일 그래프 앱을 만듦(평가 비교용, 서비스는 멀티 그래프)
-│   │   ├── netlist.py      <- 사용자 KiCad 넷리스트 파싱과 입력 제한
-│   │   └── memory.py       <- 사용자별 Store namespace 규칙, 승인 사례를 크기 제한된 모델 입력으로 만들기, 멀티 그래프의 `기억 읽기` 노드(`read_profile`: Store의 선호 실장 방식만 `mount_preference`로). graph/nodes.py · multi_agent/build.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
+│   │   ├── netlist.py      <- 평가 · 시험용 KiCad 넷리스트 파서(parse_netlist)와 projects/가 쓰는 S-expression 파서(_sexpr). 서비스 업로드는 projects/netlist.py
+│   │   └── memory.py       <- 옛 승인 사례 Store namespace(탈퇴 때 지우기용), 승인 사례를 크기 제한된 모델 입력으로 만들기, 멀티 그래프의 `기억 읽기` 노드(`read_profile`: Store의 선호 실장 방식만 `mount_preference`로). graph/nodes.py · multi_agent/build.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
 │   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + RAG 에이전트 · Spec 에이전트). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
+│   │   ├── contracts.py    <- 계획서·할 일·보고서의 모양, 이유 코드, 질문당 상한 상수
 │   │   ├── revisions.py    <- 질문과 사용 조건의 지정 판본을 문서 파일명의 판본과 대조
-│   │   ├── supervisor.py   <- Supervisor: 질문·사실·보고·한도 현황을 글로 만들어 LLM에 주고 결정서를 받음. 한도·꺼진 웹이면 거절로 바꿈
-│   │   ├── state.py        <- 멀티용 공용 메모장(MultiState): 보고서·결정서·횟수는 dict, path는 단일 그래프와 같은 말
+│   │   ├── supervisor.py   <- Supervisor 계획(LLM이 할 일 · 지시서를 냄)과 배분, 답 모으기 · 답 정리 · 종합 · 답 검사
+│   │   ├── state.py        <- 멀티용 공용 메모장(MultiState): 보고서·계획서·횟수는 dict, path는 단일 그래프와 같은 말
 │   │   ├── facts.py        <- 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 Facts를 만듦
 │   │   ├── messages.py     <- 거절 사유를 사용자 일상어 문구로 바꿈(내부 코드는 로그에만), 가격 안내 문구, 판정 답 틀
-│   │   ├── build.py        <- 조립(노드 이름은 한국어): 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG · Spec 에이전트(Send) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기 · 거절. 판정은 도구·체크포인터가 있을 때 켬, 웹은 아직 거부
+│   │   ├── build.py        <- 조립(노드 이름은 한국어): 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → (대상 확인) → RAG · Spec 에이전트(Send) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기 · 거절, 가격 안내 · 부품 목록 · 견적 안내. 판정은 도구·체크포인터가 있을 때 켬, 웹 조회는 서비스가 도구를 넘길 때 켬
 │   │   └── agents/         <- 서브에이전트. 깊은 폴더라 설명은 MULTI_AGENT.md에
 │   │       ├── __init__.py <- 패키지 표시
 │   │       ├── judge.py    <- Spec 에이전트(회로 읽기 · 대체 부품 판정 노드)
 │   │       ├── part_names.py <- 읽기 뒤 품번 바로잡기: 원래 부품 · 후보 품번을 사용자 글의 품번으로 맞춤(LLM 없음)
-│   │       └── docs.py     <- RAG 에이전트: 검색 → 근거 채점+답 쓰기(LLM 1번) → 다시 찾기 1번 → 인용 검사
-│   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
+│   │       └── docs.py     <- RAG 에이전트: 검색 → 근거 채점+답 쓰기 → 다시 찾기 1번 → 인용 검사(필요할 때 인용 고치기 · 웹 근거 다시 쓰기 · 그림 읽기 LLM 호출이 더 있음)
+│   ├── judge/              <- 회로 역할·대체 조건·판정, 가격 응답 계산의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── pricing.py      <- 조회 응답만 사용하는 수량 구간 선택·Decimal 예상 금액 계산
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
@@ -239,7 +239,7 @@ SojaFit (proj3-b)
 │   │       ├── specs.py    <- 표 행 청크 공용 규칙(코드 · SI 단위 · 기호 · 낱말 표, 패키지 · 분류 이름, 양방향 · AEC-Q101 문장)과 해석기: 카드 한 장 읽기(read_card, card_read가 씀). 사양 표 만들기 · 적재 명령은 11-10에 지움(ADR 0016)
 │   │       ├── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   │       └── demo_snapshot.py  <- 키 없는 compose가 적재할 데모 코퍼스 스냅샷(data/demo/snapshot/)을 전체 청크에서 규칙대로 뽑음
-│   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
+│   ├── services/           <- 외부 호출과 서비스 보조 기능: LLM·임베딩, Langfuse, Mouser, Exa, 메일, 공식 PDF 행 확인, 견적 저장, 키 없는 데모 재생
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 기록 · 재생은 demo.py)
@@ -248,7 +248,7 @@ SojaFit (proj3-b)
 │   │   ├── demo.py           <- 키 없는 데모의 LLM 응답 기록(recorder) · 재생(replayer, 기록에 없으면 노드 이름을 담은 ReplayMiss), 재생 모드 판단, 기록한 데모 질문 목록 · 대조, 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
 │   │   ├── mail.py         <- Gmail SMTP TLS 인증·재설정 메일 전송(로그·저장·재시도 없음)
-│   │   ├── exa.py <- 내부 근거가 부족할 때 공식 제조사 PDF를 찾는 요청당 1회 검색
+│   │   ├── exa.py <- 내부 근거가 부족할 때 쓰는 Exa 검색: 요청당 공식 제조사 PDF 1번 + 공개 참고 링크 1번(WEB_PREFETCH=1이면 미리 찾기 1번 더)
 │   │   ├── datasheet_rows.py <- 공식 데이터시트 표에서 품번 열·페이지·행·단위를 확인
 │   │   ├── document_language.py <- 공식 PDF 본문에서 영어·한국어만 허용하는 언어 검사
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)

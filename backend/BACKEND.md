@@ -22,11 +22,11 @@
 |---|---|
 | `BACKEND.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
-| `main.py` | FastAPI 진입점. 수명(JSON 로그 켜기, 인증 설정 검사, `THREADS_ENABLED=1`이면 분석 서비스 생성), 공통 JSON 오류 처리기, 요청 ID·보안 헤더·본문 한도·`no-store` 미들웨어, `api/` 라우터 등록, React 화면 연결 |
+| `main.py` | FastAPI 진입점. 수명(JSON 로그 켜기, 인증 설정 검사, `THREADS_ENABLED=1`이면 분석 서비스 생성), 공통 JSON 오류 처리기, 요청 ID·보안 헤더·본문 한도·`no-store` 미들웨어, `api/` 라우터 등록, React 화면 연결. 모든 `psycopg.Error` · 풀 대기 초과는 503(코드 버그도 저장소 장애로 보임), `DuplicateProject`는 409 `details.duplicates` |
 | `errors.py` | 오류 응답 `error.code` 표(`DEFAULT_CODES`, `SPECIAL_CODES`), `ApiError`, `code_for`, 오류 한 줄 로그 `log_error`. 코드 목록은 SPEC.md·ADR 0019 |
 | `logs.py` | stdout JSON 한 줄 로그: 요청 ID 문맥 변수, `JsonFormatter`, 예외 메시지를 뺀 traceback, 서버 시작 때 로거에 붙이는 `setup`, 접속 줄의 쿼리 글 가리기 `hide_query` |
-| `auth.py` | scrypt 비밀번호, DB 세션, 로그인 잠금·가입 한도, 데모 로그인, Google 가입·로그인, 탈퇴의 계정 행 삭제, 관리자 CLI(`python -m backend.auth`). 직접 `signup`은 내부·시험용 |
-| `auth_email.py` | 이메일 인증 가입·비밀번호 재설정의 일회용 토큰, 발송 한도, 계정 행 잠금. 메일 발송은 `services/mail.py` |
+| `auth.py` | scrypt 비밀번호, DB 세션, 로그인 잠금·가입 한도, 데모 로그인, Google 가입·로그인, 탈퇴의 계정 행 삭제, 관리자 계정 관리와 그 작업 이력(`admin_audit`, db/034), 관리자 CLI(`python -m backend.auth`). 직접 `signup`은 내부·시험용 |
+| `auth_email.py` | 이메일 인증 가입·비밀번호 재설정의 일회용 토큰, 발송 한도, 계정 행 잠금. 재설정하면 그 계정의 세션 · 로그인 실패 기록을 지운다. 메일 발송은 `services/mail.py` |
 | `api/` | HTTP 경로 전부. [API.md](api/API.md) |
 | `conversations/` | 프로젝트 소유 대화 저장소와 React run·재개가 거치는 사용자 분석 서비스. [CONVERSATIONS.md](conversations/CONVERSATIONS.md) |
 | `projects/` | 사용자 소유 프로젝트·정규화 회로 저장소, 데모 회로도, 외부 회로도 변환. [PROJECTS.md](projects/PROJECTS.md) |

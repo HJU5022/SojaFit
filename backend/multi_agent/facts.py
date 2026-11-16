@@ -12,7 +12,7 @@ from backend.multi_agent.revisions import requested_revisions
 
 
 def refs_of(target_part: dict) -> set[str]:
-    """대상 부품과 주변 넷의 회로 기호. 품번으로 잘못 뽑히지 않게 뺀다(검색 노드와 같은 규칙)."""
+    """대상 부품과 주변 넷의 회로 기호 · 핀 · 넷 이름. 품번으로 잘못 뽑히지 않게 뺀다(검색 노드의 규칙보다 넓다)."""
     part = target_part or {}
     nets = part.get('nets', [])
     # [왜] 넷 이름('/PB3')과 핀 이름도 품번이 아니다. 'PB3 쪽 D1'의 PB3을 코퍼스에 없는 품번으로 보고 거절했다(11-06 v3-13)

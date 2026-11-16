@@ -13,14 +13,14 @@
 |---|---|
 | `RAG.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
-| `db_pool.py` | `connection()`: DSN별 psycopg 연결 풀(pgvector 등록, commit/rollback 뒤 반납). `retrieve.py`가 씀 |
-| `retrieve.py` | `retrieve(question, *, k=5, parts=None, method='hybrid')`: dense + BM25를 RRF로 합치고 `rerank-3`로 다시 세움. 표지 청크 제외, `parts` 필터, `corpus_known`. `DEMO_MODE=1`이면 BM25만 |
+| `db_pool.py` | `connection()`: DSN별 psycopg 연결 풀(pgvector 등록, commit/rollback 뒤 반납). `retrieve.py`, `card_find.py`, `card_specs.py`가 씀 |
+| `retrieve.py` | `retrieve(question, *, k=5, parts=None, method='hybrid')`: dense + BM25를 RRF로 합치고 `rerank-3`로 다시 세움. 표지 청크 제외, `parts` 필터, `corpus_known`. `DEMO_MODE=1`이면 BM25만. 허용 청크가 `N_BIT`(3200)장보다 많으면 1비트 Hamming 거리(`chunk_embedding_bits`, db/009)로 먼저 거름. 환경변수 `RETRIEVE_METHOD`(설정하면 호출 인자 `method`를 덮어씀), `RETRIEVE_RERANK=0`(리랭크 생략)은 속도 A/B용 |
 | `spec_lookup.py` | 사양 코드 목록 `CODES`, 조건 자리 기본값 `DEFAULT_SLOT`, 삽입형 패키지 이름 `THT_PACKAGES`. DB를 읽지 않음 |
-| `card_read.py` | 카드 → 값·원문 인용. `pipeline/specs.py` 규칙(`read_card`)으로 먼저 읽고, 원하는 코드 값을 못 받았거나 검토 표시가 난 카드만 LLM(`card_read` 프롬프트)으로 읽음. 두 길 모두 같은 코드 확인(카드 번호·인용·숫자·단위 차원·품번)을 거침 |
-| `card_find.py` | 후보 찾기 `make_find`·`default_find`: 분류 문서의 개요 줄로 읽을 문서를 고르고(`code_pick`, 못 줄 세울 때만 LLM `card_pick`) 문서별 카드 읽기를 동시에 불러 조건에 맞는 품번을 거른 뒤 정렬. 계약은 SPEC.md 8.7 |
+| `card_read.py` | 카드 → 값·원문 인용(코드만 읽는 `read_code_values`는 RAG 에이전트도 씀). `pipeline/specs.py` 규칙(`read_card`)으로 먼저 읽고, 원하는 코드 값을 못 받았거나 검토 표시가 난 카드만 LLM(`card_read` 프롬프트)으로 읽음. 두 길 모두 같은 코드 확인(카드 번호·인용·숫자·단위 차원·품번)을 거침 |
+| `card_find.py` | 후보 찾기 `make_find`·`default_find`: 분류 문서의 개요 줄로 읽을 문서를 고르고(`code_pick`, 못 줄 세울 때만 LLM `card_pick`) 문서별 카드 읽기를 동시에 불러 조건에 맞는 품번을 거른 뒤 정렬. 읽을 문서 수 기본 5(`FIND_N_DOCS`로 덮어씀). 계약은 SPEC.md 8.7 |
 | `card_specs.py` | 판정 값 `make_specs`·`default_specs`: 품번의 사양 행(최소/대표/최대 SI 값, 단위, 원문, 시험 조건, 인용)을 카드에서 읽음. 사실 확인용 `doc_rows`(LLM 없음). 품번 → 문서 색인은 첫 찾기 때 읽음 |
 | `units.py` | `to_si(값, 단위)`: 표 단위를 SI 기본 단위로 바꿈. 모르는 단위·비율 단위는 `None` |
-| `storage.py` | 벡터 열 형식 `RAG_VECTOR_TYPE=vector\|halfvec` 계약(`vector_type`은 서버와 적재 도구가 import), 읽기 전용 DB/표 용량 점검과 vector → halfvec 비교(`python -m backend.rag.storage`) |
+| `storage.py` | 벡터 열 형식 `RAG_VECTOR_TYPE=vector\|halfvec` 계약(`vector_type`은 적재 도구 `pipeline/ingest.py`만 import), 읽기 전용 DB/표 용량 점검과 vector → halfvec 비교(`python -m backend.rag.storage`) |
 | `source_metadata.py` | `source_metadata(document)`: 경로의 basename을 manifest와 `data/package-outline-pages.json`에서 정확히 찾아 공식 HTTPS URL·외형 페이지를 돌려줌. 브라우저 DTO에만 붙이고 DB 저장 형식에는 넣지 않음 |
 | `pipeline/` | 오프라인 데이터시트 도구. 서버는 `pipeline/specs.py`의 규칙만 import하고 나머지는 import하지 않음. `python -m backend.rag.pipeline.<모듈>`로 실행 |
 

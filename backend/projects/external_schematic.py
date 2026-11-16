@@ -54,6 +54,23 @@ class ExternalSchematicChoice:
     license_evidence_url: str | None = None
 
 
+def _choice(source, title: str) -> ExternalSchematicChoice:
+    """검증된 source에서 화면 선택지 하나를 만든다(제목만 부르는 곳이 정한다)."""
+    return ExternalSchematicChoice(
+        title, source.source_url, source.source_type, source.revision,
+        manufacturer=source.manufacturer,
+        model=source.model,
+        source_file=source.source_file,
+        evidence_grade=source.evidence_grade,
+        source_sha256=source.source_sha256,
+        commit=source.commit,
+        license=source.license,
+        attribution=source.attribution,
+        repository_url=source.repository_url,
+        license_evidence_url=source.license_evidence_url,
+    )
+
+
 @dataclass(frozen=True)
 class ExternalSchematicManifest:
     project: str | None
@@ -264,20 +281,7 @@ class ExternalSchematicService:
             if source.source_type != "community" or not source.source_url or source.source_url in seen:
                 continue
             seen.add(source.source_url)
-            title = f"{source.repository or source.attribution} · {source.root_schematic}"
-            choices.append(ExternalSchematicChoice(
-                title, source.source_url, source.source_type, source.revision,
-                manufacturer=source.manufacturer,
-                model=source.model,
-                source_file=source.source_file,
-                evidence_grade=source.evidence_grade,
-                source_sha256=source.source_sha256,
-                commit=source.commit,
-                license=source.license,
-                attribution=source.attribution,
-                repository_url=source.repository_url,
-                license_evidence_url=source.license_evidence_url,
-            ))
+            choices.append(_choice(source, f"{source.repository or source.attribution} · {source.root_schematic}"))
         self.verified_choices.replace(query, tuple(choices))
 
     def _choices_for(self, query):
@@ -731,22 +735,7 @@ class ExternalSchematicService:
         choices = self._choices_for(lookup_key)
         if not choices:
             choices = tuple(
-                ExternalSchematicChoice(
-                    ' · '.join(dict.fromkeys(filter(None, (item[0].model, item[0].source_file)))),
-                    item[0].source_url,
-                    item[0].source_type,
-                    item[0].revision,
-                    manufacturer=item[0].manufacturer,
-                    model=item[0].model,
-                    source_file=item[0].source_file,
-                    evidence_grade=item[0].evidence_grade,
-                    source_sha256=item[0].source_sha256,
-                    commit=item[0].commit,
-                    license=item[0].license,
-                    attribution=item[0].attribution,
-                    repository_url=item[0].repository_url,
-                    license_evidence_url=item[0].license_evidence_url,
-                )
+                _choice(item[0], ' · '.join(dict.fromkeys(filter(None, (item[0].model, item[0].source_file)))))
                 for item in verified_results
                 if connections is not None or item[0].source_type != "community"
             )

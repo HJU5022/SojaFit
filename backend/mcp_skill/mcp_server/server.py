@@ -1,4 +1,4 @@
-"""SojaFit의 코퍼스 검색과 미검증 TSC 문서 후보를 노출하는 stdio MCP 서버."""
+"""SojaFit의 코퍼스 검색 · 문서 조회 · 미검증 TSC 문서 후보 · TSC PDF 무결성 · 회로 조회 · 코퍼스 확인 도구 6개를 노출하는 stdio MCP 서버."""
 import json
 import hashlib
 import os

@@ -1,7 +1,8 @@
-"""세션 사용자별 업로드·분석 thread·승인 기록·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
+"""세션 사용자별 분석 thread·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
 
 React 작업대의 run·재개는 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
-HTTP 입구는 그 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
+HTTP 입구는 그 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴, 그리고 회로도 후보 대화의 예산(`schematic_dialogue_budget`, api/external_circuits.py),
+프로젝트 삭제의 분석 기록 삭제(`delete_analysis_threads`) · 부품 점검표의 판정 지원 검사(`_require_supported_target`, api/projects.py), 다른 대상 안내(`other_targets_note`, api/conversations.py)다.
 `message` · `resume`의 `progress`는 그래프 노드가 시작할 때마다 노드 이름으로 불린다(SSE `status` 진행 단계, SPEC 4절).
 분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
 회로 이름 · 연결 정보는 `public.threads → project_circuit_versions`의 고정 버전에서 읽는다(`_owned`).
@@ -14,7 +15,7 @@ DB로 원자적으로 차감한다(`_budget`, db/020_service_baseline.sql). 공�
 삭제(SPEC 8.5): 프로젝트 삭제는 같은 UUID의 분석 thread · checkpoint를 같은 트랜잭션에서 지우고(`delete_analysis_threads`),
 탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
 분석 · 기록을 만드는 쓰기는 같은 잠금을 공유로 잡아(`_hold_account`) 탈퇴 중이면 409, 쓰는 중이면 탈퇴가 409다.
-보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/020_service_baseline.sql)를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
+보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/020_service_baseline.sql)와 관리자 처리 이력(admin_audit) 1년 삭제를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
 오류 코드(ADR 0019, backend/errors.py): 하루 토큰 · USD 상한과 실행 한 번의 호출 · 예약 상한은 429 `LIMIT_EXCEEDED`, 호출 간격은 429 `RATE_LIMITED`,
 조건 질문 대기는 409 `CONDITION_PENDING`, 분석 실패는 LLM · 임베딩 공급자 장애면 502 `UPSTREAM_ERROR`, 시간 예산 초과는 504, 그 밖은 503이다.
 키 없는 데모(`DEMO_REPLAY=1` · `DEMO_MODE=1`, SPEC 7절): 같은 그래프를 돌리고 LLM 응답만 기록에서 꺼낸다(`backend/services/demo.py`).
