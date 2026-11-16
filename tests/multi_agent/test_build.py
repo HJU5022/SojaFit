@@ -203,6 +203,45 @@ def test_replan_runs_a_second_round_with_parts_and_answers_from_it():
     assert out['counters']['replans'] == 1 and out['counters']['hops'] == 2
 
 
+CIRCUITLESS = {'input': '질문', 'connections': {'components': [], 'nets': []}, 'circuit': '회로 없는 질문', 'target': ''}
+NEED_NETLIST = '이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요.'
+
+
+def circuitless_app(chat):
+    """서비스처럼 부품 없는 회로 · 빈 대상을 넘기는 그래프(입력 읽기는 실제 read_input)."""
+    return B.build_graph(chat=chat, retriever=lambda q, parts=None: [doc(7)], judge_enabled=True, specs=lambda part, codes=None: ROWS,
+                         find=lambda *a, **k: [], checkpointer=InMemorySaver())
+
+
+def test_circuitless_rating_question_runs_the_docs_agent_without_a_target():
+    chat = scripted(supervisor=[Plan(question_type='rating', next='tasks', tasks=[docs_task()])],
+                    docs_answer=[DocsAnswer(grade='enough', answer='1N4148의 VRRM은 75 V이다 [7].')])
+    out = circuitless_app(chat).invoke({**CIRCUITLESS, 'input': '1N4148 역전압 몇 V야?'}, {'configurable': {'thread_id': 'c1'}})
+    assert chat.calls == ['supervisor', 'docs_answer'] and out['answer'].endswith('[7].') and not out.get('refusal')
+    assert out['target_part'] == {}
+
+
+@pytest.mark.parametrize('plan', [
+    Plan(question_type='candidate_judge', next='tasks', tasks=[Task(id=1, agent='judge', kind='candidate_judge', goal='judge 1N5819')]),
+    Plan(question_type='candidate_find', next='tasks', tasks=[Task(id=1, agent='judge', kind='candidate_find', goal='find')]),
+    Plan(question_type='role', next='tasks', tasks=[docs_task(kind='role', query=''), docs_task(2)]),
+])
+def test_circuitless_question_that_needs_the_circuit_asks_for_a_netlist_without_agents(plan):
+    """회로 없는 대화의 판정 · 찾기 · 역할 할 일은 계획 종류로 가르고(LLM 추가 호출 없음) 넷리스트를 달라는 거절로 끝난다(인터럽트 아님)."""
+    chat = scripted(supervisor=[plan])
+    out = circuitless_app(chat).invoke({**CIRCUITLESS, 'input': 'D1을 1N5819로 바꿔도 돼?'}, {'configurable': {'thread_id': 'c2'}})
+    assert chat.calls == ['supervisor'] and '__interrupt__' not in out
+    assert out['answer'] == NEED_NETLIST and out['refusal'] == {'code': 'circuit_missing', 'message': NEED_NETLIST}
+    assert out['path'][-2:] == ['계획', '거절'] and out['question_type'] == plan.question_type
+
+
+def test_frontend_shows_the_circuit_card_for_the_same_netlist_request_text():
+    """화면은 이 답 글자로 넷리스트 첨부 · 기존 회로 카드를 붙인다(frontend/src/circuit.ts NEEDS_CIRCUIT). 글자가 갈라지면 카드가 사라진다."""
+    from pathlib import Path
+    from backend.multi_agent.messages import NEED_NETLIST as SERVER
+    assert SERVER == NEED_NETLIST and f"'{SERVER}'" in Path('frontend/src/circuit.ts').read_text(encoding='utf-8')
+
+
 def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
     """[왜] 그림이 강의처럼 읽혀야 한다(MULTI_AGENT.md 11-09 노드 이름). 노드 이름이 한국어이고, 조건 라벨은 답 모으기 → Supervisor 되돌림 하나뿐이다."""
     from backend.multi_agent.supervisor import REPLAN

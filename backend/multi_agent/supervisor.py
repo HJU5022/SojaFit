@@ -24,7 +24,7 @@ from backend.graph.memory import memory_context, memory_sources
 from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
-from backend.multi_agent.messages import refusal_for, render_judgement
+from backend.multi_agent.messages import CIRCUIT_MISSING, refusal_for, render_judgement
 from backend.multi_agent.revisions import requested_revisions, revision_matches
 from backend.services.llm import is_llm_failure
 
@@ -140,7 +140,17 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
         out['question_type'] = plan.question_type  # [왜] 질문 종류는 첫 계획이 정한다(채점기가 읽는다)
     if plan.next == 'refuse':
         out['refusal_reason'] = plan.reason.value
+    elif plan.next == 'tasks' and circuit_missing(state) and any(t.kind != 'rating' for t in plan.tasks):
+        # [왜] 회로 없이 시작한 대화에서 회로 역할 · 대체 판정 · 후보 찾기는 할 수 없다. 계획의 할 일 종류로 가르고(LLM 추가 호출 없음)
+        #      서브에이전트를 부르지 않고 넷리스트를 달라는 거절로 끝낸다(SPEC 8.9). 정격 · 문서 질문(rating)은 그대로 돈다
+        out.update(plan={}, round=state.get('round') or 0, refusal_reason=CIRCUIT_MISSING)
     return out
+
+
+def circuit_missing(state: dict) -> bool:
+    """서비스가 부품 없는 회로를 넘겼다(회로 없이 시작한 대화). [주의] 평가 실행기는 회로 칸 없이 글만 넘겨 해당하지 않는다(evals/runners/run_graph.py)."""
+    connections = state.get('connections')
+    return isinstance(connections, dict) and not connections.get('components')
 
 
 def payload(state: dict, task: dict) -> dict:

@@ -11,7 +11,7 @@
 |---|---|---|
 | thread id | `str(threads.id)`가 LangGraph `thread_id` 정본이다. 분석 서비스(`sojafit_agent`)의 thread는 화면용 `public.threads`와 같은 UUID다 | `memory_service.py` `ensure_thread` |
 | 대화 문맥 | 현재 질문은 `input`, 같은 thread의 이전 사용자 입력은 내부 `conversation_history`로 분리한다. 질문 50건 상한 안에서 이력을 최대 20,000자로 제한하며 12개 개수 제한은 두지 않는다. assistant 답변·승인 사례는 포함하지 않는다. 공개 API 요청·응답 형식은 그대로다 | `memory_service.py` `_conversation_history`, `message` |
-| 회로 버전 | `public.threads.circuit_version`은 생성 당시 버전으로 고정한다. 상세·새 실행·분석 시작·재개는 `project_circuit_versions`에서 해당 버전을 읽으며 이후 업로드가 과거 대화를 바꾸지 않는다 | `repository.py`, `memory_service.py`, `db/031_circuit_versions.sql` |
+| 회로 버전 | `public.threads.circuit_version`은 생성 당시 버전으로 고정한다. 상세·새 실행·분석 시작·재개는 `project_circuit_versions`에서 해당 버전을 읽으며 이후 업로드가 과거 대화를 바꾸지 않는다. 회로 없이 시작한 대화(버전 0)만 그 프로젝트에 처음 올린 회로를 읽는다(읽을 때 정하는 식 `pinned_version`, 고정 칸은 트리거가 막아 바꾸지 않음, SPEC 8.9) | `repository.py` `pinned_version`, `memory_service.py`, `db/031_circuit_versions.sql` |
 | 대화 이름 | `public.threads.title`(033, NULL 허용)이 있으면 그 이름, 없으면 첫 사용자 질문 60자(`thread_title`)를 목록 · 상세의 `title`로 쓴다. 이름 변경은 소유자 조건 UPDATE 하나이고 분석 thread · 대상 부품은 건드리지 않는다 | `repository.py` `_summaries`, `rename_thread`, `db/033_thread_titles.sql` |
 | 체크포인트·사용자 사실 | 분석 서비스에만 있다. 사용자 사실은 Store namespace `(user_id, "profile")`에 둔다 | `profile.py` `namespace` |
 | 승인 사례 | 비활성이다. 분석 입력의 `approved_memories`는 항상 빈 목록이고 Store에도 쓰지 않는다. 승인 기록은 `public.approvals`(견적 승인)에만 남는다 | `memory_service.py:442`(`'approved_memories': []`), 같은 파일 머리말 |
@@ -23,7 +23,7 @@
 
 계약 상세는 [user-thread-memory.md](../../docs/specs/user-thread-memory.md)와 [api-error-contract.md](../../docs/specs/api-error-contract.md)를 따른다.
 
-새 분석 대상은 고정된 회로의 값·설명·풋프린트로 확인한다. 대상을 받지 않으면 `target_choices`(질문에 적힌 지원 다이오드 → 회로의 유일한 지원 다이오드)로 정하고, 둘 이상이면 분석 thread를 만들지 않고 후보를 돌려준다(SPEC 8.9). 질문이 회로의 미지원 부품만 가리키면 그 부품을 직접 지정한 것과 같은 422다(SPEC 8.9). LED/7-segment 표시기와 다이오드 외 부품은 `ensure_thread`에서422로 이유를 안내해 분석 thread/run 생성 전에 차단한다. 과거 LED 대화의 `message`/`resume`도 그래프/모델 접근 전에 차단하며 상세 기록 조회는 유지한다. LED 구동 용도 설명만 있는 정류 다이오드와 메타데이터 없는 D 참조는 기존대로 허용한다.
+새 분석 대상은 고정된 회로의 값·설명·풋프린트로 확인한다. 대상을 받지 않으면 `target_choices`(질문에 적힌 지원 다이오드 → 회로의 유일한 지원 다이오드)로 정하고, 둘 이상이면 분석 thread를 만들지 않고 후보를 돌려준다(SPEC 8.9). 질문이 회로의 미지원 부품만 가리키면 그 부품을 직접 지정한 것과 같은 422다(SPEC 8.9). 부품이 없는 회로(회로 없는 대화)는 대상 없이 빈 글자로 분석 thread를 만들고, 회로를 붙인 뒤 처음 정한 부품으로 바꾼다. 회로가 필요한 질문은 그래프의 계획 뒤 넷리스트를 달라는 거절로 끝나고, 키 없는 데모는 그래프 없이 같은 거절이다(SPEC 8.9). LED/7-segment 표시기와 다이오드 외 부품은 `ensure_thread`에서422로 이유를 안내해 분석 thread/run 생성 전에 차단한다. 과거 LED 대화의 `message`/`resume`도 그래프/모델 접근 전에 차단하며 상세 기록 조회는 유지한다. LED 구동 용도 설명만 있는 정류 다이오드와 메타데이터 없는 D 참조는 기존대로 허용한다.
 
 ## 파일
 | 파일 | 하는 일 |

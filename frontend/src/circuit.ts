@@ -56,3 +56,9 @@ export function unsupportedPartReason(part: {
     return `${topic(part.ref)} 다이오드가 아니라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
   return '';
 }
+/** 회로 없는 대화에서 회로가 필요한 질문의 서버 답(SPEC 8.9). 이 답이면 화면이 넷리스트 첨부 · 기존 회로 고르기 카드를 붙인다. backend/multi_agent/messages.py NEED_NETLIST와 같은 글자다. */
+export const NEEDS_CIRCUIT = '이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요.';
+/** 회로 없이 보낸 첫 질문으로 만드는 프로젝트 이름: 겹친 공백을 한 칸으로 줄인 앞 30자. 비면 "새 대화". */
+export function projectNameFromQuestion(question: string) {
+  return question.replace(/\s+/g, ' ').trim().slice(0, 30).trim() || '새 대화';
+}

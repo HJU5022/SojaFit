@@ -26,11 +26,22 @@ import {
   useResource,
 } from './ui';
 import { CandidateDetails, PriceLookup } from './Candidate';
-import { partsOf, unsupportedPartReason } from './circuit';
+import { NEEDS_CIRCUIT, partsOf, unsupportedPartReason } from './circuit';
+import { isSendKey } from './display';
 import { refreshNavigation } from './Projects';
 import { MissingInput, Reply, TargetChoice } from './Reply';
 import { SchematicSection } from './Schematic';
-import type { Candidate, DemoQuestion, Detail, Project, Quote, Result, Role, Run } from './types';
+import type {
+  Candidate,
+  Demo,
+  DemoQuestion,
+  Detail,
+  Project,
+  Quote,
+  Result,
+  Role,
+  Run,
+} from './types';
 const freshResult = (): Result => ({
   answer: '',
   status: 'running',
@@ -40,6 +51,166 @@ const freshResult = (): Result => ({
   price_parts: [],
   interrupt: {},
 });
+// [왜] 첫 질문은 새 대화를 열고 나서 보낸다(이전 대화의 비동기 결과가 새 화면을 덮지 않게). 작업대는 프로젝트마다 새로 그려지므로(App의 key)
+//      새 대화 화면 · 회로 고르기 카드도 넘길 수 있게 모듈에 둔다
+const pendingStart: {
+  current: { tid: string; question: string; conditions: string; target: string } | null;
+} = { current: null };
+/** 프로젝트에 새 대화를 만들어 질문을 첫 질문으로 보낸다. 질문이 비면 그 회로의 작업대만 연다(빈 대화 화면이 무엇을 검토할지 묻는다). */
+export async function openWithQuestion(projectId: number | string, question: string) {
+  if (!question.trim()) return navigate('/app?project=' + projectId);
+  const created = await api<{ id: string }>(`/projects/${projectId}/threads`, 'POST');
+  pendingStart.current = { tid: created.id, question, conditions: '', target: '' };
+  navigate(`/app?project=${projectId}&thread=${created.id}`);
+}
+/** 검토할 부품(읽기 전용). 대상은 서버가 질문 · 회로로 정하거나 대화에서 묻는다(SPEC 8.9, #30). status는 작업대가 정한 진행 안내. */
+export function TargetInfo({
+  project,
+  target,
+  status,
+  alert = false,
+}: {
+  project: Project | null;
+  target: string;
+  status: string;
+  alert?: boolean;
+}) {
+  const parts = partsOf(project),
+    diodes = parts.filter((p) => /^D\d/i.test(p.ref)),
+    usable = diodes.filter((p) => !unsupportedPartReason(p)),
+    part = parts.find((p) => p.ref === target);
+  return (
+    <div className="part-selector">
+      <h2>검토할 부품</h2>
+      <p className="target-value" aria-label="검토할 부품">
+        {part ? `${part.ref} · ${part.value}` : target || '아직 정하지 않음'}
+      </p>
+      {usable.length ? (
+        <p className="muted" aria-label="회로의 다이오드">
+          회로의 다이오드: {usable.map((p) => `${p.ref} · ${p.value}`).join(', ')}
+        </p>
+      ) : (
+        <p>회로에 판정할 수 있는 다이오드가 없습니다. 넷리스트를 첨부해 주세요.</p>
+      )}
+      {/* [왜] LED·표시기는 대체 판정을 지원하지 않는다(서버가 422). 이유를 미리 보인다 */}
+      {diodes
+        .filter((p) => unsupportedPartReason(p))
+        .map((p) => (
+          <p className="muted" key={p.ref}>
+            {unsupportedPartReason(p)}
+          </p>
+        ))}
+      <p className="part-status" role={alert ? 'alert' : undefined}>
+        {status}
+      </p>
+    </div>
+  );
+}
+/** 회로 구역: 연결 개념도와 원본 회로도를 한 구역에 펼쳐 넷리스트를 올리면 둘을 바로 같이 본다. 누르면 큰 창. */
+export function CircuitSection({
+  project,
+  target,
+  threadId,
+}: {
+  project: Project | null;
+  target: string;
+  threadId: string | null;
+}) {
+  const usable = partsOf(project).filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p));
+  return (
+    <section className="circuit-section">
+      <h2>회로</h2>
+      {/* [왜] 대상을 아직 안 정했으면(#16 서버가 정하거나 묻는다) 판정 가능한 다이오드마다 개념도를 보인다(#11) */}
+      {(target ? [target] : usable.length ? usable.slice(0, 6).map((p) => p.ref) : ['']).map(
+        (ref) => (
+          <Circuit key={ref} project={project} target={ref} zoomable />
+        ),
+      )}
+      {project && <SchematicSection project={project} threadId={threadId} />}
+    </section>
+  );
+}
+/** 회로가 필요한 질문에 서버가 넷리스트를 달라고 답했을 때 그 답 아래 카드(#30): 넷리스트 첨부, 또는 기존 회로(최근 5개, 데모 모드면 데모 회로)로 계속. */
+function CircuitRequest({
+  projectId,
+  question,
+  replay,
+  onAttach,
+}: {
+  projectId: string;
+  question: string;
+  replay: boolean;
+  onAttach: () => void;
+}) {
+  const projects = useResource<Project[]>('/projects'),
+    demos = useResource<Demo[]>('/demo-circuits'); // [주의] 운영(DEMO_MODE=0)은 404라 데모 회로만 빠진다
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState<Error | null>(null);
+  const circuits = (projects.data ?? [])
+    .filter((p) => p.circuit_version > 0 && String(p.id) !== projectId)
+    .slice(0, 5);
+  async function pick(project: () => Promise<number>) {
+    setBusy(true);
+    setError(null);
+    try {
+      const id = await project();
+      refreshNavigation();
+      // [왜] 키 없는 데모는 기록한 질문만 재생한다. 질문을 다시 보내지 않고 그 회로의 기록 질문 버튼을 보인다
+      await openWithQuestion(id, replay ? '' : question);
+    } catch (e) {
+      setError(e as Error);
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="missing-input" data-testid="circuit-request">
+      <div className="actions">
+        <button type="button" className="primary" onClick={onAttach}>
+          <Paperclip size={15} />
+          넷리스트 첨부
+        </button>
+      </div>
+      {(circuits.length > 0 || !!demos.data?.length) && (
+        <>
+          <p>기존 회로로 계속</p>
+          <div className="actions">
+            {circuits.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                disabled={busy}
+                onClick={() => pick(async () => p.id)}
+              >
+                {p.name}
+              </button>
+            ))}
+            {demos.data?.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  pick(
+                    async () =>
+                      (
+                        await api<Project>('/projects?allow_duplicate=true', 'POST', {
+                          name: d.name,
+                          demo_id: d.id,
+                        })
+                      ).id,
+                  )
+                }
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      <ErrorBox error={error} />
+    </div>
+  );
+}
 export function Workbench({ projectId, threadId }: { projectId: string; threadId: string | null }) {
   const project = useResource<Project>(
       `/projects/${projectId}${threadId ? '?thread_id=' + threadId : ''}`,
@@ -67,21 +238,14 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
     [rename, setRename] = useState(false),
     [reload, setReload] = useState(0);
-  const pendingStart = useRef<{
-    tid: string;
-    question: string;
-    conditions: string;
-    target: string;
-  } | null>(null);
   const controller = useRef<AbortController | null>(null),
+    fileInput = useRef<HTMLInputElement>(null),
     runId = useRef<string | null>(null),
     scope = useRef(0),
     end = useRef<HTMLDivElement>(null);
   const parts = partsOf(project.data),
-    diodes = parts.filter((p) => /^D\d/i.test(p.ref)),
-    // [왜] LED·표시기는 대체 판정을 지원하지 않는다(서버가 422). 고르기 전에 이유를 보이고 고를 수 없게 한다
-    usable = diodes.filter((p) => !unsupportedPartReason(p)),
-    blocked = diodes.filter((p) => unsupportedPartReason(p)),
+    usable = parts.filter((p) => /^D\d/i.test(p.ref) && !unsupportedPartReason(p)),
+    // [왜] 과거 LED 대화처럼 지원하지 않는 부품이 대상이면 보내기 전에 이유를 보인다(서버도 422)
     targetReason = (() => {
       const chosen = parts.find((p) => p.ref === target);
       return chosen ? unsupportedPartReason(chosen) : '';
@@ -256,8 +420,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         if (attachment.size > 5 * 1024 * 1024) throw new Error('넷리스트는 5 MiB 이하여야 합니다.');
         const body = new FormData();
         body.set('file', attachment);
+        // [왜] 회로 없이 시작한 대화면 같은 대화에 회로를 붙인다(서버가 조건을 다시 본다, SPEC 4절). 아니면 새 버전 · 새 대화
+        const same = tid && !project.data?.circuit_version ? '?thread_id=' + tid : '';
         const imported = await api<{ project: Project; thread_id: string }>(
-          `/projects/${projectId}/netlist`,
+          `/projects/${projectId}/netlist${same}`,
           'POST',
           body,
         );
@@ -265,8 +431,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         project.setData(imported.project);
         setTarget('');
         refreshNavigation();
-        navigate(`/app?project=${projectId}&thread=${imported.thread_id}`);
-        return;
+        if (imported.thread_id !== tid)
+          return navigate(`/app?project=${projectId}&thread=${imported.thread_id}`);
+        if (!question.trim()) return; // 같은 대화에 붙였고 함께 쓴 질문이 있으면 이어서 보낸다
       }
       if (targetReason) throw new Error(targetReason);
       if (demo || !tid) {
@@ -337,7 +504,17 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   const waiting = active?.result.status === 'requires_input',
     // 조건이 아니라 대상 부품을 묻는 중(SPEC 8.9)
     choosing = waiting && !!active?.result.interrupt.target_choices?.length,
-    running = busy || active?.result.status === 'running';
+    running = busy || active?.result.status === 'running',
+    sendDisabled =
+      busy || (!attachment && (!!waiting || !!running || !!targetReason || !question.trim())),
+    // 회로 없는 대화에서 회로가 필요한 질문의 답(SPEC 8.9). 회로를 붙이면 카드가 사라진다
+    needsCircuit =
+      !running &&
+      active?.result.status === 'refused' &&
+      active.result.answer === NEEDS_CIRCUIT &&
+      !project.data?.circuit_version,
+    lastQuestion =
+      detail?.messages.filter((m) => m.role === 'user').slice(-1)[0]?.content ?? pendingQuestion;
   const previous =
     detail?.messages.filter((m) => m.role === 'assistant' && m.run_id !== active?.id) ?? [];
   return (
@@ -399,35 +576,12 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             </div>
           )}
           <aside className="context-panel">
-            <div className="part-selector">
-              <h2>검토할 부품</h2>
-              <label>
-                다이오드 직접 지정(선택)
-                <select
-                  aria-label="검토할 다이오드"
-                  value={target}
-                  disabled={detail?.target_locked || busy}
-                  onChange={(e) => setTarget(e.target.value)}
-                >
-                  <option value="">지정 안 함(에이전트가 정함)</option>
-                  {diodes.map((p) => (
-                    <option value={p.ref} key={p.ref} disabled={!!unsupportedPartReason(p)}>
-                      {p.ref} · {p.value}
-                      {unsupportedPartReason(p) ? ' (판정 범위 밖)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {!usable.length && (
-                <p>회로에 판정할 수 있는 다이오드가 없습니다. 넷리스트를 첨부해 주세요.</p>
-              )}
-              {blocked.map((p) => (
-                <p className="muted" key={p.ref}>
-                  {unsupportedPartReason(p)}
-                </p>
-              ))}
-              <p className="part-status" role={targetReason ? 'alert' : undefined}>
-                {targetReason
+            <TargetInfo
+              project={project.data}
+              target={target}
+              alert={!!targetReason}
+              status={
+                targetReason
                   ? targetReason
                   : waiting
                     ? choosing
@@ -436,26 +590,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     : active
                       ? statuses[active.result.status]
                       : part
-                        ? '선택한 부품으로 검토할 준비가 되었습니다.'
+                        ? '이 부품으로 검토합니다.'
                         : usable.length
-                          ? '고르지 않으면 질문과 넷리스트로 정하고, 여럿이면 물어봅니다.'
-                          : '회로를 먼저 가져오세요.'}
-              </p>
-            </div>
-            {/* [왜] 연결 개념도와 원본 회로도를 한 구역에 펼쳐 두어 넷리스트를 올리면 둘을 바로 같이 본다. 누르면 큰 창. */}
-            <section className="circuit-section">
-              <h2>회로</h2>
-              {/* [왜] 대상을 아직 안 정했으면(#16 서버가 정하거나 묻는다) 판정 가능한 다이오드마다 개념도를 보인다(#11) */}
-              {(target
-                ? [target]
-                : usable.length
-                  ? usable.slice(0, 6).map((p) => p.ref)
-                  : ['']
-              ).map((ref) => (
-                <Circuit key={ref} project={project.data} target={ref} zoomable />
-              ))}
-              {project.data && <SchematicSection project={project.data} threadId={threadId} />}
-            </section>
+                          ? '질문에 적은 부품으로 정하고, 여럿이면 대화에서 물어봅니다.'
+                          : '넷리스트를 대화에 첨부해 주세요.'
+              }
+            />
+            <CircuitSection project={project.data} target={target} threadId={threadId} />
           </aside>
           <section className="conversation">
             <div className="conversation-heading">
@@ -580,6 +721,18 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   {active && !waiting && !running && (
                     <Reply run={active} onCandidate={(c, r) => setSelected({ c, r })} />
                   )}
+                  {needsCircuit && (
+                    <CircuitRequest
+                      projectId={projectId}
+                      question={lastQuestion}
+                      replay={!!questions.data}
+                      onAttach={() => {
+                        // 첨부하고 보내면 같은 질문을 이어서 다시 묻도록 비어 있는 입력창에 앞 질문을 둔다
+                        if (!question.trim()) setQuestion(lastQuestion);
+                        fileInput.current?.click();
+                      }}
+                    />
+                  )}
                   {active?.result.status === 'failed' && (
                     <button onClick={newReview}>새 검토로 다시 시작</button>
                   )}
@@ -622,6 +775,12 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   e.preventDefault();
                   void send();
                 }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file) setAttachment(file);
+                }}
               >
                 {attachment && (
                   <div className="attachment">
@@ -635,7 +794,11 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     >
                       <X size={14} />
                     </button>
-                    <small>보내면 새 회로 버전과 새 검토를 만들고 부품을 다시 선택합니다.</small>
+                    <small>
+                      {threadId && !project.data?.circuit_version
+                        ? '보내면 이 대화에 회로를 붙이고, 적은 질문이 있으면 이어서 보냅니다.'
+                        : '보내면 새 회로 버전과 새 검토를 만듭니다.'}
+                    </small>
                   </div>
                 )}
                 <label className="sr-only" htmlFor="question">
@@ -645,6 +808,11 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   id="question"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (!isSendKey(e.nativeEvent)) return; // Shift+Enter · 한글 조합 중 Enter는 그대로(#38)
+                    e.preventDefault();
+                    if (!sendDisabled) void send();
+                  }}
                   maxLength={4000}
                   // [왜] 실행 중에도 다음 질문을 쓸 수 있게 막지 않는다. 조건 입력을 기다릴 때만 막는다
                   disabled={!!waiting}
@@ -664,6 +832,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     <span>넷리스트</span>
                     {/* 실행 중에도 파일은 고를 수 있다. 보내기는 아래 버튼이 막는다 */}
                     <input
+                      ref={fileInput}
                       type="file"
                       accept=".net,.txt"
                       onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
@@ -686,11 +855,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   )}
                   <button
                     className="primary send"
-                    disabled={
-                      busy ||
-                      (!attachment &&
-                        (!!waiting || !!running || !!targetReason || !question.trim()))
-                    }
+                    disabled={sendDisabled}
                     aria-label={attachment ? '넷리스트 보내기' : '질문 보내기'}
                     title={attachment ? '넷리스트 보내기' : '질문 보내기'}
                   >

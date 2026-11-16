@@ -16,6 +16,7 @@ import {
   validQuantity,
   pricesPath,
   estimateRows,
+  isSendKey,
 } from '../src/display.ts';
 import { inputPlaceholder } from '../src/inputLabels.ts';
 
@@ -181,4 +182,13 @@ test('estimateRows는 구간·단가·금액 줄을 만들고 estimate가 없으
     assert.equal(rows.length, 1);
     assert.match(rows[0][1], /계산을 보류/);
   }
+});
+test('Enter는 보내고 Shift+Enter와 한글 조합 중 Enter는 보내지 않는다(#38)', () => {
+  const key = (over: Partial<Parameters<typeof isSendKey>[0]>) =>
+    isSendKey({ key: 'Enter', shiftKey: false, isComposing: false, keyCode: 13, ...over });
+  assert.equal(key({}), true);
+  assert.equal(key({ shiftKey: true }), false);
+  assert.equal(key({ isComposing: true }), false);
+  assert.equal(key({ keyCode: 229 }), false); // 조합 확정 Enter를 isComposing 없이 알리는 브라우저
+  assert.equal(key({ key: 'a', keyCode: 65 }), false);
 });

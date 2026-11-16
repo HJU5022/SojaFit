@@ -6,7 +6,7 @@ from psycopg.types.json import Jsonb
 
 from backend import auth
 from backend.conversations.dto import result_dto
-from backend.conversations.repository import thread_title
+from backend.conversations.repository import pinned_version, thread_title
 
 FORBIDDEN = {'price', 'price_breaks', 'stock', 'availability', 'product_url', 'fetched_at'}
 APPROVABLE = {'IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'}
@@ -149,7 +149,7 @@ class QuoteService:
                     to_regclass('sojafit_agent.threads') IS NOT NULL
                 FROM approved_cases c JOIN approvals a ON a.id=c.approval_id AND a.user_id=c.user_id
                 JOIN messages m ON m.id=a.message_id JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id
-                LEFT JOIN project_circuit_versions cv ON cv.project_id=t.project_id AND cv.version=t.circuit_version
+                LEFT JOIN project_circuit_versions cv ON cv.project_id=t.project_id AND cv.version=""" + pinned_version('t') + """
                 WHERE c.id=%(c)s AND c.user_id=%(u)s AND p.user_id=%(u)s""", {'c': case_id, 'u': user_id}).fetchone()
             if row is None:
                 raise QuoteNotFound

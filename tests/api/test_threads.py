@@ -456,6 +456,37 @@ def test_readiness_checks_current_schema_and_permissions(runtime, monkeypatch):
         app.readiness()
 
 
+def test_circuitless_conversation_runs_without_a_target_then_adopts_the_attached_circuit(runtime, monkeypatch):
+    """회로 없이 시작한 대화(버전 0): 대상 없이(빈 글자) 분석하고, 같은 대화에 넷리스트를 붙이면 그 회로로 대상을 정한다(SPEC 8.9)."""
+    from backend import auth
+    from backend.conversations.repository import ConversationRepository
+    from backend.projects.repository import ProjectRepository
+    app, (a, b), dsn = runtime
+    thread = str(uuid4())
+    with app.connection() as conn, conn.transaction():
+        project = conn.execute("INSERT INTO public.projects(user_id,name,source_kind) VALUES (%s,'회로 없는 질문','upload') RETURNING id", (a,)).fetchone()['id']
+        conn.execute('INSERT INTO public.threads(id,project_id) VALUES (%s,%s)', (thread, project))
+    assert app.ensure_thread(a, thread, '', {}, None, question='1N4148 역전압 몇 V야?') is None
+    done = app.message(a, thread, '1N4148 역전압 몇 V야?')
+    assert done['status'] == 'DONE' and done['target'] == ''
+    state = app.graph.get_state(app.config(thread)).values
+    assert state['target'] == '' and state['target_part'] == {}
+    for call, status in ((lambda: app.ensure_thread(a, thread, '', {}, 'D1'), 422),  # 회로에 없는 부품
+                         (lambda: app.ensure_thread(b, thread, '', {}, None), 404), (lambda: app.message(b, thread, '판정'), 404)):
+        with pytest.raises(HTTPException) as error:
+            call()
+        assert error.value.status_code == status
+    monkeypatch.setattr(auth, 'connection', lambda: psycopg.connect(dsn))
+    _, same = ProjectRepository().import_netlist(a, project, connections=parse_netlist(NET), source_sha256='a' * 64,
+                                                 parser_version='test', thread_id=thread)
+    assert same == thread
+    detail = ConversationRepository().thread_detail(a, thread)
+    assert detail['target_ref'] is None and detail['target_locked'] is False and detail['circuit_version'] == 1
+    assert app.ensure_thread(a, thread, '', {}, None, question='D1을 SS14로 바꿔도 돼?') is None
+    result = app.message(a, thread, 'D1을 SS14로 바꿔도 돼?')
+    assert result['target'] == 'D1' and app.graph.get_state(app.config(thread)).values['target_part']['ref'] == 'D1'
+
+
 def test_react_thread_maps_to_one_owned_analysis_thread_with_fixed_target(runtime):
     """React 정규화 회로(parts)로 같은 UUID의 분석 thread를 만들고, 대상 고정 · 소유권 · 원본 미저장을 지킨다."""
     app, (a, b), dsn = runtime

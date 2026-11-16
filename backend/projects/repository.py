@@ -8,6 +8,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from backend import auth
+from backend.conversations.repository import pinned_version
 from backend.projects.catalog import catalog_by_id, load_catalog
 from backend.projects.models import Project, ProjectSummary
 
@@ -68,17 +69,27 @@ class ProjectRepository:
                                       (user_id, name)).fetchone()[0]
             return self._get_owned(conn, user_id, project_id)
 
-    def import_netlist(self, user_id: int, project_id: int, *, connections, source_sha256: str, parser_version: str):
+    def import_netlist(self, user_id: int, project_id: int, *, connections, source_sha256: str, parser_version: str, thread_id=None):
+        """회로를 올리고 (프로젝트, 대화 id)를 돌려준다. 대화는 새로 만든다.
+
+        회로가 없던 프로젝트에 그 프로젝트의 회로 없는 대화(버전 0) thread_id를 주면 새 대화를 만들지 않고 그 대화를 돌려준다.
+        그 대화는 이 회로를 읽는다(`pinned_version`). 조건이 맞지 않는 thread_id는 무시하고 지금처럼 새 대화를 만든다.
+        """
         with auth.connection() as conn:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
                 raise ProjectNotFound
+            # [주의] 회로를 올리기 전에 본다. 프로젝트 행을 잠가 같은 프로젝트의 동시 첨부와 겹치지 않는다
+            same = thread_id is not None and conn.execute(
+                'SELECT 1 FROM threads t WHERE t.id=%s AND t.project_id=%s AND t.circuit_version=0 '
+                'AND NOT EXISTS (SELECT 1 FROM circuits c WHERE c.project_id=t.project_id)', (thread_id, project_id)).fetchone() is not None
             conn.execute("UPDATE projects SET source_kind='upload',demo_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=%s AND user_id=%s", (project_id, user_id))
             conn.execute('INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,%s,%s,%s) '
                          'ON CONFLICT (project_id) DO UPDATE SET connections=EXCLUDED.connections,source_sha256=EXCLUDED.source_sha256,'
                          'parser_version=EXCLUDED.parser_version,version=circuits.version+1,created_at=CURRENT_TIMESTAMP',
                          (project_id, Jsonb(connections, dumps=lambda value: json.dumps(value, default=dict)), source_sha256, parser_version))
-            thread_id = uuid4()
-            conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread_id, project_id))
+            if not same:
+                thread_id = uuid4()
+                conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread_id, project_id))
             return self._get_owned(conn, user_id, project_id), str(thread_id)
 
     def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str, allow_duplicate=False) -> Project:
@@ -129,7 +140,7 @@ class ProjectRepository:
                 "SELECT p.id, p.name, v.source_kind, v.demo_id, p.created_at, p.updated_at, v.connections,v.version AS circuit_version "
                 "FROM projects p LEFT JOIN circuits c ON c.project_id=p.id "
                 "LEFT JOIN threads t ON t.project_id=p.id AND t.id=%s::uuid "
-                "JOIN project_circuit_versions v ON v.project_id=p.id AND v.version=CASE WHEN %s::uuid IS NULL THEN COALESCE(c.version,0) ELSE t.circuit_version END "
+                f"JOIN project_circuit_versions v ON v.project_id=p.id AND v.version=CASE WHEN %s::uuid IS NULL THEN COALESCE(c.version,0) ELSE {pinned_version('t')} END "
                 "WHERE p.user_id=%s AND p.id=%s",
                 (thread_id, thread_id, user_id, project_id),
             )

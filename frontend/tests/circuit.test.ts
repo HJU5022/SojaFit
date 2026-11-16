@@ -1,7 +1,7 @@
 /** 공개 프로젝트의 components·nets를 빠짐없이 표시하는지 검사한다. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { partsOf, pinsOf, unsupportedPartReason } from '../src/circuit.ts';
+import { partsOf, pinsOf, projectNameFromQuestion, unsupportedPartReason } from '../src/circuit.ts';
 test('공개 components 배열에서 D1과 핀 이름을 보존한다', () => {
   const p: any = {
     connections: {
@@ -71,4 +71,9 @@ test('정류 다이오드는 LED 용도 설명이 있어도 대상으로 남는�
     '',
   );
   assert.equal(unsupportedPartReason({ ref: 'D1', value: 'Failed', footprint: '' }), ''); // led는 낱말 단위로만 본다
+});
+test('회로 없이 보낸 질문의 프로젝트 이름은 겹친 공백을 줄인 앞 30자다', () => {
+  assert.equal(projectNameFromQuestion('  1N4148\n역전압   몇 V야? '), '1N4148 역전압 몇 V야?');
+  assert.equal(projectNameFromQuestion('가'.repeat(40)), '가'.repeat(30));
+  assert.equal(projectNameFromQuestion('   '), '새 대화');
 });

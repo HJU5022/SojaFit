@@ -368,6 +368,19 @@ def test_run_streams_a_status_frame_per_new_stage_before_the_last_frame(web):
     assert all(data['status'] == 'running' and data['answer'] == '' for name, data in frames if name == 'status')
 
 
+def test_keyless_demo_answers_a_circuitless_question_with_the_netlist_request_without_the_graph(web):
+    """키 없는 데모에는 회로 없는 질문의 기록이 없다. 분석 thread · 그래프 없이 넷리스트를 달라는 거절로 끝난다(SPEC 8.9)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
+    analysis.mode = 'demo'
+    repo.get_thread = lambda user, thread_id: (thread_id, 1, {'parts': [], 'nets': []}, '회로 없는 질문')
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': 'D1을 1N5819로 바꿔도 돼?'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'refused'
+    assert frames[-1][1]['answer'] == '이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요.'
+    assert analysis.calls == [] and repo.calls == ['start', ('commit', 'refused')]
+
+
 CHOICES = [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': 'SS34'}]
 
 

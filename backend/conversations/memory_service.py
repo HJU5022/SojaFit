@@ -46,6 +46,7 @@ from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
 from backend.conversations import profile
+from backend.conversations.repository import pinned_version
 from backend.errors import ApiError
 from backend.graph.memory import namespace, memory_policy
 
@@ -426,7 +427,7 @@ class Conversations:
     def _owned(conn, user, thread):
         # [왜] 회로 이름 · 연결 정보는 화면 쪽 정본(public)에서 읽는다. 이 연결의 search_path는 sojafit_agent뿐이라 public을 이름으로 부른다
         row = conn.execute('SELECT t.*,p.name AS filename,c.connections FROM threads t JOIN public.threads pt ON pt.id=t.id '
-                           'JOIN public.projects p ON p.id=pt.project_id JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version=pt.circuit_version '
+                           f"JOIN public.projects p ON p.id=pt.project_id JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version={pinned_version('pt', 'public.project_circuit_versions')} "
                            'WHERE t.id=%s AND t.user_id=%s AND p.user_id=%s', (thread, user, user)).fetchone()
         if not row:
             raise HTTPException(404, '분석을 찾을 수 없습니다.')
@@ -458,7 +459,7 @@ class Conversations:
         with self.connection() as conn:
             self._hold_account(conn, user)
             pinned = conn.execute('SELECT c.connections FROM public.threads pt JOIN public.projects p ON p.id=pt.project_id '
-                                  'JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version=pt.circuit_version '
+                                  f"JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version={pinned_version('pt', 'public.project_circuit_versions')} "
                                   'WHERE pt.id=%s AND p.user_id=%s', (thread, user)).fetchone()
             # [왜] 대상은 첫 run에 고정된다(target_locked). 이후 질문에 부품을 적지 않아도 다시 묻지 않는다
             locked = conn.execute('SELECT target FROM threads WHERE id=%s AND user_id=%s', (thread, user)).fetchone() if target is None else None
@@ -467,14 +468,23 @@ class Conversations:
         connections = pinned['connections']
         # React 정규화 회로는 parts, 데모 회로는 components다.
         connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
+        empty = not connections['components']
         if target is None:
-            choices = [{'ref': locked['target'], 'value': ''}] if locked else target_choices(connections, question)
+            if locked and locked['target']:
+                choices = [{'ref': locked['target'], 'value': ''}]
+            elif empty:
+                # [왜] 회로 없이 시작한 대화는 대상 없이(빈 글자) 분석한다. 회로가 필요한 질문은 그래프 계획 뒤 넷리스트를 달라고 끝난다(SPEC 8.9).
+                #      빈 대상은 회로를 붙인 뒤 처음 정한 부품으로 바뀐다(아래 UPDATE)
+                choices = [{'ref': '', 'value': ''}]
+            else:
+                choices = target_choices(connections, question)
             if not choices:
                 raise HTTPException(422, '회로에 판정할 수 있는 다이오드가 없습니다. 다이오드가 있는 넷리스트를 첨부해 주세요.')
             if len(choices) > 1:
                 return choices
             target = choices[0]['ref']
-        _require_supported_target(connections, target)
+        if target or not empty:
+            _require_supported_target(connections, target)
         if self.mode == 'demo':
             from backend.services import demo
             # [왜] run 스트림을 열기 전에 거른다(공통 오류 JSON). 기록이 없으면 503, 기록한 회로 · 대상 · 질문이 아니면 422
@@ -488,6 +498,8 @@ class Conversations:
             # [주의] 화면 대화가 없거나 남의 것이면 _owned가 404다(INSERT ... SELECT가 0행). FK 위반으로 500이 되지 않는다
             conn.execute('INSERT INTO threads(id,user_id,target) SELECT pt.id,p.user_id,%s FROM public.threads pt JOIN public.projects p ON p.id=pt.project_id '
                          'WHERE pt.id=%s AND p.user_id=%s ON CONFLICT (id) DO NOTHING', (target, thread, user))
+            if target:
+                conn.execute("UPDATE threads SET target=%s WHERE id=%s AND user_id=%s AND target=''", (target, thread, user))
             row = self._owned(conn, user, thread)
         if row['target'] != target:
             raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
@@ -536,7 +548,8 @@ class Conversations:
         # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
         self._purge_expired()
         with self.locked(user, thread) as (conn, row):
-            _require_supported_target(row['connections'], row['target'])
+            if row['target'] or row['connections']['components']:  # 회로 없는 대화만 대상 없이 돈다(ensure_thread)
+                _require_supported_target(row['connections'], row['target'])
             self._reconcile(conn, row)
             if has_pending_question(self.graph.get_state(self.config(thread))):
                 # [왜] 화면은 이 코드면 조건 입력 폼을 다시 보여 준다(ADR 0019). 다른 409는 문구만 보여 준다
