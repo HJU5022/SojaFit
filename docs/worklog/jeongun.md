@@ -1156,3 +1156,15 @@
 - 배포 [실측]: PR #141 머지 `a0abece5`(04:31 KST)를 `git archive`로 내보내 `gcloud run deploy sojafit-api --source <폴더> --no-traffic --tag main-a0abece5 --revision-suffix main-a0abece5-1116`(276초). 0% 태그 주소에서 `/health` · `/login` · `/` · `/app` 200, 배포된 화면 번들에 새 프로젝트 창 수정(안내 문구 · '다시 시도' `type:"button"`) 확인, 환경변수 33개가 이전 리비전과 같음(`DEMO_MODE=0`). 04:36 KST 100% 전환, 운영 주소 4개 200. 배포 소스와 main의 `backend frontend db Dockerfile` 차이 0. 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-main76fadcb4-1116=100 --project=sojafit --region=asia-northeast3`. DB 마이그레이션 없음.
 - README · GATES · 제출 체크리스트의 배포 리비전 줄을 이 리비전으로 채움(별도 PR).
 - 다음: 운영 계정으로 새 프로젝트(업로드) 확인은 조장이 함. 24:00 동결 커밋과 배포 소스 코드 대조를 한 번 더.
+
+## 2026-11-16 Checkpoint 11/16 코멘트 보강 (브랜치 `jeongun`, 로컬 커밋만, 푸시 · PR 없음)
+- 목적: 강사 11/16 재채점 코멘트(①3.5 ②4.0 ③4.5 ④3.0)의 부족한 점 · 먼저 할 것 · 게이트 주의를 증거로 채운다. 조장이 비용 · 운영 항목을 모두 승인(11-16 09:3x).
+- ① 공고 060: 데이터시트를 적지 않은 060(로아스 FAE)을 기술지원 행 예시에서 빼고 064로 바꿈(`611721a1`). 국내 도구 견적 · 담당자 답은 메일 초안만 저장소 밖 `reports/2026-11-16-마무리/견적요청-메일-초안.md`(발송은 조장).
+- ① Codex 격리 재비교: 새 CODEX_HOME(로그인 파일만) · 사용자 설정 · 규칙 · 메모리 끔 · 빈 작업 폴더 + 문항 넷리스트만 · 웹 검색 켬, `gpt-6-astra`, codex-cli 0.167.1(사전 등록 `e8467f07`, 실행기 `scripts/eval/run_codex_v3_isolated.py`). 관련 25문항 답(명령 41개 모두 작업 폴더 `circuit.net`만 읽음, 웹 검색 79회). 비관련 25문항은 Codex 사용량 한도("try again at 2:47 PM")로 시작 못 함 → 14:49 이후 그 25개만 실행(사전 등록의 "다시 돌리지 않는다"와 다른 점: 모델 답이 없는 시작 실패라 실행). 채점 규칙에 숫자 · 단위 사이 공백 정규화만 더함(11-12 결과 바이트 동일 확인).
+- ② 청크 대조: 부품 행 표 · 표 각주 검사(`--notes`, 사전 등록 `24a0dbcd`, 결과 `c8cb0235`). 부품 행 6/6 일치, 각주 missing 14(thermal 13, `Thermal Performance Note:` 머리). 낡은 "다른 행 오류 배제 못 함" 문장 2곳 고침(`9a7ef654`).
+- ② 검색 품질 전후: 리랭크 전 후보 수 50 → 200, R1 84문항 Page Recall@5 0.8810 → 0.8929(차이 입증 못 함, 기본값 유지, Voyage 약 $0.06). `dd2d74e5` · `b5d9a20f`.
+- ③ team_lead 정정 기록을 원시 옆에(`d979b52b`). 검색 기록 `filter_released` 칸(`c498ad13`, `tests/multi_agent` 419 통과). Supervisor 답 가드 켬/끔 짝 측정: 코퍼스 인젝션은 가드까지 길 없음(0 → 0), 질문 인젝션 최종 위험 4 → 2, 정상 대화 막음 0, $0.011(`5e27aae0` · `121980a2`). D3(URL · 숫자 없는 사용 권고) 통과는 발견만, 안 고침.
+- ④/G: G3 운영 DB 본문 51,967개 sha256 재계산 = 저장 해시 = 저장소 해시 목록(`7bf4d89f`, G3 충족). 다운 경보(가동 확인 5분 + 메일 정책, 시험 경보 09:43:30 OPEN 뒤 임시 설정 삭제, `a42e5977`). Langfuse 점수 15개가 v3-01 트레이스에 붙은 것을 v3 API로 확인(`4d5cc3f0`). G2 새 clone 키 없는 기동 GitHub `main` `3ce5abdc`: 242.8초 · 스모크 28/28(`aaa6f116`). EVAL_REPORT · GATES 반영(`e320bb25` · `f09539c0`).
+- 발견: Langfuse Cloud 옛 읽기 API(`/api/public/scores` · `traces` · `sessions`)가 11-16 410으로 제거됨. 저장소 코드는 쓰지 않음.
+- 확인 못 한 것: 운영 리비전(`main-3ce5abdc-1116`)의 평가용 계정 25단계(조장 터미널 필요), Langfuse 점수 화면 캡처(로그인 필요), 시연 영상, 시험 경보 메일 도착, 오세창 빈 엔진 6회 원시 CSV(오세창 PC에만 있음, 요청문 `reports/2026-11-16-마무리/오세창-원시로그-요청.md`), README 배포 리비전 줄(지금 `a0abece5`로 적혀 있으나 운영은 `3ce5abdc`).
+- 다음 할 일: Codex 나머지 25문항 채점 · README/EVAL_REPORT 10장 반영, 25단계 뒤 README 리비전 줄, 동결 직전 pytest · freeze · gitleaks 결과 저장, 조장 푸시 · PR 판단.
