@@ -77,16 +77,16 @@
 
 ### 그래프 하위 폴더 (`results/graph/`)
 
-`results/graph/` 아래 실험별 폴더와 바로 아래 파일이다. 모두 `run_gate.py` 결과(`set*.json`, 일부 `report.json`)이고 다르면 "내용"에 적는다. 수치는 각 폴더의 README·SUMMARY와 해석 문서에 있고 이 표에 옮기지 않는다. "해석 문서 없음"은 `docs/worklog/` 밖에서 이 폴더를 인용한 문서가 없다는 뜻이다(2026-11-17 `git grep` 기준).
+`results/graph/` 아래 실험별 폴더와 바로 아래 파일이다. "내용"에 만든 것을 적지 않은 폴더의 `set*.json`은 `run_gate.py` 결과다(파일의 `summary.session`이 `gate-`로 시작, 2026-11-17 확인). 그 밖의 파일은 "내용"에 적는다. 수치는 각 폴더의 README·SUMMARY와 해석 문서에 있고 이 표에 옮기지 않는다. "해석 문서 없음"은 `docs/worklog/` 밖에서 이 폴더를 인용한 문서가 없다는 뜻이다(2026-11-17 `git grep` 기준).
 
 | 폴더·파일 | 내용 | 해석 |
 |---|---|---|
 | `graph_dataset_v2_*.json`, `multi_dataset_v2_*.json` | 동결 v2 단일·멀티 그래프 문항별 지표(`run_graph.py`) | `EVAL_REPORT.md` 4장, [preregister.md](guides/preregister.md)의 `run_graph` 결과 줄 |
 | `memory_operations_2026-11-09.json`, `thread_validation_2026-11-09.json`, 동명 `.usage.json` | 앱 사례 기억 운영 재검증, thread 검증과 사용량(`run_thread_validation.py`) | [thread-memory-operations.md](../docs/experiments/thread-memory-operations.md), 사전 등록 2026-11-09 |
-| `2026-11-06-judge-steps/` | 사전 등록 #39~#42(동결 v2 70문항) 판정 단계 원시. 출처 · sha256은 `sources_2026-11-10.json` | `EVAL_REPORT.md` 3 · 4 · 5장 |
-| `2026-11-06-judge-diagnosis/` | 판정 길 실패 진단(#39 · #40): 문항별 표, draft50-n04 · n08 재실행 | 폴더 `README.md`, `EVAL_REPORT.md` 5장 |
-| `2026-11-10-v3-outside/` | v3 #47 구성(B) · #48+#49(C) 원시 | 폴더 `README.md`, [d9-outside-evidence-2026-11-11.md](../docs/research/d9-outside-evidence-2026-11-11.md) |
-| `2026-11-10-v3-haiku-sets/` | v3 50문항 Haiku 구성(#50) 원시. 출처 · sha256은 `sources_2026-11-11.json` | `EVAL_REPORT.md` 3 · 8장 |
+| `2026-11-06-judge-steps/` | 사전 등록 #39~#42(동결 v2 70문항) 판정 단계 원시(`run_graph.py` 형식, 저장소 밖 lab에서 옮김). 출처 · sha256은 `sources_2026-11-10.json` | `EVAL_REPORT.md` 3 · 4 · 5장 |
+| `2026-11-06-judge-diagnosis/` | 판정 길 실패 진단(#39 · #40): 문항별 표(`judge_items.*`), draft50-n04 · n08 재실행(`n04_n08_checks.json`). 만든 스크립트는 저장소에 없음 | 폴더 `README.md`, `EVAL_REPORT.md` 5장 |
+| `2026-11-10-v3-outside/` | v3 #47 구성(B) · #48+#49(C) 원시와 요약 `B5-summary.json` | 폴더 `README.md`, [d9-outside-evidence-2026-11-11.md](../docs/research/d9-outside-evidence-2026-11-11.md) |
+| `2026-11-10-v3-haiku-sets/` | v3 50문항 Haiku 구성(#50) 원시(`gate-*-set1.json`은 `run_gate.py` 세트 결과로 파일 이름이 `summary.session`과 같음, `summary_*`·`stage_costs_*`는 집계). 출처 · sha256은 `sources_2026-11-11.json` | `EVAL_REPORT.md` 3 · 8장 |
 | `2026-11-11-d8-stages/`, `2026-11-11-d8-stages-rerun/` | D8 v3 50문항 단계 시간 · 호출별 비용과 집계 `stage_summary.json`, 공급자 429로 실패한 문항 재실행 | `EVAL_REPORT.md` 8장, [d8-stage-remeasure-plan.md](../docs/experiments/d8-stage-remeasure-plan.md) |
 | `2026-11-11-langfuse-probe/`, `2026-11-11-langfuse-probe-v2/` | 동결 v3-01 한 문항의 Langfuse 수신 점검(입력 `v3-01-only.jsonl`) | 사전 등록 "2026-11-11 D8 추적 보완 뒤 한 문항 수신 점검". 해석 문서 없음 |
 | `2026-11-11-langfuse-ragas-probe/`, `2026-11-11-langfuse-ragas-probe-v2/`, `2026-11-11-langfuse-ragas-probe-v3/` | 같은 한 문항으로 RAGAS 점수 전송 점검 | 해석 문서 없음 |
@@ -96,9 +96,9 @@
 | `2026-11-11-synth-01-repeat10/`, `2026-11-11-synth-both-agents/` | 합성 문항 반복 · 두 에이전트 실행(입력 jsonl 포함) | 해석 문서 없음 |
 | `2026-11-12-codex-v3-50/` | Codex v3 50문항 답과 규칙 · 사람 판정 집계(`TALLY.md`, `scripts/eval/tally_codex_v3.py`) | `EVAL_REPORT.md` 10장 |
 | `2026-11-12-d9-improve2/` | D9 v3 50문항 멀티 게이트와 `report.json` | `EVAL_REPORT.md` 3 · 4장, [GATES.md](../docs/GATES.md) |
-| `2026-11-12-d9-judge-dev-multi/`, `2026-11-12-d9-judge-dev-single/` | 판정 연습 44문항 멀티 · 단일(입력 `judge_dev_44.jsonl`은 두 폴더가 같은 파일) | `EVAL_REPORT.md` 4장 |
-| `2026-11-12-d9-langfuse-capture/` | Langfuse 수집 확인 실행 | `EVAL_REPORT.md` 7장 |
-| `2026-11-12-d9-v3-single/` | v3 단일 그래프 | `EVAL_REPORT.md` 4장 |
+| `2026-11-12-d9-judge-dev-multi/`, `2026-11-12-d9-judge-dev-single/` | 판정 연습 44문항 멀티 · 단일(`run_graph.py` 결과, 세션 `multi-`·`graph-`). 입력 `judge_dev_44.jsonl`은 두 폴더가 같은 파일 | `EVAL_REPORT.md` 4장 |
+| `2026-11-12-d9-langfuse-capture/` | Langfuse 수집 확인 실행. `dual/`·`dual2/`·`retry-16-17/`의 json은 `run_graph.py --multi` 결과(세션 `multi-`), 입력은 `dual*.jsonl` | `EVAL_REPORT.md` 7장 |
+| `2026-11-12-d9-v3-single/` | v3 단일 그래프(`run_graph.py` 결과) | `EVAL_REPORT.md` 4장 |
 | `2026-11-12-v3-16-warm-recheck/` | v3-16 한 문항 데운 뒤 재확인 | 해석 문서 없음 |
 | `2026-11-13-citecheck-v3/` | 인용 숫자 검사 브랜치의 v3 50문항 재측정과 `report.json` | `EVAL_REPORT.md` 5 · 6 · 8장, [GATES.md](../docs/GATES.md) |
 | `2026-11-14-web-prefetch/`, `2026-11-14-docs-parallel/`, `2026-11-14-grade3-early/`, `2026-11-14-no-replan/`, `2026-11-15-web-parallel/` | 웹 근거 미리 출발(B0 · B1 · A1), 검색 병렬화(P1), 참고 웹 검색 미리 출발(G1 무효 · G2 · P1b), 코퍼스 밖 재계획 생략(R1), 웹 공식 검색 병렬 출발(B1) | 각 폴더 `README.md`(사전 등록 · 코드 커밋), `EVAL_REPORT.md` 8장 |
