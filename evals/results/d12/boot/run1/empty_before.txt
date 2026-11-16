@@ -1,0 +1,16 @@
+IMAGE   ID             DISK USAGE   CONTENT SIZE   EXTRA
+---
+DRIVER    VOLUME NAME
+---
+NETWORK ID     NAME      DRIVER    SCOPE
+243b4bc756bf   bridge    bridge    local
+40bd8613b131   host      host      local
+74701e6e09b7   none      null      local
+---
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+---
+ID        RECLAIMABLE   SIZE      LAST ACCESSED
+Reclaimable:	0B
+Total:		0B
+---
+0

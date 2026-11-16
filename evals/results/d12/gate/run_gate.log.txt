@@ -1,0 +1,256 @@
+start 2026-11-17 04:57:55 KST
+[11/17/26 04:58:08] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+[11/17/26 04:58:20] INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+gate_warmup_s	17.67
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-01	PASS	cited_gold	[['1N4007G', 'ROLE_SUFFICIENT']]	8.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:58:29] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-02	PASS	cited_gold	[['SS24', 'NOT_VERIFIED']]	6.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:58:35] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-03	PASS	cited_gold	[['LL4148 L0G', 'IDENTICAL']]	5.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:58:41] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-04	PASS	cited_gold	[['UF4007', 'NOT_VERIFIED']]	4.6초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:58:45] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-05	PASS	cited_gold	[['S1M', 'NOT_SUFFICIENT']]	7.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:58:52] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-06	PASS	cited_gold	[['BZV55B3V3 L0G', 'IDENTICAL']]	8.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:59:01] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-07	PASS	cited_gold	[['SS16', 'NOT_VERIFIED']]	4.7초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:59:05] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-08	PASS	cited_gold	[['SS14H', 'SPEC_EQUIVALENT']]	5.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:59:11] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-09	PASS	cited_gold	[['SMBJ14AH', 'SPEC_EQUIVALENT']]	11.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 04:59:22] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-10	PASS	cited_gold	[['SMAJ6.0CA', 'NOT_SUFFICIENT']]	16.7초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-11	PASS	cited_gold	[['GS1G', 'ROLE_SUFFICIENT'], ['GS1J', 'ROLE_SUFFICIENT'], ['S1G-K', 'ROLE_SUFFICIENT'], ['S1G-T', 'ROLE_SUFFICIENT'], ['S1GH', 'ROLE_SUFFICIENT'], ['S1J-K', 'ROLE_SUFFICIENT'], ['S1J-T', 'ROLE_SUFFICIENT'], ['S1JH', 'ROLE_SUFFICIENT'], ['TSD1GH', 'ROLE_SUFFICIENT']]	6.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-12	PASS	cited_gold	[['HER105G', 'ROLE_SUFFICIENT'], ['HER105G-K', 'ROLE_SUFFICIENT'], ['HER105GH', 'ROLE_SUFFICIENT'], ['HER106G', 'ROLE_SUFFICIENT'], ['HER106G-K', 'ROLE_SUFFICIENT'], ['HER106GH', 'ROLE_SUFFICIENT'], ['MUR160A', 'ROLE_SUFFICIENT'], ['MUR160AH', 'ROLE_SUFFICIENT'], ['SF16G', 'ROLE_SUFFICIENT'], ['SF16G-K', 'ROLE_SUFFICIENT'], ['SF16GH', 'ROLE_SUFFICIENT'], ['SF17G', 'ROLE_SUFFICIENT'], ['SF17G-K', 'ROLE_SUFFICIENT'], ['SF17GH', 'ROLE_SUFFICIENT'], ['SF18G', 'ROLE_SUFFICIENT'], ['SF18G-K', 'ROLE_SUFFICIENT'], ['SF18GH', 'ROLE_SUFFICIENT'], ['UF4004', 'ROLE_SUFFICIENT'], ['UF4004H', 'ROLE_SUFFICIENT'], ['UF4005', 'ROLE_SUFFICIENT'], ['UF4005H', 'ROLE_SUFFICIENT']]	7.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-13	PASS	cited_gold	[['BZT52B3V3', 'SPEC_EQUIVALENT'], ['BZV55B3V3', 'SPEC_EQUIVALENT']]	8.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-14	PASS	cited_gold	[['SS14H', 'ROLE_SUFFICIENT'], ['SS15H', 'ROLE_SUFFICIENT'], ['SS16H', 'ROLE_SUFFICIENT'], ['SSA1H40H', 'ROLE_SUFFICIENT'], ['SSA1H60H', 'ROLE_SUFFICIENT'], ['SSL14H', 'ROLE_SUFFICIENT']]	5.8초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-15	PASS	cited_gold	[['SMAJ5.0A', 'IDENTICAL'], ['SMAJ5.0AH', 'SPEC_EQUIVALENT'], ['SMAJ5.0', 'ROLE_SUFFICIENT'], ['SMAJ5.0H', 'ROLE_SUFFICIENT']]	29.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:00:35] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-16	FAIL	wrong_citation		18.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:00:53] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-17	PASS	cited_gold		5.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:00:59] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-18	PASS	cited_gold		5.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:01:04] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-19	PASS	cited_gold		6.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:01:10] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-20	PASS	cited_gold		10.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:01:20] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-21	PASS	cited_gold		6.5초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-22	PASS	cited_gold		5.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-23	PASS	cited_gold		1.6초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-24	PASS	cited_gold		9.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-25	PASS	cited_gold		6.8초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-26	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-27	PASS	correct_refusal		1.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:01:52] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-28	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-29	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:01:54] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-30	PASS	correct_refusal		1.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-31	PASS	correct_refusal		1.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:01:57] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-32	PASS	correct_refusal		7.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:04] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-33	PASS	correct_refusal		8.7초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:13] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-34	PASS	correct_refusal		4.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:17] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-35	PASS	correct_refusal		6.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:23] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-36	PASS	correct_refusal		9.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:32] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-37	PASS	correct_refusal		4.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:36] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-38	PASS	correct_refusal		7.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+set1	v3-39	PASS	correct_refusal		1.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:45] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-40	PASS	correct_refusal		1.3초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:02:47] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-41	PASS	correct_refusal		13.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:00] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-42	PASS	correct_refusal		1.4초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:01] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-43	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:02] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-44	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:03] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-45	PASS	correct_refusal		1.1초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:04] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-46	PASS	correct_refusal		4.6초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:09] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-47	PASS	correct_refusal		6.2초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:15] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-48	PASS	correct_refusal		3.8초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:19] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-49	PASS	correct_refusal		5.0초
+Propagated attribute 'metadata.node_models' value is over 200 characters (392 chars). Dropping value.
+Propagated attribute 'metadata.prompts' value is over 200 characters (279 chars). Dropping value.
+[11/17/26 05:03:24] INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+set1	v3-50	PASS	correct_refusal		3.9초
+{"set": 1, "done": 50, "total": 50, "passed": 49, "p95_s": 16.7, "p50_s": 5.5, "session": "gate-dataset_v3-1117-0457-set1", "stopped_at": "v3-16", "model_env": {"LAB_THINKING": "", "LAB_THINKING_ON": "", "LAB_NODE_MODELS": "", "LAB_EFFORT": "", "DEMO_MODE": "0", "EVAL_WEB": "1", "WEB_PREFETCH": "1"}, "db": "app", "llm_provider": "openrouter", "claude_direct": false, "git": "799ae636"}
+end 2026-11-17 05:03:31 KST
+
+[exited with code 0]
