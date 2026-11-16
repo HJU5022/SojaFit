@@ -20,8 +20,10 @@ import {
   addStep,
   stepMs,
   seconds,
+  replyCandidates,
   type Step,
 } from '../src/display.ts';
+import type { Candidate } from '../src/types.ts';
 import { inputPlaceholder } from '../src/inputLabels.ts';
 
 test('formatNumber는 긴 소수만 줄이고 정수·짧은 소수는 그대로 둔다', () => {
@@ -219,4 +221,19 @@ test('진행 단계 시간: 프레임 도착 시각으로 단계마다 재고, �
   assert.equal(seconds(stepMs(steps, 1, 3000)), '1.5초');
   assert.equal(seconds(stepMs(steps, 2, 3500)), '1.6초');
   assert.equal(seconds(-5), '0.0초');
+});
+
+test('면책 문구는 판정 후보가 있는 답에만: 판정 없는 답(일상 대화 · 부품 목록)은 후보가 비고, 같은 후보는 한 번만 센다(#55)', () => {
+  assert.deepEqual(replyCandidates({}), []);
+  assert.deepEqual(replyCandidates({ roles: ['reverse_protection'], capped: false }), []);
+  const ss14 = {
+    part: 'SS14',
+    role: 'reverse_protection',
+    verdict: 'SPEC_EQUIVALENT',
+  } as Candidate;
+  const ss16 = { ...ss14, part: 'SS16', verdict: 'NOT_VERIFIED' } as Candidate;
+  assert.deepEqual(
+    replyCandidates({ results: [ss14], shown: [ss14], unverified: [ss16] }).map((c) => c.part),
+    ['SS14', 'SS16'],
+  );
 });

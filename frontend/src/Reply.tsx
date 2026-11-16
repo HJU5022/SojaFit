@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { ArrowRight, MessageSquare, PanelRight } from 'lucide-react';
 import { statuses } from './api';
-import { withoutCorpusCitations } from './display';
+import { replyCandidates, withoutCorpusCitations } from './display';
 import { inputLabel, inputPlaceholder } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
@@ -158,11 +158,7 @@ export function Reply({
   onCircuit?: () => void;
 }) {
   const r = run.result,
-    candidates = [
-      ...(r.judgement.results ?? []),
-      ...(r.judgement.shown ?? []),
-      ...(r.judgement.unverified ?? []),
-    ].filter((c, i, all) => all.findIndex((x) => x.part === c.part && x.role === c.role) === i);
+    candidates = replyCandidates(r.judgement);
   return (
     <div className="assistant-reply">
       <div className="reply-label">
@@ -227,7 +223,8 @@ export function Reply({
       {r.price_parts.map((p) => (
         <PriceLookup key={p} part={p} />
       ))}
-      <Disclaimer />
+      {/* [왜] 면책 문구는 후보 판정이 든 답에만 둔다. 일상 대화 · 부품 목록에 붙으면 하지 않은 판정을 한 것처럼 읽힌다(#55). "AI 생성" 표시는 답마다 그대로 */}
+      {candidates.length > 0 && <Disclaimer />}
     </div>
   );
 }

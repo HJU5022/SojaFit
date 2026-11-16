@@ -4,7 +4,7 @@
  * 출처: SPEC.md 3절(화면 표기), backend/judge/conditions.py(기준식 문법).
  */
 import { inputLabel, INPUT_LABELS } from './inputLabels.ts';
-import type { PriceEstimate } from './types.ts';
+import type { Candidate, PriceEstimate, Result } from './types.ts';
 
 /** 기준식의 kV · kI 여유 계수. backend/judge/conditions.py의 MARGINS와 같은 값이다. */
 const MARGIN_LABELS: Record<string, string> = {
@@ -152,6 +152,15 @@ export function withoutCorpusCitations(
     if (remaining.length === ids.length) return match;
     return remaining.length ? `${match.match(/^[ \t]*/)?.[0] ?? ''}[${remaining.join(', ')}]` : '';
   });
+}
+
+/** 답의 판정 후보(결과 · 보인 후보 · 미확인)를 같은 품번 · 역할이면 한 번만 모은다. 비면 판정이 없는 답이라 면책 문구를 붙이지 않는다(#55). */
+export function replyCandidates(judgement: Result['judgement']): Candidate[] {
+  return [
+    ...(judgement.results ?? []),
+    ...(judgement.shown ?? []),
+    ...(judgement.unverified ?? []),
+  ].filter((c, i, all) => all.findIndex((x) => x.part === c.part && x.role === c.role) === i);
 }
 
 /** 견적 수량이 서버가 받는 범위(1~100000 정수)인지 본다. 수량을 안 정했으면(undefined) 괜찮다. */
