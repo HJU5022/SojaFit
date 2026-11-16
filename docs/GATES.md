@@ -1,7 +1,7 @@
 # 필수 게이트 자기 점검
 
 - 상태: 현행
-- 기준일: 2026-11-16
+- 기준일: 2026-11-16(11-17 재측정 행은 [evals/results/d12/](../evals/results/d12/README.md), 대상 `main` `799ae636`)
 - 기준 커밋: `a0abece5`(`main`, PR #141 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-16 04:36 KST `sojafit-api-main-a0abece5-1116`). 배포 측정(G1 · G4)의 대상은 이전 리비전의 소스 `574de79`, 로컬 측정(G2 · G4)의 대상은 `ad8612e`(`ea5797c`과 같은 트리 `6452cdfc…`)다. 증거 커밋은 각 행에 적었다.
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
@@ -16,7 +16,7 @@
 
 | 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
 |---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 그 뒤 리비전(`main7ba86325-1115` · `main76fadcb4-1116` · 지금 `main-a0abece5-1116`)의 로그인 뒤 25단계 점검 기록은 없다(확인 못 함). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
+| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79`(리비전 `574de79-rs`) 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 그 뒤 리비전(`main7ba86325-1115` · `main76fadcb4-1116` · `main-a0abece5-1116` · 지금 `main-799ae636-1117`)의 로그인 뒤 25단계 점검 기록은 없다(확인 못 함, 조장용 명령은 [d12 README](../evals/results/d12/README.md)). 지금 리비전의 로그인 없는 GET은 11-17 05:03 KST에 정상이다. 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(아래 G1)) |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: 11-16 GitHub `main` `3ce5abdc` 새 clone → `/health` 200 242.8초, 스모크 28/28, [boot_2026-11-16](../evals/results/d10/boot_2026-11-16/README.md). 한계는 G2 절) |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 충족 (운영 DB 청크 본문 51,967개를 직접 열어 다시 계산한 sha256이 모두 서로 다르고 저장소 해시 목록과 같다(11-16, [db_content_hash_check](../evals/results/d10/db_content_hash_check_2026-11-16.md)), 문서 1,360, 파싱 Docling + pdfplumber. 한계는 G3 절) |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
@@ -33,6 +33,8 @@
 | 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
 | 이전 리비전 `sojafit-api-main76fadcb4-1116`(소스 `76fadcb4`, 2026-11-16 04:07 ~ 04:36 KST)과 `sojafit-api-main7ba86325-1115`(소스 `7ba86325`, 11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 지금 리비전은 README 「배포 리비전」 칸 | 리비전 이름은 `gcloud run revisions list`로 확인했다(11-16 04:37 KST). 두 리비전 모두 로그인 뒤 25단계 점검 기록은 없다(확인 못 함) | [README.md](../README.md) 표 |
 | 운영 시작 실패와 복구(2026-11-14 22:43 ~ 11-15 21:26 KST) | Secret Manager `EXA_API_KEY` 버전 1이 파기(DESTROYED)됐는데 서비스 설정이 그 버전을 고정해, 최소 인스턴스 0대인 운영 리비전 `574de79-rs`의 새 인스턴스가 시작하지 못했다(21:22 KST `/health` · `/login` · `/` 500). 같은 이미지에 `EXA_API_KEY:2`만 바꾼 리비전 `sojafit-api-574de79-exa2`를 21:26 KST에 100%로 돌려 복구했고, 22:29 KST에 위 현재 리비전으로 바꿨다. 누가 · 왜 버전 1을 파기했는지는 확인하지 못했다 | `docs/worklog/jeongun.md` 11-15 항목 「운영 다운 복구」 |
+| 지금 리비전 `sojafit-api-main-799ae636-1117`(소스 `main` `799ae636`) 로그인 없는 점검(2026-11-17 05:03 KST) | `gcloud run services describe`(읽기만)로 트래픽 100% 확인. `/health` 200(0.09초), `/login` · `/` · `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 53 · 경로 42(코드 전체 동작 60 · 경로 49 중 문서에 보이는 것, [routes.txt](../evals/results/d12/checks/routes.txt)). 로그인 뒤 25단계는 하지 않았다 | [unauth_checks.txt](../evals/results/d12/prod_unauth/unauth_checks.txt) |
+| 경보 설정 재조회(2026-11-17 04:55 KST, 읽기만) | 가동 확인 1개(`sojafit-api /health`, 5분 주기, 2xx만 통과, 6개 지역)와 경보 정책 1개(`SojaFit 운영 다운: /health 가동 확인 실패`, 켜짐, 메일 채널 1개)가 있다. 11-16 09:41 ~ 11-17 04:55 KST의 `uptime_check/check_passed` 시계열 점 8,292개(6개 지역)가 모두 참이었다(거짓 0). 새로 만들거나 바꾼 것은 없다 | [monitoring/](../evals/results/d12/monitoring/) |
 | 운영 다운 경보(2026-11-16) | 위 다운을 사람이 발견한 뒤 Cloud Monitoring에 `/health` 가동 확인(5분 주기, 2xx만 통과)과 경보 정책(실패 지역이 1개를 넘으면 메일)을 걸었다. 일부러 401을 주는 임시 확인으로 시험해 09:43:30 KST에 경보가 OPEN 되는 것을 API로 확인하고 임시 설정은 지웠다. 메일 도착 · 실제 다운 발령은 확인하지 않았다 | [alerting_2026-11-16.md](../evals/results/d10/alerting_2026-11-16.md) |
 | 리비전 `sojafit-api-574de79-rs`(소스 `main` `574de79`, 2026-11-13 12:07 KST 100% 전환, 11-15 21:26 KST까지 100%) 평가용 계정 25단계 | 배포 서버 · 실제 모델로 평가용 계정 A · B 로그인 200, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작(같은 이미지 다이제스트의 새 리비전), 같은 run 재개 200, 승인, 같은 승인 409, 견적, 계정 B의 접근 404. 통과 25 · 실패 0 · 건너뜀 0. 환경변수 32개(`EXA_WEB_SEARCH_ENABLED=1` 포함). 재개 요청을 이 리비전이 처리한 것은 서버 로그로 확인했다. 이 리비전은 `574de79`의 설정 그대로다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md), [서버 로그 발췌](../evals/results/d10/deploy_574de79/restart_server_log_2026-11-13.txt), [smoke_..._2026-11-13_120624.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-13_120624.json) |
 | 리비전 `sojafit-api-574de79`(소스 `main` `574de79`) 로그인 없는 점검 | 2026-11-13 10:53 KST: `/health` 200(0.11초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34, `/api/auth/me` 401, `/api/auth/demo-login` 404(`DEMO_MODE=0`) | [unauth_checks_raw.txt](../evals/results/d10/deploy_574de79/unauth_checks_raw.txt) |
@@ -135,8 +137,9 @@
 |---|---|---|
 | 기준 평가셋 | v3 50건(관련 25 · 비관련 25, 2026-11-10 동결). v1 50건(11-02), v2 70건(11-03)도 동결 | `evals/FROZEN.json`, [ADR 0015](adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md) |
 | 개선 전후 비교 | 3-A 검색 5단계, 3-B 판정 길 8단계, 3-C v3 검색 길 2단계, 3-D 현재 스택 확인. 달라진 문항 목록과 회귀 문항 포함 | [EVAL_REPORT.md](../EVAL_REPORT.md) 3절 |
-| v3 현재 값 | 50/50(`DEMO_MODE` 미기록. `DEMO_MODE=0` 기록 측정은 47 ~ 50/50, [EVAL_REPORT.md](../EVAL_REPORT.md) 8.2절 통과 열) | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
+| v3 현재 값 | 2026-11-17 지금 코드 `799ae636` · 운영 설정(`DEMO_MODE=0`, 웹 켬) 1세트: **49/50**(실패 v3-16 `wrong_citation`), p50 5.5 · p95 16.7초. 이전 헤드라인 50/50(`DEMO_MODE` 미기록, 11-12 `520988c`+작업 트리). `DEMO_MODE=0` 기록 측정은 47 ~ 50/50([EVAL_REPORT.md](../EVAL_REPORT.md) 8.2절 통과 열) | [d12/gate/set1.json](../evals/results/d12/gate/set1.json), `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
 | 검색 기준선(v1) | 하이브리드 Recall@5 0.737 · MRR 0.649 | `evals/results/retrieval/retrieval_baseline_2026-11-03.json` |
+| 서비스 검색 재측정(2026-11-17, `799ae636`) | 같은 실행기(`run_retrieval_service`, 사전 등록 #26 설정) 11-04 → 11-17: R1 고르기용 46 Page Recall@5 0.8587 → 0.8152, 확인용 38 0.9079 → 0.9079, v2 19 0.7939(11-04 0.8246). 달라진 문항 R1 4개(r1-042 · 086 · 098 내려감, r1-097 올라감), v2 2개(draft30-m04 · draft50-n04 내려감). 사이에 코퍼스(v1 → v4h)와 검색 코드가 함께 바뀌었다 | [d12/retrieval/service_r1_2026-11-17.json](../evals/results/d12/retrieval/service_r1_2026-11-17.json), `evals/results/retrieval/service_r1_2026-11-04.json` |
 | 사전 등록 | 바꾸기 전 기대를 기록 | `evals/guides/preregister.md` |
 
 확인 못 한 것:
@@ -174,6 +177,7 @@
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
 | 포트폴리오 | 하정운 1건 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) |
+| 비밀값 검사(재검사) | 2026-11-17, `main` `799ae636`, gitleaks `v8.30.1`(같은 이미지 digest), 저장소 `.gitleaks.toml`(허용 5) · `.gitleaksignore`(지문 14줄), `--redact`, 이력 전체 1,250 커밋 검사(`git rev-list --count` 1,494, 병합 제외 1,252), **발견 0건 · 종료 코드 0** | [gitleaks_full_history.txt](../evals/results/d12/checks/gitleaks_full_history.txt) |
 | 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/), 현재 HEAD 재검사: [secrets/after_2026-11-13_556384b.md](../evals/results/d10/secrets/after_2026-11-13_556384b.md) |
 
 확인 못 한 것(없는 것):
@@ -181,7 +185,7 @@
 | 항목 | 상태 |
 |---|---|
 | 시연 영상 파일 | 없음 |
-| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다. 동결 직전에 로컬 `gitleaks`를 다시 돌려야 한다 |
+| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다. 11-17 `799ae636`에서 로컬로 다시 돌렸다(위 표 「비밀값 검사(재검사)」) |
 | 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
 | 다른 조원 포트폴리오(오세창 · 심태현) | 없음 |
 

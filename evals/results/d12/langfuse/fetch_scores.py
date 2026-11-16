@@ -8,13 +8,14 @@ rows, cursor, pages = [], None, 0
 while True:
     q = {'fields': 'core,subject', 'limit': os.environ.get('LF_LIMIT', '100')} | ({'cursor': cursor} if cursor else {})
     req = urllib.request.Request(f'{base}/api/public/v3/scores?{urllib.parse.urlencode(q)}', headers={'Authorization': auth})
-    for attempt in range(5):
+    for attempt in range(30):
         try:
             d = json.load(urllib.request.urlopen(req, timeout=60)); break
-        except urllib.error.HTTPError as e:
-            if e.code != 429 or attempt == 4: raise
-            time.sleep(2 ** attempt)
+        except urllib.error.HTTPError as e:  # 429: 공개 API 한도(30회/창). 응답의 retryAfterSeconds만큼 기다린다
+            if e.code != 429 or attempt == 29: raise
+            time.sleep(json.loads(e.read() or b'{}').get('details', {}).get('retryAfterSeconds', 5) + 1)
     rows += d['data']; pages += 1
+    if pages % 20 == 0: print('pages', pages, 'scores', len(rows), flush=True)
     cursor = d['meta'].get('cursor')
     if not cursor or not d['data']: break
 json.dump({'endpoint': '/api/public/v3/scores?fields=core,subject', 'fetched_at_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),

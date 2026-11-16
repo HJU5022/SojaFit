@@ -1,7 +1,7 @@
 # 평가 리포트
 
 - 상태: 현행
-- 기준일: 2026-11-16 (4절 단일 대 멀티 표의 `d9-improve2` 행, 8 · 8.1 · 8.2절, 10장 마지막 문단, 11-2절을 11-16에 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
+- 기준일: 2026-11-16, 11-17 재측정 행 추가(1 · 1-4 · 7 · 8.2절의 `d12` 행, 대상 `main` `799ae636`, 원시 [evals/results/d12/](evals/results/d12/README.md)) (4절 단일 대 멀티 표의 `d9-improve2` 행, 8 · 8.1 · 8.2절, 10장 마지막 문단, 11-2절을 11-16에 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
 - 기준 커밋: 문서 전체의 단일 기준 커밋은 없다. 수치마다 측정한 커밋과 원시 파일은 해당 행에 적는다(옛 머리 `6707002`는 11-12 시점)
 - 정본 여부: 정본(평가 수치). 배포 리비전은 비정본(정본: [README.md](README.md) 맨 위 표)
 - 관련 문서: [README.md](README.md), [SPEC.md](SPEC.md), [docs/GATES.md](docs/GATES.md), [docs/research/injection-results.md](docs/research/injection-results.md), [evals/guides/preregister.md](evals/guides/preregister.md)
@@ -20,6 +20,7 @@
 | 현재 임베딩·리랭킹과 선택 근거 | `voyage-4-large` 1024차원 + Voyage `rerank-3`. 사전 등록 #25의 R1 dev/test 분리 비교로 선택해 2026-11-04 서비스 코드에 반영했습니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md), 아래 1-4절). `text-embedding-3-small`은 1-3절의 2026-11-02 과거 기준선입니다 |
 | 벡터DB와 현재 검색 계약 | PostgreSQL + pgvector, 차원 없는 `halfvec`. `DATABASE_URL` 하나에서 BM25와 dense 후보를 합치며, 허용 청크가 많으면 1비트 Hamming 후보 3,200개를 먼저 고른 뒤 정확 코사인으로 다시 세웁니다. HNSW는 쓰지 않습니다. 대상 DB에 마이그레이션 008·009와 v4h 산출물이 실제 적용됐는지는 코드 계약과 별도로 확인합니다 |
 | 운영 DB의 청크 본문 (G3, 2026-11-16) | 운영 DB `document_chunks` 51,967행의 본문을 읽기 전용으로 열어 sha256을 다시 계산했다: 저장된 해시와 51,967/51,967 같고 서로 다른 값 51,967. 정렬한 해시 목록의 sha256이 저장소 `chunk_sha256.tsv`와 같아 운영 본문 집합이 해시 목록과 정확히 같다 `[실측]` ([db_content_hash_check_2026-11-16.md](evals/results/d10/db_content_hash_check_2026-11-16.md)) |
+| 재측정에 쓴 로컬 DB (2026-11-17) | 로컬 `sojafit-live-db`(운영 Supabase 아님, 읽기만): `source_documents` 1,360, `document_chunks` 51,967(서로 다른 `chunk_sha256` 51,967), `chunk_embeddings` 51,967(`voyage-4-large`), `chunk_embedding_bits` 51,967. 저장된 해시를 정렬해 이은 글의 sha256이 `82dff159…`로 저장소 `chunk_sha256.tsv`와 같다(본문을 다시 해시하지는 않았다) `[실측]` ([local_db_counts.txt](evals/results/d12/checks/local_db_counts.txt)) |
 | manifest 위치와 버전 | 저장소의 `data/manifest.jsonl`은 2026-11-01 v1 스냅샷입니다. v4h manifest 사본은 `evals/results/chunking/v4h-2026-11-08/manifest.jsonl`(1,360행). `chunks.jsonl` 본문은 lab에만 있고 체크인된 `data/`를 자동 갱신하지 않습니다 |
 
 **키 없는 데모 규칙**: `SPEC.md` 7절을 따릅니다.
@@ -128,7 +129,9 @@
 |---|---:|---:|---:|---:|---:|
 | #26 정확 DB 검색 | 0.8587 | 0.9079 | 0.8246 | 82/84 | 1.22 · 2.04초 |
 | #27 비트 3,200 + 정확 재정렬 | 0.8587 | 0.9342 | 0.8246 | 101/103 (#26 대비) | 1.18 · 1.66초 |
+| d12 재측정(2026-11-17, `799ae636`, v4h 코퍼스 로컬 DB) | 0.8152 | 0.9079 | 0.7939 | 29/84 | 0.53 · 0.87초 |
 
+- d12 행은 #26과 같은 실행기 · 설정이다(원시 [service_r1_2026-11-17.json](evals/results/d12/retrieval/service_r1_2026-11-17.json), OpenRouter $0.0005). #26 대비 Page Recall@5가 달라진 문항은 R1 4개(r1-042 · r1-086 · r1-098 1 → 0, r1-097 0 → 1)와 v2 2개(draft30-m04 0.5 → 0.25, draft50-n04 0.667 → 0.333)다. 사이에 코퍼스(v1 52,244 → v4h 51,967청크)와 검색 코드(`6ca25d48` 등)가 함께 바뀌어 원인을 나누지 않았다. "R1과 상위 5 같은 문항" 29/84는 청크가 바뀌어 같은 쪽이라도 순서가 달라진 것을 포함한다 `[추정]`.
 - 운영 Supabase는 `halfvec(1536)`에서 차원 없는 `halfvec`로 바꿨다(마이그레이션 008). voyage-4-large만 남기고 비운 뒤 다시 넣어 DB는 441.7MB에서 206.9MB가 됐다(비트 사본 `chunk_embedding_bits` 12.1MB 포함, 마이그레이션 009).
 - 시간은 DB 검색보다 Voyage 호출이 대부분일 것으로 본다(추정, 단계별 시간은 3-1절 아래 #28 참고).
 - 정확 검색 SQL에 동점 순서 기준이 없어, 표를 다시 쓰면 같은 거리 청크의 순서가 바뀐다. 다시 넣은 뒤 R1과 상위 5가 같은 문항이 82/84에서 80/84로 줄었다(원인은 추정).
@@ -591,6 +594,7 @@ GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 \
 | P1b set1 | 0 | 1 | 11-14 · `4714b2f` | 50/50 | 6.5 | 12.7 | `2026-11-14-grade3-early/P1b/set1.json` | |
 | R1 set1 · set2 | 0 | 1 | 11-14 · `b790004` | 50/50 · 48/50 | 6.8 · 5.9 | 10.5 · 12.1 | `2026-11-14-no-replan/R1/set1.json` · `set2.json` | 마지막 채택 구성. set2 실패 v3-15 · v3-41([v3-15 경로 기록](evals/results/graph/2026-11-14-no-replan/v3-15_cap_path_2026-11-14.md)) |
 | web-parallel B1 set1 · set2 | 0 | 1 | 11-15 · `62610e8e` | 49/50 · 50/50 | 8.3 · 6.3 | 34.4 · 25.3 | `2026-11-15-web-parallel/B1/set1.json` · `set2.json` | 기각, 되돌림(2등급 단계가 R1의 1 ~ 2.5초에서 14 ~ 25초로 늘어남) |
+| d12 지금 코드 | 0 | 1 | 11-17 · `799ae636` | 49/50 | 5.5 | 16.7 | `evals/results/d12/gate/set1.json`(이 행만 `graph/` 밖) | `WEB_PREFETCH=1`, OpenRouter 경유(`claude_direct` false), 같은 호스트에서 docker 빌드가 돌아 부하 1분 평균 12 ~ 16. 실패 v3-16 `wrong_citation`(11-2절 8행과 같은 문항). 가장 느린 문항 v3-15 29.5초 · v3-16 18.3초. LLM $0.036 |
 
 이 저장소 브랜치에 결과 파일이 없는 측정(숫자는 저장소 밖 보고서에서 옮김, 이 절에서 링크하지 않는다):
 
