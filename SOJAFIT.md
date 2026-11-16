@@ -878,11 +878,19 @@ SojaFit (proj3-b)
     │   ├── submission_checklist.md  <- 제출 체크리스트(항목별 증거 경로·상태)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
-    │   ├── portfolio-<이름>.md  <- 다른 조원 포트폴리오(예정)
-    │   └── langfuse/       <- Langfuse 스크린샷 3장(11-13 배포본). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
-    │       ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
-    │       ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
-    │       └── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
+    │   ├── portfolio-osc.md  <- 오세창 포트폴리오 초안(11-17 조장 위임 AI 작성, 본인 확인 필요)
+    │   ├── portfolio-sth.md  <- 심태현 포트폴리오 초안(11-17 조장 위임 AI 작성, 본인 확인 필요)
+    │   ├── langfuse/       <- Langfuse 스크린샷 7장(11-13 배포본 3장, 11-17 4장). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
+    │   │   ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
+    │   │   ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
+    │   │   ├── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
+    │   │   ├── 04-trace-detail-scores-header.jpg  <- 점수 칩이 붙은 트레이스 상세(11-17)(예정)
+    │   │   ├── 05-trace-scores-tab.jpg  <- 한 트레이스의 점수 탭, 점수 13개(11-17)(예정)
+    │   │   ├── 06-scores-list.jpg  <- 점수 목록(11-17)(예정)
+    │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드: 트레이스 1.68K · 점수 22.25K · $1.17(11-17)(예정)
+    │   ├── presentation/   <- 발표 자료(예정)
+    │   └── video/          <- 시연 영상(예정)
+    │       └── sojafit-demo-2026-11-17.mp4  <- 시연 영상 1:48, 정상 경로 v3-01과 실패 사례 3건(예정)
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
         ├── WORKLOG.md      <- 폴더 설명과 기록 형식
         ├── jeongun.md      <- 하정운(조장·오케스트레이터)
