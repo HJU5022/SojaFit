@@ -26,7 +26,7 @@
 | `public.approvals` | 사람의 후보 승인(스냅샷의 유일한 사본) |
 | `public.quotes` | 승인에서 만든 가격 없는 견적 |
 | `public.approved_cases` | 화면의 승인 사례 목록(사용자가 지울 수 있는 표시 행) |
-| `public.admin_audit` | 관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT만 |
+| `public.admin_audit` | 관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT, 1년 지난 행은 새 분석 시작 때 지움 |
 | `public.app_migrations` | 마이그레이션 적용 이력(우리 것) |
 | `sojafit_agent.threads` | 분석 서비스의 대화 상태 기계 |
 | `sojafit_agent.messages` | 분석 문맥용 사용자 입력 + 어시스턴트 답 |
@@ -511,7 +511,7 @@
 
 ## `public.admin_audit`
 
-- **목적**: 관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT만
+- **목적**: 관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT, 1년 지난 행은 새 분석 시작 때 지움
 
 | 칸 | 타입 | NULL | 기본값 | 의미 |
 |---|---|---|---|---|

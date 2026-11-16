@@ -522,10 +522,13 @@ class Conversations:
                 'profile_hints': list(hints), 'consulted_memories': [], 'referenced_memories': []}
 
     def _purge_expired(self):
-        """보관 기간이 지난 프로젝트(60일) · 기록(30일)을 작은 묶음으로 지운다(db/020_service_baseline.sql). 실패해도 분석은 계속한다."""
+        """보관 기간이 지난 프로젝트(60일) · 기록(30일) · 관리자 처리 이력(1년)을 작은 묶음으로 지운다(db/020_service_baseline.sql). 실패해도 분석은 계속한다."""
         try:
             with self.connection() as conn:
                 conn.execute('SELECT purge_inactive_projects(), purge_log_records()')
+                # 관리자 처리 이력(admin_audit, db/034)은 1년(처리방침 2절, 11-16 결정). [왜] 청소 함수를 고치면 배포 때 운영 DB 이전이 필요해 앱 SQL 한 줄로 둔다
+                conn.execute("DELETE FROM public.admin_audit WHERE id = ANY(ARRAY(SELECT id FROM public.admin_audit "
+                             "WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '1 year' LIMIT 200))")
         except psycopg.Error:
             RETENTION_LOGGER.warning('retention_purge_failed')
 
