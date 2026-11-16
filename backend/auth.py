@@ -97,6 +97,13 @@ def verify_password(password: str, encoded: str | None) -> bool:
         return False
 
 
+def new_session(conn, user_id: int) -> str:
+    """새 세션 토큰을 만들어 그 해시만 auth_sessions에 넣고 원문 토큰을 돌려준다. 절대 만료 8시간(쿠키 max_age와 같음)."""
+    token = secrets.token_urlsafe(32)
+    conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
+    return token
+
+
 def purge_expired_sessions(conn) -> None:
     """만료된 auth_sessions 행을 지운다. [왜] 세션을 발급하는 모든 경로가 부르므로 만료 행이 쌓이지 않는다(인덱스 ix_auth_sessions_expires)."""
     conn.execute("DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP")
@@ -219,10 +226,8 @@ def google_session(issuer: str, subject: str, *, admin_only: bool = False) -> tu
         user = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
         if not user or not user[1] or (admin_only and user[0] != "admin") or not conn.execute("SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s AND user_id=%s", (issuer, subject, user_id)).fetchone():
             return None
-        token = secrets.token_urlsafe(32)
         purge_expired_sessions(conn)
-        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
-        return token, user_id
+        return new_session(conn, user_id), user_id
 
 
 def google_admin_session(issuer: str, subject: str) -> tuple[str, int] | None:
@@ -257,11 +262,8 @@ def complete_google_user(request_id: str, ip: str, *, user_id: int | None = None
                     raise HTTPException(409, '활성 일반 계정만 직접 연결할 수 있습니다. 관리자는 운영자 연결 승인이 필요합니다.')
             conn.execute('INSERT INTO auth_google_identities(issuer,subject,user_id) VALUES (%s,%s,%s)', (issuer,subject,user_id))
             conn.execute('DELETE FROM auth_google_pending WHERE request_id=%s', (request_id,))
-            token = secrets.token_urlsafe(32)
             purge_expired_sessions(conn)
-            conn.execute("INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP+INTERVAL '8 hours')",
-                         (session_token_hash(token),user_id))
-            return token, user_id
+            return new_session(conn, user_id), user_id
     except psycopg.errors.UniqueViolation:
         raise HTTPException(409, '이미 가입되었거나 다른 Google 계정이 연결되어 있습니다. 기존 로그인으로 확인해 주세요.') from None
 
@@ -370,9 +372,7 @@ def authenticate(email: str, password: str, ip: str, *, issue_session: bool = Tr
         # [주의] IP 실패 기록은 성공해도 지우지 않는다. 지우면 공격자가 자기 계정 로그인을 끼워 넣어 IP 횟수를 계속 되돌릴 수 있다
         if not issue_session:
             return '', user[0]  # 연결 성공 전에는 로그인 세션을 만들지 않는다.
-        token = secrets.token_urlsafe(32)
-        cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
-        return token, user[0]
+        return new_session(cur, user[0]), user[0]
 
 
 def client_ip(request: Request) -> str:
@@ -430,9 +430,7 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
         if not user:
             return None  # [주의] 예외 없이 끝내야 위 가입 횟수가 커밋된다
         purge_expired_sessions(cur)
-        token = secrets.token_urlsafe(32)
-        cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
-        return token, user[0]
+        return new_session(cur, user[0]), user[0]
 
 
 def demo_session(account: str) -> tuple[str, int] | None:
@@ -458,9 +456,7 @@ def demo_session(account: str) -> tuple[str, int] | None:
         if not user:
             return None
         purge_expired_sessions(conn)
-        token = secrets.token_urlsafe(32)
-        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
-        return token, user[0]
+        return new_session(conn, user[0]), user[0]
 
 
 def current_user(request: Request) -> tuple[int, str]:
