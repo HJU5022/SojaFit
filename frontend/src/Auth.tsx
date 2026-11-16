@@ -1,8 +1,20 @@
-/** 이메일·Google·데모 인증 화면. 세션 발급은 API가 한다. 출처: SPEC 8.6절. */
-import { useEffect, useState } from 'react';
+/** 이메일·Google·데모 인증 화면. 세션 발급은 API가 한다. 출처: SPEC 8.6절, docs/specs/login-auth.md "로그인 실패 안내". */
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { api } from './api';
+import { api, ApiError } from './api';
 import { Brand, ErrorBox, Loading, navigate, useResource } from './ui';
+/** 로그인·계정 연결 POST의 401이 아닌 실패를 원인별 문구로 바꾼다(401은 화면이 횟수와 함께 따로 보인다). */
+function loginFailure(e: unknown): string {
+  // [왜] 연결이 끊기면 fetch가 ApiError가 아닌 TypeError를 던진다(api.ts의 checked를 거치지 않는다)
+  if (!(e instanceof ApiError))
+    return '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+  // [주의] 로그인 경로가 내는 상태는 401 · 403(ORIGIN_MISMATCH) · 422 · 503 · 500뿐이다(backend/api/auth.py login). 429는 내지 않는다
+  if (e.status === 422) return '이메일 주소 형식을 확인해 주세요.';
+  if (e.status === 403)
+    return '요청 출처를 확인하지 못했어요. 페이지를 새로고침한 뒤 다시 시도해 주세요.';
+  if (e.status >= 500) return '로그인 서버에 일시적인 문제가 있어요. 잠시 후 다시 시도해 주세요.';
+  return e.message;
+}
 export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<void> }) {
   const demo = useResource<{ enabled: boolean }>('/auth/demo'),
     google = useResource<{ enabled: boolean }>('/auth/google/status');
@@ -19,20 +31,34 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
   const signup = path.startsWith('/signup') || path === '/verify-email',
     reset = path.startsWith('/password-reset') || path === '/reset-password',
     confirm = !!token || path.endsWith('/confirm');
-  const [error, setError] = useState<Error | null>(null),
+  const [error, setError] = useState<Error | string | null>(null),
     [busy, setBusy] = useState(false),
-    [sent, setSent] = useState(false);
-  async function act(fn: () => Promise<any>, login = false) {
+    [sent, setSent] = useState(false),
+    // 이 화면에서 같은 이메일로 401을 받은 횟수. [주의] 서버 잠금 횟수(다른 탭·이전 시도 포함)와 다를 수 있어 '이 화면에서'라고만 쓴다
+    [wrong, setWrong] = useState({ email: '', count: 0, shown: false });
+  const password = useRef<HTMLInputElement>(null);
+  /** email은 비밀번호로 로그인·연결하는 폼에서만 넘긴다(그때만 실패를 원인별 문구로 바꾼다). */
+  async function act(fn: () => Promise<any>, login = false, email?: string) {
     setBusy(true);
     setError(null);
+    setWrong((w) => ({ ...w, shown: false }));
+    let posted = false;
     try {
       await fn();
+      posted = true;
       if (login) {
         await onLogin();
         navigate('/app', true);
       } else setSent(true);
     } catch (e) {
-      setError(e as Error);
+      // [왜] 로그인 POST가 성공한 뒤 /auth/me 확인이 실패한 것은 비밀번호 문제가 아니다. 로그인 POST는 다시 보내지 않는다
+      if (posted)
+        setError('로그인은 됐지만 로그인 상태를 확인하지 못했어요. 페이지를 새로고침해 주세요.');
+      else if (email === undefined) setError(e as Error);
+      else if (e instanceof ApiError && e.status === 401) {
+        setWrong({ email, count: wrong.email === email ? wrong.count + 1 : 1, shown: true });
+        if (password.current) password.current.value = ''; // 실패하면 비밀번호만 비우고 이메일은 둔다
+      } else setError(loginFailure(e));
     } finally {
       setBusy(false);
     }
@@ -45,7 +71,7 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
         ? '이메일로 시작하기'
         : reset
           ? '비밀번호 재설정'
-          : '회로 검토를 시작하세요.';
+          : '로그인';
   return (
     <div className="auth-page">
       <header>
@@ -56,16 +82,39 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
       </header>
       <main className="auth-card">
         <h1>{heading}</h1>
-        <p>
-          {finish
-            ? '새 계정을 만들거나 기존 계정에 연결하세요.'
-            : signup
-              ? '인증 메일에서 비밀번호를 설정하면 가입이 끝납니다.'
-              : reset
-                ? '가입한 이메일로 재설정 링크를 보내드립니다.'
-                : '회로와 검토 기록을 한곳에서 이어갑니다.'}
-        </p>
-        <ErrorBox error={error} />
+        {(finish || signup || reset) && (
+          <p>
+            {finish
+              ? '새 계정을 만들거나 기존 계정에 연결하세요.'
+              : signup
+                ? '인증 메일에서 비밀번호를 설정하면 가입이 끝납니다.'
+                : '가입한 이메일로 재설정 링크를 보내드립니다.'}
+          </p>
+        )}
+        {/* [왜] 서버는 계정 없음·비밀번호 틀림·계정 잠금(5회/15분)·IP 잠금(30회/15분)·비활성을 같은 401로 돌려 어느 쪽인지 알 수 없다
+            (backend/api/auth.py login, 계정 열거 방지). 그래서 어느 칸이 틀렸는지 말하지 않고, 이 화면의 횟수와 잠금 규칙만 보인다 */}
+        <ErrorBox
+          error={
+            wrong.shown
+              ? wrong.count < 5
+                ? `이메일 또는 비밀번호가 맞지 않아요. 이 화면에서 이 이메일로 ${wrong.count}번 틀렸어요.`
+                : `이메일 또는 비밀번호가 맞지 않거나, 계정이 15분 동안 잠겼을 수 있어요. 이 화면에서 이 이메일로 ${wrong.count}번 틀렸어요.`
+              : error
+          }
+        />
+        {wrong.shown && (
+          <p className="auth-help">
+            같은 계정으로 15분 안에 5번 틀리면 15분 동안 로그인할 수 없어요. 비밀번호가 기억나지
+            않으면 <a href="/password-reset">비밀번호 재설정</a>
+            {!finish && (
+              <>
+                , 가입한 적이 없으면 <a href="/signup">회원가입</a>
+                {google.data?.enabled && ", Google로 가입했다면 아래 'Google로 계속'"}
+              </>
+            )}
+            을 이용해 주세요.
+          </p>
+        )}
         {params.get('google') === 'error' && (
           <ErrorBox error="Google 인증을 완료하지 못했습니다. 다시 로그인해 주세요." />
         )}
@@ -113,7 +162,15 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
                     : reset
                       ? '/auth/password-reset' + (confirm ? '/confirm' : '')
                       : '/auth/login';
-                void act(() => api(endpoint, 'POST', data), !signup && !reset);
+                // 같은 계정의 횟수를 세려고 서버(backend/api/auth.py Login.check_email)처럼 공백을 떼고 소문자로 맞춘다
+                const email = String(f.get('email') ?? '')
+                  .trim()
+                  .toLowerCase();
+                void act(
+                  () => api(endpoint, 'POST', data),
+                  !signup && !reset,
+                  !signup && !reset && !confirm ? email : undefined,
+                );
               }}
             >
               {!confirm && (
@@ -133,6 +190,7 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
                 <label>
                   비밀번호
                   <input
+                    ref={password}
                     name="password"
                     type="password"
                     autoComplete={confirm ? 'new-password' : 'current-password'}
@@ -205,11 +263,6 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
           개인정보 처리방침
         </a>
       </main>
-      <div className="auth-note">
-        검토의 출발은 회로.
-        <br />
-        판단의 기준은 근거.
-      </div>
     </div>
   );
 }

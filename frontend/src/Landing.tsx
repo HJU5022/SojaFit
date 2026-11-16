@@ -1,4 +1,7 @@
-/** 제품 소개. 예시 수치는 기록된 데모 결과(data/demo/recordings/outcomes.json, 질문 v3-01)에서 옮긴 값이고 실시간 판정이 아니다. */
+/**
+ * 제품 소개. 예시 수치는 기록된 데모 결과(data/demo/recordings/outcomes.json, 질문 v3-01)에서 옮긴 값이고 실시간 판정이 아니다.
+ * 판정 기준 구간(#criteria)의 숫자는 판정 규칙 코드에서 옮겼다(출처는 그 구간 주석). 판정을 계산하지 않는다.
+ */
 import { useEffect, useState } from 'react';
 import { ArrowRight, FileText, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
 import { Brand, Badge, Disclaimer } from './ui';
@@ -16,7 +19,7 @@ export function Landing() {
     );
     document
       .querySelectorAll(
-        '.landing section>h2,.landing section>p,.how li,.guide-row,.limits>div,.product-proof figure',
+        '.landing section>h2,.landing section>p,.how li,.criteria>ol,.rules,.limits>div,.product-proof figure',
       )
       .forEach((e) => {
         e.classList.add('reveal');
@@ -30,8 +33,8 @@ export function Landing() {
       <header className="landing-nav">
         <Brand />
         <nav>
-          <a href="#principle">판정 기준</a>
           <a href="#how">검토 과정</a>
+          <a href="#criteria">판정 기준</a>
           <a href="/login">
             로그인 <ArrowUpRight size={15} />
           </a>
@@ -39,21 +42,21 @@ export function Landing() {
       </header>
       <main>
         <section className="hero">
-          <h1>
-            부품은 바뀌어도,
-            <br />
-            판단에는 근거가.
-          </h1>
+          <h1>대체 부품을 내 회로에 써도 되는지 데이터시트로 판정합니다.</h1>
           <p className="hero-copy">
-            단종, 품절, 원가 때문에 다이오드를 바꿔야 할 때.
-            <br className="desktop-only" /> 회로 역할과 데이터시트로 교체 후보를 검토하세요.
+            KiCad 넷리스트에서 부품의 회로 역할과 필요한 전압·전류 조건을 정하고, 후보 데이터시트의
+            표 값과 비교해 판정합니다. 판정마다 데이터시트의 쪽·표·행을 인용합니다.
+          </p>
+          {/* [주의] 판정 규칙은 다이오드에만 있다(SPEC 1절 "하는 일"·"하지 않는 것"). 역할 23종은 backend/judge/rules/roles.yaml R01~R23. 다른 부품이 된다고 읽히게 쓰지 않는다 */}
+          <p className="hero-scope">
+            지금 지원: 다이오드(소형 MCU 회로, 회로 역할 23종). 다른 부품은 아직 판정하지 않습니다.
           </p>
           <a className="button primary" href="/login">
             내 회로 검토하기 <ArrowRight size={18} />
           </a>
           <div className="hero-sample">
             <div className="sample-top">
-              <span>다이오드 교체 검토</span>
+              <span>검토 예시</span>
               <span>기록된 데모 결과 · v3-01</span>
             </div>
             <div className="sample-body">
@@ -114,10 +117,7 @@ export function Landing() {
           </div>
         </section>
         <section id="principle" className="principle">
-          <h2>
-            원래 정격보다,
-            <br />이 회로에 필요한 조건.
-          </h2>
+          <h2>비교 기준: 원래 부품 정격과 회로 조건</h2>
           <p>같은 후보라도 무엇을 기준으로 보느냐에 따라 판단이 달라집니다.</p>
           <div className="comparison">
             <div className="segmented" aria-label="비교 기준">
@@ -167,17 +167,13 @@ export function Landing() {
           </div>
         </section>
         <section id="how" className="how">
-          <h2>
-            회로에서 시작해,
-            <br />
-            근거까지 확인하세요.
-          </h2>
+          <h2>검토 과정</h2>
           <ol>
             <li>
               <FileText />
               <div>
                 <h3>넷리스트를 올리고 부품을 고르세요.</h3>
-                <p>KiCad 넷리스트에서 다이오드와 핀 연결을 확인합니다.</p>
+                <p>KiCad 넷리스트에서 바꿀 부품(지금은 다이오드)과 핀 연결을 확인합니다.</p>
               </div>
             </li>
             <li>
@@ -199,11 +195,7 @@ export function Landing() {
           </ol>
         </section>
         <section className="product-proof">
-          <h2>
-            빠진 조건은 묻고,
-            <br />
-            판정 근거는 펼쳐봅니다.
-          </h2>
+          <h2>실제 검토 화면</h2>
           <p>기록된 데모를 이 작업대에서 실행한 화면입니다.</p>
           <div>
             <figure>
@@ -242,42 +234,140 @@ export function Landing() {
             </figure>
           </div>
         </section>
-        <section className="verdict-guide">
-          <h2>
-            쓸 수 있는지,
-            <br />
-            아직 모르는지 분명하게.
-          </h2>
-          <div className="guide-row">
-            <h3>승인할 수 있는 후보</h3>
+        {/* 판정 방법·기준식·판정 5종. 숫자와 순서는 코드에서 옮겼다. 규칙이 바뀌면 이 구간도 같이 고친다.
+            - 1.25 · ÷0.7: backend/judge/rules/roles.yaml 머리 주석(kV = 1.25, kI = 1/0.7), 역할 수 23: 같은 파일 R01~R23
+            - 역할 예 3종: 같은 파일 R01(역극성 보호) · R05(AC · 브리지 정류) · R13(플라이백 전원 출력 정류)
+            - 질문에 적은 규격을 필수 조건으로 더함: backend/judge/conditions.py user_conditions
+            - 판정 순서: backend/judge/verdict.py judge_part(동일품 → 불충족 → 확인 안 됨 → 사양 동등 → 역할상 충분), 뜻은 SPEC 3절
+            - 역할상 충분 = 조건 모두 통과 + 사양 동등 확인 실패: verdict.py _not_worse가 거짓(major 없는 역할 R13 · R14 · R17 포함)
+            - 예시가 역할상 충분인 이유(원래 1N4007RLG 데이터시트 없음): data/demo/recordings/outcomes.json v3-01 답 */}
+        <section id="criteria" className="criteria">
+          <h2>판정 방법과 기준</h2>
+          <p>회로 조건과 데이터시트 값을 코드로 비교하고, 조건마다 데이터시트 위치를 인용합니다.</p>
+          <ol className="method">
+            <li>
+              <b>1. 회로 조건</b>
+              넷리스트의 핀 연결로 부품의 회로 역할을 정하고, 입력 최대 전압·최대 전류 같은 회로
+              값을 받습니다. 빠진 값은 되묻습니다.
+            </li>
+            <li>
+              <b>2. 데이터시트 값</b>
+              후보 데이터시트의 표 행에서 정격 값과 시험 조건(온도·펄스 폭 등)을 읽습니다.
+            </li>
+            <li>
+              <b>3. 코드로 비교</b>
+              기준식 계산과 숫자·단위 비교는 모델이 아니라 판정 코드가 합니다. 시험 조건이 다르면
+              비교하지 않습니다.
+            </li>
+            <li>
+              <b>4. 근거 인용</b>
+              조건마다 데이터시트 파일과 쪽·표·행을 붙입니다.
+            </li>
+          </ol>
+          <h3>필수 조건의 기준식</h3>
+          <p>
+            대부분의 역할은 정격에 여유를 둡니다. 전압은 정격의 80%까지만 쓰도록 회로 값 × 1.25,
+            전류는 70%까지만 쓰도록 회로 값 ÷ 0.7(약 × 1.43) 이상인 정격을 요구합니다. 다이오드 회로
+            역할 23종마다 조건과 기준식이 있고, 아래는 그중 3종입니다. 질문에 적은 규격(예: 서지
+            전류 2 A 이상)도 필수 조건으로 더합니다.
+          </p>
+          <div className="rules">
             <div>
+              <strong>역극성 보호(직렬)</strong>
+              <dl>
+                <div>
+                  <dt>역전압 VRRM·VR</dt>
+                  <dd>입력 최대 전압 × 1.25 이상</dd>
+                </div>
+                <div>
+                  <dt>평균 순방향 전류 IF(AV)</dt>
+                  <dd>최대 전류 ÷ 0.7 이상</dd>
+                </div>
+                <div>
+                  <dt>순방향 전압 VF</dt>
+                  <dd>허용 전압강하 이하(값을 알려 준 경우만)</dd>
+                </div>
+              </dl>
+            </div>
+            <div>
+              <strong>AC · 브리지 정류</strong>
+              <dl>
+                <div>
+                  <dt>역전압 VRRM</dt>
+                  <dd>AC 실효값 × √2 × 1.25 이상(DC 입력이면 입력 최대 전압 × 1.25)</dd>
+                </div>
+                <div>
+                  <dt>평균 순방향 전류 IF(AV)</dt>
+                  <dd>부하 전류 ÷ 0.7 이상(다이오드 4개를 따로 쓰면 그 절반)</dd>
+                </div>
+              </dl>
+            </div>
+            <div>
+              <strong>플라이백 전원 출력 정류</strong>
+              <dl>
+                <div>
+                  <dt>역전압 VRRM</dt>
+                  <dd>(출력 전압 + 입력 최대 전압 × 권선비) × 2 이상(스너버가 있으면 × 1.25)</dd>
+                </div>
+                <div>
+                  <dt>평균 순방향 전류 IF(AV)</dt>
+                  <dd>출력 전류 ÷ 0.7 이상</dd>
+                </div>
+                <div>
+                  <dt>역회복 시간 trr</dt>
+                  <dd>75 ns 이하</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          <h3>판정 5종</h3>
+          <p>후보마다 위에서부터 차례로 따져, 처음 맞는 판정 하나를 냅니다.</p>
+          <ol className="verdict-order">
+            <li>
               <Badge verdict="IDENTICAL" />
-              <Badge verdict="SPEC_EQUIVALENT" />
-              <Badge verdict="ROLE_SUFFICIENT" />
-              <p>같은 제품인지, 주요 정격이 동등한지, 회로 역할에 충분한지 구분합니다.</p>
-            </div>
-          </div>
-          <div className="guide-row">
-            <h3>조건을 충족하지 못한 후보</h3>
-            <div>
+              <p>
+                같은 품번, 같은 기본 품번에 주문 코드만 다른 품번, 또는 제조사가 같은 제품이라고
+                밝힌 품번입니다.
+              </p>
+            </li>
+            <li>
               <Badge verdict="NOT_SUFFICIENT" />
-              <p>필수 조건을 만족하지 못하면 승인할 수 없습니다.</p>
-            </div>
-          </div>
-          <div className="guide-row">
-            <h3>근거가 더 필요한 후보</h3>
-            <div>
+              <p>
+                조건 중 하나라도 기준에 못 미칩니다. 다른 조건을 확인하지 못했어도 불충족입니다.
+              </p>
+            </li>
+            <li>
               <Badge verdict="NOT_VERIFIED" />
-              <p>문서에 값이 없거나 시험 조건이 다르면 결론을 유보합니다.</p>
-            </div>
-          </div>
+              <p>
+                필요한 값이 데이터시트에 없거나 시험 조건이 달라 비교하지 못했습니다. 견적에 넣지
+                않습니다.
+              </p>
+            </li>
+            <li>
+              <Badge verdict="SPEC_EQUIVALENT" />
+              <p>
+                조건을 모두 통과했고, 역할마다 정한 주요 정격(역전압·평균 전류·서지 전류 등)도 같은
+                시험 조건에서 원래 부품과 같거나 낫습니다. 원래 부품의 데이터시트가 있어야 합니다.
+              </p>
+            </li>
+            <li>
+              <Badge verdict="ROLE_SUFFICIENT" />
+              <p>
+                조건은 모두 통과했지만 사양 동등을 확인하지 못했습니다. 원래보다 낮은 주요 정격이
+                있거나, 같은 시험 조건의 원래 값이 없거나, 원래 부품의 데이터시트가 없거나, 그
+                역할에 주요 정격이 정해져 있지 않은 경우입니다. 첫 화면의 1N4007G 예시는 원래 부품
+                1N4007RLG의 데이터시트를 찾지 못해 이 판정입니다.
+              </p>
+            </li>
+          </ol>
         </section>
         <section className="limits">
-          <h2>마지막 판단은 사람이 합니다.</h2>
+          <h2>판정의 한계와 승인</h2>
           <div>
+            {/* [왜] "같은 동작은 보장하지 않습니다"는 위 예시 결과(Disclaimer)에 있어 이 화면에서 두 번 쓰지 않는다 */}
             <p>
-              같은 동작은 보장하지 않습니다. 지금은 다이오드를 검토하며, 실제 적용 전에는 사용
-              조건과 실장 변경을 확인해야 합니다.
+              판정은 데이터시트에 적힌 값과 회로 조건의 비교입니다. 실제 적용 전에는 사용 조건과
+              실장(패키지·기판) 변경을 확인해야 합니다.
             </p>
             <p>사람이 후보를 승인한 뒤에만 수량을 넣어 견적서를 저장합니다.</p>
             <a className="button primary" href="/login">
@@ -288,7 +378,6 @@ export function Landing() {
       </main>
       <footer>
         <Brand />
-        <span>회로를 이해하고, 근거로 교체합니다.</span>
         <a href="/privacy">개인정보 처리방침</a>
       </footer>
     </div>
