@@ -1043,7 +1043,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               프로젝트 이름
               <input name="name" defaultValue={project.data?.name} maxLength={200} required />
             </label>
-            <button className="primary">이름 저장</button>
+            <div className="dialog-actions">
+              {/* [왜] form 안이라 type="button"이 없으면 취소가 이름 저장을 보낸다 */}
+              <button type="button" onClick={() => setRename(false)}>
+                취소
+              </button>
+              <button className="primary">이름 저장</button>
+            </div>
           </form>
           <ErrorBox error={error} />
         </Modal>
@@ -1060,24 +1066,27 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             복구할 수 없습니다.
           </p>
           <ErrorBox error={error} />
-          <button
-            className="primary"
-            onClick={async () => {
-              try {
-                await api(
-                  remove === 'project' ? '/projects/' + projectId : '/threads/' + threadId,
-                  'DELETE',
-                );
-                setRemove(null);
-                refreshNavigation();
-                navigate(remove === 'project' ? '/app' : '/app?project=' + projectId);
-              } catch (e) {
-                setError(e as Error);
-              }
-            }}
-          >
-            삭제
-          </button>
+          <div className="dialog-actions">
+            <button onClick={() => setRemove(null)}>취소</button>
+            <button
+              className="primary"
+              onClick={async () => {
+                try {
+                  await api(
+                    remove === 'project' ? '/projects/' + projectId : '/threads/' + threadId,
+                    'DELETE',
+                  );
+                  setRemove(null);
+                  refreshNavigation();
+                  navigate(remove === 'project' ? '/app' : '/app?project=' + projectId);
+                } catch (e) {
+                  setError(e as Error);
+                }
+              }}
+            >
+              삭제
+            </button>
+          </div>
         </Modal>
       )}
     </div>
