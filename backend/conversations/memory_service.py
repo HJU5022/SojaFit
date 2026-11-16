@@ -112,6 +112,23 @@ def _require_supported_target(connections, target):
         raise HTTPException(422, f'{target}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.')
 
 
+def target_choices(connections, question=''):
+    """대상 부품 후보 [{ref, value}]: 질문에 적힌 지원 다이오드가 있으면 그것만, 없으면 회로의 지원 다이오드 전부(SPEC 8.8).
+
+    지원 여부는 `_require_supported_target`와 같은 규칙이다. 하나면 그 부품으로 진행하고, 둘 이상이면 사용자에게 묻는다. LLM은 고르지 않는다.
+    """
+    diodes = []
+    for part in connections.get('components', connections.get('parts', [])):
+        try:
+            _require_supported_target(connections, part['ref'])
+        except HTTPException:
+            continue
+        diodes.append({'ref': part['ref'], 'value': part.get('value') or ''})
+    # [주의] \b는 한글도 글자로 봐 'D1을'에서 D1을 못 찾는다. 앞뒤가 영문 · 숫자가 아닐 때만 그 부품으로 본다(D10 · D1N4148 안의 D1은 아님)
+    named = [d for d in diodes if re.search(rf'(?<![A-Za-z0-9]){re.escape(d["ref"])}(?![A-Za-z0-9])', question or '', re.I)]
+    return named or diodes
+
+
 @lru_cache(maxsize=1)
 def _token_budget_class():
     """EvaluationBudget을 이어받아 호출마다 예약 토큰 수를 `reserving_tokens`에 두는 클래스."""
@@ -419,6 +436,8 @@ class Conversations:
         """React 대화(public.threads) 하나를 같은 UUID의 분석 thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409.
 
         [주의] 입력 회로 대신 소유 대화의 고정 버전을 읽는다. filename · connections 인자는 기존 호출 호환용이다.
+        target이 None이면 이미 만든 분석 thread의 대상을 쓰고, 없으면 `target_choices`로 정한다(SPEC 8.8).
+        후보가 둘 이상이면 분석 thread를 만들지 않고 그 후보 목록을 돌려준다(호출자가 사용자에게 묻는다). 정했으면 None.
 
         키 없는 데모면 기록한 회로 · 대상(question을 주면 질문 · 사용 조건까지)인지 먼저 본다(아니면 422, 기록이 없으면 503)."""
         with self.connection() as conn:
@@ -426,11 +445,20 @@ class Conversations:
             pinned = conn.execute('SELECT c.connections FROM public.threads pt JOIN public.projects p ON p.id=pt.project_id '
                                   'JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version=pt.circuit_version '
                                   'WHERE pt.id=%s AND p.user_id=%s', (thread, user)).fetchone()
+            # [왜] 대상은 첫 run에 고정된다(target_locked). 이후 질문에 부품을 적지 않아도 다시 묻지 않는다
+            locked = conn.execute('SELECT target FROM threads WHERE id=%s AND user_id=%s', (thread, user)).fetchone() if target is None else None
         if pinned is None:
             raise HTTPException(404, '분석을 찾을 수 없습니다.')
         connections = pinned['connections']
         # React 정규화 회로는 parts, 데모 회로는 components다.
         connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
+        if target is None:
+            choices = [{'ref': locked['target'], 'value': ''}] if locked else target_choices(connections, question)
+            if not choices:
+                raise HTTPException(422, '회로에 판정할 수 있는 다이오드가 없습니다. 다이오드가 있는 넷리스트를 첨부해 주세요.')
+            if len(choices) > 1:
+                return choices
+            target = choices[0]['ref']
         _require_supported_target(connections, target)
         if self.mode == 'demo':
             from backend.services import demo

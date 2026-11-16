@@ -80,6 +80,19 @@ def test_interrupt_never_exposes_unrecognized_graph_payload():
     assert 'private' not in str(dto)
 
 
+def test_target_choice_question_is_rebuilt_from_checked_choices():
+    """대상 부품 질문은 저장된 문장이 아니라 검사한 후보(ref 모양 · 값 100자)로 다시 만든다(SPEC 8.8)."""
+    from backend.conversations.dto import result_dto
+    choices = [{'ref': 'D1', 'value': '1N4007', 'raw': 'private'}, {'ref': 'R1', 'value': '10k'}, {'ref': '<b>', 'value': 'x'},
+               {'ref': 'D3', 'value': ''}, 'private', {'ref': 'D4', 'value': 'V' * 300}]
+    dto = result_dto({}, request_id='r', status='requires_input',
+                     interrupt={'target_choices': choices, 'question': 'private', 'pending_start': 'private'}).model_dump()
+    assert dto['interrupt']['target_choices'] == [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': ''}, {'ref': 'D4', 'value': 'V' * 100}]
+    assert dto['interrupt']['question'].startswith('넷리스트에서 다이오드 D1(1N4007), D3, D4(')
+    assert dto['interrupt']['question'].endswith('를 찾았어요. 어떤 부품을 바꿀까요?')
+    assert 'private' not in str(dto)
+
+
 def test_terminal_public_result_preserves_safe_graph_fields_only():
     from backend.conversations.dto import public_state
     result = public_state({'answer': 'ok', 'question_type': 'candidate_judge', 'price_parts': ['1N5819', 'https://private'], 'facts': {'x': 'secret'}, 'reports': [{'secret': 1}]})

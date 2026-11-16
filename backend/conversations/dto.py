@@ -1,8 +1,8 @@
 """브라우저에 내보낼 결과의 고정 허용 목록. 그래프 상태에서 공개 값만 고르는 `public_state`도 둔다."""
 import re
 from urllib.parse import unquote
-from pydantic import BaseModel, ValidationError
-from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition, SafeRunError
+from pydantic import BaseModel, Field, ValidationError
+from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition, SafeRunError, SafeTargetChoice
 from backend.rag.source_metadata import source_metadata
 from backend.services.datasheet_rows import grade2_pdf, official_pdf
 from backend.services.exa import reference_url
@@ -17,7 +17,8 @@ class BrowserResult(BaseModel):
     judgement: dict = {}
     price_parts: list = []
     refusal: str = ''
-    interrupt: dict = {}
+    interrupt: dict = Field(default={}, description='requires_input일 때만 채운다. 회로 값 · 역할을 물으면 {missing, role_choices, question}, '
+                                                    '대상 부품을 물으면 {target_choices: [{ref, value}], question}(SPEC 4절 · 8.8)')
     request_id: str = ''
     profile_hints: list = []  # 참고(내 설정): 이번 질문으로 찾은 사용자 사실. 판정 근거가 아니며 저장하지 않는다
     error: SafeRunError | None = None
@@ -211,6 +212,17 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
             if isinstance(value, list):
                 safe_interrupt[key] = [v for v in value if isinstance(v, str) and re.fullmatch(pattern, v)][:30]
         safe_interrupt['question'] = '판정에 필요한 값을 알려 주세요.'
+        choices = []
+        for item in interrupt.get('target_choices') or []:
+            try:
+                choices.append(SafeTargetChoice.model_validate({'ref': item.get('ref'), 'value': str(item.get('value') or '')[:100]}).model_dump())
+            except (ValidationError, AttributeError):
+                continue
+        if choices:
+            # [왜] 저장된 문장을 믿지 않고 검사한 후보로 다시 만든다(SPEC 8.8)
+            safe_interrupt['target_choices'] = choices[:30]
+            found = ', '.join(c['ref'] + (f"({c['value']})" if c['value'] else '') for c in choices[:30])
+            safe_interrupt['question'] = f'넷리스트에서 다이오드 {found}를 찾았어요. 어떤 부품을 바꿀까요?'
     question_types = {'out_of_scope', 'chat', 'other_part', 'price', 'role', 'rating', 'candidate_judge', 'candidate_find'}
     question_type = state.get('question_type')
     judgement = safe_judgement(state.get('judgement')) or {}

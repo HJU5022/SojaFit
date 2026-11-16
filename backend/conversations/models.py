@@ -83,10 +83,23 @@ class SafeJudgement(SafeModel):
     preferred_mount: Literal['', 'smd', 'tht'] = ''  # 찾기 순서에 쓴 내 설정의 선호 실장 방식(SPEC 8.5). 없으면 ''
 
 
+class SafeTargetChoice(SafeModel):
+    """대상 부품 후보 하나(넷리스트의 지원 다이오드). 고르는 것은 사용자다(SPEC 8.8)."""
+    ref: str = Field(pattern=r'^[Dd][0-9][A-Za-z0-9_.+-]{0,98}$')
+    value: str = Field(default='', max_length=100)
+
+
 class SafeInterrupt(SafeModel):
     missing: list[str] = Field(default_factory=list)
     role_choices: list[str] = Field(default_factory=list)
     question: str = ''
+    target_choices: list[SafeTargetChoice] = Field(default_factory=list)  # 대상 부품을 물을 때만. 그때 missing · role_choices는 비었다
+
+
+class SafePendingStart(SafeModel):
+    """대상 부품을 물은 run의 첫 질문 · 사용 조건. 고른 부품으로 재개할 때 그대로 다시 보낸다(브라우저 결과에는 넣지 않는다)."""
+    question: str = Field(max_length=4000)
+    conditions: str = Field(default='', max_length=2000)
 
 
 class SafeRunError(SafeModel):
@@ -110,6 +123,8 @@ class SafeResult(SafeModel):
     interrupt: SafeInterrupt = Field(default_factory=SafeInterrupt)
     judgement: SafeJudgement | None = None
     error: SafeRunError | None = None
+    # [왜] 대상을 고르기 전에는 분석 thread가 없어 사용 조건을 둘 곳이 이 run 기록뿐이다. result_dto는 이 칸을 고르지 않는다
+    pending_start: SafePendingStart | None = None
 
 
 RunStatus = Literal['running', 'requires_input', 'completed', 'refused', 'failed']

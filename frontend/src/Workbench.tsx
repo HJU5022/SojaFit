@@ -25,7 +25,7 @@ import {
 import { CandidateDetails, PriceLookup } from './Candidate';
 import { partsOf, unsupportedPartReason } from './circuit';
 import { refreshNavigation } from './Projects';
-import { MissingInput, Reply } from './Reply';
+import { MissingInput, Reply, TargetChoice } from './Reply';
 import { SchematicSection } from './Schematic';
 import type {
   Candidate,
@@ -58,6 +58,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   const [detail, setDetail] = useState<Detail | null>(null),
     [runs, setRuns] = useState<Record<string, Run>>({}),
     [active, setActive] = useState<Run | null>(null),
+    // 비어 있으면 서버가 질문 · 회로로 정하거나 사용자에게 묻는다(SPEC 8.8). 첫 다이오드를 미리 고르지 않는다
     [target, setTarget] = useState(''),
     [question, setQuestion] = useState(''),
     [conditions, setConditions] = useState(''),
@@ -93,9 +94,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       const chosen = parts.find((p) => p.ref === target);
       return chosen ? unsupportedPartReason(chosen) : '';
     })();
-  useEffect(() => {
-    if (!target && usable.length) setTarget(usable[0].ref);
-  }, [project.data, target]);
   useEffect(() => {
     let live = true;
     scope.current++;
@@ -138,7 +136,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               void execute(threadId, `/threads/${threadId}/runs`, {
                 question: queued.question,
                 conditions: queued.conditions,
-                target_ref: queued.target,
+                ...(queued.target ? { target_ref: queued.target } : {}),
               });
             }
           }
@@ -156,8 +154,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   useEffect(() => () => controller.current?.abort(), []);
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
-      questions.data?.filter((q) => q.demo_id === project.data?.demo_id && q.target === target) ??
-      [];
+      questions.data?.filter(
+        (q) => q.demo_id === project.data?.demo_id && (!target || q.target === target),
+      ) ?? [];
   const currentDemo =
     questions.data?.find(
       (q) =>
@@ -168,6 +167,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   async function refreshDetail(tid: string) {
     const d = await api<Detail>('/threads/' + tid);
     setDetail(d);
+    if (d.target_ref) setTarget(d.target_ref); // 서버가 정했거나 사용자가 고른 대상
     threads.reload();
     refreshNavigation();
     return d;
@@ -250,7 +250,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         navigate(`/app?project=${projectId}&thread=${imported.thread_id}`);
         return;
       }
-      if (!target) throw new Error('먼저 검토할 다이오드를 선택해 주세요.');
       if (targetReason) throw new Error(targetReason);
       if (demo || !tid) {
         const created = await api<{ id: string }>(`/projects/${projectId}/threads`, 'POST');
@@ -273,7 +272,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       runId.current = null;
       await execute(tid!, `/threads/${tid}/runs`, {
         question: text,
-        target_ref: target,
+        ...(target ? { target_ref: target } : {}),
         conditions: cond,
       });
     } catch (e) {
@@ -281,6 +280,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   async function resume(body: any) {
+    if (body.target) setTarget(body.target); // 고른 부품을 왼쪽 연결도 · 후보 상세에 바로 보인다
     if (active) await execute(active.thread_id, `/runs/${active.id}/resume`, body);
   }
   async function older() {
@@ -317,6 +317,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   const waiting = active?.result.status === 'requires_input',
+    // 조건이 아니라 대상 부품을 묻는 중(SPEC 8.8)
+    choosing = waiting && !!active?.result.interrupt.target_choices?.length,
     running = busy || active?.result.status === 'running';
   const previous =
     detail?.messages.filter((m) => m.role === 'assistant' && m.run_id !== active?.id) ?? [];
@@ -348,14 +350,14 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             <div className="part-selector">
               <h2>검토할 부품</h2>
               <label>
-                다이오드
+                다이오드 직접 지정(선택)
                 <select
                   aria-label="검토할 다이오드"
                   value={target}
                   disabled={detail?.target_locked || busy}
                   onChange={(e) => setTarget(e.target.value)}
                 >
-                  <option value="">부품 선택</option>
+                  <option value="">지정 안 함(에이전트가 정함)</option>
                   {diodes.map((p) => (
                     <option value={p.ref} key={p.ref} disabled={!!unsupportedPartReason(p)}>
                       {p.ref} · {p.value}
@@ -376,12 +378,16 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 {targetReason
                   ? targetReason
                   : waiting
-                    ? '사용 조건을 기다리고 있습니다.'
+                    ? choosing
+                      ? '바꿀 부품을 고르면 이어서 검토합니다.'
+                      : '사용 조건을 기다리고 있습니다.'
                     : active
                       ? statuses[active.result.status]
                       : part
                         ? '선택한 부품으로 검토할 준비가 되었습니다.'
-                        : '회로를 먼저 가져오세요.'}
+                        : usable.length
+                          ? '고르지 않으면 질문과 넷리스트로 정하고, 여럿이면 물어봅니다.'
+                          : '회로를 먼저 가져오세요.'}
               </p>
             </div>
             <Circuit project={project.data} target={target} />
@@ -525,7 +531,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     </div>
                   )}
                   {waiting && roles.error && <ErrorBox error={roles.error} retry={roles.reload} />}
-                  {waiting && active && (
+                  {choosing && active && (
+                    <TargetChoice result={active.result} busy={busy} onResume={resume} />
+                  )}
+                  {waiting && !choosing && active && (
                     <MissingInput
                       key={active.id}
                       result={active.result}
@@ -606,9 +615,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   // [왜] 실행 중에도 다음 질문을 쓸 수 있게 막지 않는다. 조건 입력을 기다릴 때만 막는다
                   disabled={!!waiting}
                   placeholder={
-                    waiting
-                      ? '위의 사용 조건을 입력하면 이어서 검토합니다.'
-                      : `${target || '다이오드'}의 교체 후보나 궁금한 점을 입력하세요.`
+                    choosing
+                      ? '위에서 바꿀 부품을 고르면 이어서 검토합니다.'
+                      : waiting
+                        ? '위의 사용 조건을 입력하면 이어서 검토합니다.'
+                        : target
+                          ? `${target}의 교체 후보나 궁금한 점을 입력하세요.`
+                          : '바꿀 부품과 후보를 입력하세요. 예: D1을 1N5819로 바꿔도 될까요?'
                   }
                 />
                 <div className="composer-controls">
@@ -642,7 +655,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     disabled={
                       busy ||
                       (!attachment &&
-                        (!!waiting || !!running || !target || !!targetReason || !question.trim()))
+                        (!!waiting || !!running || !!targetReason || !question.trim()))
                     }
                     aria-label={attachment ? '넷리스트 보내기' : '질문 보내기'}
                   >
