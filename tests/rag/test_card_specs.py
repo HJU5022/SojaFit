@@ -54,3 +54,15 @@ def test_part_docs_index_reads_corpus_on_first_lookup_only(monkeypatch):
     assert connects == []
     assert lookup('ss34') == lookup('SS34 ') == ['doc-1'] and connects == ['postgresql://unused']
     assert lookup('SS99') == [] and len(connects) == 1
+
+
+def test_prefetch_loads_all_parts_documents_in_one_call():
+    """품번마다 따로 적재하지 않고 필요한 문서를 한 번에 적재한다(같은 문서는 한 번만)."""
+    loads, metas = [], []
+    docs = {k: {'file': f'{k}.pdf', 'parts': [k.upper()], 'aec_h': False, 'both': False, 'texts': [], 'text_cards': [], 'cards': []}
+            for k in ('a', 'b')}
+    specs = make_specs(load_cards=lambda keys: loads.append(list(keys)) or {k: docs[k] for k in keys},
+                       read=lambda *a, **k: ([], []), chat=None,
+                       doc_meta=lambda keys: metas.append(list(keys)) or {}, part_docs=lambda p: ['a', 'b'] if p == 'P1' else ['b'])
+    specs.prefetch(['P1', 'P2'], ['VRRM'])
+    assert loads == [['a', 'b']] and metas == [['a', 'b']]

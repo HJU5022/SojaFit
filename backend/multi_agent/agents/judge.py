@@ -1123,7 +1123,12 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         if prefetch and candidates:
             # 후보들을 문서별로 묶어 한 번에 읽어 둔다(후보마다 차례로 읽으면 LLM 호출이 후보 수만큼 이어진다)
             prefetch([n for c in candidates for n in (_part(c[0]), _part(c[0]).split(' ')[0])], need)
-        for name, category, packages in candidates:
+        # [왜] _identical은 후보마다 검색 1~2번(각 1.2~1.5초)을 차례로 불러 v3-06에서 4~6초였다. 읽기만 하고 서로 영향이 없어(후보 이름 · 원래 품번만 입력)
+        #      후보마다 동시에 시작해 두고 아래 루프가 원래 순서대로 결과를 꺼낸다. 오류는 꺼내는 자리에서 그대로 올라간다(원래 호출 자리와 같음)
+        ident_pool = ThreadPoolExecutor(max_workers=4)
+        idents = [ident_pool.submit(contextvars.copy_context().run, _identical, retriever, read.original_part, c[0]) for c in candidates]
+        ident_pool.shutdown(wait=False)
+        for (name, category, packages), ident in zip(candidates, idents):
             part_editions = revisions_for_part(revision_text, _part(name)) if editions else set()
             if editions and not part_editions:
                 continue  # An ambiguous part/edition association must not borrow another part's edition.
@@ -1171,7 +1176,7 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                 continue
             packages = packages if packages is not None else [x['text'] for x in rows if x['code'] == 'PACKAGE' and x.get('text')]
             category = category or next((x['category'] for x in rows if x.get('category')), '')  # 판정 질문은 행의 분류로
-            same, same_cite = _identical(retriever, read.original_part, name)
+            same, same_cite = ident.result()
             if editions and same_cite and (document_revision(same_cite.get('document')) not in part_editions
                                            or document_revision(same_cite.get('document')) not in (original_editions or set())):
                 same, same_cite = False, None
