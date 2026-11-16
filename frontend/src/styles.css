@@ -2894,6 +2894,8 @@ form {
 .report-facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  /* 같은 줄의 긴 값(제품 이름 등)이 두 줄이 돼도 빈칸 밑줄이 따라 내려가지 않게 칸을 늘리지 않는다(#56) */
+  align-items: start;
   gap: 4px 16px;
   margin: 0;
 }
@@ -2970,16 +2972,17 @@ form {
   border: 0;
   border-bottom: 1px solid #9aa5aa;
 }
+/* 열 폭을 고르게 나눠 빈 열도 손으로 적을 폭을 받고 보고서 폭(화면 · A4)에 맞춘다. 좁은 화면은 .report-table 안에서 민다 */
+.report-items {
+  table-layout: fixed;
+  min-width: 560px;
+}
+.report-items th,
+.report-items td {
+  overflow-wrap: anywhere;
+}
 .report-items td {
   height: 40px;
-}
-.report-items label {
-  display: block;
-  white-space: nowrap;
-}
-.report-items input {
-  margin: 0 2px 0 0;
-  vertical-align: middle;
 }
 .report-part {
   margin-top: 22px;
