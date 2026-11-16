@@ -11,7 +11,7 @@
 | 새 clone 키 없는 기동(빈 `docker:dind`, `docker compose up --build`) | 11-16 `3ce5abdc` 1회 242.8초 → **6회 중앙값 239.4초(148.9 ~ 296.0)**, 모두 600초 안 | [boot/](boot/) | 0 |
 | 키 없는 데모 스모크(`--demo --refusal`) | 28/28 → **6회 모두 28 통과 · 0 실패 · 0 건너뜀** | `boot/run*/smoke_cold.json` | 0 |
 | CI 재생 동일성(`record_demo.py replay`, 새 `-p` 프로젝트) | (이전 기록 없음) → **"재생 결과가 기록과 같습니다", 종료 0** | [checks/replay_check.txt](checks/replay_check.txt) | 0 |
-| 전체 pytest(Linux 컨테이너) | 11-16 `4c5afc1e` 2,495 통과 · 0 실패 · 190 건너뜀 → PYTEST_SUMMARY | [checks/pytest_full_linux.txt](checks/pytest_full_linux.txt), [checks/pytest_full_linux_hang_run1.txt](checks/pytest_full_linux_hang_run1.txt) | 0 |
+| 전체 pytest(Linux 컨테이너) | 11-16 `4c5afc1e` 2,495 통과 · 0 실패 · 190 건너뜀(한 프로세스) → **한 프로세스 전체 실행은 3회 모두 멈춤**(84 ~ 85%, 새 스레드 시작). 폴더마다 따로 돌리면 **2,997 통과 · 0 실패 · 205 건너뜀** | [checks/pytest_by_dir_linux.txt](checks/pytest_by_dir_linux.txt), 멈춘 3회: [1](checks/pytest_full_linux_hang_run1.txt) · [2](checks/pytest_full_linux.txt) · [3](checks/pytest_full_linux_ignore_card_find.txt) | 0 |
 | 동결 평가셋 검사(`freeze.py --check`) | 11-16 바뀐 파일 없음 → **바뀐 파일 없음, 종료 0** | [checks/freeze_check.txt](checks/freeze_check.txt) | 0 |
 | gitleaks 이력 전체 | 11-13 `556384b` 828 커밋 0건 → **1,250 커밋 0건, 종료 0** | [checks/gitleaks_full_history.txt](checks/gitleaks_full_history.txt) | 0 |
 | API 동작 · 경로 수 | SPEC 4절 동작 60 · 경로 49(문서 53 · 42) → **60 · 49(문서 53 · 42)**, 운영 `/openapi.json`도 53 · 42 | [checks/routes.txt](checks/routes.txt), [prod_unauth/unauth_checks.txt](prod_unauth/unauth_checks.txt) | 0 |
@@ -68,7 +68,25 @@ uv run python scripts/smoke/http_smoke.py --base-url https://sojafit-api-5593695
 
 ### ④ 동결 직전 pytest · freeze · gitleaks
 
-PYTEST_SECTION
+대상은 `799ae636`의 깨끗한 clone이다. Linux 이미지는 저장소 Dockerfile로 만든 API 이미지(1회차: 기동 1회차 dind 안의 `proj3-b-api`, 2 ~ 4회차: 호스트 Docker에서 같은 Dockerfile로 빌드한 `sojafit-d12-api:799ae636`, arm64, python 3.12, cairo 포함)이고, 11-16 기록과 같은 방법(`--user root`, venv는 `/tmp/venv`에 따로, `uv run --locked pytest -p no:cacheprovider -rs`)이다.
+
+| 회차 | 방법 | 결과 | 원시 |
+|---|---|---|---|
+| 1 | 전체를 한 프로세스로 | **멈춤**: 수집 3,202개, 84%에서 `tests/rag/test_card_find.py` 첫 시험이 5분 넘게 진행 없음 → `SIGABRT`로 스레드 덤프를 남기고 끝냄(종료 134) | [pytest_full_linux_hang_run1.txt](checks/pytest_full_linux_hang_run1.txt) |
+| 2 | 같은 방법, `-o faulthandler_timeout=240` | **같은 곳에서 멈춤**(240초 덤프 뒤 `docker kill`) | [pytest_full_linux.txt](checks/pytest_full_linux.txt) |
+| 3 | `--ignore=tests/rag/test_card_find.py` | **다음 파일 `tests/rag/test_card_read.py`에서 멈춤**(120초 덤프 뒤 `docker kill`) | [pytest_full_linux_ignore_card_find.txt](checks/pytest_full_linux_ignore_card_find.txt) |
+| 4 | `tests/` 아래 폴더마다 따로(13개 프로세스) | **2,997 통과 · 0 실패 · 205 건너뜀**(합 3,202 = 1회차 수집 수). 건너뜀은 전용 `TEST_DATABASE_URL` 등(`-rs` 목록) | [pytest_by_dir_linux.txt](checks/pytest_by_dir_linux.txt) |
+
+- 멈춘 곳은 세 번 모두 새 스레드 시작이다: `backend/rag/card_find.py:296`(`gather`의 `ThreadPoolExecutor.submit`) · `backend/rag/card_read.py:240`(`llm_read`) → `threading.Thread.start()`가 `_started.wait()`에서 돌아오지 않는다. 살아 있는 다른 스레드는 Langfuse 프롬프트 캐시 · OpenTelemetry 작업자뿐이었다.
+- 같은 이미지에서 `tests/rag/test_card_find.py`만 돌리면 25 통과(2.41초), `tests/rag`만 돌리면 207 통과 · 26 건너뜀이다. `tests/projects` · `multi_agent` · `api` · `services` 중 하나와 `test_card_find.py`를 함께 돌려도 멈추지 않았다. 앞선 시험이 쌓은 상태에 따라 멈추는 것으로 보이며 원인은 찾지 않았다 `[추정]`. 11-16 `4c5afc1e`에서는 같은 방법으로 67초에 끝났다(`../d10/freeze_check_2026-11-16/`). 그 뒤 `card_find.py`를 바꾼 커밋은 `bf76cf5e`(프로세스 공유 캐시) · `6ca25d48`(공용 DB 풀)이다.
+- 4회차 로그의 `exit(<폴더>)` 줄은 `tail`의 종료 코드다(측정 스크립트 실수). 판정은 폴더마다 마지막 요약 줄로 했다.
+- macOS 호스트 전체 실행은 이번에 하지 않았다.
+
+동결 평가셋 검사 `python evals/runners/freeze.py --check`: "동결 이후 바뀐 파일: 없음", 종료 0([freeze_check.txt](checks/freeze_check.txt)).
+
+gitleaks `v8.30.1`(d10과 같은 이미지 digest), 저장소 `.gitleaks.toml`(허용 5) · `.gitleaksignore`(지문 14줄), `--redact`, `--log-opts="799ae636"`: **1,250 커밋 검사, 발견 0, 종료 0**([gitleaks_full_history.txt](checks/gitleaks_full_history.txt)). `git rev-list --count` 1,494(병합 제외 1,252).
+
+CI 재생 검사(`.github/workflows/ci.yml` `eval-replay`와 같은 명령, 기동 1회차 dind, 새 프로젝트 `-p sojafit-ci`): 기록 질문 10개를 재생해 "재생 결과가 기록과 같습니다", 종료 0([replay_check.txt](checks/replay_check.txt)).
 
 ### ② 검색 품질의 새 전후 측정
 
