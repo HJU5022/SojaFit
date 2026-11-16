@@ -126,6 +126,8 @@ TITLE_W_CODE = {'zener-diode': 'PD', 'tvs': 'PPPM'}
 # [왜] 제목 값은 대표 값이다(제너 VZ는 공칭이라 최소 · 최대 칸과 다르고, TVS 제목 전압은 VBR일 때가 있다). 10% 넘게 어긋날 때만 버린다
 SLACK = 1.1
 _SCALE = {'': 1, 'm': 1e-3, 'k': 1e3}
+# H 접미사 품번(SS34H 등) 글자. card_specs.py도 같은 글자로 찾는다
+H_PART = re.compile(r'(?<![A-Z0-9])[A-Z0-9][A-Z0-9-]{2,}H(?![A-Z0-9])')
 
 
 def title_values(text, category):
@@ -401,7 +403,7 @@ def documented_parts(doc):
     if not doc.get('aec_h'):
         return names
     body = ' '.join(doc.get('texts', [])) + ' ' + ' '.join(c.get('content', '') for c in doc.get('cards', []))
-    mentioned = set(re.findall(r'(?<![A-Z0-9])[A-Z0-9][A-Z0-9-]{2,}H(?![A-Z0-9])', body.upper()))
+    mentioned = set(H_PART.findall(body.upper()))
     return names | {p for p in mentioned if p[:-1] in names}
 
 

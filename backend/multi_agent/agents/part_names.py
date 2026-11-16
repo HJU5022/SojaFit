@@ -25,13 +25,14 @@ _CURRENT = [
 ]
 
 
-def _strip(name: str) -> str:
+def strip_maker(name: str) -> str:
+    """품번 앞의 제조사 이름(TSC · Taiwan Semiconductor)을 뗀다. agents/judge.py도 쓴다."""
     return MAKER.sub('', name or '').strip()
 
 
 def _key(name: str) -> str:
     """비교 열쇠: 제조사 이름 · 공백을 떼고 대문자로."""
-    return re.sub(r'\s+', '', _strip(name)).upper()
+    return re.sub(r'\s+', '', strip_maker(name)).upper()
 
 
 def _is_part(word: str, refs: set[str]) -> bool:
@@ -77,7 +78,7 @@ def current_part(conditions: str, question: str, target: str, refs: set[str]) ->
             continue
         for pattern in _CURRENT:
             for m in re.finditer(pattern, sentence):
-                name = _strip(m.group(1))
+                name = strip_maker(m.group(1))
                 if _is_part(name.split()[0], refs):
                     found.append(name)
     keys = {_key(f): f for f in found}

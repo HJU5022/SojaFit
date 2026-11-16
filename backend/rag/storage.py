@@ -18,7 +18,6 @@ import random
 import time
 
 MODEL = 'openai/text-embedding-3-small'
-DIM = 1536
 
 
 def vector_type():
