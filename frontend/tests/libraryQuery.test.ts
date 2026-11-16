@@ -1,7 +1,12 @@
 /** 데이터시트 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번 시험(#67). 네트워크·DOM 없음. */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { libraryQueryString, matchedParts, readLibraryQuery } from '../src/libraryQuery.ts';
+import {
+  categoryName,
+  libraryQueryString,
+  matchedParts,
+  readLibraryQuery,
+} from '../src/libraryQuery.ts';
 
 test('깊은 링크의 조건을 읽고, 잘못된 쪽 번호는 1쪽이다', () => {
   assert.deepEqual(readLibraryQuery('?q=%20SS34%20'), { q: 'SS34', category: '', page: 1 });
@@ -27,4 +32,11 @@ test('검색어가 든 표지 품번만 대소문자 무시로 고른다', () =>
   assert.deepEqual(matchedParts(parts, ' ss34 '), ['SS34', 'SS34L']);
   assert.deepEqual(matchedParts(parts, 'SERIES'), []);
   assert.deepEqual(matchedParts(parts, ''), []);
+});
+
+test('분류 슬러그를 한국어 이름으로 보이고, 모르는 분류는 슬러그 그대로, 빈 값은 - 이다', () => {
+  assert.equal(categoryName('schottky-rectifier'), '쇼트키 정류 다이오드');
+  assert.equal(categoryName('bridge'), '브리지 정류기');
+  assert.equal(categoryName('new-kind'), 'new-kind');
+  assert.equal(categoryName(null), '-');
 });

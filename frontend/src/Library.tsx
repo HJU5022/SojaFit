@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ExternalLink, Search } from 'lucide-react';
 import { safeLink } from './display';
 import {
+  categoryName,
   libraryQueryString,
   matchedParts,
   readLibraryQuery,
@@ -56,7 +57,7 @@ export function Library({ search }: { search: string }) {
           <option value="">모든 분류</option>
           {categories.map((c) => (
             <option key={c.category} value={c.category}>
-              {c.category} ({c.count})
+              {categoryName(c.category)} ({c.count})
             </option>
           ))}
         </select>
@@ -103,7 +104,7 @@ export function Library({ search }: { search: string }) {
                         )}
                       </td>
                       <td>{item.publisher}</td>
-                      <td>{item.category ?? '-'}</td>
+                      <td>{categoryName(item.category)}</td>
                       <td>{item.revision ?? '-'}</td>
                       <td>{new Date(item.collected_at).toLocaleDateString('ko-KR')}</td>
                       <td>

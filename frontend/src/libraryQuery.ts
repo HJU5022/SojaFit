@@ -30,3 +30,24 @@ export function matchedParts(parts: string[], q: string): string[] {
   const needle = q.trim().toUpperCase();
   return needle ? parts.filter((part) => part.toUpperCase().includes(needle)) : [];
 }
+
+// [왜] 코퍼스 분류는 영어 슬러그(backend/multi_agent/contracts.py Category)다. 화면에는 한국어 이름을 보이고 주소·검색 값은 슬러그 그대로 둔다
+const CATEGORY_NAMES: Record<string, string> = {
+  'standard-rectifier': '일반 정류 다이오드',
+  'schottky-rectifier': '쇼트키 정류 다이오드',
+  'schottky-diode': '쇼트키 다이오드',
+  'sic-schottky-diode': 'SiC 쇼트키 다이오드',
+  'fast-recovery-trr-100-500ns': '고속 회복 다이오드(trr 100~500ns)',
+  'high-efficiency-trr-50-99ns': '고효율 다이오드(trr 50~99ns)',
+  'super-fast-recovery': '슈퍼패스트 회복 다이오드',
+  'ultra-fast-recovery': '울트라패스트 회복 다이오드',
+  'switching-diode': '스위칭 다이오드',
+  'zener-diode': '제너 다이오드',
+  tvs: 'TVS 다이오드(과전압 보호)',
+  'esd-protection': 'ESD 보호 다이오드',
+  bridge: '브리지 정류기',
+};
+/** 분류 슬러그의 한국어 이름. 표에 없는 새 분류는 슬러그 그대로 보인다. */
+export function categoryName(category: string | null | undefined): string {
+  return category ? (CATEGORY_NAMES[category] ?? category) : '-';
+}
