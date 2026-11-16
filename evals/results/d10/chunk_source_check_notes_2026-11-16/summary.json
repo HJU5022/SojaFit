@@ -1,0 +1,96 @@
+{
+ "seed": 1116,
+ "per_cell": 3,
+ "n": 123,
+ "match": 123,
+ "mismatch": 0,
+ "match_but_window_fail": 0,
+ "by_type": {
+  "electrical": 42,
+  "ratings": 42,
+  "thermal": 39
+ },
+ "n_categories": 14,
+ "n_docs": 116,
+ "negative_control": {
+  "tried": 110,
+  "page_caught": 91,
+  "window_caught": 95
+ },
+ "row_check": {
+  "ok": 117,
+  "row_mismatch": 0,
+  "unlocated": 6,
+  "unlocated_by_reason": {
+   "행 이름 칸(PARAMETER·CONDITIONS·SYMBOL) 없음: 부품 행(Device) 표 형식은 미지원": 6
+  },
+  "unlocated_by_type": {
+   "electrical": 6
+  },
+  "with_unchecked": 0,
+  "mutation_control": {
+   "다른열_6줄창_탐지": 0,
+   "다른열_변이불가": 107,
+   "다른열_시도": 10,
+   "다른열_쪽검사_탐지": 0,
+   "다른열_행검사_놓침": 0,
+   "다른열_행검사_미확인": 0,
+   "다른열_행검사_탐지": 10,
+   "다른행_6줄창_탐지": 18,
+   "다른행_변이불가": 14,
+   "다른행_시도": 103,
+   "다른행_쪽검사_탐지": 0,
+   "다른행_행검사_놓침": 0,
+   "다른행_행검사_미확인": 0,
+   "다른행_행검사_탐지": 103
+  }
+ },
+ "part_check": {
+  "applicable": 6,
+  "ok": 6,
+  "row_mismatch": 0,
+  "unlocated": 0
+ },
+ "note_check": {
+  "by_status": {
+   "attached": 32,
+   "none": 57,
+   "missing": 14,
+   "unmarked": 18,
+   "unclear": 2
+  },
+  "by_type": {
+   "electrical": {
+    "attached": 24,
+    "none": 2,
+    "unmarked": 13,
+    "unclear": 2,
+    "missing": 1
+   },
+   "ratings": {
+    "none": 37,
+    "unmarked": 5
+   },
+   "thermal": {
+    "missing": 13,
+    "none": 18,
+    "attached": 8
+   }
+  },
+  "by_reason": {
+   "표 아래 각주 없음": 57,
+   "이 행·머리글에 각주 표시 없음": 18,
+   "표시한 각주가 이 쪽 표 바로 아래에 없음": 1
+  },
+  "mutation_control": {
+   "각주지움_missing": 32,
+   "각주지움_시도": 32,
+   "부품행_다른열_부품행검사_탐지": 422,
+   "부품행_다른열_시도": 422,
+   "부품행_다른열_쪽검사_탐지": 0,
+   "부품행_다른행_부품행검사_탐지": 1265,
+   "부품행_다른행_시도": 1265,
+   "부품행_다른행_쪽검사_탐지": 0
+  }
+ }
+}
