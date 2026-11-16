@@ -6,24 +6,15 @@
 - 정본 여부: 정본(공개 프로젝트 완성 회로도 API). 경로·오류 코드의 제품 수준 목록은 [SPEC.md](../../SPEC.md)
 - 관련 문서: [backend/projects/PROJECTS.md](../../backend/projects/PROJECTS.md)
 
-## Why
+## 공식 참고 회로 검색 확장(2026-11-16)
 
-회로 설계자가 부품명이나 용도를 입력해 실제 공개 보드에서 부품과 배선을 함께 확인한다. 측정 항목은 반환된 전체 시트 수와 동일 검색의 추가 외부 호출 수다.
-
-## Goal
-
-- 이름으로 발견한 공개 회로도 파일의 시트, 게시 페이지, 원본 URL, 출처와 확인 가능한 라이선스를 반환한다. 공개 저장소가 출처이면 커밋도 반환한다.
-- 15분 동안 같은 검색의 외부 호출을 재사용한다.
-- 적용 범위는 백엔드 API와 작업대 원본 회로도 창이다.
-- 범위 밖: 데이터시트의 부분 응용 회로, 블록도, 제품 사진, PCB 렌더링 반환. 검증된 완성 회로도가 없을 때 회로 생성·대체 이미지. LLM·Mouser·DigiKey·Nexar 호출과 검색 결과의 DB 저장.
+이 절은 아래 기본 공개 회로도 계약에 추가되는 공식 참고 자료의 범위와 검증 조건이다.
 
 ### TSC 공식 제품 자료의 제한된 참고 회로 예외
 
 TSC(Taiwan Semiconductor)의 공식 제품 필터는 `https://services.taiwansemi.com/api/products_v2`에서 품번과 공식 데이터시트 URL을 동적으로 반환한다. 이 경로는 TSC 공식 제품 확인과 데이터시트의 응용 회로 참고를 위한 예외이며, 모든 제조사의 데이터시트·임의 URL을 허용하는 일반 규칙이 아니다. `TSC`를 붙이지 않은 품번도 `TS` 뒤 4자리 이상 숫자로 시작하거나 `TSCR` 3자리 이상, `TSL` 숫자, `TQL` 3자리 이상 영숫자 계열인 경우에만 전체 품번 패턴을 확인한 뒤 이 경로로 정규화하며, 일반 `SS33`·`1N4148`·`Raspberry Pi` 검색은 기존 경로를 유지한다. 서비스 내부에서는 bare TSC query를 `tsc <품번>`으로 정규화하되 기존 GitHub 제한·후보 캐시와 분리한다. 요청 품번은 공식 제품 응답의 `name`과 일치해야 하고 `status`·`datasheet` 필드와 원본 PDF를 함께 확인한다. 제품 API에 현재 품번이 없으면 `services.taiwansemi.com/storage/resources/datasheet/`의 공식 원문만 대상으로 Exa 검색을 한 번 보완할 수 있지만 GitHub 검색으로 전환하지 않는다. API에 노출되지 않은 파일을 옛 품번·동일 제품으로 추정하지 않으며, `H` 접미사 같은 변형도 공식 `name` 또는 PDF 본문에서 확인된 그대로 표시한다.
 
 TSC 데이터시트의 응용 회로는 제품의 참고 회로로 표시할 수 있지만 공개 완성 보드 회로도와 같은 것으로 취급하지 않는다. 검색어는 발견 단계에서 품번 앞부분(keyword prefix)으로 사용할 수 있으나, API의 실제 `name`과 PDF 본문에서는 요청 품번의 정확한 표기를 확인하고 변형을 추정하지 않는다. 문서 전체에서 공식 브랜드와 정확한 품번을 확인하고, 선택 페이지에서는 `Typical Application Circuit` 제목과 실제 vector wire 또는 공식 raster 연결선(밝은 배경, 얇은 직교선, 최소 8개 선과 2개 T분기)을 함께 확인한다. PDF 원본의 해시·PDF 형식·응용 회로 페이지 확인과 기존 HTTPS/SSRF/크기/캐시/공급자 한도를 유지한다. URL을 사용자가 임의로 주입해 검증을 우회하는 기능은 제공하지 않는다. 원본·제품/보드 참고·다이오드 참고의 API 검증 범위와 manifest/choices DTO는 유지하며, 주요 `SPEC.md`의 범위 변경은 별도 조장 검토 사항으로 남긴다.
-
-## What
 
 ### 공식 반도체 제조사 참고 자료 확장(2026-11-16)
 
@@ -77,6 +68,38 @@ AC: Given 위 6개 제조사의 실제 공개 회로 문서, When 참고 API로 
 백엔드는 선택적 `auto_search=true`와 프로젝트·회로 버전·대화 문맥을 받으면 소유권·버전을 확인한 뒤 TSC/다이오드/공개 보드 참고 검색 또는 업로드 원본 연결 일치 경로를 선택할 수 있다. 기본 `auto_search=false`와 기존 명시적 `reference_only`/`component_type` API, `choices`/`source_url` DTO는 유지한다. 참고 검색에는 넷리스트가 없어도 되지만 프로젝트 소유권·회로 버전은 확인하며, 응답의 `circuit_version=null`과 참고 이미지의 `reference_only=true` 범위도 유지한다. 단독 다이오드 품번은 기존 제한 패턴만 참고 경로로 분류하고, 그 밖의 검색은 원본 연결 일치 검증을 우회하지 않는다. 이 문서의 `auto_search` 설명은 백엔드 계약이며 현재 dirty 프런트 작업대의 단일 버튼 구현과 동일한 배포 상태를 뜻하지 않는다. 이번 PR에는 프런트 파일을 포함하지 않으며 운영 화면 연결은 UI 담당 정리 뒤 별도로 다룬다. 화면 검색어 계약은 2~200자이고 기존 명시 다이오드 API의 194자 상한은 유지한다.
 
 로그인한 사용자가 회로도 이름을 입력하면 서버가 공개 웹에서 PDF·PNG·SVG와 게시 페이지를 찾는다. 제조사와 비공식 출처를 검색 단계에서 배제하지 않는다. 파일을 안전하게 내려받아 실제 회로도인지 확인한 뒤 PNG로 제공한다. API는 검증된 후보와 원본 URL 선택 계약을 유지하고, 작업대는 서버가 선택한 첫 결과를 표시한다. 확인되지 않은 출처는 `public_web`, `evidence_grade=null`로 표시한다.
+
+| 상황 | 응답 | 근거 |
+|---|---|---|
+| 성공 | 200, 프로젝트와 `images` 배열 | `backend/api/external_circuits.py:59-73` |
+| 적합한 회로도 없음, 시트 번호 음수, 만료·변조된 토큰, 시트 번호 범위 밖 | 404 `SCHEMATIC_NOT_FOUND` | `backend/api/external_circuits.py`, `backend/projects/external_schematic.py` |
+| 검색어 2자 미만·200자 초과 | 422 | `backend/api/external_circuits.py:62` |
+| 공급자 장애 | 502 | `backend/api/external_circuits.py:56` |
+| 기능 비활성·설정 누락(서명 키 포함) | 503 | `backend/projects/external_schematic.py:36-39,212-216` |
+| GitHub 호출 한도 | 503, `Retry-After` 1~3600초 | `backend/projects/schematic_source.py:48`, `backend/api/external_circuits.py:51` |
+
+기능 활성 조건: `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY` 값 있음, `AUTH_SECRET` 32바이트 이상(`backend/projects/external_schematic.py:212-216,36-39`).
+
+### GET 요청 범위와 모호성
+
+| 경로 | 계약 | 근거 |
+|---|---|---|
+| `GET /api/external-circuits/schematics` | `q`(trim 후 2~200자), `project_id`, `circuit_version`, 선택 `thread_id`, `source_url`, `reference_only`, `component_type=diode`, `auto_search`를 받는다. 기본 `auto_search=false`는 기존 명시 범위를 유지한다. `auto_search=true`는 프로젝트·회로 버전이 필요하며 소유권 확인 뒤 TSC/다이오드/공개 보드 참고 또는 원본 연결 일치 경로를 선택한다. `reference_only=true`·`component_type`과 함께 지정하면 422다. 참고 결과는 `circuit_version=null`, 이미지 URL은 `reference_only=true`이며 원본 결과는 검증한 회로 버전을 포함한다. 순서가 있는 `images`(`sheet`, `url`)와 기존 `choices`를 반환한다. `source_url`은 같은 검색의 검증 후보만 허용한다. 명시적 `component_type=diode` 검색어는 2~194자다 | `backend/api/external_circuits.py` |
+
+## Why
+
+회로 설계자가 부품명이나 용도를 입력해 실제 공개 보드에서 부품과 배선을 함께 확인한다. 측정 항목은 반환된 전체 시트 수와 동일 검색의 추가 외부 호출 수다.
+
+## Goal
+
+- 이름으로 발견한 공개 회로도 파일의 시트, 게시 페이지, 원본 URL, 출처와 확인 가능한 라이선스를 반환한다. 공개 저장소가 출처이면 커밋도 반환한다.
+- 15분 동안 같은 검색의 외부 호출을 재사용한다.
+- 적용 범위는 백엔드 API와 작업대 원본 회로도 창이다.
+- 범위 밖: 데이터시트의 부분 응용 회로, 블록도, 제품 사진, PCB 렌더링 반환. 검증된 완성 회로도가 없을 때 회로 생성·대체 이미지. LLM·Mouser·DigiKey·Nexar 호출과 검색 결과의 DB 저장.
+
+## What
+
+로그인한 사용자가 회로도 이름을 입력하면 서버가 공개 웹에서 PDF·PNG·SVG와 게시 페이지를 찾는다. 제조사와 비공식 출처를 검색 단계에서 배제하지 않는다. 파일을 안전하게 내려받아 실제 회로도인지 확인한 뒤 PNG로 제공한다. 여러 후보가 있으면 사용자가 원본 URL로 특정해 다시 선택한다. 확인되지 않은 출처는 `public_web`, `evidence_grade=null`로 표시한다.
 
 | 상황 | 응답 | 근거 |
 |---|---|---|
@@ -192,7 +215,7 @@ gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAcco
 
 | 경로 | 동작 | 근거 |
 |---|---|---|
-| `GET /api/external-circuits/schematics` | `q`(trim 후 2~200자), `project_id`, `circuit_version`, 선택 `thread_id`, `source_url`, `reference_only`, `component_type=diode`, `auto_search`를 받는다. 기본 `auto_search=false`는 기존 명시 범위를 유지한다. `auto_search=true`는 프로젝트·회로 버전이 필요하며 소유권 확인 뒤 TSC/다이오드/공개 보드 참고 또는 원본 연결 일치 경로를 선택한다. `reference_only=true`·`component_type`과 함께 지정하면 422다. 참고 결과는 `circuit_version=null`, 이미지 URL은 `reference_only=true`이며 원본 결과는 검증한 회로 버전을 포함한다. 순서가 있는 `images`(`sheet`, `url`)와 기존 `choices`를 반환한다. `source_url`은 같은 검색의 검증 후보만 허용한다. 명시적 `component_type=diode` 검색어는 2~194자다 | `backend/api/external_circuits.py` |
+| `GET /api/external-circuits/schematics?q=&source_url=&component_type=diode` | 이름으로 찾은 회로도와 순서가 있는 `images`(`sheet`, `url`), 다른 검색 후보 `choices`를 반환한다. `source_url`은 선택 사항이며 같은 검색의 검증된 후보 URL일 때만 허용한다. `component_type=diode`도 선택 사항이며 지정하면 검색어는 trim 후 2~194자다. 일반 검색어는 2~200자다 | `backend/api/external_circuits.py` |
 | `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}` | 같은 로그인 세션에서 PNG 반환. 임의 외부 URL은 받지 않는다 | `backend/api/external_circuits.py:75-86` |
 
 두 경로 모두 로그인이 필요하다. 응답 헤더는 `Cache-Control: private, no-store`다. PNG는 `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`을 더한다.

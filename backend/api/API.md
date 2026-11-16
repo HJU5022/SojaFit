@@ -1,5 +1,11 @@
 # api
 
+## 공식 참고 회로 검색의 추가 계약
+
+| 파일 | 추가 계약 |
+|---|---|
+| `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest, `auto_search=true`는 소유권·버전 확인 뒤 품번 포함 원본/참고 자동 구분), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트). 제조사 없는 품번에서 복수 공식 제조사가 검증되면 기존404/SCHEMATIC_NOT_FOUND와 X-Schematic-Failure=ambiguous_manufacturer로 제조사 명시 필요를 알림 |
+
 ## 역할
 - 이 폴더: 서비스 HTTP 경로 전부. 라우터마다 `APIRouter`를 하나 갖고 `backend/main.py`가 등록한다. 라우터 태그는 파일 이름과 같아 `/docs`가 묶음별로 보인다.
 - 넣는 것: 경로 함수, 요청·응답 모델(`extra="forbid"`와 `/docs` 예시를 단 pydantic 모델), 세션·Origin 확인 의존성 연결.
@@ -18,7 +24,7 @@
 | `admin.py` | `GET /api/admin/users`, `PATCH /api/admin/users/{target_id}`(일반 계정 활성 상태 변경), `POST /api/admin/users/{target_id}/unmask`(사유 5~500자, 이력을 먼저 쓰고 이메일 원문), `DELETE /api/admin/users/{target_id}`(일반 계정 탈퇴 처리, `profile.erase_account` 재사용), `GET /api/admin/audit`(작업 이력). 활성 상태 변경 · 가림 해제 · 탈퇴 처리는 `admin_audit`(db/034)에 남는다 |
 | `prices.py` | `GET /api/prices`(로그인 필요, 요청 때 Mouser 조회, 선택 quantity 1~100000의 동일 품번 수량 구간/Decimal estimate를 응답에만 포함. `Cache-Control: no-store`, ADR 0009) |
 | `projects.py` | `GET /api/demo-circuits`(데모 모드만), `GET`·`POST /api/projects`(빈 생성 또는 데모 복제), `POST /api/projects/upload`, `POST /api/projects/{project_id}/netlist`(새 버전·새 대화), `GET`·`PATCH`·`DELETE /api/projects/{project_id}`. 상세 `thread_id` 쿼리는 해당 대화의 고정 버전을 반환 |
-| `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest, `auto_search=true`는 소유권·버전 확인 뒤 품번 포함 원본/참고 자동 구분), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트). 제조사 없는 품번에서 복수 공식 제조사가 검증되면 기존404/SCHEMATIC_NOT_FOUND와 X-Schematic-Failure=ambiguous_manufacturer로 제조사 명시 필요를 알림 |
+| `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트) |
 | `conversations.py` | `GET /api/judge/roles`·`demo-questions`, 프로젝트별 thread `GET`·`POST`, 모든 프로젝트의 대화 목록 `GET /api/threads`, `GET`·`PATCH`(이름 변경)·`DELETE /api/threads/{id}`, `POST /api/threads/{id}/runs`(SSE), `GET /api/runs/{id}`, `POST .../recover`, `POST .../resume`(SSE) |
 | `quotes.py` | `GET`·`POST /api/messages/{id}/approvals`(조회는 소유 assistant 메시지의 활성 승인(사례가 남은 승인)과 승인별 견적(`quotes`)만, 새로고침 뒤 복원용), `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `GET /api/approved-cases/{id}`(사례 하나의 기록: 원래 대화 · 질문 · 저장한 판정 · 근거 · 견적, 공개 허용 목록 통과), `DELETE /api/approved-cases/{id}`(활성 승인 해제, snapshot/기존 견적 보존·재승인 허용) |
 | `profile.py` | `GET`·`PATCH`·`DELETE /api/me/memory`(사용자 사실 기억), `DELETE /api/me`(탈퇴, 삭제 순서는 `erase_account` 하나를 관리자의 탈퇴 처리와 같이 씀) |
