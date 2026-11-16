@@ -47,7 +47,7 @@ export function Landing() {
             KiCad 넷리스트에서 부품의 회로 역할과 필요한 전압·전류 조건을 정하고, 후보 데이터시트의
             표 값과 비교해 판정합니다. 판정마다 데이터시트의 쪽·표·행을 인용합니다.
           </p>
-          {/* [주의] 판정 규칙은 다이오드에만 있다(SPEC 1절 "하는 일"·"하지 않는 것"). 다른 부품이 된다고 읽히게 쓰지 않는다 */}
+          {/* [주의] 판정 규칙은 다이오드에만 있다(SPEC 1절 "하는 일"·"하지 않는 것"). 역할 23종은 backend/judge/rules/roles.yaml R01~R23. 다른 부품이 된다고 읽히게 쓰지 않는다 */}
           <p className="hero-scope">
             지금 지원: 다이오드(소형 MCU 회로, 회로 역할 23종). 다른 부품은 아직 판정하지 않습니다.
           </p>
@@ -239,6 +239,7 @@ export function Landing() {
             - 역할 예 3종: 같은 파일 R01(역극성 보호) · R05(AC · 브리지 정류) · R13(플라이백 전원 출력 정류)
             - 질문에 적은 규격을 필수 조건으로 더함: backend/judge/conditions.py user_conditions
             - 판정 순서: backend/judge/verdict.py judge_part(동일품 → 불충족 → 확인 안 됨 → 사양 동등 → 역할상 충분), 뜻은 SPEC 3절
+            - 역할상 충분 = 조건 모두 통과 + 사양 동등 확인 실패: verdict.py _not_worse가 거짓(major 없는 역할 R13 · R14 · R17 포함)
             - 예시가 역할상 충분인 이유(원래 1N4007RLG 데이터시트 없음): data/demo/recordings/outcomes.json v3-01 답 */}
         <section id="criteria" className="criteria">
           <h2>판정 방법과 기준</h2>
@@ -352,8 +353,9 @@ export function Landing() {
             <li>
               <Badge verdict="ROLE_SUFFICIENT" />
               <p>
-                조건은 모두 통과했지만, 원래 부품보다 낮은 주요 정격이 있거나 원래 부품의
-                데이터시트가 없어 비교하지 못했습니다. 첫 화면의 1N4007G 예시는 원래 부품
+                조건은 모두 통과했지만 사양 동등을 확인하지 못했습니다. 원래보다 낮은 주요 정격이
+                있거나, 같은 시험 조건의 원래 값이 없거나, 원래 부품의 데이터시트가 없거나, 그
+                역할에 주요 정격이 정해져 있지 않은 경우입니다. 첫 화면의 1N4007G 예시는 원래 부품
                 1N4007RLG의 데이터시트를 찾지 못해 이 판정입니다.
               </p>
             </li>
