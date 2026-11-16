@@ -22,6 +22,7 @@
 ## 2. 가설과 범위
 
 - 가설(사전 등록): 코퍼스 공격에는 가드가 작동할 자리가 없어 켬 = 끔이고, 가드는 같은 reply 길에 직접 닿는 질문 공격에서만 차이를 만든다. Haiku가 대부분 따르지 않으면 실측 차단은 0일 수 있다.
+- 사전 등록 기대 대조: (1) 코퍼스 켬 = 끔 · 최종 표지 0 — 맞음. (2) 질문 공격을 Haiku가 대부분 따르지 않을 것 — 빗나감(6건 중 4건을 따름, 가드가 2건을 막고 D3 2건은 켬에서도 나감). (3) 정상 과잉 차단 — 0/8. (4) 재계획 뒤 빈 답 — 실측에서 나오지 않음(가짜 LLM에서만 확인).
 - 해석 범위: 사례당 2회 관찰이다. 방어율 · 반복성을 뜻하지 않는다. 켬/끔은 같은 그래프 결과(같은 Supervisor 계획)에 두 `끝내기`를 적용한 짝이라 가드 코드 하나만 다르다. 가드는 LLM 뒤의 결정적 코드라 팔마다 따로 부르면 LLM 흔들림만 더해진다.
 - 범위 밖: 가드 코드 수정, 판정 에이전트 길, 실제 검색 DB · MCP · 웹(Exa) · HTTP · 배포, 넷리스트 값(P3) · 이전 대화 · 승인 사례 위치의 공격, 실제 청구 대조.
 
@@ -31,7 +32,7 @@
 
 | 단계 | 코퍼스 글이 들어가나 | 근거 |
 |---|---|---|
-| 첫 계획 Supervisor 입력 | 아니오. 질문 · 대상 ref/value · 사용 조건 · 코드가 확인한 사실 · (지시어가 있을 때만) 이전 사용자 입력 · 승인 사례 | `backend/multi_agent/supervisor.py` `render_plan` |
+| 첫 계획 Supervisor 입력 | 아니오. 질문 · 대상 ref/value · 사용 조건 · 코드가 확인한 사실 · (지시어가 있을 때만) 이전 사용자 입력. 승인 사례 칸도 있으나 서비스는 늘 빈 목록을 넘기고(`backend/conversations/memory_service.py:513` `'approved_memories': []`) 이 실행기도 넘기지 않는다 | `backend/multi_agent/supervisor.py` `render_plan` |
 | RAG 에이전트 입력 | 예(청크 원문) | `backend/multi_agent/agents/docs.py` |
 | 재계획 Supervisor 입력 | 보고 요약(코드가 쓰는 글)과 `missing`(RAG 에이전트 LLM이 쓴 자유 글, 요약에도 붙음) | `render_plan` REPLAN 줄, `docs.py` `report` |
 | `끝내기`가 reply를 답으로 씀 | 보고가 없을 때(첫 계획 → 끝내기)만. 재계획 뒤에는 path만 돌려준다 | `backend/multi_agent/build.py` `finish_node` |
