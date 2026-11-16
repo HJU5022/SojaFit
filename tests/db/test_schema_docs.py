@@ -154,6 +154,5 @@ def test_committed_docs_match_the_database(dsn):
     for name, text in docs.items():
         path = ROOT / 'db' / 'schema' / name
         committed = path.read_text(encoding='utf-8')
-        if gen.MARKER not in committed:
-            pytest.skip(f'{name}은 아직 자동 생성물이 아니다(통합 단계에서 생성)')
+        assert gen.MARKER in committed, f'db/schema/{name}에 자동 생성 표시가 없습니다: 손으로 고치지 말고 다시 생성하세요'
         assert committed == text, f'db/schema/{name}이 DB와 다릅니다: uv run python scripts/db/gen_schema_docs.py 로 다시 생성하세요'
