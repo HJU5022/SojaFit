@@ -89,7 +89,7 @@ export function PartsDialog({
                     <td>
                       {p.judge_supported ? (
                         <>
-                          ✓{' '}
+                          지원{' '}
                           <button
                             className="text-button"
                             onClick={() => onReview(reviewQuestion(p.ref))}
@@ -98,7 +98,8 @@ export function PartsDialog({
                           </button>
                         </>
                       ) : (
-                        <span className="muted">{p.judge_reason} 아직 지원 안 함</span>
+                        // [왜] 칸 값은 명사로 쓴다. 왜 안 되는지는 종류 칸(LED · 커패시터 …)이 이미 보인다
+                        <span className="muted">추후 지원 예정</span>
                       )}
                     </td>
                     <td>
