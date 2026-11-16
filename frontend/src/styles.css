@@ -1331,6 +1331,7 @@ form {
   font-weight: 500;
 }
 .conversation {
+  --chat-gutter: 32px;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -1353,8 +1354,13 @@ form {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+/* 대화 기둥(#46): 질문 · 진행 · 답 · 입력창을 가운데 최대 760px 한 칸에 둔다. 좌우 여백이 남는 폭을 나눠 가진다 */
+.conversation-scroll,
+.composer-area {
+  padding-inline: max(var(--chat-gutter), calc((100% - 760px) / 2));
+}
 .conversation-scroll {
-  padding: 26px 32px;
+  padding-block: 26px;
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -1374,19 +1380,18 @@ form {
   color: var(--muted);
   line-height: 1.9;
 }
+/* 내 질문은 오른쪽 말풍선(#46). "내 질문" 이름은 화면 낭독기에만 남긴다 */
 .user-message {
+  width: fit-content;
+  max-width: 80%;
+  margin: 0 0 16px auto;
   background: #eef2f4;
-  padding: 17px 20px;
-  border-radius: 7px;
-  margin: 0 0 25px 32px;
+  padding: 10px 16px;
+  border-radius: 16px;
   font-size: 13px;
-}
-.user-message > span {
-  font-size: 13px;
-  color: var(--muted);
+  overflow-wrap: anywhere;
 }
 .user-message p {
-  margin-top: 5px;
   white-space: pre-wrap;
 }
 .reply-label {
@@ -1395,7 +1400,7 @@ form {
   align-items: center;
   font-size: 13px;
   font-weight: 600;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 .reply-label > span:last-child {
   font-weight: 400;
@@ -1419,7 +1424,7 @@ form {
   color: #0d7480;
 }
 .assistant-reply {
-  padding: 5px 0 20px;
+  padding-bottom: 32px;
 }
 .assistant-reply h2 {
   font-size: 17px;
@@ -1460,7 +1465,7 @@ form {
 }
 .full-answer,
 .evidence-list {
-  margin-top: 17px;
+  margin-top: 8px; /* 요약 줄 위아래 7px과 합쳐 카드 · 접힘 · 면책 문구 사이가 고르게 15~22px */
   font-size: 13px;
 }
 .full-answer summary,
@@ -1503,7 +1508,7 @@ form {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
@@ -1562,14 +1567,9 @@ form {
   min-height: 32px;
 }
 .composer-area {
-  padding: 15px 28px 18px;
+  padding-block: 15px 18px;
   background: white;
   border-top: 1px solid var(--line);
-}
-.composer-area > .disclaimer {
-  text-align: center;
-  font-size: 13px;
-  margin-top: 8px;
 }
 .composer {
   border: 1px solid #c4d0d6;
@@ -2171,15 +2171,6 @@ form {
     transform: translateY(0);
   }
 }
-@media (min-width: 1600px) {
-  .conversation-scroll {
-    padding: 30px 6vw;
-  }
-  .composer-area {
-    padding-left: 6vw;
-    padding-right: 6vw;
-  }
-}
 @media (max-width: 1100px) {
   .sidebar {
     width: var(--sidebar-w, 190px);
@@ -2188,11 +2179,14 @@ form {
   .app-frame {
     margin-left: var(--sidebar-w, 190px);
   }
+  .conversation {
+    --chat-gutter: 20px;
+  }
   .conversation-scroll {
-    padding: 23px 20px;
+    padding-block: 23px;
   }
   .composer-area {
-    padding: 14px 18px;
+    padding-block: 14px;
   }
   .page-content {
     padding: 30px;
@@ -2554,7 +2548,7 @@ form {
     overflow: hidden;
   }
   .conversation-scroll {
-    padding: 22px 20px;
+    padding-block: 22px;
     overflow: visible;
   }
   .conversation-start {
@@ -2564,11 +2558,6 @@ form {
     font-size: 24px;
   }
   .conversation-start p {
-    font-size: 13px;
-  }
-  .user-message {
-    margin-left: 14px;
-    padding: 14px 16px;
     font-size: 13px;
   }
   .candidate-card {
@@ -2592,7 +2581,7 @@ form {
     font-size: 16px;
   }
   .composer-area {
-    padding: 12px 20px 20px;
+    padding-block: 12px 20px;
   }
   .composer-controls {
     gap: 12px;

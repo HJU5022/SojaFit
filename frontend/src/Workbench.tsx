@@ -738,7 +738,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     .map((m) => (
                       <div key={m.id}>
                         <div className="user-message">
-                          <span>내 질문</span>
+                          <span className="sr-only">내 질문</span>
                           <p>{m.content}</p>
                         </div>
                         {previous
@@ -751,8 +751,12 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                                 onCandidate={(c, r) => setSelected({ c, r })}
                               />
                             ) : (
-                              <div key={a.id} className="markdown">
-                                <Markdown>{a.content}</Markdown>
+                              // 실행 기록을 받지 못했을 때 보이는 저장된 답. 면책 문구는 답마다 한 번(#46)
+                              <div key={a.id} className="assistant-reply">
+                                <div className="markdown">
+                                  <Markdown>{a.content}</Markdown>
+                                </div>
+                                <Disclaimer />
                               </div>
                             ),
                           )}
@@ -761,7 +765,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   {pendingQuestion &&
                     !detail?.messages.some((m) => m.content === pendingQuestion) && (
                       <div className="user-message">
-                        <span>내 질문</span>
+                        <span className="sr-only">내 질문</span>
                         <p>{pendingQuestion}</p>
                       </div>
                     )}
@@ -933,7 +937,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   </button>
                 </div>
               </form>
-              <Disclaimer />
             </div>
             {attach.overlay}
           </section>
