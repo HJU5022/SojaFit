@@ -158,6 +158,12 @@ export function Reply({
         </small>{' '}
         <span>{statuses[r.status] ?? r.stage}</span>
       </div>
+      {/* [왜] 웹 검색 장애를 "못 찾음"과 구별해 알린다(#28) */}
+      {r.web_search_unavailable && (
+        <p role="status" className="notice">
+          웹 검색을 잠시 쓸 수 없어 등록된 자료로만 답했어요.
+        </p>
+      )}
       {candidates.length ? (
         <>
           <h2>후보별 검토 결과입니다.</h2>

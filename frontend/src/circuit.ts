@@ -19,6 +19,14 @@ export function pinsOf(project: Project | null, ref: string) {
       })),
   );
 }
+/** ref에 은/는을 붙인다. 끝 글자를 한국어로 읽은 받침으로 고른다(숫자는 영·일·이·삼…, 영문은 엘·엠·엔·알만 받침). 서버 _topic과 같은 규칙. */
+function topic(ref: string) {
+  const last = ref.slice(-1).toUpperCase(),
+    code = last.charCodeAt(0);
+  const final =
+    code >= 0xac00 && code <= 0xd7a3 ? (code - 0xac00) % 28 > 0 : '013678LMNR'.includes(last);
+  return ref + (final ? '은' : '는');
+}
 /**
  * 판정 대상으로 고를 수 없는 부품의 이유(고를 수 있으면 빈 문자열). LED·표시기(7세그)·다이오드가 아닌 부품이다.
  * 서버(backend/conversations/memory_service.py의 _require_supported_target)와 같은 규칙·같은 문구라
@@ -41,10 +49,10 @@ export function unsupportedPartReason(part: {
     ledDescription ||
     /^LED\d/i.test(part.ref)
   )
-    return `${part.ref}은(는) LED로 식별됩니다. 현재 LED 대체 판정은 지원하지 않습니다. 일반 다이오드를 선택해 주세요.`;
+    return `${topic(part.ref)} LED라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
   if (/(^|[^a-z0-9])(?:7|seven)[\s_-]*seg(?:ment)?/i.test(identifiers))
-    return `${part.ref}은(는) 표시기로 식별됩니다. 현재 표시기 대체 판정은 지원하지 않습니다. 일반 다이오드를 선택해 주세요.`;
+    return `${topic(part.ref)} 표시기라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
   if (!/^D\d/i.test(part.ref))
-    return `${part.ref}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.`;
+    return `${topic(part.ref)} 다이오드가 아니라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.`;
   return '';
 }

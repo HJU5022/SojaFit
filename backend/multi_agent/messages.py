@@ -9,8 +9,6 @@
 """
 from backend.multi_agent.contracts import Reason
 
-CLUES = '부품 윗면의 글자, 주문 코드, 데이터시트 파일'
-
 
 def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] = ()) -> str:
     """거절 사유에 맞는 안내 문구. parts · revisions는 질문에서 확인한 값이고 있으면 문구에 넣는다."""
@@ -19,10 +17,10 @@ def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] 
         Reason.OUT_OF_SCOPE: '이 서비스는 회로 속 부품의 역할과 대체 후보를 데이터시트로 확인해 드려요. 회로나 부품에 관한 질문을 해 주세요.',
         Reason.PART_MISSING: f'{named}의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.',
         Reason.REVISION_MISSING: f'요청하신 판({", ".join(revisions) if revisions else "개정판"})의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.',
-        Reason.NOT_FOUND: f'요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 {CLUES}을 알려 주시면 다시 찾아볼게요.',
+        Reason.NOT_FOUND: '이 부품 자료를 찾지 못했어요. 정확한 품번이나 부품에 적힌 글자를 알려 주시면 다시 찾아볼게요.',
         Reason.LIMIT_REACHED: '확인하는 데 시간이 너무 오래 걸려 멈췄어요. 질문을 조금 더 구체적으로 다시 해 주세요.',
         Reason.VERIFY_FAILED: '답변의 근거를 확인하지 못해 답을 보여 드릴 수 없어요. 질문을 다시 해 주세요.',
-        Reason.SEARCH_ERROR: '검색 도구를 사용할 수 없어 근거를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',
+        Reason.SEARCH_ERROR: '지금은 자료를 확인할 수 없어요. 잠시 후 다시 시도해 주세요.',  # 공급자 장애 · 품번 확인 시간 초과(#29 문구 11-16)
     }
     return texts[reason]  # 거절 사유가 아닌 이유(재시도 사유)를 넘기면 KeyError: 거절 결정서는 이미 거절 사유만 받는다
 
@@ -91,7 +89,7 @@ def render_judgement(judgement: dict) -> str:
         if judgement['capped']:
             lines.append('후보가 50개 상한에 걸렸어요. 패키지나 분류를 좁혀 주세요.')
         if not judgement['shown']:
-            lines.append('이 조건을 모두 채우는 TSC 부품을 사양 표에서 찾지 못했어요.')
+            lines.append('조건을 모두 만족하는 부품을 찾지 못했어요.')
         for j in judgement['shown']:
             lines += _one(j) + ['']
         unverified = judgement['unverified']

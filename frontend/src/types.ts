@@ -58,6 +58,8 @@ export type Result = {
     target_choices?: { ref: string; value: string }[];
   };
   error?: { code: string; message: string } | null;
+  /** 이 실행에서 웹 검색(Exa)이 실패해 등록된 자료로만 답했는지(#28) */
+  web_search_unavailable?: boolean;
 };
 export type Run = { id: string; thread_id: string; message_id: number | null; result: Result };
 export type Project = {

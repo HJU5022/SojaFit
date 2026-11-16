@@ -198,6 +198,9 @@ def test_refusal_messages_are_plain_korean_and_cover_every_refusal_reason():
         assert text and '코퍼스' not in text and reason.value not in text  # 우리끼리 쓰는 말과 내부 코드는 보이지 않는다
     assert '1N4001' in M.refusal_message(Reason.PART_MISSING, ['1N4001'])
     assert 'Q2611' in M.refusal_message(Reason.REVISION_MISSING, [], ['Q2611'])
+    # #29: 강사에게 보고한 문구 그대로(11-16)
+    assert M.refusal_message(Reason.SEARCH_ERROR) == '지금은 자료를 확인할 수 없어요. 잠시 후 다시 시도해 주세요.'
+    assert M.refusal_message(Reason.NOT_FOUND) == '이 부품 자료를 찾지 못했어요. 정확한 품번이나 부품에 적힌 글자를 알려 주시면 다시 찾아볼게요.'
 
 
 
@@ -219,7 +222,7 @@ def test_render_judgement_shows_values_missing_and_cautions_even_when_not_verifi
 def test_render_find_with_no_candidates_says_so_and_shows_terms():
     j = {**JUDGEMENT, 'kind': 'find', 'results': [], 'shown': [], 'terms': [{'code': 'VRRM', 'gte': 15.0}], 'capped': True}
     text = Msg.render_judgement(j)
-    assert 'VRRM ≥ 15' in text and '찾지 못했어요' in text and '50개 상한' in text
+    assert 'VRRM ≥ 15' in text and '조건을 모두 만족하는 부품을 찾지 못했어요.' in text and '50개 상한' in text
 
 
 def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():

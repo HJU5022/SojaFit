@@ -163,7 +163,7 @@ TABLES = {
         'approval_id': '근거 승인(고유). 후보 이름 · 판정은 approvals에서 읽는다',
         'created_at': '시각',
     }),
-    'public.admin_audit': ('관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT만', {
+    'public.admin_audit': ('관리자 작업 이력(가림 해제 · 정지 · 재활성화 · 탈퇴 처리, db/034). 앱은 INSERT · SELECT, 1년 지난 행은 새 분석 시작 때 지움', {
         'id': '이력 번호',
         'actor_id': '처리한 관리자',
         'target_id': '대상 계정 번호. 탈퇴 처리 뒤에도 이력이 남도록 FK 없음',

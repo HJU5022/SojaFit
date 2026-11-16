@@ -120,8 +120,8 @@ def refuse_code(data) -> str:
             ('개정판', 'revision_missing'),
             ('시간이 너무 오래', 'limit_reached'),
             ('근거를 확인하지 못해 답을', 'verify_failed'),
-            ('검색 도구를 사용할 수 없', 'search_error'),
-            ('확인하지 못했어요', 'not_found')):
+            ('지금은 자료를 확인할 수 없', 'search_error'),
+            ('자료를 찾지 못했어요', 'not_found')):
         if needle in text:
             return code
     return 'unknown'

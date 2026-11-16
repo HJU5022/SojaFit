@@ -20,8 +20,17 @@ def test_browser_dto_excludes_internal_state():
     assert importlib.util.find_spec('backend.conversations.dto') is not None
     from backend.conversations.dto import result_dto
     body = result_dto({'answer': 'ok', 'facts': 'secret', 'plan': 'secret', 'reports': 'secret', 'counters': 1, 'check': 'secret'}, request_id='req-1').model_dump()
-    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints','error'}
+    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints','web_search_unavailable','error'}
     assert 'secret' not in str(body)
+
+
+def test_web_search_notice_only_when_no_web_evidence_is_shown():
+    """#28: 웹 검색 장애 표시는 답에 웹 근거([W] · [R])가 없을 때만 낸다. 있으면 '등록된 자료로만 답했다'는 말이 틀린다."""
+    from backend.conversations.dto import result_dto
+    assert result_dto({'answer': 'x', 'web_search_unavailable': True}, request_id='r').web_search_unavailable is True
+    ref = {'citation_number': 'R1', 'document': 'https://example.org/SS34-reference', 'section': '미검증 참고 정보'}
+    shown = result_dto({'answer': 'x', 'web_search_unavailable': True, 'evidence': [ref]}, request_id='r')
+    assert shown.evidence and shown.web_search_unavailable is False
 
 
 def test_profile_hints_keep_only_kind_value_text():

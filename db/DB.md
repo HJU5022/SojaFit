@@ -25,7 +25,7 @@
 | `031_circuit_versions.sql` | 초기화·기존 DB 추가 SQL | 불변 `project_circuit_versions`와 대화별 회로 고정. 기존 회로·대화를 v1으로 backfill(빈 회로 v0), 새 버전·대화 트리거, RLS·공개 권한 회수. 재실행 가능하며 적용 호출자가 트랜잭션을 연다 |
 | `032_approval_reselection.sql` | 초기화·기존 DB 추가 SQL | 승인 snapshot/견적을 보존하고 사례 삭제 뒤 새 승인 이력을 허용. message_id UNIQUE를 조회 인덱스로 전환. 활성 승인 1건은 새 QuoteService의 run 행 잠금과 활성 사례 검사로 직렬화 |
 | `033_thread_titles.sql` | 초기화·기존 DB 추가 SQL | 대화 이름 칸 `threads.title`(NULL 허용, 공백 제거 1~200자 CHECK `ck_threads_title`)만 더함. NULL이면 화면은 첫 질문으로 만든 이름을 보임. 기존 행은 바꾸지 않고 재실행 가능 |
-| `034_admin_audit.sql` | 초기화·기존 DB 추가 SQL | 관리자 작업 이력 표 `admin_audit`(처리한 관리자 FK, 대상 id와 가린 이메일(FK 없음, 탈퇴 처리 뒤에도 남음), 작업 unmask·deactivate·activate·delete, 연 칸, 가림 해제 사유 5~500자). 앱은 INSERT·SELECT만. RLS ON·공개 역할 권한 회수, 재실행 가능 |
+| `034_admin_audit.sql` | 초기화·기존 DB 추가 SQL | 관리자 작업 이력 표 `admin_audit`(처리한 관리자 FK, 대상 id와 가린 이메일(FK 없음, 탈퇴 처리 뒤에도 남음), 작업 unmask·deactivate·activate·delete, 연 칸, 가림 해제 사유 5~500자). 앱은 INSERT·SELECT, 1년 지난 행은 새 분석 시작 때 지움(SPEC 8.5). RLS ON·공개 역할 권한 회수, 재실행 가능 |
 | `legacy/` | 하위 폴더 | 기준선 이전의 옛 증분 SQL 이력. [LEGACY.md](legacy/LEGACY.md) |
 | `migrations/` | 하위 폴더 | 이미 서비스 표가 있는 운영 DB용 이전·점검·되돌리기 SQL. [MIGRATIONS.md](migrations/MIGRATIONS.md) |
 | `manual/` | 하위 폴더 | 자동 실행하지 않는 수동 SQL. [MANUAL.md](manual/MANUAL.md) |

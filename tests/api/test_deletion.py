@@ -411,6 +411,22 @@ def test_new_analysis_runs_cleanup_and_cleanup_failure_does_not_block(world, mon
     assert [r.message for r in caplog.records if r.name == 'backend.conversations.retention'] == ['retention_purge_failed']
 
 
+def test_new_analysis_cleanup_deletes_admin_audit_older_than_one_year(world):
+    """관리자 처리 이력(admin_audit)은 1년 뒤 새 분석 시작 때 지운다(처리방침 2절, SPEC 8.5). 1년이 안 된 줄은 남는다."""
+    app, (a, _, admin), dsn = world
+    with psycopg.connect(dsn) as conn:
+        ids = [conn.execute("INSERT INTO public.admin_audit(actor_id,target_id,target_email_masked,action,created_at) "
+                            "VALUES (%s,%s,'d***@example.test','deactivate',CURRENT_TIMESTAMP - %s * INTERVAL '1 day') RETURNING id",
+                            (admin, a, days)).fetchone()[0] for days in (400, 300)]
+    try:
+        app._purge_expired()
+        with psycopg.connect(dsn) as conn:
+            assert [r[0] for r in conn.execute('SELECT id FROM public.admin_audit WHERE id = ANY(%s)', (ids,))] == [ids[1]]
+    finally:
+        with psycopg.connect(dsn) as conn:  # [왜] actor_id FK가 고정 장치의 사용자 삭제를 막는다
+            conn.execute('DELETE FROM public.admin_audit WHERE id = ANY(%s)', (ids,))
+
+
 # --- 028의 DB 규칙: 소유자 FK CASCADE · 화면 thread FK · 체크포인트 삭제 트리거(D9) ---
 
 def test_deleting_a_react_thread_row_removes_analysis_records_and_checkpoints_by_trigger(world):

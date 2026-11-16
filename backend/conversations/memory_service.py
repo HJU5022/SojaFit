@@ -59,6 +59,7 @@ SERVICE_DAILY_TOKENS = 10_000_000
 TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
 USER_TOKENS_FULL = f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_TOKENS:,} 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 SERVICE_TOKENS_FULL = f'오늘 서비스 전체 분석 사용량(하루 {SERVICE_DAILY_TOKENS:,} 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+TOO_LONG = '답변 시간이 너무 길어져 멈췄어요. 질문을 나눠 다시 시도해 주세요.'  # 분석 한 번의 시간 · 호출 · 예약 상한(504 · 429, #29 문구 11-16)
 
 MAX_CONVERSATION_HISTORY_CHARS = 20_000
 # 이번 run의 노드 진행 알림(message · resume의 progress). `_invoke`가 읽어 노드 시간 callback에 붙인다.
@@ -97,6 +98,13 @@ def _conversation_history(contents, *, max_chars=MAX_CONVERSATION_HISTORY_CHARS)
     return list(reversed(selected))
 
 
+def _topic(ref):
+    """ref에 은/는을 붙인다. 끝 글자를 한국어로 읽은 받침으로 고른다(숫자는 영·일·이·삼…, 영문은 엘·엠·엔·알만 받침). frontend/src/circuit.ts와 같은 규칙."""
+    last = ref[-1:].upper()
+    final = (ord(last) - 0xAC00) % 28 > 0 if '가' <= last <= '힣' else last in '013678LMNR'
+    return ref + ('은' if final else '는')
+
+
 def _require_supported_target(connections, target):
     part = next((p for p in connections.get('components', connections.get('parts', [])) if p['ref'] == target), None)
     if part is None:
@@ -105,11 +113,11 @@ def _require_supported_target(connections, target):
     description = (part.get('description') or '').strip()
     led_description = re.search(r'light[\s-]*emitting[\s-]*diode|발광\s*다이오드|^(?:(?:red|green|blue|white|yellow|amber|orange|rgb)\s+)?leds?$', description, re.I)
     if re.search(r'(^|[^a-z0-9])leds?(?=$|[^a-z])', identifiers, re.I) or led_description or re.match(r'LED\d', target, re.I):
-        raise HTTPException(422, f'{target}은(는) LED로 식별됩니다. 현재 LED 대체 판정은 지원하지 않습니다. 일반 다이오드를 선택해 주세요.')
+        raise HTTPException(422, f'{_topic(target)} LED라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.')
     if re.search(r'(^|[^a-z0-9])(?:7|seven)[\s_-]*seg(?:ment)?', identifiers, re.I):
-        raise HTTPException(422, f'{target}은(는) 표시기로 식별됩니다. 현재 표시기 대체 판정은 지원하지 않습니다. 일반 다이오드를 선택해 주세요.')
+        raise HTTPException(422, f'{_topic(target)} 표시기라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.')
     if not re.match(r'D\d', target, re.I):
-        raise HTTPException(422, f'{target}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.')
+        raise HTTPException(422, f'{_topic(target)} 다이오드가 아니라서 아직 교체 검토를 지원하지 않아요. 다이오드를 골라 주세요.')
 
 
 def target_choices(connections, question=''):
@@ -514,10 +522,13 @@ class Conversations:
                 'profile_hints': list(hints), 'consulted_memories': [], 'referenced_memories': []}
 
     def _purge_expired(self):
-        """보관 기간이 지난 프로젝트(60일) · 기록(30일)을 작은 묶음으로 지운다(db/020_service_baseline.sql). 실패해도 분석은 계속한다."""
+        """보관 기간이 지난 프로젝트(60일) · 기록(30일) · 관리자 처리 이력(1년)을 작은 묶음으로 지운다(db/020_service_baseline.sql). 실패해도 분석은 계속한다."""
         try:
             with self.connection() as conn:
                 conn.execute('SELECT purge_inactive_projects(), purge_log_records()')
+                # 관리자 처리 이력(admin_audit, db/034)은 1년(처리방침 2절, 11-16 결정). [왜] 청소 함수를 고치면 배포 때 운영 DB 이전이 필요해 앱 SQL 한 줄로 둔다
+                conn.execute("DELETE FROM public.admin_audit WHERE id = ANY(ARRAY(SELECT id FROM public.admin_audit "
+                             "WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '1 year' LIMIT 200))")
         except psycopg.Error:
             RETENTION_LOGGER.warning('retention_purge_failed')
 
@@ -562,8 +573,8 @@ class Conversations:
                       # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
                       'approved_memories': []}
             with _reporting(progress):
-                self._invoke(conn, thread, inputs, budget, request_id)
-        return self.detail(user, thread, hints)
+                web_unavailable = self._invoke(conn, thread, inputs, budget, request_id)
+        return {**self.detail(user, thread, hints), 'web_search_unavailable': web_unavailable}
 
     def _profile_hints(self, user, question):
         """질문 글로 사용자 사실을 찾아 화면 참고용 칸(kind · value · text)만 돌려준다. 실패해도 분석은 계속한다."""
@@ -608,10 +619,11 @@ class Conversations:
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
             hints = self._profile_hints(user, record.get('question'))
             with _reporting(progress):
-                self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
-        return self.detail(user, thread, hints)
+                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
+        return {**self.detail(user, thread, hints), 'web_search_unavailable': web_unavailable}
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
+        """그래프를 한 번 돌리고 결과를 저장한다. 돌려주는 값: 이 실행에서 Exa 웹 검색 호출이 실패했는지(#28, 화면 안내 한 줄)."""
         from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
         from backend.services import langfuse_prompts, service_trace
         from backend.services.demo import ReplayMiss
@@ -623,13 +635,14 @@ class Conversations:
         try:
             user = conn.execute('SELECT user_id FROM threads WHERE id=%s', (thread,)).fetchone()['user_id']
             from backend.services.exa import request_scope
-            with request_scope(), evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
+            with request_scope() as web, evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
                 budget.remaining()
                 self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings, *traces], 'metadata': trace_metadata})
                 budget.remaining()
             saved = time.monotonic()
             self._finish(conn, thread, self.graph.get_state(self.config(thread)))
             timings.stages.append({'stage':'save_result','status':'ok','elapsed_ms':int((time.monotonic()-saved)*1000)})
+            return web['web_search_unavailable']
         except Exception as error:
             conn.execute("UPDATE threads SET status='FAILED' WHERE id=%s", (thread,))
             if isinstance(error, EvaluationLimitError) or (isinstance(error,HTTPException) and error.status_code==429):
@@ -646,12 +659,12 @@ class Conversations:
             # [왜] 바깥 호출에는 남은 시간만큼만 제한 시간을 준다(llm.EvaluationBudget). 시간 예산을 다 써 끊긴 바깥 호출도 504다
             if isinstance(error, EvaluationLimitError) or (late and is_upstream_error(error)):
                 if late:
-                    raise HTTPException(504, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.') from None
+                    raise HTTPException(504, TOO_LONG) from None
                 # [왜] 실행 한 번의 호출 수 · 예약 USD 상한이다. 같은 요청을 곧바로 되풀이해도 다시 걸려 LIMIT_EXCEEDED로 둔다(ADR 0019 결과)
-                raise ApiError(429, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.', code='LIMIT_EXCEEDED') from None
+                raise ApiError(429, TOO_LONG, code='LIMIT_EXCEEDED') from None
             # [왜] LLM · 임베딩 공급자 장애(502)와 우리 DB · 설정 문제(503)를 코드로 가른다(ADR 0019). from error는 로그 traceback에 원인 프레임을 남긴다
             if is_upstream_error(error):
-                raise HTTPException(502, 'LLM · 검색 서비스가 응답하지 않습니다. 잠시 후 다시 시도하세요.') from error
+                raise HTTPException(502, '답변을 만들지 못했어요. 잠시 후 다시 시도해 주세요.') from error
             raise HTTPException(503, '분석을 완료하지 못했습니다. 잠시 후 상태를 확인하세요.') from error
         finally:
             self._record_event(conn,thread,started,timings.report(),request_id,trace_id=trace_id)
