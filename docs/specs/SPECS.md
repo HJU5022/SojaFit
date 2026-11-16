@@ -10,6 +10,9 @@
 - 가입·로그인 규칙, 오류 코드, 토큰 한도, API 경로 수는 루트 `SPEC.md`가 정본입니다. 이 폴더의 문서는 해당 절을 링크합니다.
 - 화면 계약: 2026-11-16 새 화면 교체 뒤 현재 화면의 경로 · 파일 구조는 `frontend/FRONTEND.md`와 `frontend/src/SRC.md`, 흐름은 루트 `SPEC.md` 2절이 정본입니다. `frontend-screen-redesign.md`는 교체 전 화면의 이력이고(옛 화면의 개발 전용 더미 모드 작업서 `dummy-full-flow.md`는 새 화면에 그 모드가 없어 2026-11-17에 지웠다. 내용은 git 이력에 있다), `d5-frontend-service.md`는 기능 계약(API · 저장 경계)이 현행이고 화면 구현 행만 새 화면에 맞췄습니다.
 
+## 줄 번호
+- 문서 안의 `파일:줄` 번호는 그 문서 머리의 기준 커밋 때의 것이다. 코드가 바뀌면 몇 줄씩 어긋나므로 함수 · 상수 이름으로 찾는다.
+
 ## 파일
 - `_example.md` — 강사 스캐폴드의 작업서 형식 예시(AGENTS.md가 가리킴)
 - `api-error-contract.md` — FastAPI 공통 JSON 오류 응답과 서버 생성 요청 식별자

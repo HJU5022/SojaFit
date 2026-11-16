@@ -1,8 +1,8 @@
 # 아키텍처와 조원 계약서
 
 - 상태: 현행
-- 기준일: 2026-11-12
-- 기준 커밋: 6707002
+- 기준일: 2026-11-12. 2026-11-17에 1절 분기 · interrupt 행과 4절 결정 표 주석을 `799ae636` 코드에 맞춤
+- 기준 커밋: 6707002(그 밖의 줄). 이 문서의 `파일:줄` 번호는 기준 커밋의 것이라 지금 코드와 몇 줄 어긋날 수 있다
 - 정본 여부: 비정본. 구조의 정본은 [SPEC.md](../../SPEC.md) 2절 "그래프"와 [MULTI_AGENT.md](../../backend/multi_agent/MULTI_AGENT.md), 담당·규칙의 정본은 [AGENTS.md](../../AGENTS.md)와 [README.md](../../README.md) 7절. 이 문서는 설계 질문 8개의 답과 정본 위치를 모은다
 - 관련 문서: [REFERENCE.md](REFERENCE.md), [SOJAFIT.md](../../SOJAFIT.md), [ADR](../adr/ADR.md)
 
@@ -18,9 +18,9 @@
 
 | 질문 | 답 | 근거 |
 |---|---|---|
-| 왜 그래프인가(분기, 반복, 승인) | 질문 종류마다 가는 길이 다르다: 일상 대화·가격·거절은 Supervisor에서 바로 끝나고, 문서 할 일과 판정 할 일은 두 에이전트에 동시에 간다. 판정에 필요한 회로 값이 질문에 없으면 판정 노드가 interrupt로 한 번 묻고 PostgreSQL 체크포인트에서 같은 대화로 이어 간다. 한 방향 흐름은 실패를 고칠 길이 없어 실패하면 계획으로 되돌아가되 재계획 1번, 할 일 3개, Supervisor LLM 4번, 서브에이전트 실행 6번, 문서 할 일마다 검색 2번으로 막는다 | README 3절 "왜 그래프인가", `backend/multi_agent/contracts.py` `MAX_*`, AGENTS.md 지킬 것 6 |
+| 왜 그래프인가(분기, 반복, 승인) | 질문 종류마다 가는 길이 다르다: 일상 대화·가격·부품 목록·견적 안내·거절은 Supervisor에서 바로 끝나고(`parts_list` · `quote`는 #55 · #60), 문서 할 일과 판정 할 일은 두 에이전트에 동시에 간다. 판정에 필요한 회로 값이 질문에 없으면 판정 노드가 interrupt로 한 번 묻고 PostgreSQL 체크포인트에서 같은 대화로 이어 간다. 한 방향 흐름은 실패를 고칠 길이 없어 실패하면 계획으로 되돌아가되 재계획 1번, 할 일 3개, Supervisor LLM 4번, 서브에이전트 실행 6번, 문서 할 일마다 검색 2번으로 막는다 | README 3절 "왜 그래프인가", `backend/multi_agent/contracts.py` `MAX_*`, AGENTS.md 지킬 것 6 |
 | Supervisor와 서브에이전트의 책임, 서로 모르게 하는 것(컨텍스트 격리) | Supervisor(Haiku, LLM 1번)는 범위 판정, 질문 종류, 할 일 최대 3개와 지시서(맡을 에이전트, 목표, 출력, 경계, 첫 검색어)를 정한다. 서브에이전트는 메모장 전체가 아니라 지시서와 필요한 입력만 받는다. RAG 에이전트는 검색, 근거 채점+답 쓰기, 인용 검사, Spec 에이전트는 회로 읽기, 코퍼스 밖 요구 관문, 빠진 값 묻기, 조건별 비교(코드)를 맡는다. 숫자·단위 비교는 `backend/judge/`만 한다 | `backend/multi_agent/MULTI_AGENT.md` "구조", AGENTS.md 지킬 것 7 |
-| 사람 승인(interrupt)은 어디서, 왜 거기인가 | 두 곳이다. (1) 판정에 필요한 회로 값이 빠졌을 때 Spec 에이전트의 판정 노드가 문항당 1번 묻는다(체크포인터가 있어야 켠다). (2) 견적 저장 전 사람 승인은 그래프 interrupt가 아니라 API 단계다(`POST /api/messages/{id}/approvals` 뒤에만 견적 저장). 판정 하위 그래프는 재개할 때 읽기 LLM을 다시 부르지 않는다 | SPEC.md 2절 "사람 확인", 4절, 8.4 |
+| 사람 승인(interrupt)은 어디서, 왜 거기인가 | 세 곳이다. (1) 판정에 필요한 회로 값이 빠졌을 때 Spec 에이전트의 판정 노드가 문항당 1번 묻는다(체크포인터가 있어야 켠다). (2) 대상이 빈 대화에서 Supervisor가 정한 할 일이 대상 부품을 써야 할 때만 `대상 확인` 노드(코드)가 고를 부품을 묻는다(#62, SPEC 8.9). (3) 견적 저장 전 사람 승인은 그래프 interrupt가 아니라 API 단계다(`POST /api/messages/{id}/approvals` 뒤에만 견적 저장). 판정 하위 그래프는 재개할 때 읽기 LLM을 다시 부르지 않는다 | SPEC.md 2절 "사람 확인", 4절, 8.4, 8.9 |
 | 체크포인트에는 무엇이 저장되고 어떻게 재개되는가 | 이번 대화의 상태는 `sojafit_agent` 스키마의 LangGraph 체크포인트에 저장된다. 체크포인트 표 3개는 `thread_id`(글자)로만 묶인다. 재개는 같은 thread의 같은 대화로 이어 가며, 사용자가 답한 값으로 판정을 계속한다 | SPEC.md 8.5 `:384`, `backend/conversations/memory_service.py:93,314` |
 | 로그인한 사용자 id가 thread와 Store namespace에 어떻게 들어가는가 | 분석 thread는 `sojafit_agent.threads.user_id`(users FK)로 사용자에 묶이고 체크포인트 `thread_id`는 그 thread의 UUID다. 장기 기억 Store의 namespace는 `(str(user_id), "profile")`이며 첫 칸이 격리 단위다(namespace는 접근 권한 검사가 아니다). 사용자 id는 세션에서 온다(기억 API) | `db/020_service_baseline.sql:234-237`, SPEC.md 8.5 `:394`, `:400` |
 | 무엇을 State에 두고 무엇을 Store에 두는가 | 이번 대화의 상태는 체크포인터(State)에, 다음 대화에서도 유효한 사실은 LangGraph Store에 둔다. Store에는 사용자 사실 3칸(소속, 직무, 선호 실장 방식)만 있고, 승인한 판정 사례·전압 같은 회로 값·주문 수량은 기억이 아니다. 그래프는 `기억 읽기` 노드에서 선호 실장 방식만 읽는다 | SPEC.md 8.5 `:384-400` |
@@ -41,7 +41,7 @@
 
 ## 4. 결정 기록
 
-결정과 이유의 정본은 [docs/adr/](../adr/ADR.md)다. 아래 표는 초기 코퍼스·파서·청킹 결정의 근거 요약이다.
+결정과 이유의 정본은 [docs/adr/](../adr/ADR.md)다. 아래 표는 초기 코퍼스·파서·청킹 결정의 근거 요약이다. 코퍼스는 지금도 TSC뿐이지만, 내부 근거가 부족할 때 Infineon 등 공식 제조사 PDF의 쪽 · 표 행을 2등급 웹 근거로 인용하는 길이 PR #146으로 생겼다(코퍼스에 넣지 않는다. 계약은 [official-datasheet-evidence.md](../specs/official-datasheet-evidence.md)).
 
 | 날짜 | 결정 | 이유 | 대안 | 근거 |
 |---|---|---|---|---|
