@@ -70,7 +70,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 대화가 먼저이고 프로젝트는 회로 하나를 묶는 폴더입니다. 사이드바 맨 위 "새 대화"는 빈 대화 화면(`/app`)을 엽니다. 거기서 넷리스트(`.net`)를 첨부하면 파일 이름(확장자 뺌)으로 프로젝트를 만들고(`POST /api/projects/upload`), 기존 프로젝트나 데모 회로(`DEMO_MODE=1`)를 고르면 그 회로로 작업대(`/app?project=`)를 엽니다. 이름이나 회로가 겹치는 409면 기존 프로젝트 열기와 새 프로젝트로 만들기(`allow_duplicate=true`) 중에서 고릅니다. 대화(thread)는 작업대에서 첫 질문을 보낼 때 생깁니다. 사이드바 "대화"는 모든 프로젝트의 대화를 마지막 활동 순으로 보이고(`GET /api/threads`) 줄마다 ⋯ 메뉴에서 이름 변경(`PATCH /api/threads/{id}`, 그 자리에서 고침) · 삭제(`DELETE /api/threads/{id}`, 확인 창)를 합니다. "프로젝트"는 프로젝트를 폴더처럼 펼쳐 그 대화와 "이 회로로 새 대화"를 보입니다. 프로젝트 목록(`/projects`)은 줄마다 이름 변경(그 자리에서 고침, `PATCH /api/projects/{id}`) · 삭제 아이콘 버튼과 선택 칸을 두고, 고른 프로젝트를 확인 창 하나로 차례로 지웁니다(`DELETE /api/projects/{id}`를 하나씩 부르고, 분석 중이라 409로 실패한 것은 이름과 이유를 보이고 선택에 남김).
 
 1. 로그인합니다.
-2. KiCad 넷리스트를 올리거나 기존 회로를 고르고, 바꿀 부품을 고릅니다(예: D1).
+2. KiCad 넷리스트를 올리거나 기존 회로를 고릅니다. 바꿀 부품(예: D1)은 질문에 적거나 직접 지정합니다. 둘 다 없으면 서버가 회로의 유일한 지원 다이오드로 정하고, 여럿이면 넷리스트의 다이오드 중 어느 것인지 묻습니다(8.9).
 3. 회로 역할 설명을 봅니다.
 4. 역할에서 정한 대체 조건을 봅니다.
 5. 후보를 정합니다. 대체 조건으로 코퍼스에서 찾은 후보에 사용자가 넣은 품번을 더합니다.
@@ -172,10 +172,10 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `PATCH /api/threads/{id}` | 로그인 | `RenameThread` `{title}`(겹친 공백을 한 칸으로 줄이고 앞뒤를 뗀 뒤 1~200자) | 200 `ThreadListItem` | 404 · 422 | 대화 이름 바꾸기. 분석 기록 · 대상 부품은 그대로 |
     | `GET /api/threads/{id}` | 로그인 | 선택 쿼리 `limit` 1~100(기본 50) · `before_message_id` | 200 `ThreadDetail` `{id, project_id, title, target_ref, target_locked, latest_run, messages, next_before_message_id}` | 404 · 422 · 503 | 대화의 저장한 메시지를 최근 쪽부터 쪽 단위로 다시 읽음(G4 사용자별 thread) |
     | `DELETE /api/threads/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run. 마지막 갱신이 300초(`ANALYSIS_MAX_SECONDS`+60 중 큰 값)보다 오래되고 분석 잠금도 없는 멈춘 run은 막지 않음) | 대화 하나와 같은 UUID 분석 기록을 지움(8.5 삭제) |
-    | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음 · 키 없는 데모의 기록 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품, 키 없는 데모에서 기록하지 않은 회로 · 대상 · 질문 · 조건이면 데모 질문 목록을 문구에 담음) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
+    | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자(선택. 없으면 8.9대로 정하거나 묻는다), conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음 · 키 없는 데모의 기록 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품 · 판정할 수 있는 다이오드가 없는 회로, 키 없는 데모에서 기록하지 않은 회로 · 대상 · 질문 · 조건이면 데모 질문 목록을 문구에 담음) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
     | `GET /api/runs/{id}` | 로그인 | - | 200 `Run` `{id, thread_id, message_id, result}` | 404 | 연결이 끊겨도 저장한 마지막 상태를 다시 읽음(다시 실행하지 않음) |
     | `POST /api/runs/{id}/recover` | 로그인 | - | 200 `Run` | 404 | 소유한 run의 오래된 상태만 정리하고 `Run`을 돌려줌(분석 · 모델 호출 · 질문 재전송 없음) |
-    | `POST /api/runs/{id}/resume` | 로그인 | `ResumeRun` `{answers: {값 이름: 답} ≤30개, role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404. 키 없는 데모에서 기록과 다른 답 · 역할은 스트림 뒤 `failed` 422 | 빠진 회로 값 · 역할을 묻는 interrupt를 같은 thread에서 재개(G4 체크포인트, 2절 사람 확인) |
+    | `POST /api/runs/{id}/resume` | 로그인 | `ResumeRun` `{answers: {값 이름: 답} ≤30개, role: R01~R23(역할을 물었을 때만), target: 대상 부품 ref(부품을 물었을 때만, `target_choices` 중 하나, 이때 answers는 빈 객체)}` | 200 SSE | 422(제시하지 않은 부품 · 묻지 않은 부품) · 429 · 409 · 404. 키 없는 데모에서 기록과 다른 답 · 역할은 스트림 뒤 `failed` 422 | 빠진 회로 값 · 역할을 묻는 interrupt를 같은 thread에서 재개(G4 체크포인트, 2절 사람 확인). 부품을 물은 run이면 고른 부품으로 분석 thread를 만들고 처음 질문 · 사용 조건을 분석(8.9) |
     | `POST /api/messages/{id}/approvals` | 로그인 | `ApproveBody` `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 `Approval` `{id, message_id, candidate_part, verdict, case_id, created_at}` | 404 · 409 `ALREADY_APPROVED`(완료 판정이 아니거나 이미 승인) · 422 | 견적서는 사람이 승인한 뒤에만 저장(1절 하는 일, 8.4, G4 견적서 승인 지점) |
     | `GET /api/me/memory` | 로그인 | 선택 쿼리 `q` 1~500자 | 200 `list[ProfileFact]` `[{kind, value, text, version, updated_at, source}]` | 422 · 503 | 사용자 사실 장기 기억 조회 · 의미 검색(G4 기억 격리, 8.5) |
     | `PATCH /api/me/memory` | 로그인 | `ProfileUpdate` `{affiliation?, job_role?, mounting_preference?}` | 200 `list[ProfileFact]` | 409(탈퇴 중) · 422 · 503 | 사용자가 자기 사실을 고침(8.5, 대화에서 사실을 뽑지 않음) |
@@ -248,13 +248,14 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | `INTERNAL_ERROR` | 500 | 예상 못 한 오류, 내용은 로그에만. 표에 없는 5xx도 이 코드 |
 
   분석 거절(SSE `refused`)은 요청 실패가 아니라 분석 결과라 이 표 밖입니다. 서버 로그는 stdout에 JSON 한 줄씩(`severity` · `time` · `logger` · `message`, 요청 안의 줄은 `request_id`)이고, 오류 응답 · `failed` 이벤트마다 `code` · `status`를 담은 줄 하나를 남깁니다. 4xx는 INFO(문구 · 본문 없이), 5xx와 예상 못 한 예외는 ERROR에 traceback(프레임과 예외 이름만, 예외 메시지는 빼고)입니다. 질문 글 · 조건 · 넷리스트 · 이메일 · 비밀번호 · 토큰 · 키는 로그에 적지 않습니다(`backend/logs.py`).
-- run · 재개의 SSE 이벤트(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, `text/event-stream`, `/docs`에도 같은 설명): frame마다 `event: 이름`과 `data: JSON` 한 줄입니다. 순서는 `run_started` → `status` → 마지막 하나이고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`). 공개 결과는 허용 목록 `BrowserResult`(`backend/conversations/dto.py`)의 칸 `answer · status · stage · question_type · evidence · judgement · price_parts · refusal · interrupt · request_id · profile_hints`만 담고, `GET /api/runs/{id}`의 `result`와 같은 모양입니다(저장하지 않는 `profile_hints`는 거기서 빈 목록).
+- run · 재개의 SSE 이벤트(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, `text/event-stream`, `/docs`에도 같은 설명): frame마다 `event: 이름`과 `data: JSON` 한 줄입니다. 순서는 `run_started` → `status` 하나 이상 → 마지막 하나이고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`). 공개 결과는 허용 목록 `BrowserResult`(`backend/conversations/dto.py`)의 칸 `answer · status · stage · question_type · evidence · judgement · price_parts · refusal · interrupt · request_id · profile_hints`만 담고, `GET /api/runs/{id}`의 `result`와 같은 모양입니다(저장하지 않는 `profile_hints`는 거기서 빈 목록).
 
   | 이벤트 | 언제 | data 칸 |
   |---|---|---|
   | `run_started` | 스트림을 열자마자, 분석 전 | `{run_id, request_id}` |
   | `status` | 분석을 시작할 때 한 번 | 공개 결과, `status: running` · `stage: 입력 확인` |
-  | `requires_input` | 판정에 회로 값 · 역할이 더 필요할 때(마지막) | 공개 결과, `status: requires_input` · `stage: 판정` · `interrupt: {missing, role_choices, question}` |
+  | `status`(진행) | 실행 중 그래프 노드가 시작해 화면 단계가 바뀔 때마다(0개 이상, 11-16) | 같은 모양, `stage`는 노드 → 단계 표(`NODE_STAGES`): `입력 읽기` → 입력 확인, `품번·판 확인` → 품번 확인, `Supervisor` → 질문 분석, `RAG 에이전트` → 문서 검색, `회로 읽기` → 회로 역할 읽기, `대체 부품 판정` → 후보 판정, `답 모으기` · `답 정리` · `종합` · `답 검사` → 답 작성. 바로 앞과 같은 단계는 다시 보내지 않고, 표에 없는 노드(`기억 읽기` · `가격 안내` · `끝내기` · `거절`)는 보내지 않습니다. 동시 실행(Send) · 재계획이면 순서가 섞이거나 같은 단계가 다시 올 수 있습니다. 모델의 생각 글은 보내지 않습니다 |
+  | `requires_input` | 판정에 회로 값 · 역할이 더 필요할 때, 또는 대상 부품을 정하지 못했을 때(마지막) | 공개 결과, `status: requires_input` · `stage: 판정` · `interrupt: {missing, role_choices, question}`. 대상 부품을 물으면 그래프를 돌리지 않고 첫 `status` 뒤에 바로 오며 `interrupt: {target_choices: [{ref, value}], question: "넷리스트에서 다이오드 D1(…), D3(…)를 찾았어요. 어떤 부품을 바꿀까요?"}`(8.9) |
   | `completed` | 분석이 답을 냈을 때(마지막) | 공개 결과, `status: completed` · `stage: 완료` · `answer` · `question_type` · `evidence` · `judgement` · `price_parts` · `profile_hints` |
   | `refused` | 범위 밖 · 근거 없음으로 답하지 않을 때(마지막, 오류가 아님) | `completed`와 같은 칸, `status: refused` · `refusal`(= `answer`) |
   | `failed` | 분석이 실패했을 때(마지막) | 공개 결과, `status: failed` · `stage: 오류` + `error: {code, message}`(code는 위 공통 오류 표) |
@@ -486,6 +487,19 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 로그인한 사용자, WHEN 사이드바 "새 대화"를 누르면, THEN 프로젝트 만들기 창 없이 빈 대화 화면(`/app`)이 열립니다. WHEN 거기서 `.net`을 첨부하면, THEN 파일 이름으로 프로젝트를 만들고 그 작업대로 갑니다. 같은 이름 · 같은 회로면 409 목록의 "열기" 또는 "새 프로젝트로 만들기"를 고를 수 있습니다.
 - GIVEN 대화 줄의 ⋯ 메뉴, WHEN "이름 변경"으로 고치고 Enter(또는 다른 곳 클릭)를 하면, THEN 저장하고 목록에 새 이름이 보입니다. Esc면 저장하지 않습니다.
 - GIVEN 프로젝트 목록, WHEN 줄의 삭제 버튼(`aria-label` "<이름> 삭제")을 누르고 확인하면, THEN 그 프로젝트만 지워집니다. GIVEN 여러 개를 고르고 "선택 삭제" 확인, WHEN 그중 하나가 분석 중(409)이면, THEN 나머지는 지워지고 실패한 프로젝트 이름과 서버 문구가 보이며 그 프로젝트는 선택된 채 남습니다.
+
+### 8.9 대상 부품 정하기
+
+대상 부품(`target_ref`)은 LLM이 아니라 코드가 정하고, 못 정하면 사용자에게 묻습니다(11-16). 지원 여부는 `_require_supported_target`(LED · 표시기 · 다이오드가 아닌 부품 제외)와 같은 규칙이고, 화면 미리 거르기는 `frontend/src/circuit.ts`가 같은 문구로 합니다. 정하는 코드는 `backend/conversations/memory_service.py`의 `target_choices` · `ensure_thread`, 묻고 받는 경계는 `backend/api/conversations.py`입니다.
+
+- GIVEN `target_ref`를 보낸 run, WHEN 시작하면, THEN 지금과 같다(그 부품을 확인하고 분석 thread에 고정, 다르면 409, 지원하지 않으면 422).
+- GIVEN `target_ref`가 없고 질문에 회로의 지원 다이오드 ref가 하나 적혀 있음(`D1을 1N5819로 바꿔도 돼?`, 대소문자 무시, 앞뒤가 영문 · 숫자가 아닐 때만. `D10` · `D1N4148` 안의 D1은 아님), WHEN 시작하면, THEN 그 부품으로 분석 thread를 만들고 분석한다.
+- GIVEN `target_ref`가 없고 질문에 지원 다이오드 ref가 없으며 회로의 지원 다이오드가 하나뿐, WHEN 시작하면, THEN 그 부품으로 분석한다.
+- GIVEN `target_ref`가 없고 후보(질문에 적힌 지원 다이오드, 없으면 회로의 지원 다이오드 전부)가 둘 이상, WHEN 시작하면, THEN 분석 thread와 그래프 실행 없이 run을 `requires_input`으로 끝내고 `interrupt.target_choices`(ref · 넷리스트 값)와 질문 문장을 보낸다. 처음 질문 · 사용 조건은 run 기록의 `pending_start`에만 두고 브라우저 결과에는 넣지 않는다.
+- GIVEN 부품을 물은 run, WHEN `ResumeRun.target`으로 후보 하나를 보내면, THEN 그 부품으로 분석 thread를 만들고 처음 질문 · 사용 조건을 같은 run에서 분석한다. 후보 밖의 부품 · target 없음 · answers를 함께 보냄 · 부품을 묻지 않은 run에 target은 422이고 run은 그대로다.
+- GIVEN 분석 thread가 이미 대상을 고정함, WHEN `target_ref` 없이 다음 질문을 보내면, THEN 다시 정하거나 묻지 않고 고정한 대상을 쓴다(`target_locked`).
+- GIVEN 지원 다이오드가 없는 회로, WHEN `target_ref` 없이 시작하면, THEN 스트림 전 422다.
+- 화면: "검토할 부품"은 비워 두면 위 규칙을 따르는 선택 항목이고, 대상이 정해지면 그 부품을 보여 줍니다. 부품을 묻는 결과는 조건 카드와 같은 모양의 선택 카드(`TargetChoice`)로 그립니다. 시험: `tests/api/test_conversations.py`(묻기 · 재개 · 422), `tests/api/test_threads.py`(`target_choices` · `ensure_thread` 추론), `tests/conversations/test_dto.py`(후보 검사 · 질문 문장).
 
 ## 9. 미정 항목
 

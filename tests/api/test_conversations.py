@@ -100,7 +100,7 @@ def test_thread_rename_uses_safe_errors(web, monkeypatch, failure_kind, status):
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None, refuse=None):
-        self.calls, self.targets, self.version, self.hints = [], {}, 1, []
+        self.calls, self.targets, self.version, self.hints, self.nodes, self.choices = [], {}, 1, [], [], None
         self.state, self.interrupt, self.error, self.refuse = state or {'answer': 'ok'}, interrupt, error, refuse
         self.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values=self.state))
     def config(self, thread): return {'configurable': {'thread_id': thread}}
@@ -109,6 +109,8 @@ class FakeAnalysis:
             raise self.refuse
     def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
         self.calls.append(('ensure', thread, filename, target, question, conditions))
+        if target is None and self.choices:  # 실제 서비스처럼 대상을 못 정하면 분석 thread를 만들지 않고 후보를 돌려준다
+            return self.choices
         if self.targets.setdefault(thread, target) != target:
             raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
     def _run(self, *call):
@@ -116,8 +118,11 @@ class FakeAnalysis:
         if self.error:
             raise self.error
         return {'interrupt': self.interrupt, 'version': self.version, 'profile_hints': self.hints}
-    def message(self, user, thread, text, conditions='', request_id=''): return self._run('message', thread, text, conditions)
-    def resume(self, user, thread, answers, role, version, request_id=''): return self._run('resume', thread, answers, role, version)
+    def message(self, user, thread, text, conditions='', request_id='', progress=None):
+        for node in self.nodes:  # 실제 서비스처럼 그래프 노드가 시작할 때마다 노드 이름으로 알린다
+            progress(node)
+        return self._run('message', thread, text, conditions)
+    def resume(self, user, thread, answers, role, version, request_id='', progress=None): return self._run('resume', thread, answers, role, version)
     def detail(self, user, thread): return {'version': self.version}
 
 
@@ -344,6 +349,65 @@ def test_first_run_creates_analysis_thread_and_saves_before_completed(web):
     assert repo.calls == ['start', ('commit', 'completed')]
 
 
+def sse_frames(text):
+    """SSE 본문을 (이벤트 이름, data) 목록으로 나눈다."""
+    return [(lines[0].removeprefix('event: '), json.loads(lines[1].removeprefix('data: ')))
+            for block in text.strip().split('\n\n') if (lines := block.split('\n'))]
+
+
+def test_run_streams_a_status_frame_per_new_stage_before_the_last_frame(web):
+    """노드가 시작할 때마다 화면 단계가 바뀌면 status 하나. 같은 단계 · 표에 없는 노드는 보내지 않고, 마지막 frame은 그대로 하나다."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis = FakeAnalysis()
+    analysis.nodes = ['입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', 'Spec 에이전트', '회로 읽기',
+                      '대체 부품 판정', '답 모으기', '답 정리', '답 검사', '끝내기']
+    with web(analysis, FakeRepo(thread, run)) as client:
+        frames = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': 'hello', 'target_ref': 'D1'}, headers=ORIGIN).text)
+    assert [name for name, _ in frames] == ['run_started'] + ['status'] * 7 + ['completed']
+    assert [data['stage'] for name, data in frames if name == 'status'] == ['입력 확인', '품번 확인', '질문 분석', '문서 검색', '회로 역할 읽기', '후보 판정', '답 작성']
+    assert all(data['status'] == 'running' and data['answer'] == '' for name, data in frames if name == 'status')
+
+
+CHOICES = [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': 'SS34'}]
+
+
+def test_start_without_target_asks_which_part_then_resume_runs_the_first_question(web):
+    """대상을 못 정하면 그래프 없이 requires_input(target_choices)로 묻고, 고른 부품으로 재개하면 그 부품 · 처음 질문 · 사용 조건으로 분석한다(SPEC 8.9)."""
+    from backend.conversations.models import SafeResult
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
+    analysis.choices = CHOICES
+    with web(analysis, repo) as client:
+        asked = sse_frames(client.post(f'/api/threads/{thread}/runs', json={'question': '1N5819로 바꿔도 돼?', 'conditions': '입력 12 V'}, headers=ORIGIN).text)
+        assert [name for name, _ in asked] == ['run_started', 'status', 'requires_input']
+        interrupt = asked[-1][1]['interrupt']
+        assert interrupt == {'target_choices': CHOICES, 'question': '넷리스트에서 다이오드 D1(1N4007), D3(SS34)를 찾았어요. 어떤 부품을 바꿀까요?'}
+        assert analysis.calls == [('ensure', thread, '프로젝트', None, '1N5819로 바꿔도 돼?', '입력 12 V')]  # 그래프를 돌리지 않았다
+        assert repo.status == 'requires_input' and SafeResult.model_validate(repo.result).interrupt.target_choices[1].ref == 'D3'
+        saved = client.get(f'/api/runs/{run}')
+        assert saved.json()['result']['interrupt']['target_choices'] == CHOICES
+        assert 'pending_start' not in saved.text and '입력 12 V' not in saved.text  # 처음 질문 · 조건은 run 기록에만 둔다
+        done = sse_frames(client.post(f'/api/runs/{run}/resume', json={'answers': {}, 'target': 'D3'}, headers=ORIGIN).text)
+    assert done[-1][0] == 'completed' and repo.status == 'completed'
+    assert analysis.calls[1:] == [('ensure', thread, '프로젝트', 'D3', '1N5819로 바꿔도 돼?', '입력 12 V'), ('message', thread, '1N5819로 바꿔도 돼?', '입력 12 V')]
+    assert ('claim', thread, run) in repo.calls
+
+
+@pytest.mark.parametrize('saved, body', [
+    ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {}, 'target': 'D2'}),  # 후보 밖
+    ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {}}),  # 고르지 않음
+    ({'interrupt': {'target_choices': CHOICES}, 'pending_start': {'question': 'q', 'conditions': ''}}, {'answers': {'v_in_max': '12'}, 'target': 'D1'}),
+    ({'interrupt': {'missing': ['v_in_max'], 'role_choices': []}}, {'answers': {}, 'target': 'D1'}),  # 부품을 묻지 않은 run
+])
+def test_resume_target_must_be_one_of_the_offered_parts(web, saved, body):
+    thread, run = str(uuid4()), str(uuid4())
+    repo, analysis = FakeRepo(thread, run, status='requires_input', result=saved), FakeAnalysis()
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/runs/{run}/resume', json=body, headers=ORIGIN)
+    assert response.status_code == 422
+    assert analysis.calls == [] and repo.calls == [] and repo.status == 'requires_input'
+
+
 @pytest.fixture
 def native_input_path(monkeypatch):
     """Real HTTP/service/graph; fake SQL, auth and model replies only."""
@@ -420,6 +484,23 @@ def test_free_http_names_stay_out_of_model_prompts_but_conditions_reach(web,nati
     assert {'supervisor','docs_answer' if case_id=='T1' else 'judge_read'}<={node for node,_ in prompts}
     assert all(name not in user for _,user in prompts)
     assert any('CONDITION_SURFACE' in user for _,user in prompts)
+
+
+@pytest.mark.parametrize('case_id, stages', [('T1', ['입력 확인', '품번 확인', '질문 분석', '문서 검색', '답 작성']),
+                                             ('T5', ['입력 확인', '품번 확인', '질문 분석', '회로 역할 읽기', '후보 판정', '답 작성'])])
+def test_live_stages_come_from_the_real_graph_nodes(web, native_input_path, case_id, stages):
+    """진짜 그래프의 노드 이름이 진행 단계 표와 맞는지 본다(노드 이름을 바꾸면 여기서 깨진다)."""
+    from backend.conversations import memory_service
+    from backend.services.langfuse_prompts import AnalysisTimings
+    analysis, repo, _, _, question = native_input_path(case_id, 'synthetic.net')
+    graph = analysis.graph
+    # [왜] 고정 장치의 _invoke는 callback 없이 그래프만 돈다. 실제 _invoke처럼 노드 시간 callback에 진행 알림을 붙인다
+    analysis._invoke = lambda conn, tid, payload, budget, request_id='': graph.invoke(
+        payload, {**analysis.config(tid), 'callbacks': [AnalysisTimings(on_node=memory_service._progress.get())]})
+    with web(analysis, repo) as client:
+        frames = sse_frames(client.post(f'/api/threads/{repo.thread}/runs', json={'question': question, 'target_ref': 'D1'}, headers=ORIGIN).text)
+    assert frames[-1][0] == 'completed' and all(name == 'status' for name, _ in frames[1:-1])
+    assert [data['stage'] for name, data in frames if name == 'status'] == stages
 
 
 def test_free_resume_text_reaches_later_question_history_not_immediate_read(web,native_input_path):
@@ -645,7 +726,7 @@ def test_disconnected_stream_keeps_running_and_saves_terminal():
         def finish(self, *args): self.result = args
     repo = Repo()
     analysis = FakeAnalysis()
-    def slow():
+    def slow(progress):
         time.sleep(0.05)
         return {'interrupt': None}
     async def run():

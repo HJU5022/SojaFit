@@ -50,7 +50,13 @@ export type Result = {
     capped?: boolean;
   };
   price_parts: string[];
-  interrupt: { missing?: string[]; role_choices?: string[]; question?: string };
+  interrupt: {
+    missing?: string[];
+    role_choices?: string[];
+    question?: string;
+    /** 대상 부품을 물을 때만(SPEC 8.9). 고른 ref를 재개 본문의 target으로 보낸다 */
+    target_choices?: { ref: string; value: string }[];
+  };
   error?: { code: string; message: string } | null;
 };
 export type Run = { id: string; thread_id: string; message_id: number | null; result: Result };

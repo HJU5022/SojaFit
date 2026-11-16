@@ -102,6 +102,39 @@ export function MissingInput({
     </div>
   );
 }
+/** 서버가 대상 부품을 정하지 못했을 때 넷리스트의 후보 중 하나를 고르는 카드(조건 카드와 같은 모양). */
+export function TargetChoice({
+  result,
+  busy,
+  onResume,
+}: {
+  result: Result;
+  busy: boolean;
+  onResume: (body: any) => void;
+}) {
+  return (
+    <div className="missing-input" data-testid="target-choice">
+      <div className="inline-heading">
+        <MessageSquare size={20} />
+        <h2>바꿀 부품을 골라 주시면 이어서 검토합니다.</h2>
+      </div>
+      <p>{result.interrupt.question}</p>
+      <div className="actions">
+        {result.interrupt.target_choices?.map((c) => (
+          <button
+            key={c.ref}
+            type="button"
+            disabled={busy}
+            onClick={() => onResume({ answers: {}, target: c.ref })}
+          >
+            {c.ref}
+            {c.value ? ` · ${c.value}` : ''}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 export function Reply({
   run,
   onCandidate,

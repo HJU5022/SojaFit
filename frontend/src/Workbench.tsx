@@ -1,6 +1,16 @@
 /** 프로젝트·대화·실행 작업대. 서버의 고정 회로 버전과 결과를 사용한다. 출처: SPEC 4·7·8절. */
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Paperclip, Plus, Send, Square, Trash2, X } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  LoaderCircle,
+  Paperclip,
+  Plus,
+  Send,
+  Square,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { api, ApiError, statuses, streamRun } from './api';
 import {
   Circuit,
@@ -15,7 +25,7 @@ import {
 import { CandidateDetails, PriceLookup } from './Candidate';
 import { partsOf, unsupportedPartReason } from './circuit';
 import { refreshNavigation } from './Projects';
-import { MissingInput, Reply } from './Reply';
+import { MissingInput, Reply, TargetChoice } from './Reply';
 import { SchematicSection } from './Schematic';
 import type {
   Candidate,
@@ -48,6 +58,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   const [detail, setDetail] = useState<Detail | null>(null),
     [runs, setRuns] = useState<Record<string, Run>>({}),
     [active, setActive] = useState<Run | null>(null),
+    // 비어 있으면 서버가 질문 · 회로로 정하거나 사용자에게 묻는다(SPEC 8.9). 첫 다이오드를 미리 고르지 않는다
     [target, setTarget] = useState(''),
     [question, setQuestion] = useState(''),
     [conditions, setConditions] = useState(''),
@@ -57,6 +68,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [error, setError] = useState<Error | null>(null),
     [stopped, setStopped] = useState(false),
     [pendingQuestion, setPendingQuestion] = useState(''),
+    // 이번 실행에서 받은 진행 단계(SSE status의 stage). 마지막이 지금 단계다
+    [steps, setSteps] = useState<string[]>([]),
     [selected, setSelected] = useState<{ c: Candidate; r: Run } | null>(null),
     [showQuotes, setShowQuotes] = useState(false),
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
@@ -82,9 +95,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       return chosen ? unsupportedPartReason(chosen) : '';
     })();
   useEffect(() => {
-    if (!target && usable.length) setTarget(usable[0].ref);
-  }, [project.data, target]);
-  useEffect(() => {
     let live = true;
     scope.current++;
     controller.current?.abort();
@@ -95,6 +105,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     setBusy(false);
     setStopped(false);
     setPendingQuestion('');
+    setSteps([]);
     setSelected(null);
     setLoading(!!threadId);
     runId.current = null;
@@ -125,7 +136,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               void execute(threadId, `/threads/${threadId}/runs`, {
                 question: queued.question,
                 conditions: queued.conditions,
-                target_ref: queued.target,
+                ...(queued.target ? { target_ref: queued.target } : {}),
               });
             }
           }
@@ -143,8 +154,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   useEffect(() => () => controller.current?.abort(), []);
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
-      questions.data?.filter((q) => q.demo_id === project.data?.demo_id && q.target === target) ??
-      [];
+      questions.data?.filter(
+        (q) => q.demo_id === project.data?.demo_id && (!target || q.target === target),
+      ) ?? [];
   const currentDemo =
     questions.data?.find(
       (q) =>
@@ -155,6 +167,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   async function refreshDetail(tid: string) {
     const d = await api<Detail>('/threads/' + tid);
     setDetail(d);
+    if (d.target_ref) setTarget(d.target_ref); // 서버가 정했거나 사용자가 고른 대상
     threads.reload();
     refreshNavigation();
     return d;
@@ -187,9 +200,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         if (event === 'run_started') {
           liveRun = data.run_id;
           runId.current = data.run_id;
+          setSteps([]);
           setActive({ id: data.run_id, thread_id: tid, message_id: null, result: freshResult() });
         } else {
-          if (event !== 'status') terminal = data;
+          // [왜] 재계획이면 같은 단계가 다시 온다. 앞의 것을 지우고 끝에 붙여 마지막이 늘 지금 단계가 되게 한다
+          if (event === 'status')
+            setSteps((s) => [...s.filter((x) => x !== data.stage), data.stage]);
+          else terminal = data;
           setActive({ id: liveRun ?? '', thread_id: tid, message_id: null, result: data });
         }
       });
@@ -211,6 +228,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   async function send(demo?: DemoQuestion) {
+    // [왜] 실행 중에도 질문은 미리 쓸 수 있다. 보내기는 막는다(같은 대화의 두 번째 run은 서버가 409)
+    if (busy) return;
     setError(null);
     if (!demo && !question.trim() && !attachment) return;
     try {
@@ -231,7 +250,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         navigate(`/app?project=${projectId}&thread=${imported.thread_id}`);
         return;
       }
-      if (!target) throw new Error('먼저 검토할 다이오드를 선택해 주세요.');
       if (targetReason) throw new Error(targetReason);
       if (demo || !tid) {
         const created = await api<{ id: string }>(`/projects/${projectId}/threads`, 'POST');
@@ -254,7 +272,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       runId.current = null;
       await execute(tid!, `/threads/${tid}/runs`, {
         question: text,
-        target_ref: target,
+        ...(target ? { target_ref: target } : {}),
         conditions: cond,
       });
     } catch (e) {
@@ -262,6 +280,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   async function resume(body: any) {
+    if (body.target) setTarget(body.target); // 고른 부품을 왼쪽 연결도 · 후보 상세에 바로 보인다
     if (active) await execute(active.thread_id, `/runs/${active.id}/resume`, body);
   }
   async function older() {
@@ -298,6 +317,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     }
   }
   const waiting = active?.result.status === 'requires_input',
+    // 조건이 아니라 대상 부품을 묻는 중(SPEC 8.9)
+    choosing = waiting && !!active?.result.interrupt.target_choices?.length,
     running = busy || active?.result.status === 'running';
   const previous =
     detail?.messages.filter((m) => m.role === 'assistant' && m.run_id !== active?.id) ?? [];
@@ -329,14 +350,14 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             <div className="part-selector">
               <h2>검토할 부품</h2>
               <label>
-                다이오드
+                다이오드 직접 지정(선택)
                 <select
                   aria-label="검토할 다이오드"
                   value={target}
                   disabled={detail?.target_locked || busy}
                   onChange={(e) => setTarget(e.target.value)}
                 >
-                  <option value="">부품 선택</option>
+                  <option value="">지정 안 함(에이전트가 정함)</option>
                   {diodes.map((p) => (
                     <option value={p.ref} key={p.ref} disabled={!!unsupportedPartReason(p)}>
                       {p.ref} · {p.value}
@@ -357,29 +378,37 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 {targetReason
                   ? targetReason
                   : waiting
-                    ? '사용 조건을 기다리고 있습니다.'
+                    ? choosing
+                      ? '바꿀 부품을 고르면 이어서 검토합니다.'
+                      : '사용 조건을 기다리고 있습니다.'
                     : active
                       ? statuses[active.result.status]
                       : part
                         ? '선택한 부품으로 검토할 준비가 되었습니다.'
-                        : '회로를 먼저 가져오세요.'}
+                        : usable.length
+                          ? '고르지 않으면 질문과 넷리스트로 정하고, 여럿이면 물어봅니다.'
+                          : '회로를 먼저 가져오세요.'}
               </p>
             </div>
             {/* [왜] 연결 개념도와 원본 회로도를 한 구역에 펼쳐 두어 넷리스트를 올리면 둘을 바로 같이 본다. 누르면 큰 창. */}
             <section className="circuit-section">
               <h2>회로</h2>
-              <Circuit project={project.data} target={target} zoomable />
+              {/* [왜] 대상을 아직 안 정했으면(#16 서버가 정하거나 묻는다) 판정 가능한 다이오드마다 개념도를 보인다(#11) */}
+              {(target
+                ? [target]
+                : usable.length
+                  ? usable.slice(0, 6).map((p) => p.ref)
+                  : ['']
+              ).map((ref) => (
+                <Circuit key={ref} project={project.data} target={ref} zoomable />
+              ))}
               {project.data && <SchematicSection project={project.data} threadId={threadId} />}
             </section>
             <div className="review-nav">
               <div>
                 <h2>검토 기록</h2>
-                <button
-                  className="icon-button"
-                  aria-label="새 검토"
-                  onClick={newReview}
-                  disabled={busy}
-                >
+                {/* [왜] 새 검토는 빈 대화를 만들고 옮겨 갈 뿐이다. 실행 중인 검토는 서버에서 계속된다(기록 링크와 같음) */}
+                <button className="icon-button" aria-label="새 검토" onClick={newReview}>
                   <Plus size={18} />
                 </button>
               </div>
@@ -480,7 +509,21 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     )}
                   {active && running && !stopped && (
                     <div className="progress" role="status">
-                      <Loading label={active.result.stage || '검토를 시작하는 중'} />
+                      {/* 끝난 단계는 체크, 지금 단계는 도는 표시. 단계는 저장하지 않아 새로고침 뒤에는 한 줄만 보인다 */}
+                      <ol className="progress-steps" aria-label="검토 진행 단계">
+                        {(steps.length ? steps : [active.result.stage || '검토를 시작하는 중']).map(
+                          (s, i, all) => (
+                            <li key={s} className={i < all.length - 1 ? 'done' : 'current'}>
+                              {i < all.length - 1 ? (
+                                <Check size={14} />
+                              ) : (
+                                <LoaderCircle size={14} className="spin" />
+                              )}
+                              {s}
+                            </li>
+                          ),
+                        )}
+                      </ol>
                       <button
                         onClick={() => {
                           controller.current?.abort();
@@ -500,7 +543,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     </div>
                   )}
                   {waiting && roles.error && <ErrorBox error={roles.error} retry={roles.reload} />}
-                  {waiting && active && (
+                  {choosing && active && (
+                    <TargetChoice result={active.result} busy={busy} onResume={resume} />
+                  )}
+                  {waiting && !choosing && active && (
                     <MissingInput
                       key={active.id}
                       result={active.result}
@@ -578,21 +624,26 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   maxLength={4000}
-                  disabled={!!running || !!waiting}
+                  // [왜] 실행 중에도 다음 질문을 쓸 수 있게 막지 않는다. 조건 입력을 기다릴 때만 막는다
+                  disabled={!!waiting}
                   placeholder={
-                    waiting
-                      ? '위의 사용 조건을 입력하면 이어서 검토합니다.'
-                      : `${target || '다이오드'}의 교체 후보나 궁금한 점을 입력하세요.`
+                    choosing
+                      ? '위에서 바꿀 부품을 고르면 이어서 검토합니다.'
+                      : waiting
+                        ? '위의 사용 조건을 입력하면 이어서 검토합니다.'
+                        : target
+                          ? `${target}의 교체 후보나 궁금한 점을 입력하세요.`
+                          : '바꿀 부품과 후보를 입력하세요. 예: D1을 1N5819로 바꿔도 될까요?'
                   }
                 />
                 <div className="composer-controls">
                   <label className="attach-button">
                     <Paperclip size={17} />
                     <span>넷리스트</span>
+                    {/* 실행 중에도 파일은 고를 수 있다. 보내기는 아래 버튼이 막는다 */}
                     <input
                       type="file"
                       accept=".net,.txt"
-                      disabled={busy}
                       onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
                     />
                   </label>
@@ -608,12 +659,15 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                       />
                     </label>
                   </details>
+                  {running && (
+                    <small className="composer-hint">답변이 끝나면 보낼 수 있습니다.</small>
+                  )}
                   <button
                     className="primary send"
                     disabled={
                       busy ||
                       (!attachment &&
-                        (!!waiting || !!running || !target || !!targetReason || !question.trim()))
+                        (!!waiting || !!running || !!targetReason || !question.trim()))
                     }
                     aria-label={attachment ? '넷리스트 보내기' : '질문 보내기'}
                   >

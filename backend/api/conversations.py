@@ -1,6 +1,7 @@
 """인증된 React 대화의 HTTP 경계. run·재개는 사용자 분석 서비스(`memory_service.Conversations`)를 거친다.
 
-- 첫 run에 같은 UUID의 분석 회로·thread를 만들고 대상 부품을 고정한다(바꾸면 409).
+- 첫 run에 같은 UUID의 분석 회로·thread를 만들고 대상 부품을 고정한다(바꾸면 409). 대상을 안 보내면 서버가 정하고,
+  못 정하면 그래프를 돌리지 않고 `requires_input`(target_choices)으로 묻는다. 고른 부품은 재개(`ResumeRun.target`)로 받는다(SPEC 8.9).
 - 결과는 그래프 상태에서 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 SSE로 보낸다.
 - 완료 · 거절 결과에는 그 질문으로 찾은 사용자 사실(`profile_hints`, 참고(내 설정))을 붙여 보낸다. run 기록에는 저장하지 않는다.
 - 분석 서비스가 없으면(THREADS_ENABLED≠1) 스트림을 열기 전에 503, 하루 토큰 상한이 찼으면 스트림을 열기 전에 429 `LIMIT_EXCEEDED`다(`admission`).
@@ -44,15 +45,17 @@ class StartRun(BaseModel):
     model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [
         {'question': 'D1을 1N5819로 바꿔도 되나요?', 'target_ref': 'D1', 'conditions': '입력 최대 12 V, 부하 전류 0.5 A'}]})
     question: str = Field(min_length=1, max_length=4000)
-    target_ref: str = Field(max_length=100)
+    # [왜] 없으면 서버가 정한다: 질문에 적힌 지원 다이오드 → 회로의 유일한 지원 다이오드 → 둘 이상이면 requires_input으로 묻는다(SPEC 8.9)
+    target_ref: str | None = Field(default=None, max_length=100)
     conditions: str = Field(default='', max_length=2000)
 
 
 class ResumeRun(BaseModel):
-    # [왜] role은 interrupt가 역할을 물었을 때(role_choices)만 보낸다. 예시는 회로 값만 답하는 흔한 경우다
+    # [왜] role은 interrupt가 역할을 물었을 때(role_choices)만, target은 대상 부품을 물었을 때(target_choices)만 보낸다. 예시는 회로 값만 답하는 흔한 경우다
     model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [{'answers': {'v_in_max': '12', 'i_max': '0.5'}}]})
     answers: dict[str, str] = Field(max_length=30)
     role: str | None = Field(default=None, pattern=r'R(?:0[1-9]|1[0-9]|2[0-3])')
+    target: str | None = Field(default=None, max_length=100)
 
     @field_validator('answers')
     @classmethod
@@ -151,8 +154,11 @@ class Run(BaseModel):
 # [왜] run · 재개는 SSE라 response_model로 적을 수 없다. /docs에는 이벤트 이름과 data 모양을 설명으로 적는다(SPEC 4절과 같은 내용)
 SSE_RESPONSE = {200: {'description': (
     'text/event-stream. 각 frame은 `event: 이름`과 `data: JSON` 한 줄이다. 순서: '
-    '`run_started` `{run_id, request_id}` → `status` (공개 결과, status=running, stage=입력 확인) → 마지막 하나: '
-    '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`, 수정 가능한 재개 오류면 선택 error `{code, message}`) · '
+    '`run_started` `{run_id, request_id}` → `status` (공개 결과, status=running, stage=입력 확인) → '
+    '진행 단계가 바뀔 때마다 `status` 0개 이상 (같은 모양, stage=품번 확인 · 질문 분석 · 문서 검색 · 회로 역할 읽기 · 후보 판정 · 답 작성 중 하나. '
+    '그래프 노드가 시작할 때 보내며, 동시 실행 · 재계획이면 순서가 섞이거나 같은 이름이 다시 올 수 있다) → 마지막 하나: '
+    '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`, 대상 부품을 물으면 interrupt `{target_choices: [{ref, value}], question}` '
+    '(그래프를 돌리지 않고 status 하나 뒤에 바로 온다. 고른 ref를 ResumeRun.target으로 보낸다), 수정 가능한 재개 오류면 선택 error `{code, message}`) · '
     '`completed` · `refused` (stage=완료, answer · evidence · judgement · refusal · profile_hints) · '
     '`failed` (stage=오류, 공개 결과에 `error: {code, message}`, code는 공통 오류 표). '
     '저장 가능한 공개 결과 칸은 GET /api/runs/{run_id}의 result와 같다(BrowserResult). '
@@ -247,6 +253,11 @@ def recover_run(run_id: UUID, request: Request, response: Response, user_id: int
 
 # [왜] failed는 시스템 오류다. 거절(refused, 답할 수 없는 질문)은 답이라 finished(완료)로 끝난다. 둘을 같은 말로 쓰지 않는다
 STAGES = {'running': '입력 확인', 'judge': '판정', 'finished': '완료', 'failed': '오류'}
+# 실행 중 진행 단계: 그래프 노드 이름(backend/multi_agent/build.py) → 화면에 보일 단계 이름(SPEC 4절 SSE 표).
+# [왜] 표에 없는 노드(기억 읽기 · Spec 에이전트 묶음 · 가격 안내 · 끝내기 · 거절)는 따로 보이지 않는다. 마지막 frame이 곧 온다
+NODE_STAGES = {'입력 읽기': STAGES['running'], '품번·판 확인': '품번 확인', 'Supervisor': '질문 분석', 'RAG 에이전트': '문서 검색',
+               '회로 읽기': '회로 역할 읽기', '대체 부품 판정': '후보 판정',
+               '답 모으기': '답 작성', '답 정리': '답 작성', '종합': '답 작성', '답 검사': '답 작성'}
 
 
 def frame(kind, payload):
@@ -296,16 +307,31 @@ def public_error(exc, request_id, run_id):
     return error
 
 
-def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resuming=False):
-    """분석 서비스 호출(call)을 스레드에서 돌리고, 결과를 저장한 뒤 마지막 상태 하나를 보낸다."""
+def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resuming=False, keep=None):
+    """분석 서비스 호출 call(progress)을 스레드에서 돌리며 진행 단계를 보내고, 결과를 저장한 뒤 마지막 상태 하나를 보낸다.
+
+    keep: 마지막 상태와 함께 run 기록에만 저장할 칸(브라우저로 보내지 않음). 대상 부품을 물은 run의 `pending_start`다."""
     queue = asyncio.Queue()
+    loop, stage = asyncio.get_running_loop(), STAGES['running']
+
+    def show(node):
+        """(이벤트 루프에서) 노드 하나가 시작했다. 화면 단계 이름이 바뀌었을 때만 status frame을 보낸다."""
+        nonlocal stage
+        if NODE_STAGES.get(node, stage) != stage:
+            stage = NODE_STAGES[node]
+            queue.put_nowait(frame('status', result_dto({}, request_id=request_id, status='running', stage=stage).model_dump()))
+
+    # [왜] 분석은 스레드 풀에서 돈다(동시 Send면 여러 스레드). asyncio.Queue는 스레드에 안전하지 않아 루프 쪽으로 넘겨 넣는다.
+    #      넘긴 순서대로 돌고, 분석 호출이 끝나기 전에 넘겨지므로 마지막 frame보다 늘 앞이다
+    progress = lambda node: loop.call_soon_threadsafe(show, node)
+
     async def execute():
         error = None
         await queue.put(frame('status', result_dto({}, request_id=request_id, status='running', stage=STAGES['running']).model_dump()))
         try:
-            kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(), request_id))
+            kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(progress), request_id))
             # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
-            saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement)}
+            saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement), **(keep or {})}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
             await queue.put(frame(kind, safe.model_dump()))
         except Exception as exc:
@@ -350,10 +376,15 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
     #      거절된 요청이 '실행 중' run을 남기지 않고 공통 오류로 끝난다
     await run_in_threadpool(analysis.admission, user_id)
     _, _, connections, name = await run_in_threadpool(repo.get_thread, user_id, thread)
-    await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
-                            question=body.question, conditions=body.conditions)
+    choices = await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
+                                      question=body.question, conditions=body.conditions)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
-    call = lambda: analysis.message(user_id, thread, body.question, body.conditions, request_id=request_id)
+    if choices:
+        # [왜] 대상 부품을 정하지 못했다(지원 다이오드가 여럿이고 질문에 없음). 그래프를 돌리지 않고 고를 부품을 묻는다(SPEC 8.9).
+        #      분석 thread는 고른 뒤 재개에서 만든다. 그때 같은 질문 · 사용 조건을 보내려고 run 기록에 둔다
+        return stream(repo, user_id, thread, run_id, request_id, analysis, lambda progress: {'interrupt': {'target_choices': choices}},
+                      keep={'pending_start': {'question': body.question, 'conditions': body.conditions}})
+    call = lambda progress: analysis.message(user_id, thread, body.question, body.conditions, request_id=request_id, progress=progress)
     return stream(repo, user_id, thread, run_id, request_id, analysis, call)
 
 
@@ -368,6 +399,11 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
         raise HTTPException(422, '요청된 역할 중 하나를 선택해 주세요.')
     if not choices and body.role is not None:
         raise HTTPException(422, '이 run에는 역할 선택이 필요하지 않습니다.')
+    targets = [c['ref'] for c in interrupt.get('target_choices') or []]
+    if targets and (body.target not in targets or body.answers):  # 부품을 물은 run은 부품 하나만 받는다
+        raise HTTPException(422, '제시된 부품 중 하나를 골라 주세요.')
+    if not targets and body.target is not None:
+        raise HTTPException(422, '이 run에는 부품 선택이 필요하지 않습니다.')
     thread, request_id = run['thread_id'], request.state.request_id
     try:
         await run_in_threadpool(analysis.admission, user_id)
@@ -376,7 +412,18 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
             await run_in_threadpool(repo.record_resume_error, user_id, str(run_id),
                                     {'code': code_for(exc.status_code, exc), 'message': str(exc.detail)})
         raise
+    if targets:
+        # [왜] 고른 부품으로 분석 thread를 만들고(대상 확인 · 데모 질문 확인 422는 run을 그대로 두고 스트림 전에 끝난다),
+        #      그래프는 아직 돈 적이 없으니 재개가 아니라 처음 질문으로 돌린다
+        pending = run['safe_result']['pending_start']
+        _, _, connections, name = await run_in_threadpool(repo.get_thread, user_id, thread)
+        await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target,
+                                question=pending['question'], conditions=pending['conditions'])
+        await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
+        call = lambda progress: analysis.message(user_id, thread, pending['question'], pending['conditions'], request_id=request_id, progress=progress)
+        return stream(repo, user_id, thread, str(run_id), request_id, analysis, call)
     await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
     # [왜] 분석 서비스는 현재 결과 버전의 조건 질문만 재개한다. React run은 버전을 모르므로 지금 버전을 읽어 넘긴다
-    call = lambda: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'], request_id=request_id)
+    call = lambda progress: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'],
+                                            request_id=request_id, progress=progress)
     return stream(repo, user_id, thread, str(run_id), request_id, analysis, call, resuming=True)

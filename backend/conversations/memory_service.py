@@ -2,6 +2,7 @@
 
 React 작업대의 run·재개는 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
 HTTP 입구는 그 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
+`message` · `resume`의 `progress`는 그래프 노드가 시작할 때마다 노드 이름으로 불린다(SSE `status` 진행 단계, SPEC 4절).
 분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
 회로 이름 · 연결 정보는 `public.threads → project_circuit_versions`의 고정 버전에서 읽는다(`_owned`).
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
@@ -28,6 +29,7 @@ import time
 import logging
 from decimal import Decimal
 from contextlib import ExitStack, contextmanager
+from contextvars import ContextVar
 from functools import lru_cache
 from uuid import uuid4
 
@@ -59,6 +61,19 @@ USER_TOKENS_FULL = f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_T
 SERVICE_TOKENS_FULL = f'오늘 서비스 전체 분석 사용량(하루 {SERVICE_DAILY_TOKENS:,} 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 
 MAX_CONVERSATION_HISTORY_CHARS = 20_000
+# 이번 run의 노드 진행 알림(message · resume의 progress). `_invoke`가 읽어 노드 시간 callback에 붙인다.
+# [왜] `_invoke` 인자로 넘기지 않는다. 시험 · 평가 실행기(evals/runners/run_injection_baseline.py)가 `_invoke`를 지금 인자 그대로 바꿔 끼운다
+_progress = ContextVar('analysis_progress', default=None)
+
+
+@contextmanager
+def _reporting(progress):
+    """with 안에서 부르는 `_invoke`가 노드가 시작할 때마다 progress(노드 이름)를 부르게 한다."""
+    token = _progress.set(progress)
+    try:
+        yield
+    finally:
+        _progress.reset(token)
 
 
 def _conversation_history(contents, *, max_chars=MAX_CONVERSATION_HISTORY_CHARS):
@@ -95,6 +110,23 @@ def _require_supported_target(connections, target):
         raise HTTPException(422, f'{target}은(는) 표시기로 식별됩니다. 현재 표시기 대체 판정은 지원하지 않습니다. 일반 다이오드를 선택해 주세요.')
     if not re.match(r'D\d', target, re.I):
         raise HTTPException(422, f'{target}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.')
+
+
+def target_choices(connections, question=''):
+    """대상 부품 후보 [{ref, value}]: 질문에 적힌 지원 다이오드가 있으면 그것만, 없으면 회로의 지원 다이오드 전부(SPEC 8.9).
+
+    지원 여부는 `_require_supported_target`와 같은 규칙이다. 하나면 그 부품으로 진행하고, 둘 이상이면 사용자에게 묻는다. LLM은 고르지 않는다.
+    """
+    diodes = []
+    for part in connections.get('components', connections.get('parts', [])):
+        try:
+            _require_supported_target(connections, part['ref'])
+        except HTTPException:
+            continue
+        diodes.append({'ref': part['ref'], 'value': part.get('value') or ''})
+    # [주의] \b는 한글도 글자로 봐 'D1을'에서 D1을 못 찾는다. 앞뒤가 영문 · 숫자가 아닐 때만 그 부품으로 본다(D10 · D1N4148 안의 D1은 아님)
+    named = [d for d in diodes if re.search(rf'(?<![A-Za-z0-9]){re.escape(d["ref"])}(?![A-Za-z0-9])', question or '', re.I)]
+    return named or diodes
 
 
 @lru_cache(maxsize=1)
@@ -404,6 +436,8 @@ class Conversations:
         """React 대화(public.threads) 하나를 같은 UUID의 분석 thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409.
 
         [주의] 입력 회로 대신 소유 대화의 고정 버전을 읽는다. filename · connections 인자는 기존 호출 호환용이다.
+        target이 None이면 이미 만든 분석 thread의 대상을 쓰고, 없으면 `target_choices`로 정한다(SPEC 8.9).
+        후보가 둘 이상이면 분석 thread를 만들지 않고 그 후보 목록을 돌려준다(호출자가 사용자에게 묻는다). 정했으면 None.
 
         키 없는 데모면 기록한 회로 · 대상(question을 주면 질문 · 사용 조건까지)인지 먼저 본다(아니면 422, 기록이 없으면 503)."""
         with self.connection() as conn:
@@ -411,11 +445,20 @@ class Conversations:
             pinned = conn.execute('SELECT c.connections FROM public.threads pt JOIN public.projects p ON p.id=pt.project_id '
                                   'JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version=pt.circuit_version '
                                   'WHERE pt.id=%s AND p.user_id=%s', (thread, user)).fetchone()
+            # [왜] 대상은 첫 run에 고정된다(target_locked). 이후 질문에 부품을 적지 않아도 다시 묻지 않는다
+            locked = conn.execute('SELECT target FROM threads WHERE id=%s AND user_id=%s', (thread, user)).fetchone() if target is None else None
         if pinned is None:
             raise HTTPException(404, '분석을 찾을 수 없습니다.')
         connections = pinned['connections']
         # React 정규화 회로는 parts, 데모 회로는 components다.
         connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
+        if target is None:
+            choices = [{'ref': locked['target'], 'value': ''}] if locked else target_choices(connections, question)
+            if not choices:
+                raise HTTPException(422, '회로에 판정할 수 있는 다이오드가 없습니다. 다이오드가 있는 넷리스트를 첨부해 주세요.')
+            if len(choices) > 1:
+                return choices
+            target = choices[0]['ref']
         _require_supported_target(connections, target)
         if self.mode == 'demo':
             from backend.services import demo
@@ -471,7 +514,7 @@ class Conversations:
         except psycopg.Error:
             RETENTION_LOGGER.warning('retention_purge_failed')
 
-    def message(self, user, thread, text, conditions='', request_id=''):
+    def message(self, user, thread, text, conditions='', request_id='', progress=None):
         # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
         self._purge_expired()
         with self.locked(user, thread) as (conn, row):
@@ -511,7 +554,8 @@ class Conversations:
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,
                       # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
                       'approved_memories': []}
-            self._invoke(conn, thread, inputs, budget, request_id)
+            with _reporting(progress):
+                self._invoke(conn, thread, inputs, budget, request_id)
         return self.detail(user, thread, hints)
 
     def _profile_hints(self, user, question):
@@ -522,7 +566,7 @@ class Conversations:
             LOGGER.warning('profile_hints_unavailable')
             return []
 
-    def resume(self, user, thread, answers, role, version, request_id=''):
+    def resume(self, user, thread, answers, role, version, request_id='', progress=None):
         with self.locked(user, thread) as (conn, row):
             if version != row['version']:
                 raise HTTPException(409, '새 결과의 조건 질문을 다시 확인하세요.')
@@ -556,14 +600,15 @@ class Conversations:
                 conn.execute('UPDATE threads SET input_record=%s WHERE id=%s', (Jsonb(record), thread))
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
             hints = self._profile_hints(user, record.get('question'))
-            self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
+            with _reporting(progress):
+                self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
         return self.detail(user, thread, hints)
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
         from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
         from backend.services import langfuse_prompts, service_trace
         from backend.services.demo import ReplayMiss
-        timings = langfuse_prompts.AnalysisTimings()
+        timings = langfuse_prompts.AnalysisTimings(on_node=_progress.get())  # 노드 시작 알림은 message · resume이 progress를 줬을 때만
         started = time.monotonic()
         # [왜] 모델 호출별 추적을 analysis-metadata와 같은 trace_id로 묶으려고 실행 시작에 trace_id를 정한다(키가 없으면 빈 값)
         trace_id = uuid4().hex
