@@ -14,7 +14,7 @@
 | 배포 리비전 | `sojafit-api-main-a0abece5-1116`(소스 `main` `a0abece5`, 2026-11-16 04:36 KST 100% 전환). 0% 태그 주소에서 `/health` · `/login` · `/` · `/app` 200과 새 화면 코드(새 프로젝트 창 수정)를 확인한 뒤 전환했고, 전환 뒤 운영 주소도 같은 4개가 200이다. 환경변수 33개는 이전 리비전과 같다(`DEMO_MODE=0`).<br>이전 리비전: `sojafit-api-main76fadcb4-1116`(소스 `76fadcb4`, 11-16 04:07 ~ 04:36 KST, 되돌릴 곳), 그 전 `sojafit-api-main7ba86325-1115`(소스 `7ba86325`, 11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정) | 리비전 · 트래픽 100% · 환경변수는 `gcloud run services describe` · `gcloud run revisions describe`로 확인했다(11-16 04:37 KST). 평가용 계정 A · B 25단계(로그인, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작, 같은 run 재개, 승인, 같은 승인 다시(409), 견적, 계정 B의 접근 404)는 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`, 11-13)에서 통과(실패 0 · 건너뜀 0)했고, 지금 리비전에서 같은 점검을 했다는 기록은 없다(확인 못 함). 하지 않은 것: Google 로그인 왕복, 이메일 가입 왕복. 11-14 22:43 ~ 11-15 21:26 KST에는 고정해 둔 `EXA_API_KEY` 비밀 버전이 파기돼 새 인스턴스가 시작하지 못했다([GATES](docs/GATES.md) G1). 증거: [evals/results/d10/deploy_574de79/](evals/results/d10/deploy_574de79/README.md), [docs/GATES.md](docs/GATES.md) G1 · G4 |
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
 | 기준 커밋 | `a0abece5`(`main`) | 이 문서가 기술하는 코드의 기준이고 운영 배포 소스와 같다(`git diff --stat a0abece5 origin/main -- backend frontend db Dockerfile` 차이 0, 11-16 04:37 KST). 동결 커밋(11-16 24:00)의 코드가 이 커밋과 다르면 이 줄을 그 커밋으로 고친다 |
-| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
+| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 새 대화(`/app`: 회로 없이 바로 질문하거나 넷리스트 · 회로도를 첨부), 회로 작업대(`/app?project=`: 프로젝트 · KiCad 넷리스트(`.net`) · 회로도(`.kicad_sch`) 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 부품 점검표 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`, 사례마다 대체 검토 보고서), 데이터시트 서재(`/library`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
 | 시연 영상 | 영상 파일 없음. 초안 스크립트 [`docs/deliverables/demo_script.md`](docs/deliverables/demo_script.md) | 정상 1 + 실패(거절) 1, 3분 이내 |
 
 ```bash
@@ -167,18 +167,18 @@ KiCad 넷리스트 + 질문
 
 - 질문 종류마다 가는 길이 다르다. 일상 대화 · 가격 · 부품 목록 · 견적 · 거절은 Supervisor에서 바로 끝나고, 문서 할 일과 판정 할 일은 두 에이전트에 동시에 간다(SPEC 2절 "그래프").
 - 판정에 필요한 회로 값이 질문에 없으면 판정 노드가 interrupt로 한 번 묻고, PostgreSQL 체크포인트에서 같은 대화로 이어 간다. 판정은 하위 그래프라 재개할 때 읽기 LLM을 다시 부르지 않는다(SPEC 2절, `build.py`의 `judge_subgraph`).
-- 한 방향 흐름은 실패를 고칠 길이 없어 실패하면 계획으로 되돌아간다. 대신 재계획 1번 · 할 일 3개 · Supervisor LLM 4번 · 서브에이전트 실행 6번 · 문서 할 일마다 검색 2번으로 막는다(`backend/multi_agent/contracts.py`의 `MAX_*`, [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) "구조 결정", AGENTS.md 지킬 것 6).
+- 한 방향 흐름은 실패를 고칠 길이 없어 실패하면 계획으로 되돌아간다. 대신 재계획 1번 · 할 일 3개 · Supervisor LLM 4번 · 서브에이전트 실행 6번 · 문서 할 일마다 검색 2번으로 막는다(`backend/multi_agent/contracts.py`의 `MAX_*`, [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) "구조", AGENTS.md 지킬 것 6).
 
 **Supervisor: 판단은 LLM, 정해진 규칙은 코드**
 
 | 누가 | 무엇을 | 근거 |
 |---|---|---|
-| LLM `anthropic/claude-haiku-5.5` (계획 1번, 재계획 최대 1번) | 질문 종류, 거절할지, 할 일 나누기와 지시서(첫 검색어 포함) | MULTI_AGENT.md "구조 결정", ADR 0017 |
+| LLM `anthropic/claude-haiku-5.5` (계획 1번, 재계획 최대 1번) | 질문 종류, 거절할지, 할 일 나누기와 지시서(첫 검색어 포함) | MULTI_AGENT.md "구조", ADR 0017 |
 | 코드, 계획 전 | 품번 · 개정판이 코퍼스에 있는지 확인해 사실로 넘긴다. LLM은 짐작하지 않고 이 값을 받는다 | SPEC 2절, `supervisor.py`의 `Facts` |
 | 코드, 계획 뒤 | 첫 계획이 후보 찾기인데 판정 찾기 할 일이 없으면 Spec 에이전트 할 일로 바꾼다 | ADR 0017, 사전 등록 #47 |
 | 코드, Spec 에이전트 | 숫자 · 단위 비교와 판정 5종(`backend/judge/`). 사실 확인이 코퍼스에 없다고 한 후보는 판정하지 않고 `part_missing`으로 거절 | AGENTS.md 지킬 것 7, ADR 0017 |
 | 코드, 답 정리 · 종합 | 후보 판정 보고가 하나라도 있으면 코드 판정 답 틀만 내고 문서 · 종합 글을 붙이지 않는다(찾기 · 규칙 밖 역할은 예전대로) | SPEC 2절 "출력 경계", EVAL_REPORT 6절 5행(C2, 고친 뒤 실제 모델 재측정은 사례당 1회) |
-| 코드, 답 모으기 · 답 검사 | 상한과 재계획 여부, 인용 번호와 숫자의 출처 | MULTI_AGENT.md "구조 결정" |
+| 코드, 답 모으기 · 답 검사 | 상한과 재계획 여부, 인용 번호와 숫자의 출처 | MULTI_AGENT.md "구조" |
 
 Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 8장, 결정은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md) · [ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md)):
 
@@ -211,11 +211,11 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 | 임베딩 · 리랭크 | `voyage-4-large` 1024차원 + Voyage `rerank-3`, 첫 검색 전 쿼리 재작성, 표지 청크 제외(사전 등록 #25, ADR 0004 갱신 2026-11-03) |
 | 관측 | Langfuse: 평가 실행마다 단계별 입력·출력, 토큰·비용, 실행 점수. 서비스 분석은 질문 · 답 글 없이 단계별 시간만 보낸다(SPEC 7절) |
 | 로그인 | 이메일·비밀번호(scrypt), 이메일 인증 가입(메일 링크, 비밀번호 12자 이상, 가입 확정 IP당 하루 3회), Google 로그인(같은 이메일의 기존 계정은 비밀번호를 다시 확인해야 연결), DB 세션, 계정당 5회 · IP당 30회 실패 시 15분 잠금, 데모 모드 버튼 로그인, 관리자 계정 관리 API |
-| 업무 API | 프로젝트(데모 회로 · 넷리스트 업로드), 대화와 실행(SSE), 빠진 조건 묻기(interrupt)와 재개, 후보 승인, 가격 없는 견적, 내 설정(사실 3칸). 경로 · 본문 · 상태 코드는 `SPEC.md` 4절 |
+| 업무 API | 프로젝트(데모 회로 · 넷리스트(`.net`) · 회로도(`.kicad_sch`) 업로드, 회로 부품 점검표), 대화와 실행(SSE), 빠진 조건 묻기(interrupt)와 재개, 후보 승인, 가격 없는 견적, 데이터시트 서재 목록, 외부 원본 회로도 찾기, 내 설정(사실 3칸). 경로 · 본문 · 상태 코드는 `SPEC.md` 4절 |
 | 기억 | 대화 상태는 PostgreSQL 체크포인트, 다음 대화에도 쓰는 사용자 사실 3칸은 LangGraph Store(SPEC 8.5). 그래프는 `기억 읽기`에서 선호 실장 방식만 읽어, 질문이 실장 방식을 말하지 않은 후보 찾기에서 같은 판정 안의 순서에만 쓴다(판정 · 프롬프트는 그대로). 평가 실행기는 Store 없이 돌아 v3 수치는 이 노드를 재지 않았다 |
 | 가격·재고 | `GET /api/prices`: 로그인한 사용자에게 Mouser 조회 시점 값만 돌려준다(저장·로그 안 함, ADR 0009). 작업대의 가격·재고 패널과 견적 패널이 조회 버튼을 누를 때 부른다. 데모 모드·키 없음이면 값 없음 |
 | API 오류 | 모든 응답에 서버 생성 `X-Request-ID`를 넣고 JSON 오류는 `error.code/message/request_id`로 통일한다 |
-| 아직 없는 것 | 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기(SPEC 첫머리 "현재 구현 경계") |
+| 아직 없는 것 | 승인 사례를 다음 판정에 함께 보이기(SPEC 첫머리 "현재 구현 경계") |
 
 ---
 
@@ -431,6 +431,8 @@ SojaFit/
 | 기능이 정확히 무엇을 하나 (정본) | [`SPEC.md`](SPEC.md) |
 | 어떤 파일이 어디에 있나 | [`SOJAFIT.md`](SOJAFIT.md) |
 | 점수와 실패 분석, 재현 명령 | [`EVAL_REPORT.md`](EVAL_REPORT.md) |
+| 필수 게이트 G1~G7의 증거(배포 · Docker · 평가 · 관측 · 시험) | [`docs/GATES.md`](docs/GATES.md) |
+| 제출물(시연 스크립트 · 실패 분석 · AI 도구 기록 · 포트폴리오 · Langfuse 캡처) | [`docs/deliverables/DELIVERABLES.md`](docs/deliverables/DELIVERABLES.md) |
 | 평가셋을 어떻게 만들고 동결했나 | [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md) |
 | 왜 그렇게 정했나 | [`docs/adr/ADR.md`](docs/adr/ADR.md) |
 | 에이전트·협업 규칙 | [`AGENTS.md`](AGENTS.md) |
