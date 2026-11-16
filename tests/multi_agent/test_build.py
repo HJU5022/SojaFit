@@ -1,6 +1,6 @@
 """멀티 에이전트 조립(backend/multi_agent/build.py) 시험: 가짜 LLM · 검색기로 계획 → 서브에이전트 → 모으기 → 답 검사 길을 끝까지 돌려 본다.
 
-- 역할: 바로 끝내는 길(일상 대화 · 가격 안내 · 부품 목록(종류 거르기 · 종류별 개수, #59) · 범위 밖 거절 · 계획 형식 실패), 할 일 1개(역할 · 정격)와 2개(동시 실행 → 종합),
+- 역할: 바로 끝내는 길(일상 대화 · 가격 안내 · 부품 목록(종류 거르기 · 종류별 개수, #59) · 견적 안내(#60) · 범위 밖 거절 · 계획 형식 실패), 할 일 1개(역할 · 정격)와 2개(동시 실행 → 종합),
   판정 길의 인터럽트 재개(읽기 LLM을 다시 부르지 않고, 함께 돈 문서 할 일도 다시 돌지 않음), 판정 거절 보고, 새 턴에서 칸 비우기,
   기억 읽기(Store의 선호 실장 방식 → 찾기 후보 순서, Store 없으면 예전 순서)를 본다.
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
@@ -248,6 +248,26 @@ def test_parts_list_without_a_netlist_asks_for_one_like_the_circuitless_refusal(
     assert out['answer'] == NEED_NETLIST and out['refusal'] == {'code': 'circuit_missing', 'message': NEED_NETLIST}
 
 
+def test_quote_question_answers_the_fixed_quote_guide_without_search_or_judge():
+    """견적 요청(#60): 계획이 quote면 코드가 견적을 만드는 화면 길을 고정 문구로 답한다. 판정을 켜 둬도 Supervisor 한 번뿐, 검색 · 판정 읽기 없음."""
+    from backend.multi_agent.messages import QUOTE_GUIDE
+    chat, searched = scripted(supervisor=[Plan(question_type='quote', next='quote')]), []
+    out = judge_app(chat, searched).invoke({'input': '견적서 내줄 수 있나', 'connections': NETLIST}, {'configurable': {'thread_id': 'q1'}})
+    assert chat.calls == ['supervisor'] and searched == []
+    assert out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '견적 안내'] and out['question_type'] == 'quote'
+    assert out['answer'] == QUOTE_GUIDE and out['check'] == {} and not out['refusal'] and not out['judgement'] and out['price_parts'] == []
+
+
+def test_quote_guide_names_the_real_screen_labels():
+    """견적 안내의 따옴표 속 이름은 화면 글자 그대로여야 한다(단추 이름이 바뀌면 안내가 틀린다). 예시 질문만 뺀다."""
+    import re
+    from pathlib import Path
+    from backend.multi_agent.messages import QUOTE_GUIDE
+    screen = ''.join(Path(f'frontend/src/{name}').read_text(encoding='utf-8') for name in ('Reply.tsx', 'Candidate.tsx', 'Workbench.tsx'))
+    labels = [label for label in re.findall(r"'([^']+)'", QUOTE_GUIDE) if not label.endswith('?')]
+    assert labels == ['조건과 근거 보기', '이 후보 승인하기', '견적 수량', '견적서 저장', '견적 목록'] and all(label in screen for label in labels)
+
+
 def test_one_docs_task_answers_without_a_second_supervisor_call():
     chat = scripted(supervisor=[Plan(question_type='rating', next='tasks', tasks=[docs_task()])],
                     docs_answer=[DocsAnswer(grade='enough', answer='1N4148의 VRRM은 75 V이다 [7].')])
@@ -375,7 +395,7 @@ def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
     g = judge_app(scripted()).get_graph(xray=True)
     assert set(g.nodes) - {'__start__', '__end__'} == {
         '입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', 'Spec 에이전트:회로 읽기', 'Spec 에이전트:대체 부품 판정',
-        '답 모으기', '답 정리', '종합', '답 검사', '끝내기', '거절', '가격 안내', '부품 목록'}
+        '답 모으기', '답 정리', '종합', '답 검사', '끝내기', '거절', '가격 안내', '부품 목록', '견적 안내'}
     assert [(e.source, e.target, e.data) for e in g.edges if e.data] == [('답 모으기', 'Supervisor', REPLAN)]
     assert {('입력 읽기', '기억 읽기'), ('기억 읽기', '품번·판 확인')} <= {(e.source, e.target) for e in g.edges}
     assert {e.target for e in g.edges if e.source == 'Supervisor'} >= {'RAG 에이전트', 'Spec 에이전트:회로 읽기'}  # Send 동시 실행

@@ -2,6 +2,7 @@
 
 - 역할: 거절 사유(`Reason`)를 사용자가 알아들을 말로 바꾸고, 가능하면 다음에 할 행동을 같이 알려 준다.
   가격 · 재고 질문에는 값 없이 화면이 따로 보여 준다는 안내를 만든다(`price_message`, 단일 · 멀티 가격 안내 노드가 같이 쓴다).
+  견적 요청에는 견적을 만드는 화면 길을 고정 안내로 알려 준다(`QUOTE_GUIDE`, 멀티 견적 안내 노드, #60).
   판정 결과(`judgement`)를 코드 틀의 답 글로 바꾼다(`render_judgement`, 숫자 · 인용은 판정 결과를 그대로 옮긴다).
 - 하지 않는 일: 거절 결정(Supervisor · 단일 그래프 라우팅), 코드 이름 노출, 숫자 비교(`backend/judge/`), 가격 · 재고 조회(`backend/services/mouser.py`).
   "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
@@ -13,6 +14,11 @@ from backend.multi_agent.contracts import Reason
 # 데모 기록의 LLM 호출 키가 바뀐다. 코드만 정하는 이유 코드다. [주의] 화면이 이 문구로 회로 고르기 카드를 붙인다(frontend/src/circuit.ts NEEDS_CIRCUIT)
 CIRCUIT_MISSING = 'circuit_missing'
 NEED_NETLIST = '이 질문은 회로가 있어야 검토할 수 있어요. 넷리스트를 첨부해 주세요.'
+# 견적 요청의 답(#60). [왜] 견적은 대화가 아니라 승인 · 수량 화면이 만든다(SPEC 8.4). 그래프는 승인 기록을 읽지 않아 한 문구로 길만 알려 준다.
+# [주의] 따옴표 안 이름은 화면 글자와 같아야 한다(frontend/src/Reply.tsx 후보 카드 · Candidate.tsx 승인 칸 · Workbench.tsx 머리 단추)
+QUOTE_GUIDE = ("견적은 판정받은 후보를 승인한 뒤 수량을 넣어 만들어요. 판정 답의 '조건과 근거 보기'에서 '이 후보 승인하기'를 누르고 "
+               "'견적 수량'을 넣어 '견적서 저장'을 누르세요. 저장한 견적은 프로젝트 화면 위쪽 '견적 목록'에서 볼 수 있어요. "
+               "아직 판정받은 후보가 없다면 'D1을 SS14로 바꿔도 될까?'처럼 바꿀 후보를 먼저 물어보세요.")
 
 
 def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] = ()) -> str:

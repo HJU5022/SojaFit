@@ -13,6 +13,6 @@
 |---|---|
 | `CONVERSATIONS.md` | 이 문서 |
 | `test_charge_pool.py` | 예산 차감(`charge`)이 공용 연결 풀을 쓰고, 풀이 0.5초 안에 못 주면 새 연결로 같은 트랜잭션 · 같은 429를 내는지(가짜 풀) |
-| `test_dto.py` | 공개·저장 DTO 허용 목록, `public_state`, 참고(내 설정) 칸, `input_conditions` 허용 목록, `SafeResult`가 `runs.safe_result` CHECK의 필수 키를 갖는지 |
+| `test_dto.py` | 공개·저장 DTO 허용 목록(질문 종류 `quote` 포함, #60), `public_state`, 참고(내 설정) 칸, `input_conditions` 허용 목록, `SafeResult`가 `runs.safe_result` CHECK의 필수 키를 갖는지 |
 | `test_profile.py` | 사용자 사실 기억: 칸 검사·틀 문장·version·지우기·의미 순위(가짜 Voyage), 설정 API 오류 코드. DB 시험은 `TEST_THREAD_DATABASE_URL`, 색인 시험은 `vector` 확장이 있을 때만 |
 | `test_repository.py` | 격리 DB에서 대화 저장소·스키마·삭제 잠금, 저장 메시지 페이지·소유권·읽기 전용 조회(조회 전후 행 수·run 시각 불변), 오래된 running의 recover(최근·활성 분석·타 사용자·추가 입력 대기·완료 결과는 보존), 표시 조건을 제외한 결과 저장 |

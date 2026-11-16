@@ -7,7 +7,7 @@
 - 담당: 에이전트
 
 ## graph/와의 관계
-두 폴더는 서로 import한다. 이 폴더는 `backend/graph/`에서 `nodes.py`의 도우미(`read_input`, `price_answer`, `parts_list_answer`, `circuit_parts`, `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`, 상수 `REVISION`·`WORD`·`NOT_FOUND`·`QUANTITY`·`STANDARD`), `memory.py`(`read_profile`, `memory_context`, `memory_sources`), `mcp_retriever.py`(`RetrievalUnavailableError`)를 가져다 쓴다. 반대로 `backend/graph/nodes.py`는 이 폴더의 `contracts.py`, `messages.py`, `supervisor.py`(`Facts`·`render_facts`)를 가져다 쓰고, 단일 그래프(`backend/graph/build.py`)는 `facts.py`의 `facts_node`와 `agents/judge.py`의 Spec 에이전트 노드를 그대로 붙인다. 사용처별 근거는 [GRAPH.md](../graph/GRAPH.md)의 분담 표다. 순환을 피하려고 `supervisor.py`는 `citations`(답 검사)와 `circuit_parts`(계획 입력의 `Circuit attached` 줄, #59)를 함수 안에서 import한다.
+두 폴더는 서로 import한다. 이 폴더는 `backend/graph/`에서 `nodes.py`의 도우미(`read_input`, `price_answer`, `parts_list_answer`, `quote_answer`, `circuit_parts`, `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`, 상수 `REVISION`·`WORD`·`NOT_FOUND`·`QUANTITY`·`STANDARD`), `memory.py`(`read_profile`, `memory_context`, `memory_sources`), `mcp_retriever.py`(`RetrievalUnavailableError`)를 가져다 쓴다. 반대로 `backend/graph/nodes.py`는 이 폴더의 `contracts.py`, `messages.py`, `supervisor.py`(`Facts`·`render_facts`)를 가져다 쓰고, 단일 그래프(`backend/graph/build.py`)는 `facts.py`의 `facts_node`와 `agents/judge.py`의 Spec 에이전트 노드를 그대로 붙인다. 사용처별 근거는 [GRAPH.md](../graph/GRAPH.md)의 분담 표다. 순환을 피하려고 `supervisor.py`는 `citations`(답 검사)와 `circuit_parts`(계획 입력의 `Circuit attached` 줄, #59)를 함수 안에서 import한다.
 
 ## 구조
 그래프 노드 이름은 한국어이고 조립한 그래프의 `get_graph().draw_mermaid()`로 그림을 뽑는다(SPEC.md 2절).
@@ -17,14 +17,14 @@
 | `입력 읽기` | 입력 글 나누기, 대상 부품 주변 넷 읽기(`graph.nodes.read_input`) | 없음 |
 | `기억 읽기` | Store에서 선호 실장 방식만 읽어 `mount_preference`에 둠(`graph.memory.read_profile`) | 없음 |
 | `품번·판 확인` | 질문의 품번·개정판이 코퍼스에 있는지 확인(`facts.py`, MCP `check_corpus`) | 없음 |
-| `Supervisor` | 계획: 범위 판정, 질문 종류, 할 일(최대 `MAX_TASKS`)과 지시서. 일상 대화·가격·부품 목록·범위 밖·코퍼스 밖은 여기서 끝냄. 서비스가 부품 없는 회로를 넘겼는데(회로 없는 대화) 정격이 아닌 할 일이 있으면 코드가 `circuit_missing` 거절로 끝냄(SPEC 8.9) | `supervisor` |
+| `Supervisor` | 계획: 범위 판정, 질문 종류, 할 일(최대 `MAX_TASKS`)과 지시서. 일상 대화·가격·부품 목록·견적·범위 밖·코퍼스 밖은 여기서 끝냄. 서비스가 부품 없는 회로를 넘겼는데(회로 없는 대화) 정격이 아닌 할 일이 있으면 코드가 `circuit_missing` 거절로 끝냄(SPEC 8.9) | `supervisor` |
 | `RAG 에이전트` | 검색 → 다른 품번 줄·다른 판 거르기 → 근거 채점 + 답 쓰기 → 근거가 없거나 일부 답이면 다른 검색어로 재검색 → 인용 검사 → 보고 | `docs_answer` |
 | `Spec 에이전트` | 하위 그래프 `회로 읽기` → `대체 부품 판정`. 읽기 LLM 1번, 빠진 값은 인터럽트로 묻고, 사양 값 비교는 `backend/judge/verdict.py`가 함 | `judge_read` |
 | `답 모으기` | 코드만. 보고 상태와 상한을 보고 길을 정함 | 없음 |
 | `답 정리` | 할 일 1개의 답(판정은 코드 답 틀) | 없음 |
 | `종합` | 보고를 코드로 이을 수 없을 때만(조건은 [SPEC.md](../../SPEC.md) 2절 "종합으로 가는 조건"). 판정 표는 코드가 그대로 붙임 | `synth` |
 | `답 검사` | 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답·판정 결과·질문에 있던 숫자인지 검사. 걸리면 거절 | 없음 |
-| `끝내기`, `거절`, `가격 안내`, `부품 목록` | 마무리. 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고(첫 줄 아래 종류별 개수), 계획의 `part_kinds`가 있으면 그 종류만 심볼 칸을 더해 옮기며(다이오드는 LED 포함, 없으면 한 줄, #59), 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답 | 없음 |
+| `끝내기`, `거절`, `가격 안내`, `부품 목록`, `견적 안내` | 마무리. 가격 안내는 `graph.nodes.price_answer`. 부품 목록(질문 종류 `parts_list`, #55)은 `graph.nodes.parts_list_answer`가 넷리스트 부품을 기호 · 값 · 풋프린트 표로 옮기고(첫 줄 아래 종류별 개수), 계획의 `part_kinds`가 있으면 그 종류만 심볼 칸을 더해 옮기며(다이오드는 LED 포함, 없으면 한 줄, #59), 넷리스트가 없으면 `circuit_missing` 넷리스트 요청 답. 견적 안내(질문 종류 `quote`, #60)는 `graph.nodes.quote_answer`가 견적을 만드는 화면 길(판정 → 승인 → 수량 → 견적 목록)을 고정 문구 `messages.QUOTE_GUIDE`로 답함(승인 기록을 읽지 않아 한 문구) | 없음 |
 
 - 노드별 모델: `backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 정본이고, 선정 이유는 ADR 0014·0017이다.
 - 상한(질문당): 할 일 수, 재계획, Supervisor LLM 호출, 서브에이전트 실행, 문서 할 일의 검색 횟수는 `contracts.py`의 `MAX_TASKS`, `MAX_REPLANS`, `MAX_SUPERVISOR_CALLS`, `MAX_AGENT_RUNS`, `MAX_SEARCHES`다. 넘으면 거절한다.

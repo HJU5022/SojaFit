@@ -1,7 +1,7 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
 - 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 11개).
-  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다. 부품 목록(`parts_list_answer`, #55)은 멀티 그래프만 붙인다.
+  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다. 부품 목록(`parts_list_answer`, #55) · 견적 안내(`quote_answer`, #60)는 멀티 그래프만 붙인다.
   사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
@@ -24,7 +24,7 @@ from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
 from backend.graph.memory import memory_context, memory_sources
 from backend.multi_agent.contracts import QuestionType, Reason
-from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST, price_message, refusal_for, render_judgement
+from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST, QUOTE_GUIDE, price_message, refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
 from backend.rag.units import PREFIX, to_si
 from backend.services import llm
@@ -157,7 +157,7 @@ REFUSED_TYPES = {"out_of_scope": Reason.OUT_OF_SCOPE, "other_part": Reason.NOT_F
 
 
 class Route(BaseModel):
-    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 route.md의 8가지다(멀티 Supervisor는 부품 목록 parts_list를 더 고른다, #55)."""
+    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 route.md의 8가지다(멀티 Supervisor는 부품 목록 parts_list(#55) · 견적 quote(#60)를 더 고른다)."""
     # Literal로 정한 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
     question_type: QuestionType = Field(description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
     reason: FirstStageReason | None = Field(default=None, description="검색 전에 거절할 때만 거절 사유. 거절하지 않으면 비운다")
@@ -290,6 +290,15 @@ def parts_list_answer(state: dict) -> dict:
     table = ["| 기호 | 값 | 심볼 | 풋프린트 |", "|---|---|---|---|",
              *(f"| {cell(p.get('ref'))} | {cell(p.get('value'))} | {cell(p.get('symbol'))} | {cell(p.get('footprint'))} |" for p in rows)]
     return {"answer": f"{lead}\n\n" + "\n".join(table), "check": {}, "path": ["부품 목록"]}
+
+
+def quote_answer(state: dict) -> dict:
+    """견적 안내 노드: 견적 · 견적서 요청에 견적을 만드는 화면 길을 고정 문구로 답한다. LLM · DB를 부르지 않는다(#60).
+
+    [왜] Supervisor가 견적 요청을 범위 밖(주문 · 결제)으로 보내 "회로나 부품에 관한 질문을 해 주세요"라고 답했다. 견적은 판정 → 승인 → 수량 화면이 만든다.
+    승인 기록은 그래프에 넘기지 않아(`approved_memories`는 늘 빈 목록) 승인 여부로 가르지 않는다.
+    """
+    return {"answer": QUOTE_GUIDE, "check": {}, "path": ["견적 안내"]}
 
 
 def search(state: AgentState, retriever) -> dict:

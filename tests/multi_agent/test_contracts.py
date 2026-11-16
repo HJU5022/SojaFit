@@ -28,6 +28,7 @@ def test_valid_plans():
     assert Plan(question_type='price', next='price').tasks == []
     assert Plan(question_type='parts_list', next='parts_list').tasks == []  # 부품 목록은 코드가 넷리스트로 답한다(#55)
     assert Plan(question_type='parts_list', next='parts_list', part_kinds=['diode', 'resistor']).part_kinds == ['diode', 'resistor']  # #59
+    assert Plan(question_type='quote', next='quote').tasks == []  # 견적 안내는 코드가 고정 문구로 답한다(#60)
 
 
 def test_part_kinds_are_ignored_outside_the_parts_list_path():

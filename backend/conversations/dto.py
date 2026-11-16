@@ -128,7 +128,7 @@ def public_state(state: dict) -> dict:
     question_type = state.get('question_type', '')
     parts = state.get('price_parts', [])
     result = {'answer': answer if isinstance(answer, str) else '',
-              'question_type': question_type if isinstance(question_type, str) and question_type in {'out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'role', 'rating', 'candidate_judge', 'candidate_find'} else '',
+              'question_type': question_type if isinstance(question_type, str) and question_type in {'out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'quote', 'role', 'rating', 'candidate_judge', 'candidate_find'} else '',
               'price_parts': [p for p in parts if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(parts, list) else []}
     reports = state.get('final_reports') or state.get('reports') or []
     cited = {str(item) for report in reports if isinstance(report, dict)
@@ -224,7 +224,7 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
             safe_interrupt['target_choices'] = choices[:30]
             found = ', '.join(c['ref'] + (f"({c['value']})" if c['value'] else '') for c in choices[:30])
             safe_interrupt['question'] = f'넷리스트에서 다이오드 {found}를 찾았어요. 어떤 부품을 바꿀까요?'
-    question_types = {'out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'role', 'rating', 'candidate_judge', 'candidate_find'}
+    question_types = {'out_of_scope', 'chat', 'other_part', 'price', 'parts_list', 'quote', 'role', 'rating', 'candidate_judge', 'candidate_find'}
     question_type = state.get('question_type')
     judgement = safe_judgement(state.get('judgement')) or {}
     # 공식 출처는 브라우저 응답에만 붙인다. runs.safe_result의 고정 저장 형식에는 넣지 않는다.
