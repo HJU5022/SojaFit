@@ -22,7 +22,7 @@
 
 ## What
 
-- 대화는 프로젝트(회로 + 대상 부품) 아래에 만들고, 같은 UUID로 분석 thread(`sojafit_agent.threads`)가 생긴다. 질문마다 `POST /api/threads/{id}/runs`, 조건 질문 재개는 `POST /api/runs/{id}/resume`다.
+- 대화는 프로젝트 아래에 만들고(2026-11-17 주: 지금은 회로 없는 프로젝트와 대상이 빈 대화도 있다. 대상은 첫 질문에서 코드가 정하거나 `대상 확인`이 묻는다, [SPEC.md](../../SPEC.md) 2절 · 8.9), 같은 UUID로 분석 thread(`sojafit_agent.threads`)가 생긴다. 질문마다 `POST /api/threads/{id}/runs`, 조건 질문 재개는 `POST /api/runs/{id}/resume`다.
 - 조건 질문(`interrupt`)은 같은 대화에서 재개한다. 다른 회로·대상 분석은 새 대화를 만든다.
 - 다른 사용자의 대화·run은 404, 미인증은 401, 같은 대화에 동시 실행은 409다.
 - 승인은 `POST /api/messages/{id}/approvals`가 `public.approvals`에 남긴다(견적 승인, 이 서비스 밖). Store에는 쓰지 않는다.

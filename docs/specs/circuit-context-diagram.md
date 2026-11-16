@@ -1,8 +1,9 @@
 # 교체 대상 부품 주변 연결 개념도
 
-- 상태: 현행
+- 상태: 현행(데이터 계약). 화면 표시 항목은 11-16 새 화면과 다르다(아래 "새 화면과 다른 점")
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
+- 새 화면과 다른 점(2026-11-17, `799ae636` `frontend/src/ui.tsx` 대조): 새 화면의 개념도(`Circuit`)는 선택 부품의 핀 · 넷 연결을 그리고, 이 문서의 2단계 연결과 7번 안내 문구는 화면 코드에서 찾지 못했다. 작업대 회로 구역의 개념도는 눌러 큰 창으로 본다(`zoomable`). 대상 부품은 사용자가 고르는 칸이 아니라 대화에서 코드가 정하거나 묻는다([SPEC.md](../../SPEC.md) 8.9)
 - 정본 여부: 정본(연결 개념도의 데이터·표시 계약). 화면 배치는 [frontend/src/SRC.md](../../frontend/src/SRC.md)(11-16 새 화면. 옛 배치는 [frontend-screen-redesign.md](frontend-screen-redesign.md), 이력)
 - 관련 문서: [verified-circuit-and-datasheet-visuals.md](verified-circuit-and-datasheet-visuals.md)(원본 회로도 탭), [frontend-screen-redesign.md](frontend-screen-redesign.md)
 - 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
@@ -146,5 +147,5 @@ AC-08 · 노드 상세
 
 ## 한계
 
-- 표시 계약의 확대·이동 조작은 이 문서의 범위가 아니다. 새 화면(11-16)에는 도면 확대 · 이동이 없다. 옛 동작은 [frontend-screen-redesign.md](frontend-screen-redesign.md)(이력)에 있다.
+- 표시 계약의 확대·이동 조작은 이 문서의 범위가 아니다. 새 화면(11-16)에는 도면 이동이 없고, 작업대 회로 구역의 개념도만 눌러 큰 창으로 본다(`frontend/src/ui.tsx` `zoomable`). 옛 동작은 [frontend-screen-redesign.md](frontend-screen-redesign.md)(이력)에 있다.
 - 화면 AC 04~06의 개별 테스트 대응은 확인하지 않았다.
