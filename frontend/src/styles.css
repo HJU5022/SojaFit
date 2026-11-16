@@ -881,6 +881,8 @@ form {
 }
 .sidebar-bottom {
   padding-top: 15px;
+  /* [왜] 목록(.sidebar-projects)을 숨긴 화면에서도 계정 영역을 사이드바 맨 아래에 둔다(#21) */
+  margin-top: auto;
 }
 .account-info {
   display: flex;

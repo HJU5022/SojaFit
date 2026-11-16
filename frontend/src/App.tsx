@@ -73,7 +73,10 @@ function Shell({
             승인 사례
           </a>
         </nav>
-        <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
+        {/* [왜] 내 설정·사용자 관리는 계정 화면이라 대화·프로젝트 목록을 보이지 않는다(#21). 돌아가기는 위 "새 대화"·메뉴로 한다 */}
+        {pathname !== '/settings' && !pathname.startsWith('/admin') && (
+          <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
+        )}
         <div className="sidebar-bottom">
           <a href="/settings">
             <SettingsIcon size={17} />내 설정
