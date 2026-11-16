@@ -77,12 +77,13 @@ uv run python scripts/smoke/http_smoke.py --base-url https://sojafit-api-5593695
 | 1 | 전체를 한 프로세스로 | **멈춤**: 수집 3,202개, 84%에서 `tests/rag/test_card_find.py` 첫 시험이 5분 넘게 진행 없음 → `SIGABRT`로 스레드 덤프를 남기고 끝냄(종료 134) | [pytest_full_linux_hang_run1.txt](checks/pytest_full_linux_hang_run1.txt) |
 | 2 | 같은 방법, `-o faulthandler_timeout=240` | **같은 곳에서 멈춤**(240초 덤프 뒤 `docker kill`) | [pytest_full_linux.txt](checks/pytest_full_linux.txt) |
 | 3 | `--ignore=tests/rag/test_card_find.py` | **다음 파일 `tests/rag/test_card_read.py`에서 멈춤**(120초 덤프 뒤 `docker kill`) | [pytest_full_linux_ignore_card_find.txt](checks/pytest_full_linux_ignore_card_find.txt) |
+| macOS | 호스트(Apple M2) 한 프로세스 전체, 같은 `uv.lock` venv, `env -i` | **멈추지 않음**: 2,982 통과 · 15 실패 · 205 건너뜀(55.6초). 실패 중 11개는 `tests/projects/test_schematic_render.py` SVG(호스트에 cairo 없음, 11-16에도 12개), 나머지 4개(`test_external_schematic.py` · `test_official_schematic.py` 등)는 원인을 보지 않았다. 4개는 Linux 폴더별 실행에서 통과한다 | [pytest_full_macos.txt](checks/pytest_full_macos.txt) |
 | 4 | `tests/` 아래 폴더마다 따로(13개 프로세스) | **2,997 통과 · 0 실패 · 205 건너뜀**(합 3,202 = 1회차 수집 수). 건너뜀은 전용 `TEST_DATABASE_URL` 등(`-rs` 목록) | [pytest_by_dir_linux.txt](checks/pytest_by_dir_linux.txt) |
 
 - 멈춘 곳은 세 번 모두 새 스레드 시작이다: `backend/rag/card_find.py:296`(`gather`의 `ThreadPoolExecutor.submit`) · `backend/rag/card_read.py:240`(`llm_read`) → `threading.Thread.start()`가 `_started.wait()`에서 돌아오지 않는다. 살아 있는 다른 스레드는 Langfuse 프롬프트 캐시 · OpenTelemetry 작업자뿐이었다.
 - 같은 이미지에서 `tests/rag/test_card_find.py`만 돌리면 25 통과(2.41초), `tests/rag`만 돌리면 207 통과 · 26 건너뜀이다. `tests/projects` · `multi_agent` · `api` · `services` 중 하나와 `test_card_find.py`를 함께 돌려도 멈추지 않았다. 앞선 시험이 쌓은 상태에 따라 멈추는 것으로 보이며 원인은 찾지 않았다 `[추정]`. 11-16 `4c5afc1e`에서는 같은 방법으로 67초에 끝났다(`../d10/freeze_check_2026-11-16/`). 그 뒤 `card_find.py`를 바꾼 커밋은 `bf76cf5e`(프로세스 공유 캐시) · `6ca25d48`(공용 DB 풀)이다.
 - 4회차 로그의 `exit(<폴더>)` 줄은 `tail`의 종료 코드다(측정 스크립트 실수). 판정은 폴더마다 마지막 요약 줄로 했다.
-- macOS 호스트 전체 실행은 이번에 하지 않았다.
+- 그래서 멈춤은 Linux에서 한 프로세스로 전체를 돌릴 때만 봤다(3/3). macOS 한 프로세스 전체는 멈추지 않았다(1회).
 
 동결 평가셋 검사 `python evals/runners/freeze.py --check`: "동결 이후 바뀐 파일: 없음", 종료 0([freeze_check.txt](checks/freeze_check.txt)).
 
