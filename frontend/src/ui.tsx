@@ -162,37 +162,66 @@ export function Source({ cite }: { cite: Citation }) {
     </div>
   );
 }
-export function Circuit({ project, target }: { project: Project | null; target: string }) {
+/** 선택 부품의 핀·네트 연결 개념도. zoomable이면 그림을 눌러 큰 창으로 본다(작업대 왼쪽 "회로" 구역). */
+export function Circuit({
+  project,
+  target,
+  zoomable = false,
+}: {
+  project: Project | null;
+  target: string;
+  zoomable?: boolean;
+}) {
   const part = partsOf(project).find((p) => p.ref === target),
     pins = pinsOf(project, target);
+  const [open, setOpen] = useState(false);
+  const drawing = part && (
+    <svg viewBox="0 0 420 122" role="img" aria-label={`${target} ${part.value} 연결 개념도`}>
+      <path
+        d="M32 61H177m66 0h145M177 39v44l66-22-66-22Zm66 0v44"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <circle cx="32" cy="61" r="4" fill="currentColor" />
+      <circle cx="388" cy="61" r="4" fill="currentColor" />
+      <text x="210" y="22" textAnchor="middle">
+        {target} · {part.value}
+      </text>
+      {pins.slice(0, 2).map((p, i) => (
+        <g key={p.pin}>
+          <text x={i ? 365 : 55} y="48" textAnchor="middle">
+            핀 {p.pin}
+          </text>
+          <text x={i ? 365 : 55} y="98" textAnchor="middle">
+            {String(p.net).length > 19 ? String(p.net).slice(0, 16) + '…' : p.net}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
   return (
     <div className="circuit" aria-label="선택 부품 연결도">
       <div className="circuit-label">핀과 네트 연결</div>
       {part ? (
         <>
-          <svg viewBox="0 0 420 122" role="img" aria-label={`${target} ${part.value} 연결 개념도`}>
-            <path
-              d="M32 61H177m66 0h145M177 39v44l66-22-66-22Zm66 0v44"
-              stroke="currentColor"
-              strokeWidth="2"
-              fill="none"
-            />
-            <circle cx="32" cy="61" r="4" fill="currentColor" />
-            <circle cx="388" cy="61" r="4" fill="currentColor" />
-            <text x="210" y="22" textAnchor="middle">
-              {target} · {part.value}
-            </text>
-            {pins.slice(0, 2).map((p, i) => (
-              <g key={p.pin}>
-                <text x={i ? 365 : 55} y="48" textAnchor="middle">
-                  핀 {p.pin}
-                </text>
-                <text x={i ? 365 : 55} y="98" textAnchor="middle">
-                  {String(p.net).length > 19 ? String(p.net).slice(0, 16) + '…' : p.net}
-                </text>
-              </g>
-            ))}
-          </svg>
+          {zoomable ? (
+            <button
+              type="button"
+              className="zoom-button"
+              aria-label="연결 개념도 크게 보기"
+              onClick={() => setOpen(true)}
+            >
+              {drawing}
+            </button>
+          ) : (
+            drawing
+          )}
+          {open && (
+            <Modal title="연결 개념도" close={() => setOpen(false)} wide>
+              <Circuit project={project} target={target} />
+            </Modal>
+          )}
           <div className="pin-list">
             {pins.map((p) => (
               <span key={p.pin}>

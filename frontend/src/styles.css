@@ -898,16 +898,50 @@ form {
   padding: 23px 18px;
   min-width: 0;
 }
+.circuit-section {
+  margin-bottom: 26px;
+}
+.circuit-section > h2 {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.circuit-section > .circuit {
+  margin-bottom: 12px;
+}
 .schematic-section {
-  margin-top: 12px;
   border: 1px solid var(--line);
   border-radius: 5px;
   background: var(--paper);
-  padding: 8px 12px;
+  padding: 13px 12px;
+  font-size: 13px;
 }
-.schematic-section summary {
+.zoom-button {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: zoom-in;
+}
+.zoom-button:hover {
+  background: none;
+}
+.zoom-button img {
+  max-height: 240px;
+  object-fit: contain;
+}
+.schematic-missing {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+}
+.schematic-missing span {
+  color: var(--muted);
+}
+.schematic-choices summary {
   cursor: pointer;
-  font-weight: 600;
 }
 .schematic-section form {
   display: grid;
@@ -2091,6 +2125,15 @@ form {
   .circuit svg {
     height: 82px;
     margin: 0;
+  }
+  .dialog .circuit svg {
+    height: auto;
+  }
+  .circuit-section {
+    margin: 0;
+  }
+  .circuit-section > .circuit {
+    margin-bottom: 10px;
   }
   .pin-list {
     font-size: 13px;
