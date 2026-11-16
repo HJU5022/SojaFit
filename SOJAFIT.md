@@ -784,7 +784,6 @@ SojaFit (proj3-b)
     │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
     │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
     │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
-    │   ├── dummy-full-flow.md  <- (폐기·이력) 옛 화면의 개발 전용 더미 모드 흐름
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
     │   ├── frontend-screen-redesign.md <- (이력) 11-16 교체 전 프런트엔드 화면 구성
     │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
@@ -813,7 +812,6 @@ SojaFit (proj3-b)
     │   ├── frontend-schematic-work-summary-2026-11-15.md <- 프런트 오류·회로도 검색 개선 17개 작업과 검증 범위 공유 보고서
     │   ├── schematic-search-verification-2026-11-15.md <- CDFER·다이오드 검색 실검증과 한도 소진 시점의 미검증 항목
     │   ├── official-schematic-search-verification-2026-11-16.md <- 공식 회로도 검색 확대·자료 검증·PDF 중복 제거·병렬 처리 실측 보고서
-    │   ├── resolved-issues-summary-2026-11-15.md <- 회로도 검색·입력·판정·대화 기억의 해결·검증 완료 항목 공유 보고서
     │   ├── docker-cold-start-measurements.md  <- G2 빌드·첫 기능·첫 회로도·운영 응답 실측 비교
     │   ├── d9-outside-evidence-2026-11-11.md <- D9 근거 자료: 저장소 안으로 옮긴 원시 목록
     │   ├── grade-evidence-validation.md <- 1등급 2등급 3등급 근거 흐름과 검증 범위
