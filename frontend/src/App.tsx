@@ -14,7 +14,8 @@ import { api, ApiError } from './api';
 import { Brand, ErrorBox, followLink, Loading, navigate, useLocation } from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
-import { Admin, ApprovedCases, Privacy, PrivacyLink, Settings } from './Account';
+import { Admin, ApprovedCases, Settings } from './Account';
+import { Footer, isLegalPath, LegalPage } from './Legal';
 import { ConversationNav, NewConversation } from './Conversations';
 import { ProjectList } from './Projects';
 import { Workbench } from './Workbench';
@@ -114,7 +115,7 @@ function Shell({
             </button>
           </div>
           <ErrorBox error={error} />
-          <PrivacyLink className="privacy-small" />
+          <Footer compact />
         </div>
       </aside>
       <div className="app-frame">
@@ -163,7 +164,7 @@ export default function App() {
   }, []);
   const publicPage =
     pathname === '/' ||
-    pathname === '/privacy' ||
+    isLegalPath(pathname) || // 이용약관 · 개인정보처리방침 · AI 이용 안내 · 출처·라이선스(#27)
     pathname === '/login' ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/password-reset') ||
@@ -175,7 +176,7 @@ export default function App() {
     if (!checking && user && pathname === '/login') navigate('/app', true);
   }, [checking, user, publicPage, error, pathname]);
   if (pathname === '/') return <Landing />;
-  if (pathname === '/privacy') return <Privacy />;
+  if (isLegalPath(pathname)) return <LegalPage path={pathname} />;
   if (checking)
     return (
       <div className="page-content">

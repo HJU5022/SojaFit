@@ -634,15 +634,10 @@ form {
 .landing footer {
   background: var(--surface);
   padding: 45px 5vw;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  font-size: 13px;
 }
 .auth-page {
   min-height: 100dvh;
-  /* [왜] 개인정보 처리방침 링크(.privacy-link)를 카드 밖 화면 맨 아래에 둔다(#20) */
+  /* [왜] 하단 고지 줄(.site-footer)을 카드 밖 화면 맨 아래에 둔다(#20 #27) */
   display: flex;
   flex-direction: column;
   /* [왜] 오류 · 안내 문장이 '6/번'처럼 낱말 중간에서 줄을 바꾸지 않게 한다(랜딩과 같은 규칙) */
@@ -706,13 +701,48 @@ form {
   flex: 1;
   font-size: 13px;
 }
-.privacy-link {
-  display: block;
-  text-align: center;
-  margin-top: auto;
-  padding: 40px 20px 24px;
+/* 화면 맨 아래 고지 한 줄(#27): 네이버식으로 조용히 두고 항목 사이는 얇은 세로선 */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  row-gap: 4px;
   font-size: 12px;
   color: var(--muted);
+}
+.site-footer > a {
+  text-decoration: none;
+}
+/* [왜] 구분선을 글자 "|"가 아닌 그림으로 그려 화면 낭독기가 읽지 않게 한다 */
+.site-footer > a:not(:first-of-type)::before {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 10px;
+  margin: 0 10px;
+  background: #c3cdd2;
+  vertical-align: -1px;
+}
+.site-footer > small {
+  font-size: inherit;
+  margin-left: 16px;
+}
+.site-footer.compact {
+  justify-content: flex-start;
+  padding: 8px 3px;
+  font-size: 11.5px;
+}
+.site-footer.compact > a:not(:first-of-type)::before {
+  margin: 0 6px;
+}
+.site-footer.compact > small {
+  margin-left: 0;
+  width: 100%;
+}
+.auth-page > .site-footer {
+  margin-top: auto;
+  padding: 40px 20px 24px;
 }
 /* 로그인 실패 아래의 잠금 규칙 · 재설정 링크 안내 */
 .auth-card > .auth-help {
@@ -723,31 +753,67 @@ form {
 .subheading {
   margin: 25px 0 12px;
 }
-.privacy-page {
+.legal-page {
   max-width: 800px;
   padding: 40px 28px;
   margin: auto;
 }
-.privacy-page main {
+.legal-page main {
   margin-top: 50px;
 }
-.privacy-page h1 {
+.legal-page h1 {
   margin-bottom: 24px;
 }
-.privacy-page h2 {
+.legal-page h2 {
   margin-top: 30px;
   margin-bottom: 12px;
 }
-.privacy-page p {
+.legal-page p {
   font-size: 15px;
 }
-/* 화면 아래 링크로 여는 개인정보 처리 안내 작은 창(#20) */
-.dialog .privacy-text h2 {
+.legal-page > .site-footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+/* 하단 고지 줄로 여는 문서 창(#20 #27). 창이 푸터 안에 있어 글자 크기를 다시 정한다 */
+.dialog:has(> .dialog-body > .legal-text) {
+  width: 720px;
+  font-size: 14px;
+}
+.dialog .legal-text h2 {
   font-size: 15px;
   margin: 20px 0 6px;
 }
-.dialog .privacy-text p {
+.dialog .legal-text p {
   font-size: 14px;
+}
+.legal-text h3 {
+  font-size: 14px;
+  margin: 14px 0 4px;
+}
+.legal-text ul {
+  padding-left: 20px;
+  margin: 6px 0 12px;
+}
+.legal-text table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  font-size: 13px;
+  margin: 8px 0 12px;
+}
+.legal-text th,
+.legal-text td {
+  border: 1px solid var(--line);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.legal-text th {
+  background: var(--surface);
+  font-weight: 600;
 }
 /* 224px 탐색 + 남은 너비. 검토는 270px 문맥 + 가변 대화. */
 .app-shell {
@@ -919,11 +985,6 @@ form {
   place-items: center;
   border-radius: 50%;
   font-weight: 600;
-}
-.sidebar-bottom .privacy-small {
-  font-size: 13px;
-  color: var(--muted);
-  padding: 8px 3px;
 }
 .app-frame {
   margin-left: 224px;
@@ -2126,12 +2187,7 @@ form {
     font-size: 14px;
   }
   .landing footer {
-    display: flex;
-    flex-wrap: wrap;
     padding: 30px 22px;
-  }
-  .landing footer > a:last-child {
-    font-size: 13px;
   }
   .auth-page > header {
     padding: 25px 22px;
@@ -2524,10 +2580,10 @@ form {
   .case-list p {
     font-size: 13px;
   }
-  .privacy-page {
+  .legal-page {
     padding: 25px 22px;
   }
-  .privacy-page p {
+  .legal-page p {
     font-size: 14px;
   }
 }
@@ -2614,7 +2670,7 @@ form {
   }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
-  .sidebar-bottom .privacy-small {
+  .sidebar-bottom .site-footer {
     padding-left: 5px;
   }
 }

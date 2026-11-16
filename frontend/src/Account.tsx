@@ -335,45 +335,12 @@ export function Admin() {
     </div>
   );
 }
-/** `/privacy` 주소로 바로 들어왔을 때의 페이지. 화면 안에서는 아래 PrivacyLink가 같은 본문을 작은 창으로 연다(#20). */
-export function Privacy() {
+// [주의] 운영자가 정한 공개 연락처는 이 메일 하나다. 사람 이름은 적지 않는다(#27)
+export const contactEmail = 'hajeongun.dev@gmail.com';
+/** 개인정보처리방침 본문. 하단 고지 줄(Legal.tsx)이 작은 창과 `/privacy` 페이지로 연다(#20 #27). */
+export function PrivacyText() {
   return (
-    <div className="privacy-page">
-      <Brand />
-      <main>
-        <h1>개인정보 처리 안내</h1>
-        <PrivacyText />
-      </main>
-    </div>
-  );
-}
-/** 화면 아래쪽의 조용한 "개인정보 처리방침" 링크. 보통 클릭은 작은 창으로 열고, 새 탭으로 열면 `/privacy` 페이지가 된다(#20). */
-export function PrivacyLink({ className }: { className?: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <a
-        className={className}
-        href="/privacy"
-        onClick={(e) => {
-          if (!plainClick(e)) return;
-          e.preventDefault(); // [주의] 문서 전체 링크 위임(followLink)이 이 클릭을 페이지 이동으로 바꾸지 않게 한다
-          setOpen(true);
-        }}
-      >
-        개인정보 처리방침
-      </a>
-      {open && (
-        <Modal title="개인정보 처리 안내" close={() => setOpen(false)}>
-          <PrivacyText />
-        </Modal>
-      )}
-    </>
-  );
-}
-function PrivacyText() {
-  return (
-    <div className="privacy-text">
+    <div className="legal-text">
       <p>SojaFit의 현재 명세에 따른 데이터 처리 안내입니다.</p>
       <h2>계정과 검토 기록</h2>
       <p>

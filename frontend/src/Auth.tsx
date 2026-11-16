@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { api, ApiError } from './api';
 import { Brand, ErrorBox, Loading, navigate, useResource } from './ui';
-import { PrivacyLink } from './Account';
+import { Footer } from './Legal';
 /** 로그인·계정 연결 POST의 401이 아닌 실패를 원인별 문구로 바꾼다(401은 화면이 횟수와 함께 따로 보인다). */
 function loginFailure(e: unknown): string {
   // [왜] 연결이 끊기면 fetch가 ApiError가 아닌 TypeError를 던진다(api.ts의 checked를 거치지 않는다)
@@ -262,7 +262,7 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
         )}
       </main>
       {/* [왜] 카드 안에 두면 로그인 단추 다음으로 눈에 띈다. 화면 맨 아래에 조용히 둔다(#20) */}
-      <PrivacyLink className="privacy-link" />
+      <Footer />
     </div>
   );
 }
