@@ -143,8 +143,8 @@ function Shell({
       </aside>
       <div className="app-frame">
         <div className="app-topbar">
-          <span>다이오드 대체 검토</span>
-          <span>회로 · 조건 · 근거</span>
+          <span>부품 교체 검토</span>
+          <span>지금 지원: 다이오드</span>
         </div>
         <main className="app-sheet">{children}</main>
       </div>
