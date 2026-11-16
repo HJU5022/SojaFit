@@ -1,4 +1,4 @@
-/** 페이지·세션 경계. 로그아웃 때 업무 상태를 폐기한다. 출처: SPEC 8.6절. */
+/** 페이지·세션 경계. 로그아웃 때 업무 상태를 폐기한다. 사이드바는 대화가 먼저다(SPEC 2절). 출처: SPEC 8.6절. */
 import { useEffect, useState } from 'react';
 import {
   CheckCheck,
@@ -11,13 +11,17 @@ import {
   X,
 } from 'lucide-react';
 import { api, ApiError } from './api';
-import { Brand, ErrorBox, Loading, navigate, useLocation, useResource } from './ui';
+import { Brand, ErrorBox, followLink, Loading, navigate, useLocation } from './ui';
 import { Landing } from './Landing';
 import { Auth } from './Auth';
-import { Admin, ApprovedCases, Privacy, Settings } from './Account';
-import { NewProject, ProjectList } from './Projects';
+import { Settings } from './Account';
+import { ApprovedCases } from './Approved';
+import { Admin } from './Admin';
+import { Footer, isLegalPath, LegalPage } from './Legal';
+import { ConversationNav, NewConversation } from './Conversations';
+import { ProjectList } from './Projects';
 import { Workbench } from './Workbench';
-import type { Project, User } from './types';
+import type { User } from './types';
 function Shell({
   user,
   path,
@@ -29,25 +33,24 @@ function Shell({
   children: React.ReactNode;
   onLogout: () => void;
 }) {
-  const projects = useResource<Project[]>('/projects'),
-    [open, setOpen] = useState(false),
-    [create, setCreate] = useState(false),
+  const [open, setOpen] = useState(false),
     [error, setError] = useState<Error | null>(null);
-  const projectId = new URLSearchParams(location.search).get('project');
-  useEffect(() => {
-    const fn = () => projects.reload();
-    window.addEventListener('projects-changed', fn);
-    return () => window.removeEventListener('projects-changed', fn);
-  }, []);
+  const params = new URLSearchParams(path.split('?')[1]),
+    pathname = path.split('?')[0];
   useEffect(() => setOpen(false), [path]);
   return (
     <div className="app-shell">
       <header className="mobile-header">
-        <button aria-label="메뉴 열기" className="icon-button" onClick={() => setOpen(true)}>
+        <button
+          aria-label="메뉴 열기"
+          title="메뉴 열기"
+          className="icon-button"
+          onClick={() => setOpen(true)}
+        >
           <Menu size={21} />
         </button>
         <Brand />
-        <a href="/settings" aria-label="내 설정">
+        <a href="/settings" className="icon-button" aria-label="내 설정" title="내 설정">
           <SettingsIcon size={19} />
         </a>
       </header>
@@ -60,16 +63,17 @@ function Shell({
           <button
             className="mobile-only icon-button"
             aria-label="메뉴 닫기"
+            title="메뉴 닫기"
             onClick={() => setOpen(false)}
           >
             <X size={20} />
           </button>
         </div>
-        <button className="new-project-button" onClick={() => setCreate(true)}>
-          <Plus size={17} />새 프로젝트
+        <button className="new-project-button primary" onClick={() => navigate('/app')}>
+          <Plus size={17} />새 대화
         </button>
         <nav>
-          <a href="/app" className={path.startsWith('/app') ? 'nav-active' : ''}>
+          <a href="/projects" className={pathname === '/projects' ? 'nav-active' : ''}>
             <Folder size={17} />
             프로젝트
           </a>
@@ -78,27 +82,10 @@ function Shell({
             승인 사례
           </a>
         </nav>
-        <div className="sidebar-projects">
-          <p>내 회로</p>
-          {projects.loading ? (
-            <Loading />
-          ) : projects.error ? (
-            <ErrorBox error={projects.error} retry={projects.reload} />
-          ) : projects.data?.length ? (
-            projects.data.map((p) => (
-              <a
-                key={p.id}
-                className={String(p.id) === projectId ? 'selected' : ''}
-                href={'/app?project=' + p.id}
-              >
-                <span className="circuit-dot" />
-                {p.name}
-              </a>
-            ))
-          ) : (
-            <p className="muted">아직 프로젝트가 없습니다.</p>
-          )}
-        </div>
+        {/* [왜] 내 설정·사용자 관리는 계정 화면이라 대화·프로젝트 목록을 보이지 않는다(#21). 돌아가기는 위 "새 대화"·메뉴로 한다 */}
+        {pathname !== '/settings' && !pathname.startsWith('/admin') && (
+          <ConversationNav projectId={params.get('project')} threadId={params.get('thread')} />
+        )}
         <div className="sidebar-bottom">
           <a href="/settings">
             <SettingsIcon size={17} />내 설정
@@ -123,6 +110,7 @@ function Shell({
             <button
               className="icon-button"
               aria-label="로그아웃"
+              title="로그아웃"
               onClick={async () => {
                 try {
                   await api('/auth/logout', 'POST');
@@ -136,24 +124,16 @@ function Shell({
             </button>
           </div>
           <ErrorBox error={error} />
-          <a className="privacy-small" href="/privacy">
-            개인정보 처리방침
-          </a>
+          <Footer compact />
         </div>
       </aside>
       <div className="app-frame">
         <div className="app-topbar">
-          <span>다이오드 대체 검토</span>
-          <span>회로 · 조건 · 근거</span>
+          <span>부품 교체 검토</span>
+          <span>지금 지원: 다이오드</span>
         </div>
         <main className="app-sheet">{children}</main>
       </div>
-      {create && (
-        <NewProject
-          close={() => setCreate(false)}
-          onCreated={(p) => navigate('/app?project=' + p.id)}
-        />
-      )}
     </div>
   );
 }
@@ -185,11 +165,15 @@ export default function App() {
   useEffect(() => {
     void check();
     window.addEventListener('session-expired', logout);
-    return () => window.removeEventListener('session-expired', logout);
+    document.addEventListener('click', followLink);
+    return () => {
+      window.removeEventListener('session-expired', logout);
+      document.removeEventListener('click', followLink);
+    };
   }, []);
   const publicPage =
     pathname === '/' ||
-    pathname === '/privacy' ||
+    isLegalPath(pathname) || // 이용약관 · 개인정보처리방침 · AI 이용 안내 · 출처·라이선스(#27)
     pathname === '/login' ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/password-reset') ||
@@ -201,7 +185,7 @@ export default function App() {
     if (!checking && user && pathname === '/login') navigate('/app', true);
   }, [checking, user, publicPage, error, pathname]);
   if (pathname === '/') return <Landing />;
-  if (pathname === '/privacy') return <Privacy />;
+  if (isLegalPath(pathname)) return <LegalPage path={pathname} />;
   if (checking)
     return (
       <div className="page-content">
@@ -241,19 +225,21 @@ export default function App() {
         ) : (
           <div className="page-content">
             <h1>관리자만 접근할 수 있습니다.</h1>
-            <a href="/app">프로젝트로</a>
+            <a href="/app">새 대화로</a>
           </div>
         )
+      ) : pathname === '/projects' ? (
+        <ProjectList />
       ) : pathname === '/app' ? (
         project ? (
           <Workbench key={project} projectId={project} threadId={thread} />
         ) : (
-          <ProjectList />
+          <NewConversation />
         )
       ) : (
         <div className="page-content">
           <h1>페이지를 찾을 수 없습니다.</h1>
-          <a href="/app">프로젝트로</a>
+          <a href="/app">새 대화로</a>
         </div>
       )}
     </Shell>

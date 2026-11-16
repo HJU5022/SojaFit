@@ -41,7 +41,7 @@ def test_no_answer_in_found_docs_shows_files_and_tries():
 
 def test_retrieval_error_is_a_search_error_code():
     out = nodes.refuse({"question_type": "rating", "retrieval_error": {"kind": "timeout"}})
-    assert "검색 도구" in out["answer"] and out["refusal"]["code"] == "search_error"
+    assert "자료를 확인할 수 없어요" in out["answer"] and out["refusal"]["code"] == "search_error"
 
 
 @pytest.mark.parametrize("current", [

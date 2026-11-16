@@ -20,8 +20,17 @@ def test_browser_dto_excludes_internal_state():
     assert importlib.util.find_spec('backend.conversations.dto') is not None
     from backend.conversations.dto import result_dto
     body = result_dto({'answer': 'ok', 'facts': 'secret', 'plan': 'secret', 'reports': 'secret', 'counters': 1, 'check': 'secret'}, request_id='req-1').model_dump()
-    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints','error'}
+    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints','web_search_unavailable','error'}
     assert 'secret' not in str(body)
+
+
+def test_web_search_notice_only_when_no_web_evidence_is_shown():
+    """#28: 웹 검색 장애 표시는 답에 웹 근거([W] · [R])가 없을 때만 낸다. 있으면 '등록된 자료로만 답했다'는 말이 틀린다."""
+    from backend.conversations.dto import result_dto
+    assert result_dto({'answer': 'x', 'web_search_unavailable': True}, request_id='r').web_search_unavailable is True
+    ref = {'citation_number': 'R1', 'document': 'https://example.org/SS34-reference', 'section': '미검증 참고 정보'}
+    shown = result_dto({'answer': 'x', 'web_search_unavailable': True, 'evidence': [ref]}, request_id='r')
+    assert shown.evidence and shown.web_search_unavailable is False
 
 
 def test_profile_hints_keep_only_kind_value_text():
@@ -77,6 +86,19 @@ def test_interrupt_never_exposes_unrecognized_graph_payload():
     dto = result_dto({}, request_id='r', status='requires_input', interrupt={'missing': ['v_in', '/private/path'], 'role_choices': ['R01', 'private'], 'question': '/private/raw', 'secret': 'private'}).model_dump()
     assert dto['interrupt']['missing'] == ['v_in']
     assert dto['interrupt']['role_choices'] == ['R01']
+    assert 'private' not in str(dto)
+
+
+def test_target_choice_question_is_rebuilt_from_checked_choices():
+    """대상 부품 질문은 저장된 문장이 아니라 검사한 후보(ref 모양 · 값 100자)로 다시 만든다(SPEC 8.9)."""
+    from backend.conversations.dto import result_dto
+    choices = [{'ref': 'D1', 'value': '1N4007', 'raw': 'private'}, {'ref': 'R1', 'value': '10k'}, {'ref': '<b>', 'value': 'x'},
+               {'ref': 'D3', 'value': ''}, 'private', {'ref': 'D4', 'value': 'V' * 300}]
+    dto = result_dto({}, request_id='r', status='requires_input',
+                     interrupt={'target_choices': choices, 'question': 'private', 'pending_start': 'private'}).model_dump()
+    assert dto['interrupt']['target_choices'] == [{'ref': 'D1', 'value': '1N4007'}, {'ref': 'D3', 'value': ''}, {'ref': 'D4', 'value': 'V' * 100}]
+    assert dto['interrupt']['question'].startswith('넷리스트에서 다이오드 D1(1N4007), D3, D4(')
+    assert dto['interrupt']['question'].endswith('를 찾았어요. 어떤 부품을 바꿀까요?')
     assert 'private' not in str(dto)
 
 

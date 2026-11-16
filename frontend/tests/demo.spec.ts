@@ -28,18 +28,16 @@ test('데모 로그인 → 검토 → 조건 재개 → 승인·견적 → 기�
   await page.getByRole('link', { name: '내 회로 검토하기' }).first().click();
   await page.getByRole('button', { name: '데모 사용자 A' }).click();
   await expect(page).toHaveURL(/\/app/);
-  await page.getByRole('button', { name: '새 프로젝트', exact: true }).first().click();
-  await page.getByLabel('데모 회로', { exact: true }).selectOption('attiny85_time_switch');
-  await page.getByLabel('프로젝트 이름').fill('전원 입력 다이오드 검토');
-  await page.getByRole('button', { name: '프로젝트 만들기' }).click();
+  // 대화가 먼저: 프로젝트 창 없이 새 대화 화면에서 데모 회로를 고른다(이미 있으면 409 → 새 프로젝트로 만들기)
+  await page.getByRole('button', { name: '새 대화', exact: true }).click();
+  await page.getByLabel('회로 선택').selectOption('demo:attiny85_time_switch');
+  await page.getByRole('button', { name: '대화 시작' }).click();
   await Promise.race([
     page.getByLabel('검토할 다이오드').waitFor(),
-    page.getByText('같은 회로로 새 프로젝트 만들기').waitFor(),
+    page.getByRole('button', { name: '새 프로젝트로 만들기' }).waitFor(),
   ]);
-  if (await page.getByText('같은 회로로 새 프로젝트 만들기').isVisible()) {
-    await page.getByText('같은 회로로 새 프로젝트 만들기').click();
-    await page.getByRole('button', { name: '프로젝트 만들기' }).click();
-  }
+  if (await page.getByRole('button', { name: '새 프로젝트로 만들기' }).isVisible())
+    await page.getByRole('button', { name: '새 프로젝트로 만들기' }).click();
   await expect(page.getByLabel('검토할 다이오드')).toBeVisible();
   await page.getByLabel('검토할 다이오드').selectOption('D1');
   await page.locator('[data-demo-id="v3-01"]').click();
@@ -90,11 +88,17 @@ test('데모 로그인 → 검토 → 조건 재개 → 승인·견적 → 기�
   await page.getByRole('button', { name: '견적 목록', exact: true }).click();
   await expect(page.locator('.quote-item').first()).toContainText('100');
   await page.getByRole('button', { name: '닫기', exact: true }).click();
+  // 사이드바 "대화": 방금 대화가 맨 위에 있고 ⋯ 메뉴로 그 자리에서 이름을 바꾼다
+  await page.locator('.thread-row').first().getByRole('button', { name: '대화 메뉴' }).click();
+  await page.getByRole('menuitem', { name: '이름 변경' }).click();
+  await page.getByLabel('대화 이름').fill('전원 입력 D1 검토');
+  await page.getByLabel('대화 이름').press('Enter');
+  await expect(page.locator('.thread-row').first()).toContainText('전원 입력 D1 검토');
   await page.getByRole('link', { name: '승인 사례', exact: true }).click();
   await expect(page.locator('.case-list article').first()).toBeVisible();
   await page.getByRole('link', { name: '내 설정', exact: true }).click();
   await page.getByLabel('소속', { exact: true }).fill('데모 회로설계팀');
-  await page.getByLabel('직무', { exact: true }).selectOption('design');
+  await page.getByLabel('직무', { exact: true }).fill('하드웨어 회로 설계');
   await page.getByLabel('선호 실장 방식', { exact: true }).selectOption('smd');
   await page.getByRole('button', { name: '설정 저장' }).click();
   await expect(page.getByText('내 설정을 저장했습니다.')).toBeVisible();

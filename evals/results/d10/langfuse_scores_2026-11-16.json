@@ -1,0 +1,131 @@
+{
+ "trace_id": "7bb6b3d98274e748aa1ea89555cb4d0e",
+ "scores": [
+  {
+   "name": "pass",
+   "value": true,
+   "dataType": "BOOLEAN",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "path",
+   "value": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "dataType": "CATEGORICAL",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "latency_s",
+   "value": 6.4,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "passed_cards",
+   "value": 0,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "question_type",
+   "value": "candidate_judge",
+   "dataType": "CATEGORICAL",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "fake_citations",
+   "value": 0,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "uncited_sentences",
+   "value": 2,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "docs_found",
+   "value": 0,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "tries",
+   "value": 0,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "not_found",
+   "value": false,
+   "dataType": "BOOLEAN",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "llm_calls",
+   "value": 2,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "cost_usd",
+   "value": 0.0008580700000000001,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "hops",
+   "value": 1,
+   "dataType": "NUMERIC",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "refusal_code",
+   "value": "",
+   "dataType": "CATEGORICAL",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  },
+  {
+   "name": "answer_metric",
+   "value": "cited_gold",
+   "dataType": "CATEGORICAL",
+   "source": "API",
+   "timestamp": "2026-11-15T14:38:54.595Z",
+   "comment": null
+  }
+ ],
+ "observation_sample": {
+  "traceId": "7bb6b3d98274e748aa1ea89555cb4d0e",
+  "name": "끝내기",
+  "environment": "eval",
+  "startTime": "2026-11-15T14:38:53.737Z"
+ }
+}

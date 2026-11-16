@@ -30,3 +30,9 @@ description = "작업 기록의 되돌리기 명령 --to-revisions=<리비전 �
 targetRules = ["generic-api-key"]
 paths = ['''^docs/worklog/.*\.md$''']
 regexes = ['''--to-revisions=''']
+
+# [왜] 11-16 후보 수 실험의 리랭크 캐시도 위와 같은 sha256 "key"(order·scores·tokens·key)라 generic-api-key에 25건 걸렸다(b5d9a20f).
+[[allowlists]]
+description = "후보 수 실험 리랭크 캐시의 sha256 해시 key(비밀값 아님)"
+targetRules = ["generic-api-key"]
+paths = ['''evals/results/retrieval/2026-11-16-cand-pool/rerank_new_2026-11-16\.jsonl''']

@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-11-16T10:52:30+09:00",
+  "verified_questions": 50,
+  "all_returned_model_matches": true,
+  "all_finish_reasons_stop": true,
+  "all_inputs_match_source_hashes": true,
+  "all_raw_answers_match_api_responses": true,
+  "display_changes": "only list markers and blank-line whitespace; no wording, numeric value or URL edits",
+  "display_format_pass": 50,
+  "api_key_in_deliverables": false,
+  "question_history_messages": 0,
+  "web_enabled_requests": 50,
+  "questions_with_reported_search": 46,
+  "web_search_requests_reported": 201,
+  "reported_cost_usd_web_run": 5.5393678,
+  "previous_aborted_run": {
+    "web_search": false,
+    "state": "interrupted_by_user_condition_change",
+    "answered": 16,
+    "requests_without_received_response": 3,
+    "reported_cost_usd": 0.9106029999999999,
+    "unreceived_requests_cost": "unknown; may be billed",
+    "included_in_final_answers": false
+  },
+  "answer_correctness_scored": false
+}

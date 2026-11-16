@@ -88,7 +88,7 @@ Supervisor 모델을 Sonnet 5.5에서 Haiku 5.5로 바꾸는 시도(사전 등�
 | 판정 기록이 사후 작성 | v3 판정 당시 기록(노션, 시트, 메시지)이 없다. 문항별 수정 이력과 초안-최종 차이를 되살릴 수 없다 | [v3_judging_record.md](../../evals/drafts/reviews/v3_judging_record.md) 머리말, 남은 한계 |
 | 비교 대상이 정답 초안과 같은 도구 | Codex가 정답 초안(하정운 검수, 1차 심태현·최종 하정운 판정)과 비교 대상 양쪽에 쓰여 Codex 점수에 유리할 수 있다 | [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 5절 |
 | Codex 집계는 규칙 기반 | 결론 방향과 핵심 값까지만 보고 쪽 인용은 보지 않는다. 규칙이 못 가린 5건은 2026-11-13에 사람(하정운)이 판정했다(오답 3 · 올바른 거절 2, [human_judgments.jsonl](../../evals/results/graph/2026-11-12-codex-v3-50/human_judgments.jsonl)). 판정 기록은 한 사람이 한 번 남긴 것이고 외부 검토는 없다 | [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 1~3절 |
-| 청크-원본 대조 검사기가 놓치는 오류 | 숫자 끝자리를 바꾼 가짜 청크 110개 중 쪽 수준 91개(83%)만 잡았다. 같은 쪽 다른 행 값으로 바뀐 오류는 배제하지 못한다 | [chunk_source_check/README.md](../../evals/results/d10/chunk_source_check/README.md) "검사기의 한계" |
+| 청크-원본 대조 검사기가 놓치는 오류 | 숫자 끝자리를 바꾼 가짜 청크 110개 중 쪽 수준 91개(83%)만 잡았다. 같은 쪽 다른 행 값으로 바뀐 오류는 이 쪽 검사로는 배제하지 못해, 2026-11-16에 행 검사(`--rows`)를 더했다: 합성 변이 382건 전부 탐지, 실제 표본 123개 중 117 일치 · 0 불일치 · 6 미확인([chunk_source_check_rows_2026-11-16](../../evals/results/d10/chunk_source_check_rows_2026-11-16/README.md)) | [chunk_source_check/README.md](../../evals/results/d10/chunk_source_check/README.md) "검사기의 한계" |
 
 ## 9. 막지 못한 인젝션 사례와 점수 판정 LLM(Luna)의 한계 (2026-11-16 채움)
 

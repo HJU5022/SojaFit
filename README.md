@@ -396,7 +396,7 @@ SojaFit/
 |---|---|---|---|
 | KiCad 10(`kicad-cli`) | 원본 회로도 변환 전용 `renderer` 이미지(`Dockerfile`의 `renderer` target, 공식 `ppa:kicad/kicad-10.0-releases`의 `kicad=10.0.*`). 기본 API 이미지에는 넣지 않고 `INCLUDE_KICAD=1`로 빌드할 때만 들어간다(선택). KiCad를 고치지 않고 실행 파일(`kicad-cli`)로 부른다 | GPL-3.0-or-later | [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) |
 | KiCad 라이브러리(심볼 · 풋프린트 · 3D) | 위 `kicad` 패키지에 딸려 와 변환할 때 쓰인다. 저장소에 복사해 두지 않았다 | CC-BY-SA 4.0, KiCad 라이브러리 예외(라이브러리 부품을 쓴 설계에는 그 라이선스를 강제하지 않는다)가 붙는다 | KiCad 프로젝트의 라이선스 안내 `[문서]`. 이 저장소에 원문 사본은 없다(확인 못 함) |
-| 외부 공개 회로도(검색 결과로 화면에 보이는 것) | 사용자가 회로도 검색을 누를 때 확인된 공개 저장소의 고정 commit에서 받아 그림으로 렌더한다. 저장소에 넣지 않는다 | 저장소마다 다르다. 화면이 출처(`attribution`) · 라이선스(`license`) · 원본 링크를 그림 옆에 같이 보인다. 라이선스를 확인하지 못한 자료는 `NOASSERTION`을 일괄 허용하지 않는다 | [`backend/projects/PROJECTS.md`](backend/projects/PROJECTS.md), `frontend/src/Schematic.tsx` |
+| 외부 공개 회로도(검색 결과로 화면에 보이는 것) | 작업대가 프로젝트를 열 때(저장된 데모 도면이 없을 때 한 번) 또는 사용자가 다른 이름으로 찾을 때 확인된 공개 저장소의 고정 commit에서 받아 그림으로 렌더한다. 저장소에 넣지 않는다 | 저장소마다 다르다. 화면이 출처(`attribution`) · 라이선스(`license`) · 원본 링크를 그림 옆에 같이 보인다. 라이선스를 확인하지 못한 자료는 `NOASSERTION`을 일괄 허용하지 않는다 | [`backend/projects/PROJECTS.md`](backend/projects/PROJECTS.md), `frontend/src/Schematic.tsx` |
 | 평가 · 데모용 공개 회로 | 저장소에 사본이 있다 | 프로젝트마다 MIT · CC BY-SA 3.0 · 4.0 등 | [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md) |
 | TSC 데이터시트 | 위 데이터 절 | 사이트 약관: 정보 · 비상업 목적, 고치지 않고 고지 · 출처 유지 | [`data/corpus/CORPUS.md`](data/corpus/CORPUS.md) |
 

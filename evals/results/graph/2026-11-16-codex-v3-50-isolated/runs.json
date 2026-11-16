@@ -1,0 +1,306 @@
+{
+ "codex": "codex-cli 0.167.1",
+ "model": "gpt-6-astra",
+ "runs": [
+  {
+   "id": "v3-01",
+   "exit": 0,
+   "seconds": 41.4,
+   "netlist": "data/circuits/collected/received-20261030/c01/received/c01-attiny85-time-switch.net"
+  },
+  {
+   "id": "v3-02",
+   "exit": 0,
+   "seconds": 30.5,
+   "netlist": "data/circuits/collected/received-20261030/c02/received/c02-fc-rom-vomitter.net"
+  },
+  {
+   "id": "v3-03",
+   "exit": 0,
+   "seconds": 26.2,
+   "netlist": "data/circuits/collected/received-20261030/c03/received/c03-attiny2313a-thermostat.net"
+  },
+  {
+   "id": "v3-04",
+   "exit": 0,
+   "seconds": 22.7,
+   "netlist": "data/circuits/collected/received-20261030/c04/received/c04-tiny85fancontrol.net"
+  },
+  {
+   "id": "v3-05",
+   "exit": 0,
+   "seconds": 37.2,
+   "netlist": "data/circuits/collected/received-20261030/c05/received/c05-ug56-pwm-controller.net"
+  },
+  {
+   "id": "v3-06",
+   "exit": 0,
+   "seconds": 27.6,
+   "netlist": "data/circuits/collected/received-20261030/c07/received/c07-car-radio-acc-delay.net"
+  },
+  {
+   "id": "v3-07",
+   "exit": 0,
+   "seconds": 36.1,
+   "netlist": "data/circuits/collected/received-20261030/c08/received/c08-overengineered-psu.net"
+  },
+  {
+   "id": "v3-08",
+   "exit": 0,
+   "seconds": 26.6,
+   "netlist": "data/circuits/collected/received-20261030/c10/received/c10-tinydimmer.net"
+  },
+  {
+   "id": "v3-09",
+   "exit": 0,
+   "seconds": 46.8,
+   "netlist": "data/circuits/collected/received-20261030/c12/received/c12-zr7-taillight.net"
+  },
+  {
+   "id": "v3-10",
+   "exit": 0,
+   "seconds": 56.1,
+   "netlist": "data/circuits/collected/received-20261030/c12/received/c12-zr7-taillight.net"
+  },
+  {
+   "id": "v3-11",
+   "exit": 0,
+   "seconds": 51.8,
+   "netlist": "data/circuits/collected/samples/breadboard_supply/converted/circuit.net"
+  },
+  {
+   "id": "v3-12",
+   "exit": 0,
+   "seconds": 71.1,
+   "netlist": "data/circuits/collected/samples/mosfet_driver/converted/circuit.net"
+  },
+  {
+   "id": "v3-13",
+   "exit": 0,
+   "seconds": 39.5,
+   "netlist": "data/circuits/collected/received-20261030/c07/received/c07-car-radio-acc-delay.net"
+  },
+  {
+   "id": "v3-14",
+   "exit": 0,
+   "seconds": 58.6,
+   "netlist": "data/circuits/collected/received-20261030/c11/received/c11-hrem.net"
+  },
+  {
+   "id": "v3-15",
+   "exit": 0,
+   "seconds": 54.3,
+   "netlist": "data/circuits/collected/received-20261030/c12/received/c12-zr7-taillight.net"
+  },
+  {
+   "id": "v3-16",
+   "exit": 0,
+   "seconds": 25.8,
+   "netlist": "data/circuits/collected/samples/mosfet_driver/converted/circuit.net"
+  },
+  {
+   "id": "v3-17",
+   "exit": 0,
+   "seconds": 69.4,
+   "netlist": "data/circuits/collected/samples/attiny85_dev/converted/circuit.net"
+  },
+  {
+   "id": "v3-18",
+   "exit": 0,
+   "seconds": 18.9,
+   "netlist": "data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net"
+  },
+  {
+   "id": "v3-19",
+   "exit": 0,
+   "seconds": 75.3,
+   "netlist": "data/circuits/collected/samples/attiny85_dev/converted/circuit.net"
+  },
+  {
+   "id": "v3-20",
+   "exit": 0,
+   "seconds": 35.8,
+   "netlist": "data/circuits/collected/samples/pro_micro/converted/circuit.net"
+  },
+  {
+   "id": "v3-21",
+   "exit": 0,
+   "seconds": 26.3,
+   "netlist": "data/circuits/collected/samples/breadboard_supply/converted/circuit.net"
+  },
+  {
+   "id": "v3-22",
+   "exit": 0,
+   "seconds": 18.9,
+   "netlist": "data/circuits/collected/received-20261030/c02/received/c02-fc-rom-vomitter.net"
+  },
+  {
+   "id": "v3-23",
+   "exit": 0,
+   "seconds": 23.7,
+   "netlist": "data/circuits/collected/received-20261030/c03/received/c03-attiny2313a-thermostat.net"
+  },
+  {
+   "id": "v3-24",
+   "exit": 0,
+   "seconds": 32.9,
+   "netlist": "data/circuits/collected/received-20261030/c08/received/c08-overengineered-psu.net"
+  },
+  {
+   "id": "v3-25",
+   "exit": 0,
+   "seconds": 22.2,
+   "netlist": "data/circuits/collected/received-20261030/c11/received/c11-hrem.net"
+  },
+  {
+   "id": "v3-26",
+   "exit": 1,
+   "seconds": 25.7,
+   "netlist": "data/circuits/collected/received-20261030/c03/received/c03-attiny2313a-thermostat.net"
+  },
+  {
+   "id": "v3-27",
+   "exit": 1,
+   "seconds": 15.7,
+   "netlist": "data/circuits/collected/received-20261030/c04/received/c04-tiny85fancontrol.net"
+  },
+  {
+   "id": "v3-28",
+   "exit": 1,
+   "seconds": 6.0,
+   "netlist": "data/circuits/collected/received-20261030/c08/received/c08-overengineered-psu.net"
+  },
+  {
+   "id": "v3-29",
+   "exit": 1,
+   "seconds": 4.2,
+   "netlist": "data/circuits/collected/received-20261030/c10/received/c10-tinydimmer.net"
+  },
+  {
+   "id": "v3-30",
+   "exit": 1,
+   "seconds": 3.9,
+   "netlist": "data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net"
+  },
+  {
+   "id": "v3-31",
+   "exit": 1,
+   "seconds": 3.9,
+   "netlist": "data/circuits/collected/samples/pro_micro/converted/circuit.net"
+  },
+  {
+   "id": "v3-32",
+   "exit": 1,
+   "seconds": 3.6,
+   "netlist": "data/circuits/collected/received-20261030/c01/received/c01-attiny85-time-switch.net"
+  },
+  {
+   "id": "v3-33",
+   "exit": 1,
+   "seconds": 3.4,
+   "netlist": "data/circuits/collected/received-20261030/c02/received/c02-fc-rom-vomitter.net"
+  },
+  {
+   "id": "v3-34",
+   "exit": 1,
+   "seconds": 4.2,
+   "netlist": "data/circuits/collected/received-20261030/c04/received/c04-tiny85fancontrol.net"
+  },
+  {
+   "id": "v3-35",
+   "exit": 1,
+   "seconds": 3.3,
+   "netlist": "data/circuits/collected/received-20261030/c07/received/c07-car-radio-acc-delay.net"
+  },
+  {
+   "id": "v3-36",
+   "exit": 1,
+   "seconds": 3.6,
+   "netlist": "data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net"
+  },
+  {
+   "id": "v3-37",
+   "exit": 1,
+   "seconds": 3.3,
+   "netlist": "data/circuits/collected/received-20261030/c11/received/c11-hrem.net"
+  },
+  {
+   "id": "v3-38",
+   "exit": 1,
+   "seconds": 3.5,
+   "netlist": "data/circuits/collected/received-20261030/c12/received/c12-zr7-taillight.net"
+  },
+  {
+   "id": "v3-39",
+   "exit": 1,
+   "seconds": 4.9,
+   "netlist": "data/circuits/collected/received-20261030/c01/received/c01-attiny85-time-switch.net"
+  },
+  {
+   "id": "v3-40",
+   "exit": 1,
+   "seconds": 5.0,
+   "netlist": "data/circuits/collected/received-20261030/c02/received/c02-fc-rom-vomitter.net"
+  },
+  {
+   "id": "v3-41",
+   "exit": 1,
+   "seconds": 5.1,
+   "netlist": "data/circuits/collected/received-20261030/c03/received/c03-attiny2313a-thermostat.net"
+  },
+  {
+   "id": "v3-42",
+   "exit": 1,
+   "seconds": 6.3,
+   "netlist": "data/circuits/collected/received-20261030/c08/received/c08-overengineered-psu.net"
+  },
+  {
+   "id": "v3-43",
+   "exit": 1,
+   "seconds": 5.7,
+   "netlist": "data/circuits/collected/received-20261030/c11/received/c11-hrem.net"
+  },
+  {
+   "id": "v3-44",
+   "exit": 1,
+   "seconds": 4.8,
+   "netlist": "data/circuits/collected/received-20261030/c12/received/c12-zr7-taillight.net"
+  },
+  {
+   "id": "v3-45",
+   "exit": 1,
+   "seconds": 19.2,
+   "netlist": "data/circuits/collected/samples/breadboard_supply/converted/circuit.net"
+  },
+  {
+   "id": "v3-46",
+   "exit": 1,
+   "seconds": 19.4,
+   "netlist": "data/circuits/collected/samples/mosfet_driver/converted/circuit.net"
+  },
+  {
+   "id": "v3-47",
+   "exit": 1,
+   "seconds": 17.3,
+   "netlist": "data/circuits/collected/samples/attiny85_dev/converted/circuit.net"
+  },
+  {
+   "id": "v3-48",
+   "exit": 1,
+   "seconds": 16.5,
+   "netlist": "data/circuits/collected/samples/pro_micro/converted/circuit.net"
+  },
+  {
+   "id": "v3-49",
+   "exit": 1,
+   "seconds": 14.9,
+   "netlist": "data/circuits/collected/received-20261030/c10/received/c10-tinydimmer.net"
+  },
+  {
+   "id": "v3-50",
+   "exit": 1,
+   "seconds": 4.3,
+   "netlist": "data/circuits/collected/received-20261030/c12/received/c12-zr7-taillight.net"
+  }
+ ]
+}

@@ -40,11 +40,17 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | `secrets/` | - | 비밀값 검사 원시 증거: 실행 기록, 요약, 이력 검사 보고서 2개, 추가 검사 노트 |
 | `startup_restart_isolation_2026-11-13.md` | - | 한 줄 기동 시간(냉 · 온), 키 없는 데모 응답, 재시작 뒤 재개, 계정 분리 52개 점검의 결과와 재현법 |
 | `boot/` | - | 위 측정의 원시 출력: 시각표, 스모크 28단계, 52개 점검, 체크포인트 행 수, 합성 시험 출력, 측정 스크립트(`.log` 파일은 `.txt`를 덧붙여 둠) |
+| `boot_2026-11-16/` | - | 새 clone 키 없는 기동 재측정: GitHub `main` `3ce5abdc`, 빈 dind, `.env` 없음. clone → `/health` 200 242.8초, 스모크 28/28(G2) |
+| `freeze_check_2026-11-16/` | - | 동결 직전 검사: Linux 컨테이너 전체 pytest 2,495 통과 · 0 실패, `freeze.py --check` 바뀐 파일 없음, 비밀값 검사 |
 | `corpus_v4h_fingerprint_2026-11-12.md` | 5 | v4h 카드·distinct_text·파일 sha256 |
 | `index_row_count_2026-11-13.md` | - | 운영 DB `SojaFit_2` 코퍼스 표 행 수 읽기 전용 조회(문서 1,360 · 청크 51,967), 다시 보는 쿼리, 52,244 → 51,967 날짜와 이유 |
+| `db_content_hash_check_2026-11-16.md` | - | 운영 DB 청크 본문 51,967개를 읽기 전용으로 열어 sha256을 다시 계산: 저장 해시와 51,967/51,967 같음, 정렬 해시 목록 sha256이 저장소 `chunk_sha256.tsv`와 같음(G3). 다시 보는 쿼리 |
+| `alerting_2026-11-16.md` | - | 운영 다운 경보: Cloud Monitoring `/health` 가동 확인(5분) + 경보 정책 + 메일 채널, 일부러 401을 주는 임시 확인으로 경보 OPEN 시험(09:43:30 KST) 뒤 임시 설정 삭제 |
+| `langfuse_scores_2026-11-16.md`, `.json` | - | Langfuse 평가 트레이스(v3-01, 11-15 웹 끔 측정)에 붙은 점수 15개를 v3 점수 API로 읽은 기록(G6). 옛 공개 API 410 제거 확인 |
 | `corpus_swap_2026-11-09/` | - | 11-09 운영 DB 코퍼스 교체 전(`check.log.txt`) · 후(`verify.log.txt`) 행 수 원본(`.log` 파일은 `.txt`를 덧붙여 둠) |
 | `chunk_source_check/` | - | 표·수치 청크 표본 123개를 원본 PDF 같은 쪽과 대조한 결과(`scripts/eval/chunk_source_check.py`) |
 | `chunk_source_check_rows_2026-11-16/` | - | 같은 123개를 PDF 표의 같은 행·열 칸 값까지 대조한 결과(`--rows`): 행 검사 117 일치 · 0 불일치 · 6 미확인(부품 행 표), 변이 시험, 남은 한계 |
+| `chunk_source_check_notes_2026-11-16/` | - | 같은 123개에 부품 행 표 · 표 각주 대조를 더한 결과(`--notes`): 부품 행 6/6 일치(이제 123개 전부 행 · 열 대조), 각주 none 57 · unmarked 18 · attached 32 · missing 14(thermal 13, 모두 `Thermal Performance Note:` 머리) · unclear 2, 변이 시험, 남은 한계 |
 | `v3_gate_fail_2026-11-13.txt` | 5 | v3 게이트(`gate_report.py`)가 기준 미달 사본 4종에서 종료 1로 실패하는 출력(`mutation/v3_gate_demo.py`) |
 | `pytest_full_2026-11-13.txt` | - | 전체 pytest 실행 로그(macOS 로컬) |
 | `pytest_full_linux_2026-11-13.txt` | - | 전체 pytest 실행 로그(Linux 컨테이너, 저장소 Dockerfile 이미지 + 컨테이너 안 dev 설치). 실행 A(git 없음) 8 failed, 실행 B 0 failed |

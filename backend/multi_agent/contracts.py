@@ -142,7 +142,7 @@ class TaskReport(BaseModel):
     docs: list[dict] = Field(default_factory=list)          # 문서 할 일이 LLM에 보여 준 청크(인용 검사 · 채점이 쓴다)
     references: list[dict] = Field(default_factory=list)    # 3등급 참고 링크. 판정 근거와 분리한다.
     judgement: dict = Field(default_factory=dict)           # 판정 할 일의 판정 · 찾기 결과(답 틀의 입력)
-    searches: list[dict] = Field(default_factory=list)      # 검색마다 {query, parts, top: [[파일, 쪽], ...]}(검색 지표 계산용)
+    searches: list[dict] = Field(default_factory=list)      # 검색마다 {query, parts, top: [[파일, 쪽], ...]}(검색 지표 계산용). 문서 내부 검색은 filter_released(True면 품번 필터를 풀고 찾음)도 둔다
     llm_calls: int = 0
     round: int = 1                                          # 몇 번째 계획의 할 일인가(재계획 뒤 2)
 
