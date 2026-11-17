@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-17
-- 기준 커밋: `main` `2030f846`(PR #160 병합, 배포 소스) 뒤 레포 정리 커밋(문서 · 주석만). 최종 동결 태그 `final-2026-11-17`. 배포 리비전 `sojafit-api-pre-ef0138b2-rs`
+- 기준 커밋: `main` `2030f846`(PR #160 병합, 배포 소스) 뒤 레포 정리 커밋(문서 · 주석만). 최종 동결 태그 `final-2026-11-17`. 그 뒤 발표 폴더(PR #162)와 랜딩 그림 4장(`b4a02113`)만 바꿨다. 배포 리비전 `sojafit-api-pre-b4a02113-1117`(측정은 그 전 `sojafit-api-pre-ef0138b2-rs`)
 - 정본 여부: 비정본(제출물 점검표). 게이트 상태의 정본은 [GATES.md](../GATES.md)
 - 관련 문서: [GATES.md](../GATES.md), [DELIVERABLES.md](DELIVERABLES.md), [README.md](../../README.md)
 
@@ -15,7 +15,7 @@
 | 조 저장소 | main에 최종본 | 됨: 최종 동결 태그 `final-2026-11-17`(레포 정리 PR 병합 뒤 붙임. 그 전 태그 `freeze-2026-11-17`은 옮기지 않음) | GitHub `aihuman-7th/proj3-b` |
 | README | 한 줄 정의 · 지표 표 · compose 실행 · 데모 모드 실행 | 됨 | [README.md](../../README.md) |
 | SPEC.md · AGENTS.md | 지금 코드와 맞음 | 됨(11-17 맞춤) | [SPEC.md](../../SPEC.md), [AGENTS.md](../../AGENTS.md) |
-| 배포 주소 | `/health` 200, 발표일까지 유지 | 됨: 리비전 `sojafit-api-pre-ef0138b2-rs` 100%(11-17 19:52부터) | README 「배포 리비전」 |
+| 배포 주소 | `/health` 200, 발표일까지 유지 | 됨: 리비전 `sojafit-api-pre-b4a02113-1117` 100%(11-17 20:45부터, 그 전 19:52 ~ `sojafit-api-pre-ef0138b2-rs`) | README 「배포 리비전」 |
 | 평가용 계정 2개 | 비공개 제출 | **하정운이 제출 양식에 넣는다** | - |
 | 운영 리비전 25단계 | 평가용 계정으로 핵심 시나리오 | 됨: 11-17 19:56 운영 리비전 24/24 통과, 재시작 뒤 재개 19:52 통과 | [GATES.md](../GATES.md) G1 · G4, `scripts/results/smoke/` 11-17 `195049` · `195638` |
 | manifest | 원문 길이 · 보존 길이 · 잘림 여부 | 됨: 1,360행 | `evals/results/chunking/v4h-2026-11-08/manifest.jsonl` |

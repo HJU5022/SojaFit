@@ -74,9 +74,11 @@ SojaFit (proj3-b)
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
-│   │       ├── product/    <- 랜딩이 쓰는 실제 데모 화면 캡처
-│   │       │   ├── condition-evidence.png <- 조건 행과 데이터시트 근거(쪽·표·행)를 보인 검토 화면 캡처
-│   │       │   └── missing-condition.png <- 추가 조건을 물어보는 검토 화면 캡처
+│   │       ├── product/    <- 랜딩 "판정 근거" 4단계가 쓰는 운영 화면 캡처(11-17)
+│   │       │   ├── question.png <- 회로에서 부품 교체를 묻고 사용 조건을 적는 화면
+│   │       │   ├── missing-condition.png <- 빠진 조건(허용 전압 강하)을 물어보는 화면
+│   │       │   ├── condition-evidence.png <- 입력 조건과 조건별 필요 값 · 후보 값 비교 화면
+│   │       │   └── evidence-source.png <- 조건 행을 펼쳐 데이터시트 근거(파일·쪽·표)를 보인 화면
 │   │       ├── samples/    <- 공개 라이선스 넷리스트(화면 입구는 #58에서 뺐고 파일만 둠)
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
