@@ -888,6 +888,10 @@ SojaFit (proj3-b)
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
     │   ├── portfolio-osc.md  <- 오세창 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
     │   ├── portfolio-sth.md  <- 심태현 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
+    │   ├── portfolio/      <- 세 포트폴리오를 A4 1장으로 뽑은 제출본 PDF(11-17, 마크다운과 같은 내용)
+    │   │   ├── portfolio-jeongun.pdf  <- 하정운
+    │   │   ├── portfolio-osc.pdf  <- 오세창
+    │   │   └── portfolio-sth.pdf  <- 심태현
     │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 운영 프로젝트 SojaFit_v2). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
     │   │   ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
     │   │   ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
