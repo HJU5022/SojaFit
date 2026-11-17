@@ -1,6 +1,6 @@
 # 포트폴리오 — 심태현
 
-> 초안 — 본인 확인 필요(조장이 작업 기록에서 옮겨 작성, 2026-11-17). 숫자는 모두 [EVAL_REPORT.md](../../EVAL_REPORT.md)에 있는 값이고, 괄호는 그 절이다.
+> 본인 확인 전(작업 기록 · PR 기준으로 정리, 2026-11-17). 숫자는 모두 [EVAL_REPORT.md](../../EVAL_REPORT.md)에 있는 값이고, 괄호는 그 절이다.
 
 **서비스 · 운영** | SojaFit, KDT AI Human 7기 3차 프로젝트 2조(2026-10-30 ~ 11-17)
 저장소 [aihuman-7th/proj3-b](https://github.com/aihuman-7th/proj3-b) · 배포 주소는 [README](../../README.md) 맨 위 표(평가용 계정은 적지 않는다)
