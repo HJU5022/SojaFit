@@ -1,5 +1,15 @@
 # jeongun 작업 기록
 
+## 2026-11-17 PR #158 운영 배포 · 운영 확인
+- 배포 [실측]: PR #158 병합(`390f13ad`, 18:36:58). 병합 전에 `ab2ff18e`를 `git archive`로 풀어 `gcloud run deploy sojafit-api --source . … --no-traffic --tag pre-ab2ff18e --revision-suffix pre-ab2ff18e-1117`로 미리 빌드했다(18:21 ~ 18:30:47). `origin/main`과 `ab2ff18e`의 트리가 같다(`d577afb7`).
+  - 무트래픽 점검(18:31:05): `/health` 200(12.7초, 콜드 스타트), `/login` · `/` · `/app` · `/quotes` 200, `/api/auth/me` · `/api/demo-circuits` 401, openapi 경로 42 · 동작 53, 화면 묶음 `index-fCw38RH3.js`(견적서 탭 · 적은 값 말풍선 글자 포함), 환경변수 38개(`DEMO_MODE=0`, DB 비밀 `DATABASE_URL_NEW`).
+  - 트래픽 전환 18:37:15 ~ 18:37:25: `sojafit-api-pre-ab2ff18e-1117` 100%. 운영 주소 같은 점검 통과.
+  - 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-pre-a9a4e2ea-1117=100 --project sojafit --region asia-northeast3`.
+  - 키 없는 재생 검사(`ab2ff18e`, 18:23): "재생 결과가 기록과 같습니다".
+- 운영 확인 [실측 18:38 ~ 18:39, 조장 계정의 Chrome, 프로젝트 133, 새 대화 `3eb60405`]: "D2 대체품 찾아줘" → 조건 카드 → 모두 모름으로 계속 → 질문 아래 말풍선 "모두 모름으로 계속", 답은 빈 칸이 아니라 "회로에서 읽은 이 부품의 역할은 '역극성 보호(직렬)'이에요. … 대략적인 값(예: 5V, 0.5A)이나 부품에 적힌 품번 · 마킹을 알려 주시면 …"(상태 답변 범위 안내). 왼쪽 메뉴에 "견적서" 탭이 보인다.
+- 확인 못 한 것: 견적서 탭의 운영 자료 목록(탭이 뜨는 것만 봤다), 조건 카드에 값을 적었을 때의 운영 말풍선(8010에서만 봤다).
+- 이어서(조장 요청, 18:41 ~): 견적서 링크 네 곳(견적서 탭 · 승인 사례 기록 · 승인한 후보 창 · 견적 목록)을 같은 탭에서 열고 문서의 "돌아가기"는 온 화면으로 가게 했다. 견적서 문서를 표준 견적서 양식으로 다시 구성했다(`Approved.tsx` `CaseQuote`, `styles.css`). 값의 출처는 그대로다. 넷리스트만으로 회로도를 그리는 일은 하지 않았다: 자동 배치 라이브러리(netlistsvg 1.0.2 MIT + elkjs EPL-2.0)를 새로 넣어야 하고 화면 묶음 · 라이선스 고지 · 큰 회로 검증에 2 ~ 3시간으로 봤다 [추정]. 조장에게 물었으나 답이 없어 추천안(오늘은 하지 않음)대로 뒀다.
+
 ## 2026-11-17 PR #157 운영 배포 · 운영에서 같은 대화 다시 확인
 - 배포 [실측]: PR #157 병합(`c786badc`, 18:11:59). 미리 시작한 `gcloud run deploy --source`는 작업 세션이 끊기며 로컬 gcloud가 죽었지만 Cloud Build `c1bfb6dc`는 끝까지 돌았다(18:03:49 ~ 18:13:50, 소스는 `a9a4e2ea`를 `git archive`로 푼 것). 그 이미지(`sha256:d3a51f53…28aab8`)로 `gcloud run deploy sojafit-api --image … --no-traffic --tag pre-a9a4e2ea --revision-suffix pre-a9a4e2ea-1117 --update-env-vars …`(18:14:08 ~ 18:14:38). `origin/main`과 `a9a4e2ea`의 트리가 같다(`adbdd0b9`).
   - 무트래픽 점검(18:14:38): `/health` 200(14.4초, 콜드 스타트), `/login` · `/` · `/app` · `/quotes` 200, `/api/auth/me` · `/api/demo-circuits` 401, openapi 경로 42 · 동작 53, 화면 묶음 `index-Dfh3jnEa.js`, 환경변수 38개(`DEMO_MODE=0`, DB 비밀 `DATABASE_URL_NEW`).

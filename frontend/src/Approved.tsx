@@ -14,6 +14,7 @@ import {
   Loading,
   Markdown,
   Modal,
+  navigate,
   Source,
   useResource,
 } from './ui';
@@ -140,9 +141,7 @@ function CaseDetail({ id, close }: { id: number; close: () => void }) {
                     <li key={q.id}>
                       {q.part_number} · {q.quantity}개 ·{' '}
                       {new Date(q.created_at).toLocaleString('ko-KR')} 저장 ·{' '}
-                      <a href={`/approved/${id}/quote/${q.id}`} target="_blank" rel="noreferrer">
-                        견적서 보기
-                      </a>
+                      <a href={`/approved/${id}/quote/${q.id}`}>견적서 보기</a>
                     </li>
                   ))}
                 </ul>
@@ -212,12 +211,7 @@ export function QuoteHistory() {
                 </p>
               </div>
               <div className="case-actions">
-                <a
-                  className="button primary"
-                  href={`/approved/${caseId}/quote/${quote.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <a className="button primary" href={`/approved/${caseId}/quote/${quote.id}`}>
                   <FileText size={16} />
                   견적서 보기
                 </a>
@@ -430,10 +424,14 @@ export function CaseQuote({
   return (
     <div className="report-page">
       <div className="report-actions">
-        <a className="button" href="/approved">
+        {/* [왜] 견적서는 같은 탭에서 연다(11-17 조장 결정: 누를 때마다 새 탭이 쌓였다). 돌아가기는 온 화면(대화 · 견적서 목록 · 승인 사례)으로 간다 */}
+        <button
+          className="button"
+          onClick={() => (window.history.length > 1 ? window.history.back() : navigate('/quotes'))}
+        >
           <ArrowLeft size={16} />
           돌아가기
-        </a>
+        </button>
         <button className="primary" onClick={download} disabled={!f || prices.loading || busy}>
           <Download size={16} />
           {busy ? 'PDF 만드는 중…' : 'PDF 다운로드'}
@@ -450,41 +448,83 @@ export function CaseQuote({
         </Empty>
       ) : (
         <article className="report quote-sheet" ref={sheet}>
-          <header>
-            <h1>견적서</h1>
+          {/* 표준 견적서 양식(11-17 조장 요청): 제목 · 수신/발행 · 합계 금액 · 번호 붙은 품목 · 견적 조건 · 검토 근거 · 승인.
+              값은 전과 같이 저장된 사례와 문서를 열 때 조회한 가격뿐이다(사업자 정보처럼 모르는 값은 넣지 않는다) */}
+          <header className="quote-head">
+            <h1 className="quote-title">견 적 서</h1>
             <dl className="report-facts">
-              {[
-                ['견적 번호', f.number],
-                ['작성일', new Date(quote.created_at).toLocaleDateString('ko-KR')],
-                ['프로젝트(회로)', d.project_name],
-                ['요청자', email],
-                ['서비스', 'SojaFit'],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <dt>{k}</dt>
-                  <dd>{v}</dd>
-                </div>
-              ))}
+              <div>
+                <dt>견적 번호</dt>
+                <dd>{f.number}</dd>
+              </div>
+              <div>
+                <dt>작성일</dt>
+                <dd>{new Date(quote.created_at).toLocaleDateString('ko-KR')}</dd>
+              </div>
             </dl>
           </header>
+          <div className="quote-parties">
+            <section>
+              <h2>수신</h2>
+              <dl>
+                <div>
+                  <dt>요청자</dt>
+                  <dd>{email}</dd>
+                </div>
+                <div>
+                  <dt>프로젝트(회로)</dt>
+                  <dd>{d.project_name}</dd>
+                </div>
+                <div>
+                  <dt>바꿀 부품</dt>
+                  <dd>{[f.ref, f.original].filter(Boolean).join(' · ') || '—'}</dd>
+                </div>
+              </dl>
+            </section>
+            <section>
+              <h2>발행</h2>
+              <dl>
+                <div>
+                  <dt>서비스</dt>
+                  <dd>SojaFit(부품 대체 검토)</dd>
+                </div>
+                <div>
+                  <dt>가격 출처</dt>
+                  <dd>{f.source ?? (prices.loading ? '조회 중' : '조회 불가')}</dd>
+                </div>
+                <div>
+                  <dt>가격 조회 시각</dt>
+                  <dd>{f.fetchedAt ? new Date(f.fetchedAt).toLocaleString('ko-KR') : '—'}</dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+          <p className="quote-lead">아래와 같이 견적합니다.</p>
+          <p className="quote-total">
+            <span>합계 금액</span>
+            <strong>{money(f.estimate?.total)}</strong>
+            <small>세금 · 배송비 별도</small>
+          </p>
           <section>
             <h2>품목</h2>
             <div className="report-table">
               <table className="quote-items">
                 <thead>
                   <tr>
+                    <th>No</th>
                     <th>기호</th>
                     <th>원래 품번</th>
                     <th>대체 품번</th>
                     <th>제조사</th>
                     <th>수량</th>
-                    <th>적용 구간</th>
                     <th>단가</th>
                     <th>금액</th>
+                    <th>비고</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
+                    <td>1</td>
                     <td>{f.ref ?? '—'}</td>
                     <td>{f.original ?? '—'}</td>
                     <td>
@@ -492,17 +532,19 @@ export function CaseQuote({
                     </td>
                     <td>{f.manufacturer ?? '—'}</td>
                     <td>{f.quantity.toLocaleString()}개</td>
-                    <td>
-                      {f.estimate ? `${f.estimate.break_quantity.toLocaleString()}개부터` : '—'}
-                    </td>
                     <td>{money(f.estimate?.unit_price)}</td>
                     <td>{money(f.estimate?.total)}</td>
+                    <td>
+                      {f.estimate
+                        ? `${f.estimate.break_quantity.toLocaleString()}개부터 적용 단가`
+                        : '—'}
+                    </td>
                   </tr>
                 </tbody>
                 <tfoot>
                   <tr>
                     <th colSpan={7}>합계</th>
-                    <td>{money(f.estimate?.total)}</td>
+                    <td colSpan={2}>{money(f.estimate?.total)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -510,24 +552,29 @@ export function CaseQuote({
             {reason && <p role="status">가격 조회 불가: {reason}</p>}
           </section>
           <section>
-            <h2>가격·재고 출처</h2>
+            <h2>견적 조건</h2>
             {f.source && f.fetchedAt ? (
-              <>
-                <p>
-                  {f.source} 실시간 조회 · {new Date(f.fetchedAt).toLocaleString('ko-KR')}
-                </p>
-                <p>재고: {f.availability ?? '미제공'}</p>
-                {safeLink(f.url) && <p className="quote-url">판매처: {safeLink(f.url)}</p>}
-              </>
+              <ol className="quote-terms">
+                <li>
+                  단가와 금액은 {f.source}에서 {new Date(f.fetchedAt).toLocaleString('ko-KR')}에
+                  조회한 값이며, 그 뒤에 바뀔 수 있습니다.
+                </li>
+                <li>세금 · 배송비 · 환율은 들어 있지 않습니다.</li>
+                <li>
+                  재고: {f.availability ?? '미제공'}(조회 시점). 주문 전에 판매처에서 다시 확인해
+                  주세요.
+                </li>
+                <li>
+                  SojaFit은 가격 · 재고를 저장하지 않습니다. 이 문서를 다시 열면 그때 조회한 값이
+                  보입니다.
+                </li>
+              </ol>
             ) : (
               <p>
                 {prices.loading ? '가격·재고를 조회하는 중입니다.' : '조회한 가격·재고가 없습니다.'}
               </p>
             )}
-            <p>
-              세금·배송비·환율은 들어 있지 않습니다. 가격·재고는 조회한 시점의 값이며 SojaFit은
-              저장하지 않습니다. 주문 전에 판매처에서 다시 확인해 주세요.
-            </p>
+            {safeLink(f.url) && <p className="quote-url">판매처: {safeLink(f.url)}</p>}
           </section>
           <section>
             <h2>검토 근거</h2>
@@ -554,16 +601,18 @@ export function CaseQuote({
           </section>
           <section>
             <h2>승인</h2>
-            <dl className="report-facts">
-              <div>
-                <dt>승인 시각</dt>
-                <dd>{new Date(d.created_at).toLocaleString('ko-KR')}</dd>
-              </div>
-              <div>
-                <dt>승인자</dt>
-                <dd>{email}</dd>
-              </div>
-            </dl>
+            <table className="quote-sign">
+              <tbody>
+                <tr>
+                  <th>승인자</th>
+                  <td>{email}</td>
+                  <th>승인 시각</th>
+                  <td>{new Date(d.created_at).toLocaleString('ko-KR')}</td>
+                  <th>확인</th>
+                  <td className="quote-sign-blank" aria-label="확인 서명 칸" />
+                </tr>
+              </tbody>
+            </table>
           </section>
           <Disclaimer />
         </article>
