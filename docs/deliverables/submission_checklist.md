@@ -32,7 +32,7 @@
 | 실패 사례 분석(되돌린 결정 1건과 이유, 미채택 실험, 막지 못한 것, 판정자 한계) | 됨 | [failure_analysis.md](failure_analysis.md) 6 · 7 · 8 · 9절 |
 | 포트폴리오 1장 × 3명(LangGraph · 멀티 에이전트 · 평가 · 관측 수치, EVAL_REPORT 값만) | 됨: 3장 있음 | [portfolio-jeongun.md](portfolio-jeongun.md) · [portfolio-osc.md](portfolio-osc.md) · [portfolio-sth.md](portfolio-sth.md) |
 | AI 코딩 도구 사용 기록 | 됨: 3명 행 있음(오세창 행은 도구 이름이 작업 기록에 없음) | [ai_tools_log.md](ai_tools_log.md) |
-| 발표 자료(전원 파트) | 19장, 파트 배정, 장마다 노트에 "왜 이렇게 했나" | [presentation/](presentation/) |
+| 발표 자료(전원 파트) | 20장, 파트 배정, 장마다 노트에 "왜 이렇게 했나" | [presentation/](presentation/) |
 | 리허설 2회 | **전원**. 11-17 1회 · 11-18 발표 전 1회 | - |
 | 인젝션 막은 것 · 못 막은 것 | 됨 | [failure_analysis.md](failure_analysis.md) 9-0절 |
 | 포트폴리오 · 스크린샷 개인정보 · 비밀값 | 됨(11-17 점검, 0건) | [GATES.md](../GATES.md) G7 「개인정보 · 비밀값 점검」 |
