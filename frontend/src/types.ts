@@ -8,7 +8,10 @@ export type Citation = {
   row?: string;
   section?: string;
   source_url?: string;
+  /** 웹 근거의 등급(2 공식 문서 · 3 참고 링크). 등록된 데이터시트 근거에는 없다(SPEC 2절 근거 등급 표). */
   evidence_grade?: number;
+  /** 웹 근거의 출처 종류(`external_web` · `web_reference`). 등록된 데이터시트 근거에는 없다. */
+  source_type?: string;
   citation_number?: string;
 };
 type Check = {

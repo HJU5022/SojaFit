@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   basisLabel,
+  evidenceGrade,
   explainAnswer,
   explainNames,
   opLabel,
@@ -248,4 +249,19 @@ test('예/아니오 조건은 op_amp를 포함하고 수치·알 수 없는 코�
   for (const code of ['v_in_max', 'VF', 'unknown_code', '__proto__']) {
     assert.equal(isBooleanInput(code), false, code);
   }
+});
+
+test('근거 등급 표기: 서버가 준 등급은 그대로, 웹 표시가 없는 근거는 1등급, 등급 없는 웹 근거는 표기하지 않는다', () => {
+  // 등록된 데이터시트 근거: 서버가 등급 · 출처 종류를 붙이지 않는다
+  assert.deepEqual(evidenceGrade({}), { grade: 1, label: '근거 1등급 · 등록된 데이터시트' });
+  assert.deepEqual(evidenceGrade({ evidence_grade: 2, source_type: 'external_web' }), {
+    grade: 2,
+    label: '근거 2등급 · 제조사 공식 문서',
+  });
+  assert.deepEqual(evidenceGrade({ evidence_grade: 3, source_type: 'web_reference' }), {
+    grade: 3,
+    label: '근거 3등급 · 미검증 참고 정보',
+  });
+  // [주의] 웹 근거인데 등급이 없으면(서버가 검사하지 못한 옛 기록) 1등급으로 올려 적지 않는다
+  assert.equal(evidenceGrade({ source_type: 'external_web' }), null);
 });

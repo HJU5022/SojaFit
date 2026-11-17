@@ -15,7 +15,7 @@ import {
 import { api, verdicts } from './api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { explainAnswer, markdownUrl, safeLink } from './display';
+import { evidenceGrade, explainAnswer, markdownUrl, safeLink } from './display';
 import { acceptsFile, isSchematicFile, partsOf, pinsOf } from './circuit';
 import type { Citation, Project, Verdict } from './types';
 export function navigate(url: string, replace = false) {
@@ -422,9 +422,12 @@ export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
     ),
   };
 }
+/** 근거 한 건: 등급 배지(1 등록된 데이터시트 · 2 제조사 공식 문서 · 3 미검증 참고 정보) · 문서 · 위치 · 원문 링크. */
 export function Source({ cite }: { cite: Citation }) {
+  const grade = evidenceGrade(cite);
   return (
     <div className="citation">
+      {grade && <span className={`badge grade-${grade.grade}`}>{grade.label}</span>}
       <strong>{cite.document || '문서명 미제공'}</strong>
       <span>
         {[cite.page != null ? `${cite.page}쪽` : null, cite.table, cite.row, cite.section]
@@ -438,7 +441,6 @@ export function Source({ cite }: { cite: Citation }) {
       ) : (
         <span className="muted">원문 링크 미제공</span>
       )}
-      {cite.evidence_grade === 3 && <span>미검증 참고 정보</span>}
     </div>
   );
 }

@@ -2947,6 +2947,19 @@ form {
   max-width: 100%;
   font-weight: 500;
 }
+/* 근거 등급 배지: 1 등록된 데이터시트 · 2 제조사 공식 문서 · 3 미검증 참고 정보(판정 배지와 같은 색 계열) */
+.citation .grade-1 {
+  color: #286c56;
+  background: #e9f3ed;
+}
+.citation .grade-2 {
+  color: #225c79;
+  background: #e6f0f6;
+}
+.citation .grade-3 {
+  color: #826018;
+  background: #f6f0de;
+}
 .caution {
   margin: 15px 0;
   font-size: 13px;
