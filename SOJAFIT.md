@@ -892,14 +892,14 @@ SojaFit (proj3-b)
     │   │   ├── portfolio-jeongun.pdf  <- 하정운
     │   │   ├── portfolio-osc.pdf  <- 오세창
     │   │   └── portfolio-sth.pdf  <- 심태현
-    │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 운영 프로젝트 SojaFit_v2). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
+    │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 밤 배포 리비전 코드 v3 실행). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
     │   │   ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
     │   │   ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
     │   │   ├── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
-    │   │   ├── 04-trace-detail-scores-header.jpg  <- 평가 trace 상세 머리의 점수 칩(passed_cards · latency_s · question_type 등, 11-17)
-    │   │   ├── 05-trace-scores-tab.jpg  <- 같은 trace의 점수 탭(점수 13개가 trace에 붙음)
-    │   │   ├── 06-scores-list.jpg  <- 운영 프로젝트 점수 목록(점수마다 trace 연결)
-    │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 1.68K · 점수 22.25K · 비용 $1.17, 최근 1일)
+    │   │   ├── 04-trace-ragas-scores-header.jpg  <- RAGAS 점수 칩이 붙은 평가 trace 상세(gate v3-11, Faithfulness 0.89, 11-17)
+    │   │   ├── 05-trace-ragas-scores-tab.jpg  <- 같은 trace의 점수 탭(점수 17개)
+    │   │   ├── 06-trace-spec-rag-timeline.jpg  <- Spec · RAG 에이전트가 함께 도는 trace Timeline(gate v3-41, 올바른 거절)
+    │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 2.14K · 점수 23.27K · 비용 $1.46, 최근 1일)
     │   ├── presentation/   <- 최종 발표 덱(11-18)
     │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
     │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 덱 20장(본편 17 + Q&A 백업 3)

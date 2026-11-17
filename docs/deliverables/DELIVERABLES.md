@@ -19,7 +19,7 @@
 | `portfolio-sth.md` | 제출물 | 심태현 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요) |
 | `portfolio/` | 제출물 | 위 세 포트폴리오를 A4 1장으로 뽑은 PDF(`portfolio-{이름}.pdf`, 11-17, 마크다운과 같은 내용) |
 | `submission_checklist.md` | 제출물 | 제출 체크리스트: 게이트·제출물 항목별 증거 경로와 상태 |
-| `langfuse/` | 제출물 | Langfuse 스크린샷 7장: 01~03 목록 · 트레이스 상세 · 비용(11-13 배포본), 04~07 점수 칩이 붙은 평가 trace 상세 · 그 trace의 점수 탭(13개) · 점수 목록 · 홈 대시보드(11-17 운영 프로젝트 SojaFit_v2). 설명은 아래 "Langfuse 스크린샷" 절 |
+| `langfuse/` | 제출물 | Langfuse 스크린샷 7장: 01~03 목록 · 트레이스 상세 · 비용(11-13 배포본), 04~07 RAGAS 점수가 붙은 평가 trace 상세 · 그 trace의 점수 탭(17개) · Spec · RAG 두 에이전트 Timeline · 홈 대시보드(11-17 밤, 프로젝트 SojaFit_v2). 설명은 아래 "Langfuse 스크린샷" 절 |
 | `video/` | 제출물 | 시연 영상 `sojafit-demo-2026-11-17.mp4`(1분 35초, 1280×720). 정상 경로 v3-01(조건 질문 정지 → 재개 → 역할상 충분 판정 · 근거 → 승인 → 견적 → 대체 검토 보고서)과 실패 경로 3개(실측값 요청 · 코퍼스에 없는 품번 LL4149 · 프롬프트 인젝션), 화면마다 자막 한 문장. 첫 장면은 배포 `/health`와 리비전 `sojafit-api-main-28b14600-1117` 로그인 화면, 나머지는 같은 코드(main `28b14600`)의 로컬 실제 모드(실제 모델) |
 | `presentation/` | 제출물 | 최종 발표 덱(`sojafit-final-2026-11-18.pptx`)과 슬라이드 · 발표자 · 수치 근거 표. [PRESENTATION.md](presentation/PRESENTATION.md) |
 
@@ -50,11 +50,11 @@
 | [`langfuse/01-trace-list.jpg`](langfuse/01-trace-list.jpg) | 트레이스 목록(루트 관측, 환경 `default`) | 11-13 09:38~10:10 배포본 요청이 트레이스로 들어옴(최근 1일 루트 관측 약 101건, `LangGraph`와 `analysis-metadata` 포함), 입출력 마스킹 |
 | [`langfuse/02-model-call-detail.jpg`](langfuse/02-model-call-detail.jpg) | 트레이스 `ce5f5ad0…` 타임라인과 모델 호출 상세 | Spec 에이전트(대체 부품 판정, LLM 2회) → Supervisor 재계획 → RAG 에이전트(LLM 1회)가 나뉘어 보이고, 선택한 RAG 호출의 모델 `anthropic/claude-haiku-5.5`, 4.76초, 5k 토큰, 0.001달러 |
 | [`langfuse/03-cost-dashboard.jpg`](langfuse/03-cost-dashboard.jpg) | Langfuse Cost Dashboard(환경 `default`+`eval`) | 최근 1일 트레이스 151건, 비용 합계 0.118649달러, 모델별·환경별·사용자별 비용 |
-| [`langfuse/04-trace-detail-scores-header.jpg`](langfuse/04-trace-detail-scores-header.jpg) | 트레이스 `gate v3-47` 상세(11-17, 화면 시각 03:33:45, 10.44초) | 머리에 점수 칩(passed_cards · latency_s · tries · question_type · refusal_code · cost_usd 외 10개), 노드 트리(입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 → 답 모으기 → 거절), 평가 문항 입력 · 출력(마스킹 없음) |
-| [`langfuse/05-trace-scores-tab.jpg`](langfuse/05-trace-scores-tab.jpg) | 같은 트레이스의 Scores 탭(11-17) | 점수 13개: refusal_code, latency_s, docs_found, pass, question_type, cost_usd, tries, path, answer_metric, llm_calls, hops, not_found, passed_cards |
-| [`langfuse/06-scores-list.jpg`](langfuse/06-scores-list.jpg) | Scores 목록(11-17, 최근 1일) | gate 실행 트레이스마다 붙은 점수 행(화면 시각 03:34), 446쪽(쪽당 50행) |
-| [`langfuse/07-home-dashboard-2026-11-17.jpg`](langfuse/07-home-dashboard-2026-11-17.jpg) | 홈 대시보드(11-17, 환경 `eval` · `default`, 최근 1일) | 트레이스 1.68K, 비용 $1.17(모두 `anthropic/claude-haiku-5.5`, 26.25M 토큰), 점수 22.25K, 관측 30.76K |
+| [`langfuse/04-trace-ragas-scores-header.jpg`](langfuse/04-trace-ragas-scores-header.jpg) | 트레이스 `gate v3-11`(후보 찾기) 상세, 11-17 19:53:59, 7.10초 · $0.001 · 22k 토큰 | 머리 점수 칩 ragas_context_precision 0.68 · ragas_faithfulness 0.89 · question_type candidate_find, 트레이스 트리(Supervisor → Spec 에이전트) |
+| [`langfuse/05-trace-ragas-scores-tab.jpg`](langfuse/05-trace-ragas-scores-tab.jpg) | 같은 트레이스의 Scores 탭 | 점수 17개(RAGAS 2개, answer_metric cited_gold, fake_citations 0 등)가 트레이스에 붙음 |
+| [`langfuse/06-trace-spec-rag-timeline.jpg`](langfuse/06-trace-spec-rag-timeline.jpg) | 트레이스 `gate v3-41`(서비스 범위 밖 수명 질문) Timeline, 11-17 20:02:37, 12.91초 · $0.001379 | Supervisor 3.84초 → Spec 에이전트 2.52초 → RAG 에이전트 9.05초 → 답 모으기 → 거절. 점수 칩 not_found True(올바른 거절) |
+| [`langfuse/07-home-dashboard-2026-11-17.jpg`](langfuse/07-home-dashboard-2026-11-17.jpg) | 홈 대시보드(11-17 밤, 환경 `eval` · `default`, 최근 1일) | 트레이스 2.14K · 모델 비용 $1.46(Haiku 5.5) · 점수 23.27K |
 
 - `02`의 트레이스는 마지막 노드가 `거절`이다. 판정 근거가 모자라 거절로 끝난 질문이고, 이 장은 에이전트 구조와 호출 기록을 보이려고 골랐다.
 - 403 원인과 해소 기록은 [evals/results/d10/langfuse_403_2026-11-13.md](../../evals/results/d10/langfuse_403_2026-11-13.md).
-- `04` ~ `07`은 2026-11-17에 캡처했다(프로젝트 `SojaFit_v2`). 위 칸은 작업 폴더의 같은 이름 파일을 열어 옮겼다. 트레이스를 보낸 실행의 소스 커밋은 화면에 없다.
+- `04` ~ `07`은 2026-11-17 밤에 새 측정 기준으로 다시 캡처했다(프로젝트 `SojaFit_v2`). 04 · 05는 19:45 RAGAS 켠 v3 실행(세션 `gate-dataset_v3-1117-1945-set1`), 06은 19:58 v3 실행 1세트의 트레이스이고, 둘 다 배포 리비전 코드(`2030f846` 백엔드)를 로컬에서 운영 설정으로 돌린 것이다. 위 칸은 작업 폴더의 같은 이름 파일을 열어 옮겼다. 트레이스를 보낸 실행의 소스 커밋은 화면에 없다.

@@ -22,7 +22,7 @@
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 충족 (운영 DB 청크 본문 51,967개를 직접 열어 다시 계산한 sha256이 모두 서로 다르고 저장소 해시 목록과 같다(11-16, [db_content_hash_check](../evals/results/d10/db_content_hash_check_2026-11-16.md)), 문서 1,360, 파싱 Docling + pdfplumber. 한계는 G3 절) |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-17 운영 리비전에서 조건 질문으로 멈춘 뒤 서버 재시작(같은 이미지의 새 리비전 `sojafit-api-pre-ef0138b2-rs`로 트래픽 이동, 19:52) → 재개 → 판정 완료 통과, [smoke_…_2026-11-17_195049.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-17_195049.json)(이 회차는 B 비밀번호 입력 실수로 B 단계 401 · 건너뜀, B 격리는 19:56 회차에서 통과). 그 전 11-13 [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 11-17 배포 리비전 코드(`2030f846`) 웹 켬 2세트 50/50 · 49/50(실패 v3-41 지어낸 답 1, [2026-11-17-deploy-ef0138b2-v3](../evals/results/graph/2026-11-17-deploy-ef0138b2-v3/report.txt)). 그 전 새벽 `799ae636` 49/50 · 49/50([d12](../evals/results/d12/README.md)). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
-| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 충족 (점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 화면은 7장: 11-13 배포본 트레이스 3장, 11-17 점수가 붙은 트레이스 상세 · 점수 탭 · 점수 목록 · 홈 대시보드 4장([langfuse/](deliverables/langfuse/) `04` ~ `07`)) |
+| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 충족 (점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 화면은 7장: 11-13 배포본 트레이스 3장, 11-17 배포 리비전 코드 v3 실행의 RAGAS 점수 트레이스 상세 · 점수 탭, Spec · RAG 두 에이전트 Timeline, 홈 대시보드 4장([langfuse/](deliverables/langfuse/) `04` ~ `07`)) |
 | G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 충족 (비밀값: gitleaks 1,250 커밋 0건(11-17). 시연 영상 [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) 1분 35초, 정상 경로 1 + 실패 경로 3. 포트폴리오 3장 · AI 도구 기록은 오세창 · 심태현 본인 확인 전) |
 
 ## 게이트별 증거
@@ -162,14 +162,14 @@
 | 반복 평가 | v3 50문항 4세트(#50)가 세트마다 Langfuse 세션 하나에 트레이스 50개와 문항 점수를 남김 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7장 |
 | 서비스 분석 트레이스 | `user_id`(사용자) · `session_id`(대화)를 붙이고 질문 · 답 글은 보내지 않음(시험으로 확인) | `tests/services/test_langfuse_prompts.py` |
 | Skill 대표 흐름 | 대표 4건 · 직접 생성 13건의 generation 23개를 API로 확인, 상황별 기준 12/13 충족 | `evals/results/skill/skill_tool_summary_2026-11-03.json` |
-| 대시보드 스크린샷 7장 | `01-trace-list.jpg`(트레이스 목록) · `02-model-call-detail.jpg`(트레이스 타임라인과 모델 호출 상세: 모델 · 시간 · 토큰 · 비용) · `03-cost-dashboard.jpg`(비용 대시보드)는 2026-11-13 10:13~10:15 KST 캡처, 프로젝트 `SojaFit_v2`. `04` ~ `07`(점수가 붙은 트레이스 상세 · 점수 탭 · 점수 목록 · 홈 대시보드)은 2026-11-17 캡처 | [docs/deliverables/langfuse/](deliverables/langfuse/), [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
+| 대시보드 스크린샷 7장 | `01-trace-list.jpg`(트레이스 목록) · `02-model-call-detail.jpg`(트레이스 타임라인과 모델 호출 상세: 모델 · 시간 · 토큰 · 비용) · `03-cost-dashboard.jpg`(비용 대시보드)는 2026-11-13 10:13~10:15 KST 캡처, 프로젝트 `SojaFit_v2`. `04` ~ `07`(RAGAS 점수가 붙은 트레이스 상세 · 점수 탭, Spec · RAG 에이전트 Timeline, 홈 대시보드)은 2026-11-17 밤 캡처(배포 리비전 코드 로컬 v3 실행 트레이스) | [docs/deliverables/langfuse/](deliverables/langfuse/), [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
 | 느림 원인 사례 | 2건과 LLM 단계별 시간 · 비용 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7 · 8장 |
 
 확인 못 한 것:
 
 | 항목 | 이유 |
 |---|---|
-| 운영 리비전 트레이스의 점수 화면 | 점수가 붙은 화면은 11-17 `799ae636` 로컬 실행 트레이스로 캡처했다(`04` ~ `07`). 운영 리비전 트레이스로는 캡처하지 않았다. 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md). 2026-11-17 재조회: 운영 프로젝트 점수 57,198개(숫자 · 참거짓 40,826 + 범주 16,372)가 트레이스 4,109개에 붙어 있고, 11-17 `799ae636` 게이트 세트의 트레이스 50개에 700개가 붙었다. 캡처할 트레이스: `5fa5c6c56187c8a38326de96fd57dfa5`(v3-01, 점수 15개), [d12 README](../evals/results/d12/README.md) |
+| 운영 리비전 트레이스의 점수 화면 | 점수가 붙은 화면은 11-17 배포 리비전 코드(`2030f846` 백엔드)의 로컬 v3 실행 트레이스로 캡처했다(`04` ~ `07`). 운영 리비전 트레이스로는 캡처하지 않았다. 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md). 2026-11-17 재조회: 운영 프로젝트 점수 57,198개(숫자 · 참거짓 40,826 + 범주 16,372)가 트레이스 4,109개에 붙어 있고, 11-17 `799ae636` 게이트 세트의 트레이스 50개에 700개가 붙었다. 캡처할 트레이스: `5fa5c6c56187c8a38326de96fd57dfa5`(v3-01, 점수 15개), [d12 README](../evals/results/d12/README.md) |
 | 배포본 서비스 분석 트레이스의 Langfuse 수신 | 수신을 확인했다: 11-13 09:38~10:10 배포본 요청이 트레이스로 보인다(스크린샷 `01`, 최근 1일 루트 관측 약 101건). 403 원인은 [langfuse_403_2026-11-13.md](../evals/results/d10/langfuse_403_2026-11-13.md). 확인 시점의 리비전은 `fadde2a`이고 그 뒤의 100% 리비전(`574de79-rs`, 지금 리비전은 README 표 「배포 리비전」)에서 새로 캡처하지는 않았다 |
 | 현재 Skill 실행 UI | 확인하지 않았다 |
 
