@@ -149,6 +149,7 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--max-usd", type=float, default=1.0)
     parser.add_argument("--max-tokens", type=int, default=1024)
+    parser.add_argument("--max-seconds", type=float, default=900)  # 기본 900은 #17 그대로, 새 사전 등록(2026-11-17)에서만 올린다
     args = parser.parse_args()
     # [왜] 사전 등록 #17의 조건(실제 호출, OpenRouter, 규정 모델)과 다른 설정으로 돌면 비교가 무효가 되므로 시작 전에 막는다
     if llm.DEMO_MODE or llm.LLM_PROVIDER != "openrouter" or llm.LLM_MODEL != "anthropic/claude-haiku-5.5":
@@ -169,7 +170,7 @@ def main():
 
     price = pricing(llm.LLM_MODEL)
     # 인자: 호출 600건, 최대 달러, 900초, 모델 단가(프롬프트·출력·임베딩 토큰당). 단가 구간(overrides)이 있으면 같이 넘긴다
-    budget = llm.EvaluationBudget(600, args.max_usd, 900, float(price["prompt"]), float(price["completion"]),
+    budget = llm.EvaluationBudget(600, args.max_usd, args.max_seconds, float(price["prompt"]), float(price["completion"]),
                                 float(pricing("openai/text-embedding-3-small")["prompt"]),
                                 max_tokens=args.max_tokens, pricing_tiers=tuple(price.get("overrides", [])))
     # 이 실행의 입력·코드 지문 목록. 나중에 결과가 어느 코드·프롬프트로 나온 것인지 해시로 대조한다
