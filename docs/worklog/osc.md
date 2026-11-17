@@ -1300,3 +1300,22 @@
 - 기존 고정 main `9c87ba36` 기준 PR 준비 패치에 보고서·문서 목록·트리 등록을 추가했다. 총20파일(백엔드5·테스트4·문서와 목록11)이며 실제 OSC 병합·기존 index 변경 없이 별도 index와 복사본에서 정리한다. 다른 연구 자료·UI·배포·DB 변경은 선별하지 않는다.
 - 추가 서비스 실측·기능 테스트·앱 코드 수정·API/DB 요청·재시작·커밋·푸시·PR 생성·배포는 없다. 기존552건 시험을 재실행하지 않으며 문서 내용·링크·목록·패치 적용 여부만 확인한다. 작업 전 tracked1307개·untracked16개 개별 해시는 `C:/Users/user/AppData/Local/Temp/osc-official-search-doc-preservation-20261116-212926/`에 보관했다.
 - 확인: 공유 보고서와 준비 복사본 일치, 비교표14행·기존552passed 기록 보존, 상대 링크 유효, 저장소 구조 정적 검사5항목·패치 적용·`diff --check` 통과. Python9파일 해시가 추가 전과 같고 기존 raw index를 유지했다. 선별한 작업 기록에는 보고서의 근거가 되는 제조사 확장·영어 원문·품번 검색의 기존 절도 포함했다. JSON·PNG·로컬 전용 링크는 PR에 넣지 않았다.
+
+## 2026-11-17 · 단일 회로도 검색의 공식 참고 API 연결
+
+- 기준: OSC HEAD와 fetch한 origin/main 모두 `2e702752ff015778d87c53d3e9fa1879b12b0290`. `git merge --ff-only origin/main`은 Already up to date. 아래 UI 실측은 `main2e702752`와 동일 연결 패치를 적용한 별도 실행이며, 최신 main `5e642703` 자체를 실측한 결과가 아니다. 기존 dirty 파일·인덱스를 저장소 밖 `osc-schematic-ui-preserve-20261117-c_s0eukn`에 백업했다.
+- 원인: 운영 프런트가 품번에도 프로젝트 원본 GET을 보내 기존 연결 대조에서 404. 명시 참고 GET은 TSC·6개 제조사에서 200·PNG10장을 반환한 별도 운영 실측을 확인했다.
+- 수정: 기존 찾기 요청에 `auto_search=true`를 연결하고 소유 프로젝트·회로 버전·대화·선택 URL을 유지한다. 참고 PNG URL을 그대로 쓰며 응답의 `circuit_version`과 `source_type`으로 제목·대체텍스트·확대창을 원본/공식 참고/그 밖의 참고로 구분한다. 기존 검색 입력·찾기 버튼 하나를 성공 뒤에도 유지하고 원본 일치 안내를 두 범위에 맞게 바꾼다. `auto:` 캐시 namespace로 기존 원본 조회와 격리하고 기존 재사용/fresh 계약은 유지한다. 백엔드 검증·업로드 우선순위·스타일·추가 버튼 변경은 없다.
+- 사전 연결 패치 확인: 새 요청·표시 회귀는 수정 전 2실패/기존5통과, 수정 후7통과. 전체 frontend 단위45통과·타입/빌드 통과. 기존 API fixture 회귀104통과(외부 DB·검색·모델 호출 없음). 당시 전체 format:check는 변경하지 않은 기존37파일에서 실패했고 이번 수정3파일의 개별 검사는 통과했다. 최신 main 준비본의 별도 검증은 다음 줄에 기록한다.
+- 이번 준비본 별도 확인(main `5e642703` 기준): `npm ci` 155 packages, `npm test` 49 passed/0 failed, `npm run build` TypeScript·Vite exit 0, `npm run format:check`는 `core.autocrlf=false` LF archive에서 전체 통과(exit 0), `tests/api/test_external_circuits.py` 104 passed, `tests/repo` 5 passed, frozen evaluation hash check 통과. 이는 이번 준비본의 로컬 회귀이며 아래 이전 UI 실측과 별도다. 전체 `pytest`는 실행하지 않았다.
+- 실행: 기존 DB 컨테이너와 `osc-schematic-local_pgdata` 볼륨을 재사용해 기동했고, 기존 API 설정의 DEMO_MODE=0·DEMO_REPLAY=0·KICAD_RENDERER_URL 빈 값과 /health200을 확인했다. 실제 검색·화면 확인은 로컬8011에 한정한다. 운영 배포·커밋·푸시는 하지 않는다.
+- 빌드 입력: HEAD git archive에 승인한 frontend 수정만 복사한 임시 context. 다른 dirty 백엔드 실험은 포함하지 않는다. `docker build --build-arg INCLUDE_KICAD=0 --tag osc-schematic-local-api:official-ui-main-20261117 <context>`를 실행했다. context·선택 파일 해시는 `osc-official-ui-main-build-20261117-5_bngw2k/build-input.json`에 남겼다. 이 절은 빌드·회귀 실행 후 작성했다.
+- 실제 확인 범위: TSC TS19371CX6, TI LM2596 datasheet, ST L7805, ADI LT1763, onsemi NSVR351SDSA3, Infineon BAT62-02V, Vishay VEML7700 각각1회. 기존 프로젝트13의 검색창·버튼을 조작하고 HTTP 상태·PNG·출처·원본 링크를 확인한다. 별도 모델·임베딩·가격 호출, 벡터 생성, DB 스키마 변경은 하지 않는다. 실패를 성공 표본으로 바꾸기 위한 재검색은 하지 않는다. 결과는 완료 뒤 같은 절에 덧붙인다.
+
+- 실행 중 DB 호환 원인: 원본 app DB에 033의 threads.title·035의 circuit_schematics가 없어 최신 main의 프로젝트·대화 GET이503이었다. 원본을 app_official_ui_verify_20261117로 복제하고 복제본에만033·035를 적용했다. 8011의 DATABASE_URL은 복제 DB 이름으로만 바꿨고 나머지 환경은 유지했다. 원본24테이블의 행 수·전체 행 지문은 전후 동일했다.
+- 실제 UI 최종 결과: TS19371CX6·TI LM2596 datasheet·L7805·LT1763·NSVR351SDSA3·BAT62-02V·VEML7700 전부 기존 찾기 버튼에서 auto_search=true GET200, PNG합계10장200·디코딩·프런트표시·출처·원본링크일치. ST3쪽·ADI2쪽은 확대창에서 전체PNG를 확인했다. 별도PNG주소 직접 열기를 프런트성공으로 대체하지 않았다.
+- 실제 경계: 프로젝트13 GET200, 잘못된 회로버전409·없는 프로젝트404·인증없는요청401. 최초 프로젝트 이름의 원본 검색은 연결 불일치404를 유지했다. 모델·임베딩·가격API호출0, 기존원본DB·DB볼륨보존, KiCad제외확인. 런타임backend Python94파일은main과일치한다.
+- 기존작업: Git인덱스와worklog기존바이트prefix유지. 병행작업이갱신한 SOJAFIT.md·evals/EVALS.md·evals/guides/GUIDES.md·evals/guides/preregister.md는수정·되돌리지않았다. 검증자료는저장소밖 osc-official-ui-main-build-20261117-5_bngw2k/live/verification.md·results.json·png-proof.json·실제프런트스크린샷에저장했다. 커밋·push·PR·운영배포없음. 8011은복제검증DB를사용하며원본 app DB는그대로남아있다.
+
+- PR 준비 기준: origin/main `5e642703fa36167c9da7c0b7f14b7949c3f6b6b5`의 추출본에 연결 코드3개·문서4개만 선별했다. 실제 OSC HEAD `2e702752`와 인덱스는 유지했다. 관련 없는 dirty 파일과 이전 스테이징은 포함하지 않는다. 추가 외부 검색·DB·컨테이너·운영 설정 변경은 없다.
+- 제한: 이후 운영 재확인에서 ST L7805의 명시 참고 요청은404 `validation_failed`를 반환했다. 이 연결 패치는 PDF 검사 조건을 바꾸지 않으며 해당 문제를 해결한 것으로 집계하지 않는다. 이전7개 성공은 당시 저장된 결과이고 이번에 재실측하지 않았다.
