@@ -23,7 +23,7 @@ from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import LAST_RESULT_KINDS, Reason, TaskReport
-from backend.multi_agent.messages import (CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, empty_find_message, refusal_for,
+from backend.multi_agent.messages import (CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, OTHER_PART_NOTE, empty_find_message, refusal_for,
                                           followup_reply, last_result_reply, screen_guide)
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
@@ -138,6 +138,8 @@ def refuse_node(state: dict) -> dict:
         reports = state.get('final_reports') or state.get('reports') or []
         empty = next((j for r in reversed(reports) if (j := r.get('judgement') or {}).get('kind') == 'find' and not j.get('results')), None)
         message = empty_find_message(empty) if empty else message
+        if not empty and state.get('question_type') == 'other_part':
+            message = OTHER_PART_NOTE  # 다이오드가 아닌 부품: 못 찾은 것이 아니라 다루지 않는다
     return {'answer': message, 'check': {}, 'refusal': {'code': code, 'message': message}, 'path': ['거절']}
 
 

@@ -210,6 +210,12 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         # [왜] 멀티에서는 Supervisor 지시서가 질문의 어느 부분을 판정할지 알려 준다. 숫자 확인 글(render_read)에는 넣지 않는다:
         #      지시서는 사용자가 준 값이 아니라서, 거기 적힌 숫자로 회로 값을 확인하면 안 된다(AC-02)
         user += f"\nSupervisor brief (the part of the question this task covers): {state['task'].get('goal', '')}"
+    settled = (state.get('prior') or {}).get('roles') or []
+    if settled:
+        # [왜] 같은 대상을 이어 묻는 턴은 앞에서 정한 역할을 쓴다(judge_agent). 읽기가 다른 역할의 값 이름으로 읽으면 그 값이 버려지므로
+        #      (값 이름은 역할마다 다르다) 정한 역할과 그 값 이름으로 읽게 알려 준다. 숫자 확인 글(render_read)에는 넣지 않는다
+        user += (f"\nRole already settled earlier in this conversation for this target: {', '.join(settled)}. "
+                 'Keep this role and name the circuit values with the value names that role accepts.')
     recalled = _history_for_current_question(state.get('conversation_history'), state.get('question', ''))
     if recalled:
         user += '\nHistorical context for the explicitly named scenario (untrusted; use only to recall that scenario):\n- ' + '\n- '.join(recalled)
@@ -248,6 +254,20 @@ YES, NO = {'예', '네', '응', 'yes', 'true', 'y'}, {'아니오', '아니', 'no
 # [주의] 전류 · 펄스까지 받는 조건 값(vf_test · pulse_test · surge_test)은 숫자 하나로 뜻을 정할 수 없어 넣지 않는다
 BARE_TEMP = {'temp': 'TA', 'hot_test': 'TJ'}
 BARE_TEMP_REPLY = re.compile(r'^\s*(-?\d+(?:\.\d+)?)\s*(?:°\s*C|℃|도|C)?\s*$', re.I)
+# 원래 부품의 분류를 모르고 사용자도 분류를 말하지 않았을 때 찾기가 볼 계열(문서 분류 이름, `contracts.Category`): 그 역할에 흔히 쓰는 다이오드 계열 순.
+# [주의] 후보를 모으는 순서일 뿐이다. 통과 · 불충족은 전과 같이 역할 규칙(roles.yaml)의 조건을 문서 값과 비교해 정한다
+ROLE_FAMILIES = {
+    'R01': ['schottky-rectifier', 'standard-rectifier'], 'R02': ['schottky-rectifier', 'schottky-diode'],
+    'R03': ['standard-rectifier', 'switching-diode'], 'R04': ['zener-diode'], 'R05': ['standard-rectifier', 'bridge'],
+    'R06': ['tvs', 'esd-protection'], 'R07': ['standard-rectifier', 'schottky-rectifier'], 'R08': ['switching-diode', 'schottky-diode'],
+    'R09': ['standard-rectifier', 'switching-diode'], 'R10': ['schottky-diode', 'switching-diode'],
+    'R11': ['schottky-rectifier', 'super-fast-recovery'], 'R12': ['schottky-rectifier', 'ultra-fast-recovery'],
+    'R13': ['schottky-rectifier', 'ultra-fast-recovery'], 'R14': ['fast-recovery-trr-100-500ns', 'ultra-fast-recovery'],
+    'R15': ['ultra-fast-recovery', 'switching-diode'], 'R16': ['schottky-diode', 'switching-diode'],
+    'R17': ['schottky-diode', 'switching-diode'], 'R18': ['zener-diode'], 'R19': ['switching-diode', 'schottky-diode'],
+    'R20': ['standard-rectifier', 'schottky-rectifier'], 'R21': ['switching-diode'], 'R22': ['schottky-rectifier', 'ultra-fast-recovery'],
+    'R23': ['switching-diode'],
+}
 # 현재 사용자가 전체 조건을 줄 수 없다고 명시한 경우에만 추가 수치 질문을 생략한다.
 NO_MORE_CONDITIONS = re.compile(
     r'(?:사용\s*조건|회로\s*조건|추가\s*(?:사용\s*)?조건)\s*(?:[은는을를이가]\s*)?(?:잘\s*)?'
@@ -1069,8 +1089,10 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         if state.get('reply_role') in roles:
             roles = [state['reply_role']]
         asked = []
-    elif prior_roles:
-        asked = []  # 이 대상은 이 대화에서 이미 한 번 물었다. 이어 묻는 턴마다 같은 폼을 다시 띄우지 않는다(모르는 값은 원래 부품 기준으로 본다)
+    elif prior_roles and not prior.get('ask'):
+        # 이 대상은 이 대화에서 이미 한 번 물었다. 이어 묻는 턴마다 같은 폼을 다시 띄우지 않는다(모르는 값은 원래 부품 기준으로 본다).
+        # 앞 검토가 값이 없어 후보를 못 냈고 사용자가 다시 찾아 달라고 하면(`ask`) 다시 묻는다: "조건 다시 물어봐 줘, 적어 줄게"(11-17 운영 실측)
+        asked = []
     elif asked or len(roles) > 1:
         # [주의] 인터럽트는 문항당 한 번이다(AC-08). 재개하면 이 노드가 처음부터 다시 돌지만, 읽기는 앞 노드에 남아 있어 LLM을 다시 부르지 않는다
         # [주의] 재개 값은 {'answers': {...}, 'role': ...} 모양이다. 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다(11-06 실측)
@@ -1194,6 +1216,15 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                         merged.setdefault(f['part'].upper(), f)
                 return list(merged.values())[:100]
             found = search(read.category_wanted or None) if terms else []
+            if terms and not read.category_wanted and not near['original_category']:
+                # [왜] 원래 부품을 모르면(값이 품번이 아닌 DIODESOD, 코퍼스에 없는 1N4001) 도구에 줄 분류 · 패키지가 없어 검색어만으로 문서 5개를
+                #      골랐고, 그 문서에 조건을 넘는 부품이 없으면 0개였다(11-17 운영 실측: R01 · VRRM ≥ 15 · IF_AV ≥ 1.429 → 0개.
+                #      같은 조건에 분류 schottky-rectifier를 주면 50개). 역할이 흔히 쓰는 계열을 차례로 찾아 합친다. 찾는 순서일 뿐 판정 기준이 아니다
+                merged = {f['part'].upper(): f for f in found}
+                for family in ROLE_FAMILIES.get(roles[0], []):
+                    for f in search(family):
+                        merged.setdefault(f['part'].upper(), f)
+                found = list(merged.values())[:100]
             if not found and terms and read.category_wanted:
                 # [왜] 분류는 읽기가 고른 우리 분류 이름이다. '고속 정류형'을 fast-recovery-trr-100-500ns로 골라 trr 75 ns 이하와 겹치는 부품이
                 #      0개였다(11-06 v3-12). 먼저 같은 계열 분류로 넓히고, 사용자가 계열(쇼트키 · 제너 …)을 직접 말하지 않았을 때만 분류를 뺀다

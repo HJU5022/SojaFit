@@ -90,7 +90,16 @@ def _last_judgement(mode: str, before: dict) -> dict:
     if mode == 'demo':
         return {}
     from backend.multi_agent.messages import judgement_summary
-    return judgement_summary(before.get('judgement') or {}, before.get('target') or '') or before.get('last_judgement') or {}
+    judgement = before.get('judgement') or {}
+    if not judgement:
+        # [왜] 후보를 하나도 못 내 거절로 끝난 찾기는 `judgement` 칸이 비고 보고서에만 판정이 남는다(거절 노드도 보고서에서 읽는다).
+        #      그 요청을 사용자가 값만 알려 주며 이어 갈 수 있게 보고서의 마지막 찾기 · 판정을 쓴다(11-17 운영 실측)
+        reports = before.get('final_reports') or before.get('reports') or []
+        judgement = next((j for r in reversed(reports) if (j := r.get('judgement') or {}).get('kind') in ('find', 'judge')), {})
+    fresh = judgement_summary(judgement, before.get('target') or '')
+    old = before.get('last_judgement') or {}
+    # 후보를 못 낸 판정(빈 목록 요약)이 앞에서 낸 후보 요약을 지우지 않게 한다. 앞 요약도 후보가 없으면 새 것으로 바꾼다
+    return fresh if fresh.get('candidates') or (fresh and not old.get('candidates')) else old
 
 
 def _conversation_history(contents, *, max_chars=MAX_CONVERSATION_HISTORY_CHARS):
@@ -177,6 +186,37 @@ def absent_diode_reply(connections, question):
         return ''
     found = ', '.join(d['ref'] + (f"({d['value']})" if d['value'] else '') for d in target_choices(connections))
     return f'이 회로에 {_topic(asked[0].upper())} 없어요. 넷리스트에서 다이오드 {found}를 찾았어요.'
+
+
+def unsupported_diode_reply(connections, question):
+    """질문이 회로에 있는 다이오드 모양 기호(D3 · LED1)만 적었는데 그 부품이 지원 대상이 아니면(LED · 표시기) 그 이유와 검토할 수 있는 다이오드를 알리는 답(코드 글). 아니면 빈 글자.
+
+    [왜] 대화를 처음 만들 때는 `target_choices`가 같은 이유로 422를 내지만, 이어지는 질문은 그 확인을 지나지 않는다. LED인 D3의 대체품을 물으면
+         품번이 없어 "이 부품 자료를 찾지 못했어요"만 돌아왔다(11-17 운영 실측: 방금 부품 목록 표에 D3 = Green, LED-0603을 보여 준 뒤였다).
+    [주의] 지원 다이오드를 함께 적었거나 다이오드 모양이 아닌 기호(Q1 · R5)는 여기서 막지 않는다(그 질문은 그래프가 답한다).
+    """
+    parts = connections.get('components', connections.get('parts', []))
+    named = [p['ref'] for p in parts if re.match(r'(?:D|LED)\d', p['ref'], re.I) and _named(question, p['ref'])]
+    supported = target_choices(connections)
+    if not named:
+        # 부품 목록 표에서 본 값 · 풋프린트 글자만 그대로 보낸 말("SparkFun:LED-0603"): 그 글자를 가진 회로 부품으로 본다(기호 없이 5자 이상 통째로 같을 때만)
+        said = re.sub(r'\s+', '', question or '').casefold()
+        if len(said) >= 5:
+            named = [p['ref'] for p in parts if re.match(r'(?:D|LED)\d', p['ref'], re.I)
+                     and said in {re.sub(r'\s+', '', str(p.get(k) or '')).casefold() for k in ('value', 'footprint')}]
+            if named and not any(d['ref'] in named for d in supported):
+                found = ', '.join(d['ref'] + (f"({d['value']})" if d['value'] else '') for d in supported)
+                return (f"{question.strip()}은(는) 이 회로에서 {', '.join(named)}의 값 · 풋프린트 이름이에요. LED나 표시기는 아직 교체 검토를 지원하지 않아요."
+                        + (f' 이 회로에서 검토할 수 있는 다이오드는 {found}예요.' if found else ''))
+        return ''
+    if any(d['ref'] in named for d in supported):
+        return ''
+    try:
+        _require_supported_target(connections, named[0])
+    except HTTPException as error:
+        found = ', '.join(d['ref'] + (f"({d['value']})" if d['value'] else '') for d in supported)
+        return str(error.detail) + (f' 이 회로에서 검토할 수 있는 다이오드는 {found}예요.' if found else '')
+    return ''
 
 
 def other_targets_note(connections, question, target):

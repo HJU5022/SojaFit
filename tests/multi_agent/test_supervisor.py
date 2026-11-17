@@ -584,6 +584,12 @@ def test_values_only_message_after_a_result_repeats_the_earlier_request_without_
     # 품번이 있거나 묻는 말이면 코드가 정하지 않는다(계획 LLM이 본다)
     assert S.carry_on_plan({**state, 'question': '5V 100mA면 SS36L 돼?', 'last_judgement': found}) is None
     assert S.carry_on_plan(state) is None  # 직전 판정이 없다
+    # 후보를 하나도 못 낸 찾기(값을 몰라 못 찾음) 뒤에 값만 주면 그 찾기를 다시 한다(11-17 운영 실측: 계획 LLM이 후보 없는 판정 할 일을 내 "자료를 찾지 못했어요")
+    empty = {'kind': 'find', 'roles': ['R03'], 'candidates': []}
+    out = S.plan_node({**state, 'last_judgement': empty}, chat=chat, judge_enabled=True)
+    assert out['question_type'] == 'candidate_find' and out['question'] == state['question']
+    out = S.plan_node({**state, 'last_judgement': {**empty, 'kind': 'judge'}}, chat=chat, judge_enabled=True)
+    assert out['question_type'] == 'candidate_find'  # 다시 판정할 후보가 없으면 찾기
 
 
 def test_judge_task_carries_the_role_and_given_values_of_the_same_target():
@@ -592,7 +598,11 @@ def test_judge_task_carries_the_role_and_given_values_of_the_same_target():
     task = {'id': 1, 'agent': 'judge', 'kind': 'candidate_judge', 'goal': 'x'}
     last = {'target': 'D2', 'roles': ['R02'], 'inputs': {'values_si': {'i_max': 0.1}, 'test_conditions': {}}, 'candidates': [{'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT'}]}
     state = {'question': 'q', 'target': 'D2', 'last_judgement': last}
-    assert S.payload(state, task)['prior'] == {'roles': ['R02'], 'inputs': {'values_si': {'i_max': 0.1}, 'test_conditions': {}}}
+    assert S.payload(state, task)['prior'] == {'roles': ['R02'], 'inputs': {'values_si': {'i_max': 0.1}, 'test_conditions': {}}, 'ask': False}
+    # 앞 검토가 후보를 못 냈으면 되묻기 폼을 다시 보이게 한다. 값만 준 말은 방금 글로 답한 것이라 다시 묻지 않는다
+    empty = {**last, 'candidates': []}
+    assert S.payload({**state, 'last_judgement': empty, 'question': 'D2 조건 다시 물어봐줘'}, task)['prior']['ask'] is True
+    assert S.payload({**state, 'last_judgement': empty, 'question': '전원은 5V고 전류는 100mA야'}, task)['prior']['ask'] is False
     assert 'prior' not in S.payload({**state, 'target': 'D1'}, task)
     assert 'prior' not in S.payload({**state, 'last_judgement': {}}, task)
     assert 'prior' not in S.payload(state, {**task, 'agent': 'docs', 'kind': 'rating', 'query': 'q'})
@@ -607,3 +617,13 @@ def test_plan_input_tells_that_the_target_is_not_chosen_yet_when_the_circuit_has
     assert 'Target part: (not chosen yet: the circuit has D1 SS34, D2 SS34.' in text and 'the user is then asked which part' in text
     chosen = {**base, 'target': 'D2', 'target_part': {'ref': 'D2', 'value': 'SS34', 'nets': []}, 'target_choices': [{'ref': 'D1', 'value': 'SS34'}]}
     assert 'Target part: D2 SS34' in S.render_plan(chosen, True) and 'not chosen yet' not in S.render_plan(chosen, True)
+
+
+def test_plan_input_after_a_search_without_candidates_tells_how_to_continue():
+    """후보를 못 낸 앞 검토도 계획 입력에 싣는다: 무엇이 필요한지 묻는 말은 `last_conditions`, 다시 물어봐 달라는 말은 다시 찾기(11-17 운영 실측)."""
+    from backend.multi_agent import supervisor as S
+    base = {'question': '다시 물어봐줘 그럼 적어줄게', 'target': 'D2', 'target_part': {'ref': 'D2', 'value': 'DIODESOD', 'nets': []}, 'conditions': '', 'facts': {}}
+    text = S.render_plan({**base, 'last_judgement': {'kind': 'find', 'roles': ['R01'], 'candidates': [], 'needed': ['v_in_max', 'i_max']}}, True)
+    for want in ('found NO candidates', 'circuit role R01', 'has not given: v_in_max, i_max', 'reply_kind `last_conditions`', '`candidate_find`', 'shows the condition form again'):
+        assert want in text, want
+    assert 'Previous turn' not in S.render_plan({**base, 'last_judgement': {'kind': 'no_rule', 'candidates': []}}, True)

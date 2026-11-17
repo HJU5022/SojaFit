@@ -569,8 +569,30 @@ def test_find_passes_original_package_and_category_for_ranking(monkeypatch):
         J.judge_agent({**STATE, 'question_type': 'candidate_find', 'judge_read': read}, specs=specs_of({'1N4001': rows}), find=find,
                       retriever=None)
     # [왜] 원래 부품을 알면 그 순서로 한 번, 기준에 가까운 순으로 한 번 더 찾는다(같은 패키지 계열로 50개가 다 차는 것을 막음, 11-07 v2 찾기)
-    assert seen == [{'original_packages': ['DO-41', 'DO-204AL'], 'original_category': 'standard-rectifier'}, {},
-                    {'original_packages': None, 'original_category': None}]
+    # 원래 부품의 분류를 모르고 사용자도 분류를 말하지 않으면 역할이 흔히 쓰는 계열을 차례로 더 찾는다(ROLE_FAMILIES, 11-17 운영 실측: 0개)
+    none = {'original_packages': None, 'original_category': None}
+    assert seen == [{'original_packages': ['DO-41', 'DO-204AL'], 'original_category': 'standard-rectifier'}, {}, none,
+                    *[none] * len(J.ROLE_FAMILIES[READ['role']])]
+
+
+def test_find_tries_the_role_families_only_when_no_category_is_known(monkeypatch):
+    """원래 부품을 몰라 분류가 없을 때만 역할 계열로 더 찾는다. 사용자가 분류를 말했거나 원래 부품의 분류를 알면 전과 같다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+
+    def find(conditions, category, package, limit, **near):
+        seen.append(category)
+        return []
+    read = dict(READ, original_part='', candidates=[])
+    J.judge_agent({**STATE, 'question_type': 'candidate_find', 'judge_read': read}, specs=specs_of({}), find=find, retriever=None)
+    assert seen[0] is None and seen[1:] == J.ROLE_FAMILIES[READ['role']]
+    seen.clear()
+    J.judge_agent({**STATE, 'question_type': 'candidate_find', 'judge_read': dict(read, category_wanted='zener-diode')}, specs=specs_of({}), find=find,
+                  retriever=None)
+    assert 'schottky-rectifier' not in seen and seen[0] == 'zener-diode'
+    from backend.multi_agent.contracts import Category
+    from typing import get_args
+    assert {c for cats in J.ROLE_FAMILIES.values() for c in cats} <= set(get_args(Category)) and set(J.ROLE_FAMILIES) == set(J.C.load())
 
 
 def test_ac09_numbers_are_compared_in_verdict_only(monkeypatch):

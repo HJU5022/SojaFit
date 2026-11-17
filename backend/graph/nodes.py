@@ -299,7 +299,8 @@ def quote_answer(state: dict) -> dict:
     [왜] Supervisor가 견적 요청을 범위 밖(주문 · 결제)으로 보내 "회로나 부품에 관한 질문을 해 주세요"라고 답했다. 견적은 판정 → 승인 → 수량 화면이 만든다.
     승인 기록은 그래프에 넘기지 않아(`approved_memories`는 늘 빈 목록) 승인 여부로 가르지 않는다.
     """
-    return {"answer": QUOTE_GUIDE, "check": {}, "path": ["견적 안내"]}
+    from backend.multi_agent.messages import quote_guide  # 직전 판정에 승인할 수 있는 후보가 있으면 그 이름과 누를 자리를 짚어 준다(11-17)
+    return {"answer": quote_guide(state.get("last_judgement") or {}), "check": {}, "path": ["견적 안내"]}
 
 
 TARGET_KINDS = {"role", "candidate_judge", "candidate_find"}  # 대상 부품의 회로 · 값을 읽는 할 일

@@ -467,7 +467,7 @@ def test_refusal_after_an_empty_candidate_find_shows_the_role_and_terms_instead_
     report = {'task': 1, 'agent': 'judge', 'status': 'fail', 'reason': 'no_result', 'judgement': find}
     out = B.refuse_node({'refusal_reason': Reason.NOT_FOUND.value, 'facts': {}, 'final_reports': [report]})
     assert out['refusal']['code'] == 'not_found' and out['answer'] == out['refusal']['message']
-    assert out['answer'].startswith('역할: R02 (근거: D3.K → +5V)') and 'VRRM ≥ 15' in out['answer']
+    assert "역할은 '역류 방지'이에요" in out['answer'] and '최대 역전압(VRRM) 15 V 이상' in out['answer']
     generic = refusal_for(Reason.NOT_FOUND, {})
     # 찾기 판정이 없거나(문서 질문) 후보가 있었으면 공통 문구 그대로다
     assert B.refuse_node({'refusal_reason': Reason.NOT_FOUND.value, 'facts': {}, 'final_reports': []})['answer'] == generic
@@ -925,3 +925,37 @@ def test_stored_mount_preference_reorders_find_candidates_and_no_store_keeps_the
     assert [x['part'] for x in new['judgement']['shown']] == ['SS14', '1N5817']  # SMA(SMD) 후보가 앞으로
     verdicts = lambda s: {x['part']: (x['verdict'], x['board_change']) for x in s['judgement']['results']}
     assert verdicts(new) == verdicts(old)  # 판정 · 기판 수정 여부 · 후보 목록은 그대로, 순서만 바뀐다
+
+
+def test_refusal_for_a_part_that_is_not_a_diode_says_it_is_not_handled():
+    """다이오드가 아닌 부품을 묻는 말(`other_part`)의 거절은 "자료를 찾지 못했어요" 대신 다루지 않는 부품임을 알린다(11-17 운영 실측: "트랜지스터 찾아줘"). 이유 코드는 그대로다."""
+    from backend.multi_agent.messages import OTHER_PART_NOTE
+    out = B.refuse_node({'refusal_reason': 'not_found', 'question_type': 'other_part', 'facts': {}})
+    assert out['answer'] == OTHER_PART_NOTE and out['refusal']['code'] == 'not_found'
+    assert '찾지 못했어요' in B.refuse_node({'refusal_reason': 'not_found', 'question_type': 'candidate_judge', 'facts': {}})['answer']
+    empty = {'kind': 'find', 'roles': ['R02'], 'role_evidence': [], 'terms': [], 'results': []}
+    kept = B.refuse_node({'refusal_reason': 'not_found', 'question_type': 'other_part', 'facts': {}, 'reports': [{'judgement': empty}]})
+    assert kept['answer'] != OTHER_PART_NOTE  # 후보 찾기가 0개로 끝난 거절은 읽은 역할 · 건 조건 안내가 먼저다
+
+
+def test_quote_request_points_at_the_approvable_candidate_of_the_last_result():
+    """"위 부품 견적서 작성해줘"(11-17 운영 실측): 직전 판정에 승인할 수 있는 후보가 있으면 그 후보와 누를 자리를 짚고, 없으면 이유를, 판정이 없으면 고정 안내를 준다."""
+    from backend.graph import nodes as N
+    from backend.multi_agent.messages import QUOTE_GUIDE
+    last = {'candidates': [{'part': 'PHAD6J', 'verdict': 'ROLE_SUFFICIENT'}, {'part': 'PUAD6J', 'verdict': 'ROLE_SUFFICIENT'}, {'part': 'X1', 'verdict': 'NOT_VERIFIED'}]}
+    ready = N.quote_answer({'last_judgement': last})['answer']
+    assert 'PHAD6J(역할상 충분), PUAD6J(역할상 충분)' in ready and 'PHAD6J 카드' in ready and "'이 후보 승인하기'" in ready and '대신 저장하지는 않아요' in ready and 'X1' not in ready
+    none = N.quote_answer({'last_judgement': {'candidates': [{'part': 'X1', 'verdict': 'NOT_VERIFIED'}], 'missing': ['i_max']}})['answer']
+    assert '아직 승인 · 견적을 만들 수 없어요' in none and 'i_max' in none
+    assert N.quote_answer({})['answer'] == QUOTE_GUIDE == N.quote_answer({'last_judgement': {}})['answer']
+
+
+def test_what_do_you_need_after_a_search_without_candidates_explains_what_is_missing():
+    """후보를 못 낸 앞 검토 뒤 "뭘 줘야 찾아?"(계획 표시 `last_conditions`)에는 그 검토의 역할과 필요한 값으로 답한다(11-17 운영 실측: 빈말만 돌아왔다)."""
+    from backend.multi_agent.messages import last_result_reply
+    empty = {'kind': 'find', 'roles': ['R01'], 'candidates': [], 'needed': ['v_in_max', 'i_max']}
+    text = last_result_reply('last_conditions', empty)
+    assert "역할은 '역극성 보호(직렬)'" in text and 'v_in_max, i_max' in text and '다시 물어봐 달라고' in text
+    assert last_result_reply('last_candidates', empty) == '' and last_result_reply('last_conditions', {}) == ''
+    state = {'question_type': 'chat', 'plan': {'reply': 'x', 'reply_kind': 'last_conditions'}, 'facts': {}, 'last_judgement': empty, 'question': '뭘 줘야 찾아오는데'}
+    assert B.finish_node(state)['answer'] == text
