@@ -8,6 +8,7 @@ import {
   Mail,
   Menu,
   Plus,
+  ReceiptText,
   Settings as SettingsIcon,
   Shield,
   X,
@@ -26,7 +27,7 @@ import {
 import { Landing } from './Landing';
 import { Auth } from './Auth';
 import { contactEmail, Settings } from './Account';
-import { ApprovedCases, CaseQuote, CaseReport } from './Approved';
+import { ApprovedCases, CaseQuote, CaseReport, QuoteHistory } from './Approved';
 import { Admin } from './Admin';
 import { Library } from './Library';
 import { isLegalPath, LegalModal, LegalPage, legalDocs } from './Legal';
@@ -91,6 +92,10 @@ function Shell({
           <a href="/approved" className={path === '/approved' ? 'nav-active' : ''}>
             <CheckCheck size={17} />
             승인 사례
+          </a>
+          <a href="/quotes" className={pathname === '/quotes' ? 'nav-active' : ''}>
+            <ReceiptText size={17} />
+            견적서
           </a>
           <a href="/library" className={pathname === '/library' ? 'nav-active' : ''}>
             <LibraryBig size={17} />
@@ -267,6 +272,8 @@ export default function App() {
         <Settings user={user} onLogout={logout} />
       ) : pathname === '/approved' ? (
         <ApprovedCases />
+      ) : pathname === '/quotes' ? (
+        <QuoteHistory />
       ) : pathname === '/library' ? (
         <Library search={params.toString()} />
       ) : pathname === '/admin' || pathname === '/admin/users' ? (

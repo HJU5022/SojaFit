@@ -156,6 +156,92 @@ function CaseDetail({ id, close }: { id: number; close: () => void }) {
     </Modal>
   );
 }
+/**
+ * 견적서 목록(`/quotes`, 11-17 조장 요청): 저장한 견적서를 프로젝트를 가리지 않고 한곳에서 다시 연다.
+ * [왜] 견적은 프로젝트 머리 "견적 목록"과 승인 사례 "기록 보기" 안에만 있어, 왼쪽 메뉴에서 지난 견적을 찾을 수 없었다.
+ * 새 API 없이 승인 사례 목록과 사례 기록(`GET /api/approved-cases` · `/{id}`)에 저장된 견적만 모아 보인다. 값은 저장된 그대로다.
+ */
+export function QuoteHistory() {
+  const cases = useResource<{ id: number }[]>('/approved-cases'),
+    [rows, setRows] = useState<
+      | {
+          caseId: number;
+          quote: ApprovedCaseDetail['quotes'][number];
+          detail: ApprovedCaseDetail;
+        }[]
+      | null
+    >(null),
+    [error, setError] = useState<Error | null>(null);
+  useEffect(() => {
+    if (!cases.data) return;
+    let live = true;
+    setError(null);
+    Promise.all(cases.data.map((c) => api<ApprovedCaseDetail>('/approved-cases/' + c.id)))
+      .then((details) => {
+        if (!live) return;
+        const all = details.flatMap((d) =>
+          d.quotes.map((quote) => ({ caseId: d.id, quote, detail: d })),
+        );
+        all.sort((a, b) => +new Date(b.quote.created_at) - +new Date(a.quote.created_at));
+        setRows(all);
+      })
+      .catch((e) => live && setError(e));
+    return () => {
+      live = false;
+    };
+  }, [cases.data]);
+  return (
+    <div className="page-content">
+      <h1>견적서</h1>
+      <p className="page-intro">
+        승인한 후보로 저장한 견적서입니다. 눌러서 견적서를 다시 열거나 원래 대화로 갈 수 있습니다.
+        견적은 판정 답의 후보를 승인한 뒤 수량을 넣어 저장해야 생깁니다.
+      </p>
+      <ErrorBox error={error ?? cases.error} retry={cases.reload} />
+      {cases.loading || (cases.data && !rows && !error) ? (
+        <Loading />
+      ) : rows?.length ? (
+        <div className="case-list">
+          {rows.map(({ caseId, quote, detail }) => (
+            <article key={quote.id}>
+              <div>
+                <h2>{quote.part_number}</h2>
+                <p>
+                  수량 {quote.quantity.toLocaleString('ko-KR')}개 · {detail.project_name} ·{' '}
+                  {new Date(quote.created_at).toLocaleString('ko-KR')} 저장
+                </p>
+              </div>
+              <div className="case-actions">
+                <a
+                  className="button primary"
+                  href={`/approved/${caseId}/quote/${quote.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <FileText size={16} />
+                  견적서 보기
+                </a>
+                <a
+                  className="button"
+                  href={`/app?project=${detail.project_id}&thread=${detail.thread_id}`}
+                >
+                  원래 대화
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        !error &&
+        !cases.error && (
+          <Empty title="저장한 견적서가 없습니다">
+            판정 답의 후보를 승인하고 수량을 넣어 저장하면 여기에 모입니다.
+          </Empty>
+        )
+      )}
+    </div>
+  );
+}
 export function ApprovedCases() {
   const data = useResource<any[]>('/approved-cases'),
     [error, setError] = useState<Error | null>(null),
