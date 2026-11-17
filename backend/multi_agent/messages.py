@@ -30,6 +30,26 @@ QUOTE_GUIDE = ("견적은 판정받은 후보를 승인한 뒤 수량을 넣어 
 # 화면 사용법을 묻는 일상 대화의 고정 안내(11-17). [왜] 이 길의 답은 LLM이 쓰는데, 있는 기능을 없다고 답했다
 # ("회로도 원본은 보여드리지 않습니다" · "회로에서 버튼의 위치를 찾으시나요?", 운영 대화 실측). 프롬프트는 재생 기록의 키라 바꾸지 않고
 # 코드가 낱말로 갈라 고정 글을 낸다. [주의] 따옴표 안 이름은 화면 글자와 같아야 한다(Workbench.tsx 머리 단추 · Reply.tsx · Candidate.tsx)
+def quote_guide(last: dict) -> str:
+    """견적을 만들어 달라는 말의 답. 직전 판정(`last_judgement`)에 승인할 수 있는 후보가 있으면 그 후보와 누를 자리를 짚고, 없으면 그 이유를, 판정이 없으면 고정 안내를 준다.
+
+    [왜] "위 부품 견적서 작성해줘"에 화면 사용법 전체를 그대로 읽어 줘, 방금 낸 후보로 무엇을 누르면 되는지 알 수 없었다(11-17 운영 실측).
+    [주의] 견적은 사람이 후보를 승인해야 만들어진다(승인은 사람이 누른다). 에이전트가 대신 승인하거나 견적을 저장하지 않는다.
+    """
+    cands = (last or {}).get('candidates') or []
+    ready = [c for c in cands if c.get('verdict') in APPROVABLE]
+    if ready:
+        named = ', '.join(f"{c['part']}({VERDICT_KO.get(c['verdict'], c['verdict'])})" for c in ready[:3])
+        return (f"앞 검토에서 승인할 수 있는 후보는 {named}예요. 견적은 사람이 후보를 승인해야 만들어져서 제가 대신 저장하지는 않아요. "
+                f"위 답의 {ready[0]['part']} 카드에서 '조건과 근거 보기'를 열고 '이 후보 승인하기'를 누른 뒤, '견적 수량'을 넣고 '견적서 저장'을 누르면 견적서가 만들어져요. "
+                "저장한 견적은 프로젝트 화면 위쪽 '견적 목록'과 왼쪽 '승인 사례'에서 다시 볼 수 있어요.")
+    if cands:
+        missing = ', '.join(last.get('missing') or [])
+        return ("앞 검토의 후보는 모두 '문서로 확인 안 됨'이거나 불충족이라 아직 승인 · 견적을 만들 수 없어요. "
+                + (f'빠진 값({missing})을 알려 주시면 다시 판정해요.' if missing else '회로 전압 · 전류를 알려 주시면 그 값으로 다시 판정해요.'))
+    return QUOTE_GUIDE
+
+
 SCREEN_GUIDES = (
     (re.compile(r'회로도|개념도|schematic', re.I),
      "회로도는 화면 오른쪽 위 '회로 보기'를 누르면 볼 수 있어요. 회로도 파일(.kicad_sch)을 올린 회로는 그 그림을, 넷리스트만 올린 회로는 "
@@ -37,6 +57,19 @@ SCREEN_GUIDES = (
     (re.compile(r'버튼|단추'),
      "승인 단추('이 후보 승인하기')는 판정 답의 후보 카드에서 '조건과 근거 보기'를 누르면 아래쪽에 있어요. "
      "판정이 동일품 · 사양 동등 · 역할상 충분인 후보에만 보이고, 문서로 확인 안 됨 · 불충족 후보에는 없어요."),
+    # 아래 넷은 11-17 운영 대화에서 계획(LLM)의 일상 대화 글이 틀리거나 빈말이던 물음이다
+    (re.compile(r'견적'),
+     "저장한 견적은 프로젝트 화면 위쪽 '견적 목록'과 왼쪽 '승인 사례'의 기록에서 볼 수 있어요. 견적은 판정 답의 후보를 승인한 뒤 "
+     "'견적 수량'을 넣고 '견적서 저장'을 눌러야 생겨요. 아직 승인한 후보가 없으면 목록이 비어 있어요."),
+    (re.compile(r'(?:넷리스트|회로)[^.?!]{0,12}(?:없이|없으면|없어도|안\s*(?:넣|올|주))'),
+     "넷리스트 없이는 품번을 말해 주신 부품의 정격 · 특성(데이터시트에 적힌 값)만 답할 수 있어요. 대체품 찾기와 바꿔도 되는지 판정은 "
+     "회로에서 그 부품의 역할을 읽어야 해서 넷리스트가 있어야 해요."),
+    (re.compile(r'(?:뭘|뭐를|뭐|무엇을?|어떻게)[^.?!]{0,10}(?:줘야|주면|알려\s*줘야|말해야|필요|물어)|조건을[^.?!]{0,14}(?:알면|몰라|모르)'),
+     "회로는 이미 받았어요. 다이오드 기호만 말해 주시면 돼요(예: D1 대체품 찾아줘). 회로 연결에서 역할을 읽고 TSC 후보를 찾아 데이터시트 근거와 함께 "
+     "보여 드려요. 회로만으로 알 수 없는 전압 · 전류는 한 번 여쭤보는데, 몰라도 계속할 수 있어요. 다만 원래 부품의 품번을 알 수 없고 값도 모르면 "
+     "후보를 고를 기준이 없어 대략적인 값(예: 5V, 0.5A)이 필요해요."),
+    (re.compile(r'시발|씨발|ㅅㅂ|ㅆㅂ|좆|존나|개새|병신'),
+     "답이 도움이 되지 않았네요, 죄송해요. 하려던 일을 짧게 다시 말해 주시면 바로 할게요(예: D1 대체품 찾아줘, 값 다시 적을게, 견적 어떻게 만들어)."),
 )
 
 
@@ -56,7 +89,12 @@ def last_result_reply(kind: str, last: dict, part: str = '') -> str:
     """
     cands = (last or {}).get('candidates') or []
     if not cands:
-        return ''
+        if kind != 'last_conditions' or (last or {}).get('kind') not in ('find', 'judge'):
+            return ''
+        needed = ', '.join(last.get('needed') or [])
+        return (f"앞 검토에서 후보를 고르지 못한 이유예요. 회로에서 읽은 역할은 '{_role_names(last)}'인데, 이 역할의 후보는 회로 값으로 거르기 때문이에요"
+                + (f'(필요한 값: {needed})' if needed else '') + '. 원래 부품의 품번을 알면 그 정격을 기준으로 삼지만 이 회로에서는 원래 부품의 데이터시트를 찾지 못했어요. '
+                '대략적인 값(예: 5V, 0.5A)이나 부품에 적힌 품번 · 마킹을 알려 주시면 바로 다시 찾고, 다시 물어봐 달라고 하시면 값을 적는 칸을 다시 보여 드려요.')
     named = lambda rows: ', '.join(f"{c['part']}({VERDICT_KO.get(c['verdict'], c['verdict'])})" for c in rows)
     missing = ', '.join(last.get('missing') or [])
     assumed = ', '.join(last.get('assumed') or [])
@@ -117,8 +155,10 @@ def judgement_summary(judgement: dict, target: str = '') -> dict:
     사용자가 알려 준 회로 값(`inputs`). 이어 묻는 턴의 계획 입력(`supervisor.previous_turn`) · 답(`last_result_reply`) · 다음 판정(`prior`)이 쓴다.
     """
     results = (judgement or {}).get('results') or []
-    if not results:
+    if not results and (judgement or {}).get('kind') not in ('find', 'judge'):
         return {}
+    # [왜] 후보를 하나도 못 낸 찾기 · 판정도 요약을 남긴다(후보 빈 목록). 값을 몰라 못 찾은 뒤 사용자가 값만 알려 주면 그 요청을 다시 해야 하는데,
+    #      요약이 없어 계획(LLM)이 후보 없는 판정 할 일을 내고 "자료를 찾지 못했어요"로 끝났다(11-17 운영 실측, 원래 부품 1N4001의 문서가 없는 회로)
     order = {v: i for i, v in enumerate(('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT', 'NOT_VERIFIED', 'NOT_SUFFICIENT'))}
     ranked = sorted(results, key=lambda c: (order.get(c.get('verdict'), 9), c.get('board_change') is not False))
     given = judgement.get('analysis_inputs') or {}
@@ -129,6 +169,7 @@ def judgement_summary(judgement: dict, target: str = '') -> dict:
                             'lines': _one(c) if 'checks' in c else []} for c in ranked[:8]],
             'missing': sorted({m for c in results for m in c.get('missing') or []}),
             'assumed': sorted({m for c in results for m in c.get('assumed') or []}),
+            'needed': list(judgement.get('asked') or []),  # 되묻기에서 물은 회로 값 이름(후보를 못 낸 검토에서 무엇이 필요한지 알려 줄 때 쓴다)
             'checked': list(dict.fromkeys(k['code'] for c in ranked[:8] for k in c.get('checks') or [])),  # 후보에서 본 항목 코드(VRRM · IF_AV …)
             'inputs': {'values_si': dict(given.get('values_si') or {}), 'test_conditions': dict(given.get('test_conditions') or {})}}
 
@@ -144,6 +185,12 @@ EARLIER_ANSWER = ("앞서 드린 답은 이 대화 위쪽에 그대로 있어요
 
 # 일반 개념 설명(일상 대화) 끝에 코드가 붙이는 문장(#66). [왜] LLM이 쓰게 했더니 '데이tásheet'처럼 글자가 깨졌다
 GENERAL_NOTE = '데이터시트 근거가 아닌 일반 설명입니다.'
+
+
+# [왜] 다이오드가 아닌 부품을 묻는 말(`other_part`)에 "이 부품 자료를 찾지 못했어요"가 나가 품번을 주면 찾아 줄 것처럼 읽혔다
+#      (11-17 운영 실측: "트랜지스터 찾아줘"). 찾지 못한 것이 아니라 다루지 않는 부품이라는 사실과 대신 물을 말을 알린다
+OTHER_PART_NOTE = ("SojaFit은 TSC 데이터시트로 다이오드(정류 · 쇼트키 · 스위칭 · 제너 · TVS)의 정격을 확인하고 대체품을 검토해요. "
+                   "트랜지스터 · IC · 저항 같은 다른 부품은 아직 다루지 않아요. 다이오드는 'D1 대체품 찾아줘'처럼 물어봐 주세요.")
 
 
 def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] = ()) -> str:
@@ -232,19 +279,44 @@ def _terms_line(judgement: dict) -> str:
     return f'사양 표에서 건 조건: {terms or "없음(빠진 값이 있어 거르지 못함)"}{note}'
 
 
-def empty_find_message(judgement: dict) -> str:
-    """후보 찾기가 0개로 끝났을 때의 안내: 읽은 역할 · 건 조건을 보여 주고 다음에 줄 것을 알려 준다(멀티 거절 노드가 쓴다).
+# 찾기 조건 코드의 화면 이름과 단위(못 찾았을 때의 안내 글에서만 쓴다. 답 틀의 표는 코드 그대로다)
+TERM_KO = {'VRRM': ('최대 역전압', 'V'), 'VR': ('역전압', 'V'), 'IF_AV': ('평균 순방향 전류', 'A'), 'IFSM': ('서지 전류', 'A'),
+           'VF': ('순방향 전압', 'V'), 'IR': ('역방향 누설 전류', 'A'), 'TRR': ('역회복 시간', 's'), 'VZ': ('제너 전압', 'V'),
+           'PD': ('허용 전력', 'W'), 'CJ': ('접합 용량', 'F'), 'VRWM': ('스탠드오프 전압', 'V'), 'VBR': ('항복 전압', 'V'),
+           'VC': ('클램핑 전압', 'V'), 'IPP': ('피크 펄스 전류', 'A'), 'PPPM': ('피크 펄스 전력', 'W'), 'VESD': ('ESD 내압', 'V')}
 
-    [왜] 전에는 공통 문구('이 부품 자료를 찾지 못했어요')만 보여 이미 읽은 역할과 계산한 조건이 버려졌다. 사용자는 무엇을 고쳐 다시
-         물어야 하는지 알 수 없었다(11-17 조장 결정). 실행 상태는 그대로 거절이고 문구만 바뀐다.
+
+def _role_names(judgement: dict) -> str:
+    """역할 번호(R01)를 화면 이름(역극성 보호(직렬))으로."""
+    from backend.judge import conditions as C
+    rules = C.load()
+    return ' 또는 '.join(rules[r]['name'] for r in judgement.get('roles') or [] if r in rules) or '규칙에 없는 역할'
+
+
+def _terms_words(terms: list[dict]) -> str:
+    """찾기 조건을 말로: 'VRRM ≥ 15' → '최대 역전압(VRRM) 15 V 이상'."""
+    out = []
+    for t in terms:
+        name, unit = TERM_KO.get(t['code'], (t['code'], ''))
+        label = name if name == t['code'] else f"{name}({t['code']})"
+        out.append(f"{label} {_num(t.get('gte', t.get('lte')))}{' ' + unit if unit else ''} {'이상' if 'gte' in t else '이하'}")
+    return ', '.join(out)
+
+
+def empty_find_message(judgement: dict) -> str:
+    """후보 찾기가 0개로 끝났을 때의 안내: 읽은 역할 · 찾은 기준을 말로 보여 주고 다음에 줄 것을 알려 준다(멀티 거절 노드가 쓴다).
+
+    [왜] 전에는 공통 문구('이 부품 자료를 찾지 못했어요')만 보여 이미 읽은 역할과 계산한 조건이 버려졌다(11-17 조장 결정).
+         그 뒤에는 답 틀의 줄을 그대로 붙여 "역할: R01 (근거: D2.C → RAW (cathode to …)) 사양 표에서 건 조건: VRRM ≥ 15"처럼 역할 번호 · 영어 근거 글 ·
+         사양 코드가 그대로 나갔다. 사용자가 읽을 수 없었다(11-17 운영 실측). 역할 이름과 기준을 말로 쓴다. 실행 상태는 그대로 거절이다.
     """
-    lines = [_role_line(judgement), _terms_line(judgement)]
+    role = _role_names(judgement)
     if judgement['terms']:
-        lines.append('이 조건을 모두 만족하는 부품을 찾지 못했어요. 값이 맞는지 다시 확인하시거나, 패키지 · 분류 같은 조건을 줄여 다시 물어봐 주세요.')
-    else:
-        lines.append('후보를 고를 기준이 되는 값이 없어 찾지 못했어요. 회로 전압 · 전류처럼 아는 값만 알려 주시면 다시 찾아볼게요. '
-                     '단위 없이 숫자만 적어도 돼요.')
-    return '\n'.join(lines)
+        return (f"회로에서 읽은 이 부품의 역할은 '{role}'이에요. 이 역할에 맞춰 {_terms_words(judgement['terms'])}인 TSC 부품을 찾았는데, "
+                '모두 만족하는 부품이 없었어요. 값을 조금 낮추거나(대략적인 값이어도 돼요) 패키지 · 종류를 정해 두셨다면 그 조건을 빼고 다시 물어봐 주세요.')
+    return (f"회로에서 읽은 이 부품의 역할은 '{role}'이에요. 이 역할의 후보는 회로의 전압 · 전류로 거르는데, 그 값을 모르고 "
+            '원래 부품의 데이터시트도 찾지 못해 후보를 고를 기준을 세우지 못했어요. 대략적인 값(예: 5V, 0.5A)이나 부품에 적힌 품번 · 마킹을 알려 주시면 '
+            '바로 다시 찾을게요. 다시 물어봐 달라고 하시면 값을 적는 칸을 다시 보여 드려요.')
 
 
 def render_judgement(judgement: dict) -> str:

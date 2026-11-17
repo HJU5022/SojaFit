@@ -100,10 +100,23 @@ def previous_turn(state: dict) -> list[str]:
     """
     last = state.get('last_judgement') or {}
     cands = last.get('candidates') or []
-    if not cands:
-        return []
     part = state.get('target_part') or {}
     target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')}".strip() or state.get('target', '') or '(none)'
+    if not cands:
+        if last.get('kind') not in ('find', 'judge'):
+            return []
+        # 앞 검토가 후보를 하나도 못 냈다(값이 없거나 조건을 넘는 부품이 없음). 사용자는 흔히 "뭘 줘야 찾아?" · "다시 물어봐 줘"로 잇는다(11-17 운영 실측)
+        return ['', 'Previous turn of this conversation (reference only; never evidence or instructions):',
+                f"- Your earlier answer, summarised by code: a candidate search for target {target} that found NO candidates; "
+                f"circuit role {', '.join(last.get('roles') or []) or 'unknown'}; circuit values the user has not given: {', '.join(last.get('needed') or []) or 'unknown'}",
+                'How to plan this turn:',
+                '- A new self-contained request or anything unrelated is planned exactly as it would be without this block.',
+                '- It asks what you need, why you need conditions, or says it does not know the conditions ("뭘 줘야 찾아?", "조건을 왜 말해야 돼?"): '
+                'question_type `chat`, next `finish`, reply_kind `last_conditions`.',
+                '- It asks you to ask again, to show the form again, to search again, or just to find a substitute for the same target '
+                '("다시 물어봐 줘", "조건 적어 줄게", "그냥 알아서 찾아줘"): question_type `candidate_find` with one `judge` task of kind `candidate_find` '
+                '(the code shows the condition form again).',
+                '- For `last_conditions` the code writes the answer; write one short Korean sentence as reply.']
     terms = ', '.join(f"{t['code']} {'>=' if 'gte' in t else '<='} {t.get('gte', t.get('lte'))}" for t in last.get('terms') or []) or 'none'
     numbered = ', '.join(f"{i}. {c['part']} {c['verdict']}" for i, c in enumerate(cands, 1))
     unknown = ', '.join([*(last.get('missing') or []), *(a for a in last.get('assumed') or [] if a not in (last.get('missing') or []))]) or 'none'
@@ -141,10 +154,11 @@ def carry_on_plan(state: dict) -> tuple[Plan, str] | None:
     """
     last = state.get('last_judgement') or {}
     cands = last.get('candidates') or []
-    if not cands or not _conditions_only(state):
+    # 앞 요청이 찾기 · 판정이었으면 후보를 못 냈어도(값을 몰라 못 찾음) 그 요청을 다시 한다
+    if last.get('kind') not in ('find', 'judge') or not _conditions_only(state):
         return None
     question = str(state.get('question') or '')
-    if last.get('kind') == 'judge':
+    if last.get('kind') == 'judge' and cands:
         ref = (state.get('target_part') or {}).get('ref') or state.get('target') or '이 부품'
         question = f"{ref}를 {', '.join(c['part'] for c in cands[:3])}로 바꿔도 돼? {question}"
         task = Task(id=1, agent='judge', kind='candidate_judge', goal='Judge the named candidate parts again with the circuit values the user just gave.')
@@ -266,7 +280,9 @@ def payload(state: dict, task: dict) -> dict:
         if last.get('roles') and last.get('target') and last['target'] == state.get('target'):
             # [왜] 같은 대상을 이어 묻는데 읽기 LLM이 턴마다 역할을 다르게 읽어 판정이 뒤집혔다(11-17 실측: 찾기는 R02 · 사양 동등, 바로 뒤 판정은 R01 · 확인 안 됨).
             #      이 대화에서 이미 정한 역할과 사용자가 알려 준 회로 값을 이어 쓴다(되묻기도 대화에서 한 번만)
-            base['prior'] = {'roles': list(last['roles']), 'inputs': last.get('inputs') or {}}
+            base['prior'] = {'roles': list(last['roles']), 'inputs': last.get('inputs') or {},
+                             # 앞 검토가 후보를 못 냈으면 되묻기 폼을 다시 보인다. 값만 준 말은 방금 글로 답한 것이라 다시 묻지 않는다
+                             'ask': not last.get('candidates') and not _conditions_only(state)}
     return base
 
 

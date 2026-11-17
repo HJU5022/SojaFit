@@ -405,8 +405,9 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
     if not reply and connections.get('components', connections.get('parts')):
         # [왜] 위 확인은 대화를 처음 만들 때만 돈다. 이어지는 질문의 없는 기호("D3 대체할 부품", 회로에는 D1 · D2뿐)는 품번으로 읽혀
         #      "D3의 데이터시트를 찾을 수 없어요"로 거절됐다(11-17 운영 대화 실측). 같은 코드 글로 답한다
-        from backend.conversations.memory_service import absent_diode_reply
-        reply = absent_diode_reply(connections, body.question)
+        from backend.conversations.memory_service import absent_diode_reply, unsupported_diode_reply
+        # 회로에 있지만 지원 대상이 아닌 다이오드 모양 기호(LED인 D3)도 같은 길로 답한다
+        reply = absent_diode_reply(connections, body.question) or unsupported_diode_reply(connections, body.question)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
     if reply:
         # [왜] 질문이 회로에 없는 다이오드 기호(D9)만 적었다. 코드가 그 사실과 회로의 다이오드를 답하고 그래프는 돌리지 않는다(LLM이 지어내지 않게, SPEC 8.9 · #62)

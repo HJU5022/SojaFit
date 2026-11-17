@@ -1056,3 +1056,56 @@ def test_absent_diode_reference_reply_names_the_diodes_the_circuit_has():
     reply = absent_diode_reply(circuit, 'D3 대체할 부품!!!')
     assert 'D3' in reply and 'D1(SS34)' in reply and 'D2(SS34)' in reply
     assert absent_diode_reply(circuit, 'D2 대체할 부품 있어?') == ''  # 회로에 있는 기호면 그래프가 답한다
+
+
+def test_unsupported_diode_shaped_reference_reply_says_why_and_names_the_supported_diode():
+    """이어지는 질문이 회로에 있는 LED(D3)만 적으면 "자료를 찾지 못했어요" 대신 LED라 지원하지 않는다는 사실과 검토할 수 있는 다이오드를 알린다(11-17 운영 실측)."""
+    from backend.conversations.memory_service import unsupported_diode_reply
+    pins = [{'number': '1', 'net': 'A'}, {'number': '2', 'net': 'B'}]
+    circuit = {'components': [{'ref': 'D1', 'value': 'Yellow', 'footprint': 'SparkFun:LED-0603', 'pins': pins},
+                              {'ref': 'D2', 'value': 'DIODESOD', 'footprint': 'SparkFun:SOD-323', 'pins': pins},
+                              {'ref': 'D3', 'value': 'Green', 'footprint': 'SparkFun:LED-0603', 'pins': pins},
+                              {'ref': 'Q1', 'value': 'MOSFET', 'footprint': 'SOT-23', 'pins': pins}]}
+    reply = unsupported_diode_reply(circuit, 'D3의 대체품을 찾아줄래?')
+    assert 'D3' in reply and 'LED' in reply and 'D2(DIODESOD)' in reply
+    assert unsupported_diode_reply(circuit, 'D2의 대체품을 찾아줄래?') == ''   # 지원 다이오드는 그래프가 답한다
+    assert unsupported_diode_reply(circuit, 'D2랑 D3 차이가 뭐야?') == ''       # 지원 다이오드를 함께 적었다
+    assert unsupported_diode_reply(circuit, 'Q1은 뭐하는 부품이야?') == ''      # 다이오드 모양 기호가 아니면 막지 않는다
+    assert unsupported_diode_reply(circuit, '모든 부품을 다 보여줄래') == ''
+    # 표에서 본 풋프린트 글자만 그대로 보낸 말도 그 부품으로 본다(기호 없이 통째로 같을 때만)
+    by_text = unsupported_diode_reply(circuit, 'SparkFun:LED-0603')
+    assert 'D1, D3' in by_text and 'LED' in by_text and 'D2(DIODESOD)' in by_text
+    assert unsupported_diode_reply(circuit, 'DIODESOD') == ''          # 지원 다이오드의 값이면 그래프가 답한다
+    assert unsupported_diode_reply(circuit, 'LED') == ''               # 너무 짧은 글자는 보지 않는다
+
+
+# 다음 턴에 싣는 직전 판정 요약(`memory_service._last_judgement`): 실제 모델에서는 싣고, 기록 재생(데모)에서는 싣지 않는다
+from backend.conversations.memory_service import _last_judgement  # noqa: E402
+LAST_JUDGED = {'target': 'D2', 'judgement': {'kind': 'find', 'roles': ['R02'], 'results': [{'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT', 'board_change': True}]}}
+
+
+def test_live_mode_carries_the_summary_and_keeps_it_across_turns_without_a_judgement():
+    last = _last_judgement('live', LAST_JUDGED)
+    assert last['target'] == 'D2' and last['kind'] == 'find' and [c['part'] for c in last['candidates']] == ['SS34L']
+    # 판정 없는 턴(일상 대화 · 견적 안내)을 지나도 앞 요약이 남는다
+    assert _last_judgement('live', {'target': 'D2', 'judgement': {}, 'last_judgement': last}) == last
+    assert _last_judgement('live', {}) == {}  # 새 대화
+
+
+def test_demo_replay_never_carries_it():
+    """기록 재생에서 요약을 실으면 계획 입력에 앞 턴 글이 붙어 기록에 없는 LLM 호출이 된다(ReplayMiss). 한 대화에서 기록 질문을 이어 물어도 싣지 않는다."""
+    assert _last_judgement('demo', LAST_JUDGED) == {}
+    assert _last_judgement('demo', {'last_judgement': {'candidates': [{'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT'}]}}) == {}
+
+
+def test_a_find_that_ended_without_candidates_still_leaves_a_summary_from_the_reports():
+    """후보를 못 내 거절로 끝난 찾기는 `judgement` 칸이 비고 보고서에만 남는다. 그 요청을 값만 알려 주며 이어 갈 수 있게 요약(후보 빈 목록)을 남긴다(11-17 운영 실측)."""
+    empty = {'kind': 'find', 'roles': ['R03'], 'results': [], 'analysis_inputs': {'values_si': {}, 'test_conditions': {}}}
+    last = _last_judgement('live', {'target': 'D1', 'reports': [{'judgement': {}}, {'judgement': empty}]})
+    assert last['kind'] == 'find' and last['roles'] == ['R03'] and last['target'] == 'D1' and last['candidates'] == []
+    # 후보를 못 낸 판정이 앞에서 낸 후보 요약을 지우지 않는다
+    earlier = _last_judgement('live', LAST_JUDGED)
+    assert _last_judgement('live', {'target': 'D2', 'reports': [{'judgement': empty}], 'last_judgement': earlier}) == earlier
+    # 앞 요약도 후보가 없으면 새 것으로 바꾼다
+    assert _last_judgement('live', {'target': 'D1', 'reports': [{'judgement': {**empty, 'roles': ['R22']}}], 'last_judgement': last})['roles'] == ['R22']
+    assert _last_judgement('live', {'reports': [{'judgement': {'kind': 'no_rule', 'results': []}}]}) == {}  # 찾기 · 판정이 아니면 남기지 않는다

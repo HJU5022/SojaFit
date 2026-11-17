@@ -245,9 +245,10 @@ def test_empty_find_message_shows_role_and_terms_or_asks_for_values():
     j = {**JUDGEMENT, 'kind': 'find', 'results': [], 'terms': [{'code': 'VRRM', 'gte': 15.0}, {'code': 'IF_AV', 'gte': 1.4286}]}  # 값은 답 틀의 표시 자릿수로 보인다
     with_terms, without = Msg.empty_find_message(j), Msg.empty_find_message({**j, 'terms': []})
     for text in (with_terms, without):
-        assert text.startswith('역할: R01 (근거: D1.K → RAW)') and '이 부품 자료를 찾지 못했어요' not in text
-    assert 'VRRM ≥ 15, IF_AV ≥ 1.429' in with_terms and '이 조건을 모두 만족하는 부품을 찾지 못했어요' in with_terms
-    assert '없음(빠진 값이 있어 거르지 못함)' in without and '숫자만 적어도 돼요' in without
+        # 역할 번호 · 영어 근거 글 · 사양 코드만 그대로 내보내지 않고 역할 이름과 기준을 말로 쓴다(11-17 운영 실측: 사용자가 읽을 수 없었다)
+        assert "역할은 '역극성 보호(직렬)'이에요" in text and 'R01' not in text and 'D1.K → RAW' not in text and '이 부품 자료를 찾지 못했어요' not in text
+    assert '최대 역전압(VRRM) 15 V 이상, 평균 순방향 전류(IF_AV) 1.429 A 이상' in with_terms and '모두 만족하는 부품이 없었어요' in with_terms
+    assert '원래 부품의 데이터시트도 찾지 못해' in without and '대략적인 값(예: 5V, 0.5A)' in without and '다시 물어봐 달라고' in without
 
 
 def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():

@@ -627,3 +627,18 @@ def test_empty_read_candidates_take_the_original_only_when_the_question_names_ju
              'task': {'id': 1, 'agent': 'judge', 'kind': 'candidate_judge', 'goal': goal}}
     out = J.judge_read_agent(state, chat=lambda *args: J.JudgeRead(role='R02', original_part='SS34'))['judge_read']
     assert out['original_part'] == 'SS34' and out['candidates'] == candidates
+
+
+def test_follow_up_read_is_told_the_role_settled_earlier_in_the_conversation():
+    """같은 대상을 이어 묻는 턴(`prior`)은 읽기 입력에 앞에서 정한 역할을 알린다: 다른 역할의 값 이름으로 읽으면 그 값이 버려진다(11-17). `prior`가 없으면 입력은 전과 같다."""
+    seen = []
+
+    def chat(node, system, user, schema):
+        seen.append(user)
+        return J.JudgeRead(role='R02', original_part='1N5819')
+
+    J.judge_read_agent(STATE, chat=chat)
+    J.judge_read_agent({**STATE, 'prior': {'roles': ['R02']}}, chat=chat)
+    assert 'Role already settled' not in seen[0]
+    assert seen[1].startswith(seen[0]) and 'Role already settled earlier in this conversation for this target: R02.' in seen[1]
+    assert 'Role already settled' not in J.render_read({**STATE, 'prior': {'roles': ['R02']}}, RULES)  # 숫자 확인 글에는 넣지 않는다

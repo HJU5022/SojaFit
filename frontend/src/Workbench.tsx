@@ -696,12 +696,11 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       // 저장소를 못 쓰면 이번 화면에서만 따른다
     }
   }
-  // 답 머리의 "회로 보기"(#47): 패널을 열고, 패널이 그려진 뒤 회로 구역으로 내린다
+  // 부품 고르기 카드의 "회로 보기"(#47): 회로 패널을 연다.
+  // [왜] 전에는 패널을 연 뒤 회로 구역으로 scrollIntoView를 불렀는데, 이 호출이 패널뿐 아니라 화면 전체를 위로 밀어
+  //      머리줄이 잘리고 아래가 비었다(11-17 운영 실측). 패널만 열고 스크롤은 하지 않는다
   function showCircuit() {
     choosePanel(true);
-    requestAnimationFrame(() =>
-      document.getElementById('circuit-section')?.scrollIntoView({ block: 'start' }),
-    );
   }
   const part = parts.find((p) => p.ref === target),
     availableQuestions =
@@ -985,8 +984,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       active?.result.status === 'refused' &&
       active.result.answer === NEEDS_CIRCUIT &&
       !project.data?.circuit_version,
-    // 회로가 있고 바꿀 부품이 정해진 대화의 답에만 "회로 보기"를 붙인다(#47). 판정 · 역할 답은 대상이 정해진 뒤에 나온다
-    circuitLink = project.data?.circuit_version && target ? showCircuit : undefined,
     lastQuestion =
       detail?.messages.filter((m) => m.role === 'user').slice(-1)[0]?.content ?? pendingQuestion;
   const previousReplies =
@@ -1175,7 +1172,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                                 key={a.id}
                                 run={runs[a.run_id]}
                                 onCandidate={(c, r) => setSelected({ c, r })}
-                                onCircuit={circuitLink}
                               />
                             ) : (
                               // 실행 기록을 받지 못했을 때 보이는 저장된 답. 면책 문구는 답마다 한 번(#46)
@@ -1239,11 +1235,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     />
                   )}
                   {active && !waiting && !running && (
-                    <Reply
-                      run={active}
-                      onCandidate={(c, r) => setSelected({ c, r })}
-                      onCircuit={circuitLink}
-                    />
+                    <Reply run={active} onCandidate={(c, r) => setSelected({ c, r })} />
                   )}
                   {needsCircuit && (
                     <CircuitRequest

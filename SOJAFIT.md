@@ -447,7 +447,7 @@ SojaFit (proj3-b)
 │   │       ├── draft_50_review.md  <- 50건 검토표와 합의 기록
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
 │   │       ├── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
-│   │       └── v3_judging_record.md  <- v3 50건 판정 역할(초안 Codex·하정운, 1차 심태현, 최종 하정운) 사후 기록
+│   │       └── v3_judging_record.md  <- v3 50건 판정 역할(초안 Codex·하정운, 1차 심태현, 최종 하정운) 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
 │       ├── d10/            <- Checkpoint D10 점검 증거: 인젝션 기준 검사 출력, 변이 28건 결과와 재현 스크립트, 비밀값 검사(원시 파일은 폴더 README.md가 설명)
 │       ├── d12/            <- 11-17 지금 코드(`799ae636`) 재측정 증거: v3 게이트 · 서비스 검색 · 새 clone 기동 · pytest · gitleaks · Langfuse 점수 · 경보 조회(폴더 README.md가 설명)
@@ -881,8 +881,8 @@ SojaFit (proj3-b)
     │   ├── submission_checklist.md  <- 제출 체크리스트(항목별 증거 경로·상태)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
-    │   ├── portfolio-osc.md  <- 오세창 포트폴리오 초안(11-17 조장 위임 AI 작성, 본인 확인 필요)
-    │   ├── portfolio-sth.md  <- 심태현 포트폴리오 초안(11-17 조장 위임 AI 작성, 본인 확인 필요)
+    │   ├── portfolio-osc.md  <- 오세창 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
+    │   ├── portfolio-sth.md  <- 심태현 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
     │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 운영 프로젝트 SojaFit_v2). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
     │   │   ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
     │   │   ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세

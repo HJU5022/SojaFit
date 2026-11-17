@@ -126,7 +126,10 @@ function CaseDetail({ id, close }: { id: number; close: () => void }) {
             {d.answer && (
               <section>
                 <h2>승인 때의 답</h2>
-                <Markdown>{d.answer}</Markdown>
+                {/* [왜] 표 · 목록 모양은 .markdown 안에서만 먹는다. 감싸지 않아 6칸 표가 창 너비에 눌려 글자가 한 자씩 꺾였다(11-17 운영 실측) */}
+                <div className="markdown">
+                  <Markdown>{d.answer}</Markdown>
+                </div>
               </section>
             )}
             <section>
