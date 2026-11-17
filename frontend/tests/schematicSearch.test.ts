@@ -2,6 +2,47 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { REUSE_MS, searchOnce } from '../src/schematicSearch.ts';
+import * as schematic from '../src/schematicSearch.ts';
+
+test('단일 검색은 소유 프로젝트·회로 버전을 유지하고 서버가 원본과 참고 범위를 구분하게 한다', () => {
+  assert.equal(typeof schematic.schematicSearchParams, 'function');
+  const params = schematic.schematicSearchParams('  TS19371CX6  ', 13, 1, 'thread-13');
+  assert.deepEqual(Object.fromEntries(params), {
+    q: 'TS19371CX6',
+    project_id: '13',
+    circuit_version: '1',
+    auto_search: 'true',
+    thread_id: 'thread-13',
+  });
+  const selected = schematic.schematicSearchParams(
+    'L7805',
+    13,
+    2,
+    null,
+    'https://www.st.com/resource/en/datasheet/l78.pdf',
+  );
+  assert.equal(selected.get('source_url'), 'https://www.st.com/resource/en/datasheet/l78.pdf');
+  assert.equal(selected.has('thread_id'), false);
+  assert.equal(selected.has('reference_only'), false);
+  assert.equal(selected.has('component_type'), false);
+});
+
+test('참고 회로를 원본으로 표시하지 않고 공식 출처와 다른 출처를 구분한다', () => {
+  assert.equal(typeof schematic.schematicLabel, 'function');
+  assert.equal(
+    schematic.schematicLabel({ circuit_version: null, source_type: 'manufacturer_official' }),
+    '공식 참고 회로',
+  );
+  assert.equal(
+    schematic.schematicLabel({ circuit_version: null, source_type: 'community' }),
+    '참고 회로',
+  );
+  assert.equal(
+    schematic.schematicLabel({ circuit_version: 1, source_type: 'manufacturer_official' }),
+    '원본 회로도',
+  );
+  assert.equal(schematic.schematicLabel(null), '원본 회로도');
+});
 
 function counter(result: () => Promise<string>) {
   const run = () => {

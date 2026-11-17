@@ -2,7 +2,7 @@
  * 원본 회로도 구역(작업대 오른쪽 회로 패널의 "회로" 구역, 연결 개념도 아래): 회로도(.kicad_sch)를 올린 회로 버전은 그 그림(GET /api/projects/{id}/schematic, #52)을,
  * 예제(데모) 프로젝트는 저장된 원본 그림을, 넷리스트가 있는 그 밖의 프로젝트는
  * 열 때 한 번 공개 웹 검색(GET /api/external-circuits/schematics)한 결과를 바로 보인다. 그림을 누르면 큰 창으로 본다.
- * 하지 않는 일: 회로 일치 판단(서버가 부품·핀 연결 대조로 승인한 도면만 돌려준다), 검색 결과를 서버·브라우저 저장소에 저장.
+ * 하지 않는 일: 검색 범위·회로 일치 판단(서버가 원본/참고를 구분하고 원본의 부품·핀 연결을 대조한다), 검색 결과를 서버·브라우저 저장소에 저장.
  * [왜] 검색은 유료 외부 검색과 3~20초 렌더를 거치므로 같은 (프로젝트, 회로 버전)은 다시 보내지 않는다(`schematicSearch.ts`).
  * 출처: SPEC 4절(external-circuits), README 외부 공개 회로도.
  */
@@ -11,7 +11,7 @@ import { ExternalLink } from 'lucide-react';
 import { api, ApiError } from './api';
 import { partsOf } from './circuit';
 import { safeLink, sameOriginImage } from './display';
-import { searchOnce } from './schematicSearch';
+import { schematicLabel, schematicSearchParams, searchOnce } from './schematicSearch';
 import { ErrorBox, Loading, Modal, useResource } from './ui';
 import type { Demo, ExternalSchematic, Project } from './types';
 
@@ -25,6 +25,7 @@ type FigureProps = {
   name: string;
   images: string[];
   attribution: string;
+  kind?: string;
   /** 없으면(올린 회로도) 라이선스 줄을 두지 않는다 */
   license?: string;
   originalUrl?: string | null;
@@ -39,20 +40,21 @@ function Figure({
   name,
   images,
   attribution,
+  kind = '원본 회로도',
   license,
   originalUrl,
   note,
   onOpen,
 }: FigureProps & { onOpen?: () => void }) {
   const link = safeLink(originalUrl);
-  const alt = (i: number) => `${name} 원본 회로도${images.length > 1 ? ` ${i + 1}쪽` : ''}`;
+  const alt = (i: number) => `${name} ${kind}${images.length > 1 ? ` ${i + 1}쪽` : ''}`;
   return (
     <figure className="schematic-figure">
       {onOpen ? (
         <button
           type="button"
           className="zoom-button"
-          aria-label="원본 회로도 크게 보기"
+          aria-label={`${kind} 크게 보기`}
           onClick={onOpen}
         >
           <img src={images[0]} alt={alt(0)} />
@@ -107,7 +109,7 @@ export function SchematicSection({
         `/api/projects/${project.id}/schematic?circuit_version=${project.circuit_version}`,
       )
     : undefined;
-  const key = `${project.id}:${project.circuit_version}`;
+  const key = `auto:${project.id}:${project.circuit_version}`;
   // [주의] 늦게 끝난 검색이 회로 버전이 바뀐 뒤의 화면을 덮지 않도록 지금 보이는 키를 둔다.
   const shown = useRef(key);
   shown.current = key;
@@ -117,13 +119,13 @@ export function SchematicSection({
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   function search(q: string, fresh: boolean, sourceUrl?: string) {
-    const params = new URLSearchParams({
-      q: q.trim(),
-      project_id: String(project.id),
-      circuit_version: String(project.circuit_version),
-    });
-    if (threadId) params.set('thread_id', threadId);
-    if (sourceUrl) params.set('source_url', sourceUrl);
+    const params = schematicSearchParams(
+      q,
+      project.id,
+      project.circuit_version,
+      threadId,
+      sourceUrl,
+    );
     setBusy(true);
     setError(null);
     searchOnce(key, () => api<ExternalSchematic>('/external-circuits/schematics?' + params), fresh)
@@ -172,6 +174,7 @@ export function SchematicSection({
             name: result.model ?? project.name,
             images,
             attribution: result.attribution,
+            kind: schematicLabel(result),
             license: result.license,
             originalUrl: result.source_url,
             note: [SOURCE[result.source_type], result.manufacturer, result.model, result.revision]
@@ -182,10 +185,10 @@ export function SchematicSection({
   const missing = error instanceof ApiError && error.code === 'SCHEMATIC_NOT_FOUND';
   return (
     <div className="schematic-section">
-      <div className="circuit-label">원본 회로도</div>
+      <div className="circuit-label">{figure?.kind ?? '원본 회로도'}</div>
       {figure && <Figure {...figure} onOpen={() => setOpen(true)} />}
       {demos.loading || busy ? (
-        <Loading label={busy ? '원본 회로도를 찾는 중 · 최대 20초' : undefined} />
+        <Loading label={busy ? '회로도를 찾는 중' : undefined} />
       ) : figure ? (
         result &&
         result.choices.length > 0 && (
@@ -220,6 +223,14 @@ export function SchematicSection({
           ) : (
             <ErrorBox error={error} retry={() => search(query, true)} />
           )}
+        </>
+      )}
+      {hasNetlist &&
+        !uploaded &&
+        !savedImage &&
+        !busy &&
+        !demos.loading &&
+        !(error instanceof ApiError && error.status === 503) && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -236,13 +247,12 @@ export function SchematicSection({
                 required
               />
             </label>
-            <small>업로드한 회로와 부품·핀 연결이 같다고 확인된 도면만 보입니다.</small>
+            <small>품번은 참고 회로로, 프로젝트 원본은 연결이 일치할 때만 표시합니다.</small>
             <button disabled={query.trim().length < 2}>찾기</button>
           </form>
-        </>
-      )}
+        )}
       {open && figure && (
-        <Modal title="원본 회로도" close={() => setOpen(false)} wide>
+        <Modal title={figure.kind ?? '원본 회로도'} close={() => setOpen(false)} wide>
           <Figure {...figure} />
         </Modal>
       )}

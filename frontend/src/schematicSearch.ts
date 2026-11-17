@@ -4,6 +4,34 @@
  * [왜] 검색 한 번이 유료 외부 검색과 3~20초 렌더를 거친다. 대화를 옮기면 작업대가 다시 그려지는데, 그때 같은 검색을 다시
  * 보내지 않고 진행 중인 검색도 이어받는다. 출처: SPEC 4절(external-circuits).
  */
+import type { ExternalSchematic } from './types';
+
+export function schematicSearchParams(
+  query: string,
+  projectId: number,
+  circuitVersion: number,
+  threadId: string | null,
+  sourceUrl?: string,
+): URLSearchParams {
+  const params = new URLSearchParams({
+    q: query.trim(),
+    project_id: String(projectId),
+    circuit_version: String(circuitVersion),
+    auto_search: 'true',
+  });
+  if (threadId) params.set('thread_id', threadId);
+  if (sourceUrl) params.set('source_url', sourceUrl);
+  return params;
+}
+
+export function schematicLabel(
+  result: Pick<ExternalSchematic, 'circuit_version' | 'source_type'> | null,
+): string {
+  if (result?.circuit_version === null) {
+    return result.source_type === 'manufacturer_official' ? '공식 참고 회로' : '참고 회로';
+  }
+  return '원본 회로도';
+}
 
 // [주의] 서버가 서명한 이미지 주소는 15분 뒤 만료되므로 찾은 결과는 14분까지만 쓴다.
 export const REUSE_MS = 14 * 60 * 1000;
