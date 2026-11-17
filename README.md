@@ -11,12 +11,12 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | API(배포) 주소 | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상. Cloud Run이라 첫 요청은 몇 초 걸린다. 같은 주소의 `/login`이 React 화면이다 |
-| 배포 리비전 | `sojafit-api-pre-b4a02113-1117`(소스 `b4a02113`, 11-17 20:45 KST 트래픽 100% 전환). `2030f846`과 다른 것은 랜딩 "판정 근거" 그림 4장(`frontend/public/assets/product/`)과 그 경로 · 설명 글뿐이고 백엔드는 같다. v3 2세트 · 25단계는 그 전 운영 리비전 `sojafit-api-pre-ef0138b2-rs`(소스 `main` `2030f846`, PR #160 병합. 이미지 `sha256:0a7a1b1b…2dd0`)에서 쟀다: 19:27 KST `sojafit-api-pre-ef0138b2-1117`로 전환, 19:52 25단계의 서버 재시작 점검으로 같은 이미지의 새 리비전 `-rs`로 옮김. 렌더러 `sojafit-osc-kicad-renderer-main-28b14600-1117`(바뀌지 않음) | 전환 전 0% 태그 주소와 전환 뒤 운영 주소에서 로그인 없는 GET 점검(`/health` · `/login` · `/app` · `/quotes` 200, `/api/auth/me` 401, openapi 경로 42 · 동작 53), 로그인 뒤 25단계 24/24([GATES G1](docs/GATES.md)), `docs/worklog/jeongun.md` 11-17 |
+| 배포 리비전 | `sojafit-api-pre-b4a02113-1117`(소스 `b4a02113`, 11-17 20:45 KST 트래픽 100% 전환). `2030f846`과 서비스 동작에서 다른 것은 랜딩 "판정 근거" 그림 4장(`frontend/public/assets/product/`)과 그 경로 · 설명 글뿐이고 백엔드는 같다(그 밖은 주석 · 측정 스크립트, 아래 「동결」 칸). v3 2세트 · 25단계는 그 전 운영 리비전 `sojafit-api-pre-ef0138b2-rs`(소스 `main` `2030f846`, PR #160 병합. 이미지 `sha256:0a7a1b1b…2dd0`)에서 쟀다: 19:27 KST `sojafit-api-pre-ef0138b2-1117`로 전환, 19:52 25단계의 서버 재시작 점검으로 같은 이미지의 새 리비전 `-rs`로 옮김. 렌더러 `sojafit-osc-kicad-renderer-main-28b14600-1117`(바뀌지 않음) | 전환 전 0% 태그 주소와 전환 뒤 운영 주소에서 로그인 없는 GET 점검(`/health` · `/login` · `/app` · `/quotes` 200, `/api/auth/me` 401, openapi 경로 42 · 동작 53), 로그인 뒤 25단계 점검(재시작 단계 제외 24개) 24/24, 재시작 뒤 재개는 19:50 실행에서 통과([GATES G1](docs/GATES.md)), `docs/worklog/jeongun.md` 11-17 |
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
-| 동결 | 채점 기준 동결: `9c87ba36`(11-16 24:00, 과제 가이드 "11-16 자정 이후 커밋은 채점하지 않음"). 최종 동결: 태그 `final-2026-11-17`(11-17 레포 정리 커밋). 그 전 태그 `freeze-2026-11-17`(PR #150)은 옮기지 않았다. 최종 동결과 배포 소스 `2030f846`의 차이는 문서 · 주석뿐이다(파이썬은 docstring을 뺀 구문 트리가 같고, 화면은 빌드 결과 묶음 이름이 같음) | `docs/worklog/jeongun.md` 11-17 레포 정리 |
+| 동결 | 채점 기준 동결: `9c87ba36`(11-16 24:00, 과제 가이드 "11-16 자정 이후 커밋은 채점하지 않음"). 최종 동결: 태그 `final-2026-11-17`(11-17 레포 정리 커밋 `a468c0ba`. 배포 소스 `2030f846`과 비교해 서비스 코드는 주석만 다르고, 측정 스크립트 2개(`scripts/smoke/http_smoke.py` `allow_duplicate`, `evals/runners/run_skill_pair.py` `--max-seconds`)가 바뀌었다). 그 뒤 발표 폴더(PR #162), 랜딩 그림 4장(`b4a02113`, PR #163), 제출물 검수에서 찾은 문서 · 주석 정리, 큰 파일 주석 보강, 쓰지 않는 prop · 중복 함수 2곳 삭제(동작 같음, 배포하지 않음)만 바꿨고 태그는 옮기지 않았다. 그 전 태그 `freeze-2026-11-17`(PR #150)도 옮기지 않았다 | `docs/worklog/jeongun.md` 11-17 레포 정리 |
 | 기준 커밋 | `2030f846`(`main`, PR #160 병합, 11-17 19:21 KST) | 11-17 배포 리비전 측정(v3 50문항 2세트 · 25단계)의 대상 커밋이다. 그 전 측정(11-17 새벽 [evals/results/d12/](evals/results/d12/README.md))의 대상은 `799ae636`이다 |
-| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 새 대화(`/app`: 회로 없이 바로 질문하거나 넷리스트 · 회로도를 첨부), 회로 작업대(`/app?project=`: 프로젝트 · KiCad 넷리스트(`.net`) · 회로도(`.kicad_sch`) 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 부품 점검표 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`, 사례마다 대체 검토 보고서), 견적서(왼쪽 메뉴 "견적서" `/quotes`: 저장한 견적 목록. 견적마다 A4 한 장 견적서 문서 `/approved/{사례}/quote/{견적}`를 열고 "PDF 다운로드"로 받는다), 데이터시트 서재(`/library`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
-| 시연 영상 | [`docs/deliverables/video/sojafit-demo-2026-11-17.mp4`](docs/deliverables/video/sojafit-demo-2026-11-17.mp4)(1분 35초). 대본 [`demo_script.md`](docs/deliverables/demo_script.md) | 정상 경로 v3-01(조건 질문 정지 → 재개 → 판정 · 근거 → 승인 → 견적 → 보고서) + 실패 경로 3개(실측값 요청 · 코퍼스에 없는 품번 · 프롬프트 인젝션), 화면마다 자막. 첫 장면 배포 `/health`, 나머지는 같은 코드(main `28b14600`)의 로컬 실제 모드 |
+| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 새 대화(`/app`: 회로 없이 바로 질문하거나 넷리스트 · 회로도를 첨부), 회로 작업대(`/app?project=`: 프로젝트 · KiCad 넷리스트(`.net`) · 회로도(`.kicad_sch`, 렌더러 필요) 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 원본 회로도 · 부품 점검표 · 가격·재고 조회 · 후보 승인 · 견적), 승인 사례(`/approved`, 사례마다 대체 검토 보고서), 견적서(왼쪽 메뉴 "견적서" `/quotes`: 저장한 견적 목록. 견적마다 A4 한 장 견적서 문서 `/approved/{사례}/quote/{견적}`를 열고 "PDF 다운로드"로 받는다), 데이터시트 서재(`/library`), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin`, 관리자만) |
+| 시연 영상 | [`docs/deliverables/video/sojafit-demo-2026-11-17.mp4`](docs/deliverables/video/sojafit-demo-2026-11-17.mp4)(1분 35초). 대본 [`demo_script.md`](docs/deliverables/demo_script.md) | 정상 경로 v3-01(조건 질문 정지 → 재개 → 판정 · 근거 → 승인 → 견적 → 보고서) + 실패 경로 3개(실측값 요청 · 코퍼스에 없는 품번 · 프롬프트 인젝션), 화면마다 자막. 11-17 06:16 녹화. 첫 장면은 당시 배포본(`sojafit-api-main-28b14600-1117`)의 `/health`, 나머지는 배포 소스 `2030f846`보다 앞선 main `28b14600`의 로컬 실제 모드 |
 
 ```bash
 curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.run.app/health
@@ -37,7 +37,7 @@ curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.ru
 |---|---|---|
 | 평가셋 통과 | 동결 v3 50문항(관련 25 · 무관 25) **50/50 · 49/50**, 지어낸 답 0 · 1(v3-41) | 배포 리비전 코드 · 운영 설정 2세트(11-17), [4절](#4-지표) |
 | 개선 전후(검색) | 확인용 38문항 Page Recall@5 **0.579 → 0.908**(14승 1패, 부호 검정 p 0.001) | 같은 문항 · 같은 실행기, [EVAL_REPORT](EVAL_REPORT.md) 3-A · 1-4절 |
-| 응답 시간 | p50 5.2 · 4.4초, p95 15.5 · 7.5초(첫 세트는 웹 데이터시트를 처음 받는 문항 3개가 15 ~ 22초) | 위 v3 2세트, [4절](#4-지표) |
+| 응답 시간 | p50 5.2 · 4.4초, p95 15.5 · 7.5초(첫 세트는 웹 데이터시트를 처음 받는 문항 4개가 15 ~ 22초) | 위 v3 2세트, [4절](#4-지표) |
 | 단계별 응답 시간(p50) | Supervisor 1.52 · 회로 읽기 2.73 · 검색 1.22 · RAG 답 쓰기 2.27 · 부품 판정 1.60초. 승인 대기(사람이 기다린 시간)는 재지 않았다 | 11-11 웹 끔 측정, [EVAL_REPORT](EVAL_REPORT.md) 8장 |
 | 요청당 비용 | 문항당 LLM $0.00064 + 리랭크 $0.00013. 50문항 한 세트 LLM $0.037 · $0.032 | 11-11 단계 측정 · 11-17 v3 2세트, [EVAL_REPORT](EVAL_REPORT.md) 8장 |
 
@@ -53,7 +53,7 @@ curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.ru
 D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오드로 바꿔도 되나?
 ```
 
-공개 ATtiny85 계열 KiCad 회로의 다이오드 554개 중 1N4148(100V)이 53개, 1N4007(1000V)이 11개였다. 5V 회로에 과한 정격이 그대로 이어진다. 제조사 대체품 조회 도구는 동등성을 보증하지 않는다고 고지한다. 같은 50문항을 범용 코딩 에이전트(Codex)에 넣은 팀 측정은 45/50(우리 50/50은 `DEMO_MODE` 미기록 측정, 아래 4절 표)이고, 없는 품번을 내놓은 사례는 없었다(비관련 25건 모두 올바른 거절). 오답 4건은 넷리스트를 읽지 못한 역할 질문 3건과 시험 조건 차이를 놓친 승인 1건이다. 한계: 정답 초안을 같은 도구가 썼고 Codex 답의 원본 로그가 없다([EVAL_REPORT.md](EVAL_REPORT.md) 10장, [TALLY.md](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)). 원본 로그를 남기고 우리와 같은 입력(문항 글 + 넷리스트 전체, 저장소 맥락 없음)을 문항마다 넣은 다른 범용 모델 기준선(GPT-6.1 Terra + 웹 검색, 11-16)은 41/50이었다. 역할 4문항은 모두 맞혔고, 범위 밖 6문항에서는 서비스 범위를 모른 채 다이오드가 아닌 부품을 추천했다([TALLY.md](evals/results/graph/2026-11-16-terra-v3-50-isolated-web/TALLY.md)). 근거와 조사 출처는 [`docs/TOPIC.md`](docs/TOPIC.md).
+공개 ATtiny85 계열 KiCad 회로의 다이오드 554개 중 1N4148(100V)이 53개, 1N4007(1000V)이 11개였다. 5V 회로에 과한 정격이 그대로 이어진다. 제조사 대체품 조회 도구는 동등성을 보증하지 않는다고 고지한다. 같은 50문항을 범용 코딩 에이전트(Codex)에 넣은 팀 측정은 45/50(같은 문항에서 배포 리비전 코드는 50/50 · 49/50, 아래 4절 표 첫 행)이고, 없는 품번을 내놓은 사례는 없었다(비관련 25건 모두 올바른 거절). 오답 4건은 넷리스트를 읽지 못한 역할 질문 3건과 시험 조건 차이를 놓친 승인 1건이다. 한계: 정답 초안을 같은 도구가 썼고 Codex 답의 원본 로그가 없다([EVAL_REPORT.md](EVAL_REPORT.md) 10장, [TALLY.md](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)). 원본 로그를 남기고 우리와 같은 입력(문항 글 + 넷리스트 전체, 저장소 맥락 없음)을 문항마다 넣은 다른 범용 모델 기준선(GPT-6.1 Terra + 웹 검색, 11-16)은 41/50이었다. 역할 4문항은 모두 맞혔고, 범위 밖 6문항에서는 서비스 범위를 모른 채 다이오드가 아닌 부품을 추천했다([TALLY.md](evals/results/graph/2026-11-16-terra-v3-50-isolated-web/TALLY.md)). 근거와 조사 출처는 [`docs/TOPIC.md`](docs/TOPIC.md).
 
 ---
 
@@ -146,12 +146,12 @@ LLM을 부르는 노드와 코드만 도는 노드(모델의 정본은 `backend/
 
 | 구분 | 노드 | 모델 | 근거 |
 |---|---|---|---|
-| LLM | `Supervisor` | `anthropic/claude-haiku-5.5` (`supervisor`) | `supervisor.py:87` |
-| LLM | `RAG 에이전트` | Haiku (`docs_answer`, 근거 채점 + 답 쓰기) | `agents/docs.py:560` |
-| LLM | `회로 읽기` (Spec 에이전트 안) | Haiku (`judge_read`) | `agents/judge.py:125` |
-| LLM | `종합` | `anthropic/claude-sonnet-5.5` (`synth`). 쓰는 조건은 SPEC 2절 | `supervisor.py:303` |
-| 코드, 드물게 LLM | `대체 부품 판정` | 코드가 못 읽은 카드가 있을 때만 Haiku (`card_read`). 비교와 판정은 코드 | `rag/card_read.py:251`, `rag/card_specs.py:93` |
-| 코드 | `입력 읽기` `기억 읽기` `품번·판 확인` `대상 확인` `답 모으기` `답 정리` `답 검사` `끝내기` `거절` `가격 안내` `부품 목록` `견적 안내` | 없음 | `build.py:26-50`, `supervisor.py:146 · 257 · 312`, `facts.py:107`, `graph/nodes.py:124 · 209`, `graph/memory.py:26` |
+| LLM | `Supervisor` | `anthropic/claude-haiku-5.5` (`supervisor`) | `supervisor.py` `plan_node` |
+| LLM | `RAG 에이전트` | Haiku (`docs_answer`, 근거 채점 + 답 쓰기) | `agents/docs.py` `docs_agent` |
+| LLM | `회로 읽기` (Spec 에이전트 안) | Haiku (`judge_read`) | `agents/judge.py` `judge_read_agent` |
+| LLM | `종합` | `anthropic/claude-sonnet-5.5` (`synth`). 쓰는 조건은 SPEC 2절 | `supervisor.py` `synth_node` |
+| 코드, 드물게 LLM | `대체 부품 판정` | 코드가 못 읽은 카드가 있을 때만 Haiku (`card_read`). 비교와 판정은 코드 | `agents/judge.py` `judge_task_node`, `rag/card_read.py` `llm_read`, `rag/card_specs.py` `make_specs` |
+| 코드 | `입력 읽기` `기억 읽기` `품번·판 확인` `대상 확인` `답 모으기` `답 정리` `답 검사` `끝내기` `거절` `가격 안내` `부품 목록` `견적 안내` | 없음 | `build.py` `build_graph`(노드 등록) · `parse_node` · `facts_step` · `finish_node` · `refuse_node`, `supervisor.py` `collect_node` · `single_node` · `check_node`, `graph/nodes.py` `read_input` · `target_choice` · `price_answer` · `parts_list_answer` · `quote_answer`, `graph/memory.py` `read_profile` |
 
 **개념도(손으로 그린 요약, 노드 이름과 화살표는 위 그래프가 기준)**
 
@@ -236,7 +236,7 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 
 ## 4. 지표
 
-기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 값이다. 이 절 첫 표(통과 50/50 · p95 10.0 · 8.6 ~ 8.9 등)의 측정은 결과 파일에 `DEMO_MODE`가 없는 11-14 이전 값이다(코드 기본값 1 = 검색이 BM25만). `DEMO_MODE=0`이 기록된 v3 50문항 측정의 통과 수는 47 ~ 50/50이다(아래 "통과 수와 응답 시간(조건별)" 표의 통과 열). 배포 리비전(`sojafit-api-pre-ef0138b2-rs`, 소스 `2030f846`)과 같은 코드를 운영 설정(웹 켬 + 미리 출발)으로 2026-11-17 저녁에 잰 값이 표 첫 행이고, 같은 날 새벽 `799ae636` 값이 둘째 행이다. 수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 3-D · 8장이다.
+기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 값이다. 이 절 첫 표의 첫 두 행은 11-17 값이고, 셋째 행부터(통과 50/50 · p95 10.0 · 8.6 ~ 8.9 등)는 결과 파일에 `DEMO_MODE`가 없는 11-14 이전 값이다(코드 기본값 1 = 검색이 BM25만). `DEMO_MODE=0`이 기록된 v3 50문항 측정의 통과 수는 47 ~ 50/50이다(아래 "통과 수와 응답 시간(조건별)" 표의 통과 열). 배포 리비전(`sojafit-api-pre-ef0138b2-rs`, 소스 `2030f846`)과 같은 코드를 운영 설정(웹 켬 + 미리 출발)으로 2026-11-17 저녁에 잰 값이 표 첫 행이고, 같은 날 새벽 `799ae636` 값이 둘째 행이다. 수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 3-D · 8장이다.
 
 | 지표 | 값 | 조건 | 원시 결과 |
 |---|---|---|---|
@@ -281,21 +281,21 @@ docker compose up --build   # .env 없이 띄우면 DEMO_MODE=1(데모 모드). 
 curl http://localhost:8000/health   # {"status":"ok"}
 ```
 
-`.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_REPLAY=1`로 띄운다. db(pgvector) → thread-setup(LangGraph 표 준비. 서비스 표는 db가 첫 기동 때 `db/020_service_baseline.sql`로 만든다) · corpus-load(데모 코퍼스 스냅샷 적재) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. corpus-load는 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 데이터시트 42문서 · 청크 1,556개, 임베딩 없음)을 로컬 DB에 넣어, 키 없이도 검색 도구가 BM25로 데모 회로의 1N4148과 그 대체 후보(같은 분류의 스위칭 다이오드), 1N4001G 계열 데이터시트를 찾게 한다. 키 없는 분석은 이 스냅샷 DB에서 실제 멀티 에이전트 그래프를 돌리고, LLM 응답만 미리 기록한 것(`data/demo/recordings/`)을 재생한다. 이미 들어간 문서 · 청크는 건너뛰어 다시 띄워도 늘지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`와 `DEMO_REPLAY`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다(계정 시드는 빈 볼륨에서만 실행된다).
+`.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_REPLAY=1`로 띄운다. db(pgvector) → thread-setup(LangGraph 표 준비. 서비스 표는 db가 첫 기동 때 `db/020_service_baseline.sql`로 만든다) · corpus-load(데모 코퍼스 스냅샷 적재) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. corpus-load는 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 데이터시트 42문서 · 청크 1,556개, 임베딩 없음)을 로컬 DB에 넣어, 키 없이도 검색 도구가 BM25로 데모 회로의 1N4148과 그 대체 후보(같은 분류의 스위칭 다이오드), 1N4001G 계열 데이터시트를 찾게 한다. 키 없는 분석은 이 스냅샷 DB에서 실제 멀티 에이전트 그래프를 돌리고, LLM 응답만 미리 기록한 것(`data/demo/recordings/`)을 재생한다. 이미 들어간 문서 · 청크는 건너뛰어 다시 띄워도 늘지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`와 `DEMO_REPLAY`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다.
 
-로컬 DB 볼륨 주의: DB 재설계(`028`) 이전 코드로 만든 볼륨은 새 코드와 맞지 않으므로 `docker compose down -v`(로컬 DB 데이터를 지움)로 볼륨을 지우고 다시 `docker compose up` 한다. 새 볼륨은 initdb가 `db/` 바로 아래 SQL(코퍼스 → `020_service_baseline.sql` → `026`)을 이름순으로 한 번만 실행한다. 이미 서비스 표가 있는 운영 DB는 `db/migrations/`의 이전 SQL을 쓴다([db/DB.md](db/DB.md)).
+로컬 DB 볼륨 주의: DB 재설계(`028`) 이전 코드로 만든 볼륨은 새 코드와 맞지 않으므로 `docker compose down -v`(로컬 DB 데이터를 지움)로 볼륨을 지우고 다시 `docker compose up` 한다. 새 볼륨은 initdb가 `db/` 바로 아래 SQL(확장 `000` · 코퍼스 `002` ~ `012` → `020_service_baseline.sql` → `026` · `027` · `029` ~ `036`)을 이름순으로 한 번만 실행한다. 이미 서비스 표가 있는 운영 DB는 `db/migrations/`의 이전 SQL을 쓴다([db/DB.md](db/DB.md)).
 
 키 없는 모드의 화면은 React 작업대 하나다. 키 없이 되는 것과 안 되는 것:
 
-1. `http://localhost:8000`을 열고 "데모 사용자 A로 들어가기"를 누른다(새 대화 화면 `/app`이 열린다).
+1. `http://localhost:8000`을 열고 "데모 사용자 A" 버튼을 누른다(새 대화 화면 `/app`이 열린다).
 2. 사이드바 "프로젝트" 머리글의 +(새 프로젝트 창)에서 데모 회로로 프로젝트를 만든다. 기록한 데모 질문이 있는 회로 · 부품은 "ATtiny85 Time Switch" D1, "ATtiny2313A Thermostat" D5, "SparkFun Breadboard Power Supply 5V/3.3V" D1, "Franzininho DIY" D3, "Adafruit MOSFET Driver STEMMA" D3, "SparkFun Pro Micro v13" D2이다. 작업대 입력창 위 "기록된 데모 질문"에 그 회로의 질문 버튼이 보인다(새 화면에는 부품을 고르는 칸이 없고, 버튼이 기록의 대상 부품을 함께 보낸다. 대화의 대상이 이미 정해져 있으면 그 부품의 질문만 보인다. `frontend/src/Workbench.tsx`의 `availableQuestions` · `send`).
 3. 버튼을 누르면 새 대화로 그 질문과 사용 조건을 기록 그대로 보내고 결과(판정 · 근거 · 거절)가 나온다. ATtiny85 Time Switch D1의 교체 질문(`v3-01`)은 조건 질문에서 멈추고, "기록한 답으로 계속하기"를 누르면 같은 대화에서 판정까지 이어진다.
 4. 내 설정(`/settings`)에서 소속 · 직무 · 선호 실장 방식을 저장하고 지운다.
-5. 다른 창(시크릿 창)에서 "데모 사용자 B로 들어가기"를 누르면 A의 프로젝트와 내 설정이 보이지 않는다.
+5. 다른 창(시크릿 창)에서 "데모 사용자 B" 버튼을 누르면 A의 프로젝트와 내 설정이 보이지 않는다.
 
 키 없는 데모는 기록한 질문 10개(`scripts/demo/DEMO.md`의 데모 질문 표: 판정 · 불충족 · 동일품 · 조건 질문 · 후보 찾기 · 정격 · 거절 3종)만 재생한다. 기록한 회로 · 대상 · 질문 · 사용 조건의 조합 밖은 재생하지 않는다. 질문 · 사용 조건이 글자 하나라도 다르거나, 같은 대화의 두 번째 질문이거나, 조건 질문에 기록과 다른 답을 보내면 422로 데모 질문 목록을 보여 준다. 답은 실제 그래프 · 데이터시트 스냅샷에서 실제 모델이 기록 때 낸 응답이라, 같은 질문에 같은 답을 내는 것만 보여 주고 새 질문에 대한 품질은 보여 주지 않는다. 기록 파일(`data/demo/recordings/`)이 없으면 서버는 뜨고 분석 요청만 503(LLM 응답 기록이 없다는 안내)이다. 기록 · 재생 확인 방법은 [`scripts/demo/DEMO.md`](scripts/demo/DEMO.md)에 있다.
 
-데모 모드(`DEMO_MODE=1`)면 로그인 화면에 "데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼이 생긴다. 비밀번호 없이 버튼으로 들어가고(계정은 SQL 시드가 아니라 버튼을 처음 누를 때 앱이 만든다), 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다(메일 인증 설정이 있어야 한다).
+데모 모드(`DEMO_MODE=1`)면 로그인 화면에 "데모 사용자 A" · "데모 사용자 B" 버튼이 생긴다(`frontend/src/Auth.tsx`). 비밀번호 없이 버튼으로 들어가고(계정은 SQL 시드가 아니라 버튼을 처음 누를 때 앱이 만든다), 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다(메일 인증 설정이 있어야 한다).
 
 ### 키를 넣고 실제 모드
 
@@ -316,13 +316,13 @@ KiCad 원본 회로도를 그림(PNG)으로 바꾸는 일만 하는 별도 서�
 | 무엇 | 어떻게 | 근거 |
 |---|---|---|
 | 이미지 | `Dockerfile`의 `renderer` target. KiCad 10을 설치하고 `uvicorn backend.projects.schematic:app`을 8000 포트로 띄운다 | [`Dockerfile`](Dockerfile) |
-| 로컬에서 같이 띄우기 | compose profile `schematic`: `docker compose --profile schematic up --build` | [`docker-compose.yml`](docker-compose.yml) `renderer` |
-| API가 렌더러를 찾는 주소 | 환경변수 `KICAD_RENDERER_URL`. compose의 api는 값이 없으면 `http://renderer:8000`을 쓴다. 그래서 profile 없이 띄우면 그 주소에 서비스가 없어 KiCad 원본 회로도 렌더가 `KiCad 렌더러에 연결할 수 없습니다`로 실패한다 `[추정]`(코드 `render_remote_kicad`를 읽은 것이고 compose에서 실행해 보지는 않았다) | [`docker-compose.yml`](docker-compose.yml), `backend/projects/schematic.py` |
-| Cloud Run | 주소는 HTTPS여야 하고 API가 메타데이터 서버의 ID token을 붙여 부른다(`_renderer_headers`). 운영 리비전에는 `KICAD_RENDERER_URL`이 설정돼 있다(조장 전달, 직접 확인 못 함) | `backend/projects/schematic.py` |
+| 로컬 compose | 로컬 compose에는 렌더러가 없어 `.kicad_sch` 업로드는 503이다(compose의 api는 `KICAD_RENDERER_URL: ""`, 렌더러 서비스는 PR #138 `a19d078f`에서 뺐다). 렌더러는 `--target renderer`로 따로 빌드해 띄우고 API에 `KICAD_RENDERER_URL`을 넣는다 | [`docker-compose.yml`](docker-compose.yml) api `environment` |
+| API가 렌더러를 찾는 주소 | 환경변수 `KICAD_RENDERER_URL`(http · https 주소). 비어 있으면 `.kicad_sch` 업로드는 "KiCad 렌더러가 설정되지 않았습니다"로 503이다 | `backend/projects/schematic.py` `export_uploaded_kicad`, `backend/api/projects.py` `read_schematic` |
+| Cloud Run | 주소는 HTTPS여야 하고 API가 메타데이터 서버의 ID token을 붙여 부른다(`_renderer_headers`). 운영 리비전(`799ae636`) 환경변수에 `KICAD_RENDERER_URL`이 있다([revision_env.txt](evals/results/d12/prod_unauth/revision_env.txt)) | `backend/projects/schematic.py` |
 | 회로도 업로드(#52) | `.kicad_sch`를 올리면 API가 원문을 `POST /render` `{schematic}`로 보내 넷리스트와 그림을 받는다(`backend/api/projects.py` `read_schematic`, SPEC 8.10). 이 경로는 API 안 `kicad-cli`로 대신하지 않아 렌더러가 없으면 503이다 | `backend/projects/schematic.py` `export_uploaded_kicad` |
-| 렌더러 없이 | `INCLUDE_KICAD=1`로 API 이미지를 빌드해 `kicad-cli`를 넣고 `KICAD_RENDERER_URL`을 비워 두면 API 프로세스가 직접 부른다(실행 파일은 `KICAD_CLI`로 지정). compose의 api는 위 기본 주소가 있어 이 방식은 compose 밖에서 쓴다 | [`Dockerfile`](Dockerfile), `backend/projects/external_schematic.py` |
+| 렌더러 없이 | `INCLUDE_KICAD=1`로 API 이미지를 빌드해 `kicad-cli`를 넣고 `KICAD_RENDERER_URL`을 비워 두면 API 프로세스가 직접 부른다(실행 파일은 `KICAD_CLI`로 지정). 외부 회로도 그림에만 쓰고 회로도 업로드는 이 방식으로 대신하지 않는다(위 줄). compose의 api는 `INCLUDE_KICAD: "0"`이라 이 방식은 compose 밖에서 쓴다 | [`Dockerfile`](Dockerfile), `backend/projects/external_schematic.py` |
 
-렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)와 회로도 업로드(아래 표 줄)뿐이다. 분석 그래프 · `.net` 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 분리(`renderer` target 추가) 뒤의 코드(`799ae636`)로 키 없는 새 clone 기동과 스모크를 11-17에 6회 다시 쟀다: `/health` 200 중앙값 239.4초, 스모크 6회 모두 28/28(profile 없이 기본 `docker compose up --build`, [GATES](docs/GATES.md) G2).
+렌더러를 부르는 코드는 `backend/projects/external_schematic.py`(외부 회로도 검색 API `backend/api/external_circuits.py`)와 회로도 업로드(위 표)뿐이다. 분석 그래프 · `.net` 넷리스트 업로드 · 판정은 부르지 않는다. 외부 회로도 검색은 `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 있어야 켜지므로 키 없는 데모에서는 꺼져 있다(`external_schematic.py`의 `_enabled`). 분리(`renderer` target 추가) 뒤의 코드(`799ae636`)로 키 없는 새 clone 기동과 스모크를 11-17에 6회 다시 쟀다: `/health` 200 중앙값 239.4초, 스모크 6회 모두 28/28(기본 `docker compose up --build`, [GATES](docs/GATES.md) G2).
 
 ### 화면 개발 서버
 
@@ -353,8 +353,8 @@ uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json
 
   RAGAS 채점(Faithfulness · Context Precision)은 기본으로 켜져 있어(`RAGAS_ENABLED` 기본 1, 판정 모델 `RAGAS_MODEL` 기본 `openai/gpt-4o-mini`) OpenRouter 채점 호출이 더 든다. 끄려면 명령 앞에 `RAGAS_ENABLED=0`을 붙인다. 아래 비용은 RAGAS를 끈 실행의 값이다.
 
-  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 11-17에 `799ae636`을 `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 EXA_WEB_SEARCH_ENABLED=1`(운영과 미리 출발만 다름)로 이 실행기에 다시 넣었다: 1세트 LLM $0.036, 결과는 4절 첫 행([evals/results/d12/](evals/results/d12/README.md)). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
-- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡을 당시 순서 `npm ci && npm run test:run && npm run build`로, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md). 지금 `frontend` 잡은 `npm ci` → `npm test` → `npm run format:check` → `npm run build`이고, 새 화면으로 바꾸며 `test:run`은 없어졌다). 11-17 `799ae636`에서 셋을 로컬로 다시 돌렸다: Linux 컨테이너 pytest는 한 프로세스 전체 실행이 3회 모두 `tests/rag/test_card_find.py` · `test_card_read.py`의 새 스레드 시작에서 멈췄고(11-16 `4c5afc1e`은 67초에 2,495 통과), `tests/` 폴더마다 따로 돌리면 2,997 통과 · 0 실패 · 205 건너뜀이다. macOS 호스트에서 한 프로세스로 돌리면 멈추지 않고 2,982 통과 · 15 실패(cairo 없는 SVG 11개 등) · 205 건너뜀이다. `freeze.py --check` 바뀐 파일 없음, gitleaks 이력 1,250 커밋 발견 0([d12 README](evals/results/d12/README.md) 「동결 직전 pytest · freeze · gitleaks」). Actions에서의 실제 실행 결과는 확인하지 못했다.
+  비용: 웹을 끈 1세트(50문항)의 LLM 비용이 11-11 측정 약 0.032달러([EVAL_REPORT.md](EVAL_REPORT.md) 8장), 웹을 켠 11-14 측정 0.032 ~ 0.044달러(결과 파일 `cost_usd` 합)였다. 11-17에 `799ae636`을 `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 EXA_WEB_SEARCH_ENABLED=1`(운영과 미리 출발만 다름)로 이 실행기에 다시 넣었다: 1세트 LLM $0.036, 결과는 4절 첫 표 둘째 행([evals/results/d12/](evals/results/d12/README.md)). 전체 명령 · 인자는 [`evals/EVALS.md`](evals/EVALS.md).
+- GitHub Actions(`.github/workflows/`)는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(작업 기록 `docs/worklog/jeongun.md`). 그래서 CI 잡을 로컬에서 대신 돌린 기록이 있다(11-11 `frontend` 잡을 당시 순서 `npm ci && npm run test:run && npm run build`로, 11-13 `gitleaks` · 전체 `pytest`; [G7 증거](docs/GATES.md). 지금 `frontend` 잡은 `npm ci` → `npm test` → `npm run format:check` → `npm run build`이고, 새 화면으로 바꾸며 `test:run`은 없어졌다). 11-17에 셋을 로컬로 다시 돌렸다: Linux 컨테이너 전체 pytest는 회로도 변환 메모리 제한을 하위 프로세스에만 걸게 고친 `83960166`에서 2,997 통과 · 0 실패 · 205 건너뜀, 74.4초다([pytest_full_linux_after_hang_fix.txt](evals/results/d12/checks/pytest_full_linux_after_hang_fix.txt)). 같은 커밋을 macOS 호스트에서 한 프로세스로 돌리면 2,982 통과 · 15 실패 · 205 건너뜀이다([pytest_full_macos_after_hang_fix.txt](evals/results/d12/checks/pytest_full_macos_after_hang_fix.txt)). `freeze.py --check` 바뀐 파일 없음, gitleaks 이력 1,250 커밋 발견 0([d12 README](evals/results/d12/README.md) 「동결 직전 pytest · freeze · gitleaks」). Actions에서의 실제 실행 결과는 확인하지 못했다.
 
 ---
 
@@ -380,7 +380,7 @@ SojaFit/
 ├── data/           manifest, 데이터시트 표본, 평가·시연용 공개 회로
 ├── db/             DB 초기화 SQL과 스키마 문서
 ├── evals/          동결 평가셋, 평가 실행기, 평가 결과
-├── tests/          PR마다 CI가 돌리는 회귀 테스트
+├── tests/          CI와 같은 명령으로 돌리는 회귀 테스트
 ├── scripts/        손으로 돌리는 측정·점검 스크립트와 측정 결과
 └── docs/           주제서 · 게이트 · 결정(ADR) · 작업서 · 조사 · 제출물 · 작업 기록
 ```
@@ -391,11 +391,11 @@ SojaFit/
 
 | 이름 | GitHub | 역할 |
 |---|---|---|
-| 하정운(조장) | [@HJU5022](https://github.com/HJU5022) | 오케스트레이터 · 기획·SPEC · 데이터시트 수집·검색 · LangGraph 에이전트 · 평가셋·정답 판정 · 서비스·배포 조율 |
-| 심태현 | [@SimonTH-0912](https://github.com/SimonTH-0912) | 서비스·운영 |
-| 오세창 | [@sechang405-maker](https://github.com/sechang405-maker) | LLM · 임베딩 · 리랭커 모델 비교 · 제조사 공식 PDF 근거 · 원본 회로도 검색 |
+| 하정운(조장) | [@HJU5022](https://github.com/HJU5022) | 오케스트레이터 · 기획·SPEC · 데이터시트 수집 · RAG(파싱·청킹·검색, 임베딩·리랭커 비교) · LangGraph 에이전트 · 평가셋·정답 판정 · 서비스·배포 조율 |
+| 심태현 | [@SimonTH-0912](https://github.com/SimonTH-0912) | 서비스·운영: 로그인 · 인증 · Google · 이메일 인증, DB 마이그레이션, 사용자별 기억, Langfuse 연결, 작업대 · 승인 · 견적 화면, 인젝션 평가 |
+| 오세창 | [@sechang405-maker](https://github.com/sechang405-maker) | LLM(Supervisor) 모델 비교 · 임베딩 후보 조사 · 제조사 공식 PDF 근거 · 원본 회로도 검색 · Docker 실측, 작업대 화면 일부(#74 · #84 · #86), 오류 계약(#71) |
 
-김재훈([@nanocode00](https://github.com/nanocode00))은 2026-11-06 개인 사정으로 팀을 탈퇴했습니다. 탈퇴 전 평가셋 v1 · v2 정답의 2차 판정에 참여했습니다.
+김재훈([@nanocode00](https://github.com/nanocode00))은 2026-11-06 개인 사정으로 팀을 탈퇴했습니다. 탈퇴 전 평가셋 v1 · v2 정답의 2차 판정, 5지표 채점기(#43) · Skill/MCP 검증(#38)에 참여했습니다.
 
 ### 일정
 
@@ -404,8 +404,8 @@ SojaFit/
 | 11/3(화) | 평가셋 v2 동결(`evals/FROZEN.json`) |
 | 11/6(금) | Supervisor와 서브에이전트 분리, 중간 점검 |
 | 11/10(화) | 기준 평가셋 v3 동결(ADR 0015) |
-| 11/16(월) 24:00 | 코드와 설정 동결 |
-| 11/17(화) 24:00 | 최종 제출(마감 시점의 `main`) |
+| 11/16(월) 24:00 | 채점 기준 커밋 `9c87ba36`(11-16 24:00). 맨 위 핵심 지표의 v3 통과 · 응답 시간은 그 뒤 11-17에 배포 리비전 코드(`2030f846`)로 잰 값이다 |
+| 11/17(화) 24:00 | 최종 제출. 최종 동결 태그 `final-2026-11-17`(`a468c0ba`), 그 뒤 바뀐 것은 맨 위 표 「동결」 칸 |
 | 11/18(수) | 발표 |
 
 필수 게이트 G1~G7과 저장소에서 채우는 위치는 [`docs/GATES.md`](docs/GATES.md)에 있다.
@@ -418,21 +418,21 @@ SojaFit/
 
 - **데이터시트**: Taiwan Semiconductor 사이트 약관은 정보·비상업 목적에 한해, 고치지 않고 저작권 고지를 유지하고 출처를 밝히는 조건으로 복제·배포를 허용한다. PDF는 고치지 않고 고지·출처와 함께 쓴다([`data/corpus/CORPUS.md`](data/corpus/CORPUS.md)).
 - **데모 코퍼스 스냅샷**: 키 없는 compose가 로컬 DB에 넣는 TSC 42문서 · 청크 1,556개의 출처 · 이용 조건 · 고른 규칙은 [`data/demo/snapshot/SNAPSHOT.md`](data/demo/snapshot/SNAPSHOT.md)에 있다.
-- **넣지 않는 데이터시트**: 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트는 코퍼스로 모으거나 저장하지 않는다. 다만 PR #146부터 내부 근거가 부족한 질문에서는 공식 제조사 일곱 곳(TSC · TI · ST · ADI · onsemi · Infineon · Vishay)의 PDF를 답할 때 받아 메모리에서 쪽 · 표 행을 읽고 2등급 근거로 인용한다(Nexperia 제외, [`docs/specs/official-datasheet-evidence.md`](docs/specs/official-datasheet-evidence.md)). 이렇게 실행 중에 받아 읽는 것이 각 제조사 약관에 맞는지 검토한 기록은 저장소에서 찾지 못했다(확인 못 함). 그 밖의 제조사 부품은 링크만 보여 준다.
-- **회로**: 평가·시연용 회로 5종은 라이선스를 확인한 공개 KiCad 프로젝트(MIT, CC BY-SA 3.0·4.0)다. 원 저장소와 커밋은 [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md)에 있다.
+- **넣지 않는 데이터시트**: 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트는 코퍼스로 모으거나 저장하지 않는다. 다만 PR #146부터 내부 근거가 부족한 질문에서는 공식 제조사 일곱 곳(TSC · TI · ST · ADI · onsemi · Infineon · Vishay)의 PDF를 답할 때 받아 메모리에서 쪽 · 표 행을 읽고 2등급 근거로 인용한다(Nexperia 제외, [`docs/specs/official-datasheet-evidence.md`](docs/specs/official-datasheet-evidence.md)). 한 번 조회에 질문한 품번의 PDF를 최대 2개(`backend/services/exa.py` `MAX_DOWNLOADS`) 받아 메모리에서 읽고 저장하지 않는다. 각 제조사 약관 검토는 남은 일이다. 그 밖의 제조사 부품은 링크만 보여 준다.
+- **회로**: 평가·시연용 회로 15종(`data/circuits/catalog.json`)은 라이선스를 확인한 공개 KiCad 프로젝트(MIT, CC BY-SA 3.0·4.0)다. 원 저장소와 커밋은 [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md)에 있다.
 
 ### 제3자 소프트웨어 · 라이선스
 
 | 대상 | 쓰는 곳 | 라이선스 | 근거 |
 |---|---|---|---|
 | KiCad 10(`kicad-cli`) | 원본 회로도 변환 전용 `renderer` 이미지(`Dockerfile`의 `renderer` target, 공식 `ppa:kicad/kicad-10.0-releases`의 `kicad=10.0.*`). 기본 API 이미지에는 넣지 않고 `INCLUDE_KICAD=1`로 빌드할 때만 들어간다(선택). KiCad를 고치지 않고 실행 파일(`kicad-cli`)로 부른다 | GPL-3.0-or-later | [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) |
-| KiCad 라이브러리(심볼 · 풋프린트 · 3D) | 위 `kicad` 패키지에 딸려 와 변환할 때 쓰인다. 저장소에 복사해 두지 않았다 | CC-BY-SA 4.0, KiCad 라이브러리 예외(라이브러리 부품을 쓴 설계에는 그 라이선스를 강제하지 않는다)가 붙는다 | KiCad 프로젝트의 라이선스 안내 `[문서]`. 이 저장소에 원문 사본은 없다(확인 못 함) |
+| KiCad 라이브러리(심볼 · 풋프린트 · 3D) | 위 `kicad` 패키지에 딸려 와 변환할 때 쓰인다. 저장소에 복사해 두지 않았다 | CC-BY-SA 4.0, KiCad 라이브러리 예외(라이브러리 부품을 쓴 설계에는 그 라이선스를 강제하지 않는다)가 붙는다 | KiCad 프로젝트의 라이선스 안내. 이 저장소에 원문 사본은 없다 |
 | 외부 공개 회로도(검색 결과로 화면에 보이는 것) | 작업대가 프로젝트를 열 때(저장된 데모 도면이 없을 때 한 번) 또는 사용자가 다른 이름으로 찾을 때 확인된 공개 저장소의 고정 commit에서 받아 그림으로 렌더한다. 저장소에 넣지 않는다 | 저장소마다 다르다. 화면이 출처(`attribution`) · 라이선스(`license`) · 원본 링크를 그림 옆에 같이 보인다. 라이선스를 확인하지 못한 자료는 `NOASSERTION`을 일괄 허용하지 않는다 | [`backend/projects/PROJECTS.md`](backend/projects/PROJECTS.md), `frontend/src/Schematic.tsx` |
 | 평가 · 데모용 공개 회로 | 저장소에 사본이 있다 | 프로젝트마다 MIT · CC BY-SA 3.0 · 4.0 등 | [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md) |
 | TSC 데이터시트 | 위 데이터 절 | 사이트 약관: 정보 · 비상업 목적, 고치지 않고 고지 · 출처 유지 | [`data/corpus/CORPUS.md`](data/corpus/CORPUS.md) |
 
-- **이 저장소 자체의 라이선스**: 루트에 `LICENSE` · `NOTICE` 파일이 없다(2026-11-16 `ls`로 확인). 저장소 사용을 허락하는 라이선스를 정해 두지 않았다. 저장소는 팀 비공개(`aihuman-7th/proj3-b`)이고 과제 제출용이다.
-- KiCad GPL 고지: 렌더러는 `docker compose --profile schematic up`이나 별도 서비스로 돌려 API가 HTTP로 부른다(아래 "선택: KiCad 렌더러"). 이 이미지를 공개로 배포할 때의 GPL 의무(소스 제공 · 고지)는 따로 검토하지 않았다(확인 못 함).
+- **이 저장소 자체의 라이선스**: 루트에 `LICENSE` · `NOTICE` 파일이 없다. 저장소 사용을 허락하는 라이선스를 정해 두지 않았다. 저장소는 팀 비공개(`aihuman-7th/proj3-b`)이고 과제 제출용이다.
+- KiCad GPL 고지: 렌더러는 `Dockerfile`의 `--target renderer`로 따로 빌드한 별도 서비스로 돌려 API가 HTTP로 부른다(위 "선택: KiCad 렌더러"). 이 이미지를 공개로 배포할 때의 GPL 의무(소스 제공 · 고지)는 따로 검토하지 않았다.
 - Python · npm 의존성의 라이선스는 `uv.lock` · `frontend/package-lock.json`에 있고 하나씩 대조하지 않았다.
 
 ### 안전
@@ -440,7 +440,7 @@ SojaFit/
 - 같은 동작은 보장하지 않는다. 판정은 문서 근거가 있을 때만 내고, 값이 없거나 시험 조건이 다르면 "문서로 확인 안 됨"으로 둔다.
 - 데이터시트 안의 문장은 데이터이지 지시가 아니다. 문서에 "이전 지시를 무시하라" 같은 문장이 있어도 따르지 않는다.
 - 견적서는 사람이 승인한 뒤에만 저장한다.
-- 키와 실제 계정 비밀번호는 `.env`에만 둔다. 평가용 계정은 저장소에 적지 않고 강사에게 따로 제출한다.
+- 키와 실제 계정 비밀번호는 `.env`에만 둔다. 평가용 계정은 저장소에 적지 않고 평가 담당자에게 따로 제출한다.
 
 ---
 

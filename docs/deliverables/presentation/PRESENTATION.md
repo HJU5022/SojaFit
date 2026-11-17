@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-17
-- 기준 커밋: `main` 태그 `final-2026-11-17`(`a468c0ba`, PR #161 병합. 배포 리비전 `sojafit-api-pre-ef0138b2-rs`의 소스 `2030f846`과 백엔드가 같다). 그 뒤 이 폴더만 고친 커밋이 있다
+- 기준 커밋: `main` 태그 `final-2026-11-17`(`a468c0ba`, PR #161 병합. 측정한 배포 리비전 `sojafit-api-pre-ef0138b2-rs`의 소스 `2030f846`과 비교해 서비스 코드는 주석만 다르고, 측정 스크립트 2개(`scripts/smoke/http_smoke.py` `allow_duplicate`, `evals/runners/run_skill_pair.py` `--max-seconds`)가 바뀌었다). 그 뒤 발표 폴더(PR #162), 랜딩 그림 4장(`b4a02113`, PR #163), 제출물 검수에서 찾은 문서 · 주석 정리, 큰 파일 주석 보강, 쓰지 않는 prop · 중복 함수 2곳 삭제(동작 같음, 배포하지 않음)만 바꿨고 태그는 옮기지 않았다
 - 정본 여부: 비정본(발표용 요약). 수치의 정본은 [README.md](../../../README.md), [EVAL_REPORT.md](../../../EVAL_REPORT.md), [docs/GATES.md](../../GATES.md), [data/DATA.md](../../../data/DATA.md)
 - 관련 문서: [DELIVERABLES.md](../DELIVERABLES.md), [demo_script.md](../demo_script.md), [SPEC.md](../../../SPEC.md)
 
@@ -20,7 +20,7 @@
 
 ## 슬라이드와 발표자
 
-발표자는 README 7절 역할(하정운: 기획·SPEC · LangGraph 에이전트 · 평가셋, 오세창: 검색·데이터, 심태현: 서비스·운영)에 맞춰 나눴다. 바꾸려면 덱의 발표자 노트 첫 줄과 이 표를 같이 고친다.
+발표자는 하정운 1–5 · 9–11 · 18–19, 심태현 6 · 12–16, 오세창 7 · 8 · 17장이다. 바꾸려면 덱의 발표자 노트 첫 줄과 이 표를 같이 고친다.
 
 | # | 제목 | 파트 | 발표 |
 |---:|---|---|---|
@@ -52,7 +52,7 @@
 |---|---|---|
 | 넷리스트 실측(2) | 다이오드 554개 중 1N4148(100V) 53 · 1N4007(1000V) 11 | README 1절, `docs/research/evidence/netlist/manifest_diodes.json` |
 | 범용 모델 비교(3 · 10) | Codex 45/50, Terra(웹) 41/50 | EVAL_REPORT 10장, `evals/results/graph/2026-11-12-codex-v3-50/TALLY.md`, `2026-11-16-terra-v3-50-isolated-web/TALLY.md` |
-| 승인 · 재개(6) | 운영 25단계 24/24 통과(11-17 19:56, `pre-ef0138b2-rs`), 운영 서버 재시작 뒤 재개 통과(19:50 실행) | GATES G1 · G4, `scripts/results/smoke/`의 11-17 `195049` · `195638` |
+| 승인 · 재개(6) | 운영 25단계 점검(재시작 단계 제외 24개) 24/24(11-17 19:56, `pre-ef0138b2-rs`), 재시작 뒤 재개는 19:50 실행에서 통과 | GATES G1 · G4, `scripts/results/smoke/`의 11-17 `195049` · `195638` |
 | 코퍼스 · 청킹(7) | 1,360문서 · 7,725쪽 · 청크 51,967 · 품번 9,589, 표 한 행 162조각 41 · 41, 파싱 대조 99.993% | data/DATA.md "코퍼스 수치", EVAL_REPORT 1절 · 1-1절 |
 | 검색 전후(8) | 확인용 38문항 Page Recall@5 0.579 → 0.934(11-04), 11-17 새벽 `799ae636` 재측정 0.908 | EVAL_REPORT 3-A · 1-4절, `evals/results/retrieval/r1_steps_2026-11-04.json`, `evals/results/d12/retrieval/` |
 | v3 결과(10 · 17) | 배포 리비전 코드 50/50 · 49/50, p50 · p95 5.2 · 15.5초 / 4.4 · 7.5초, 지어낸 답 0 · 1(v3-41), 무관 거절 25/25 · 24/25 | README 4절, EVAL_REPORT 8.2 · 11-2절, `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/` |

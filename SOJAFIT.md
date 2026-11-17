@@ -887,8 +887,8 @@ SojaFit (proj3-b)
     │   ├── submission_checklist.md  <- 제출 체크리스트(항목별 증거 경로·상태)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
-    │   ├── portfolio-osc.md  <- 오세창 포트폴리오(작업 기록 · PR 기준, 본인 확인 전)
-    │   ├── portfolio-sth.md  <- 심태현 포트폴리오(작업 기록 · PR 기준, 본인 확인 전)
+    │   ├── portfolio-osc.md  <- 오세창 포트폴리오(작업 기록 · PR 기준)
+    │   ├── portfolio-sth.md  <- 심태현 포트폴리오(작업 기록 · PR 기준)
     │   ├── portfolio/      <- 세 포트폴리오를 A4 1장으로 뽑은 제출본 PDF(11-17, 마크다운과 같은 내용)
     │   │   ├── portfolio-jeongun.pdf  <- 하정운
     │   │   ├── portfolio-osc.pdf  <- 오세창
@@ -903,7 +903,7 @@ SojaFit (proj3-b)
     │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 2.14K · 점수 23.27K · 비용 $1.46, 최근 1일)
     │   ├── presentation/   <- 최종 발표 덱(11-18)
     │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
-    │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 덱 20장(본편 17 + Q&A 백업 3)
+    │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 덱 19장
     │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "파일" 절
     │       └── sojafit-demo-2026-11-17.mp4  <- 1분 35초, 정상 경로(v3-01 판정·승인·견적·보고서) + 실패 경로 3개, 화면마다 자막
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
