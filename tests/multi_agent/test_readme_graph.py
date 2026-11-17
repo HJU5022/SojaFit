@@ -15,13 +15,18 @@ README = Path(__file__).resolve().parents[2] / 'README.md'
 
 
 def normalize(raw: str) -> str:
-    """LangGraph 원문에서 GitHub가 못 읽는 두 곳만 고친다. 노드 이름 · 라벨 · 간선 방향은 그대로다.
+    """LangGraph 원문에서 GitHub가 못 읽는 두 곳과 노드 글자색만 고친다. 노드 이름 · 라벨 · 간선 방향은 그대로다.
     1) 한국어 노드 id가 `\\c785\\b825\\20`처럼 CSS 이스케이프로 나온다. 풀어서 글자가 아닌 문자(공백 · `·` · `:`)를 `_`로 바꾼 id를 쓴다. 화면에 보이는 라벨은 그대로다.
-    2) 조건 간선 라벨 ` -. &nbsp;글&nbsp; .-> `(괄호 · `·`가 있다)를 ` -.->|"&nbsp;글&nbsp;"| `로 바꿔 따옴표로 감싼다."""
+    2) 조건 간선 라벨 ` -. &nbsp;글&nbsp; .-> `(괄호 · `·`가 있다)를 ` -.->|"&nbsp;글&nbsp;"| `로 바꿔 따옴표로 감싼다.
+    3) `classDef default` · `last`에 `color:#1f2328`, 바탕이 투명한 `first`에 `color:#8b949e`를 붙인다(다크 모드에서 글자가 보이게)."""
     # shortcut: 이스케이프 바로 뒤에 16진수 글자(a-f 0-9)가 붙는 id는 잘못 읽는다. 지금 노드 이름에는 없고, 생기면 아래 비교가 실패해 드러난다
     ident = re.compile(r'(?:\\[0-9a-f]{1,6}|[A-Za-z0-9_])+')
     decode = lambda m: re.sub(r'\W', '_', re.sub(r'\\([0-9a-f]{1,6})', lambda e: chr(int(e[1], 16)), m[0])) if '\\' in m[0] else m[0]
-    return re.sub(r' -\. (&nbsp;.*?&nbsp;) \.-> ', r' -.->|"\1"| ', ident.sub(decode, raw))
+    text = re.sub(r' -\. (&nbsp;.*?&nbsp;) \.-> ', r' -.->|"\1"| ', ident.sub(decode, raw))
+    # [왜] GitHub 다크 모드는 글자를 밝게 그려 밝은 노드 바탕에서 안 보인다. 바탕을 칠한 노드(default · last)의 글자색을 고정한다
+    text = re.sub(r'(classDef (?:default|last) fill:\S+)', r'\1,color:#1f2328', text)
+    # [왜] 시작 노드는 바탕이 투명하다. 밝은 화면과 어두운 화면 양쪽에서 읽히는 회색으로 둔다
+    return text.replace('classDef first fill-opacity:0', 'classDef first fill-opacity:0,color:#8b949e')
 
 
 def graph_mermaid() -> str:

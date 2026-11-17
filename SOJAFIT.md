@@ -835,6 +835,7 @@ SojaFit (proj3-b)
     │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
     │   ├── eval-report-detail-2026-11-17.md  <- 요약 재작성 전 EVAL_REPORT 전체 기록(11-17)
+    │   ├── readme-detail-2026-11-17.md  <- 요약 재작성 전 README 전체 기록(11-17)
     │   ├── market/         <- 문제와 시장 근거: 고객 여정 · 채용 공고 · 수요 근거와 유사 서비스 가격
     │   │   ├── market-user-journey.md  <- 문제와 시장 근거
     │   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
@@ -905,7 +906,7 @@ SojaFit (proj3-b)
     │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
     │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 자료 25장(데모 영상 포함)
     │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "파일" 절
-    │       └── sojafit-demo-2026-11-17.mp4  <- 2분 29초, 운영 리비전에서 녹화한 정상 경로 1 + 실패 경로 2, 화면마다 자막
+    │       └── sojafit-demo-2026-11-17.mp4  <- 2분 49초, 운영 리비전에서 녹화한 정상 · 경계 · 방어 경로, 화면마다 자막
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
         ├── WORKLOG.md      <- 폴더 설명과 기록 형식
         ├── jeongun.md      <- 하정운(조장·오케스트레이터)

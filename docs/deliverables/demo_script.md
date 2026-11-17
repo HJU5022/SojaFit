@@ -3,7 +3,7 @@
 - 상태: 현행 (11-17 촬영)
 - 기준일: 2026-11-12 (대본 작성일)
 - 기준 커밋: 6707002 (대본 작성 시점)
-- 정본 여부: 정본(촬영 순서). 영상 파일은 [`video/sojafit-demo-2026-11-17.mp4`](video/sojafit-demo-2026-11-17.mp4)(2분 29초)다. 실제로 찍은 장면 · 리비전은 [DELIVERABLES.md](DELIVERABLES.md) `video/` 줄이 정본이고, 이 대본과 다르다(운영 리비전 녹화, 실패 경로 2개)
+- 정본 여부: 정본(촬영 순서). 영상 파일은 [`video/sojafit-demo-2026-11-17.mp4`](video/sojafit-demo-2026-11-17.mp4)(2분 49초)다. 실제로 찍은 장면 · 리비전은 [DELIVERABLES.md](DELIVERABLES.md) `video/` 줄이 정본이고, 이 대본과 다르다(운영 리비전 녹화, 정상 · 경계 · 방어)
 - 관련 문서: [DELIVERABLES.md](DELIVERABLES.md), [scripts/demo/DEMO.md](../../scripts/demo/DEMO.md), [GATES.md](../GATES.md)(G7), [EVAL_REPORT.md](../../EVAL_REPORT.md) 6장
 
 ## 1. 요약
@@ -11,11 +11,11 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | 목표 길이 | 3분 이내 | 가이드 G7 |
-| 구성 | 계획: 정상 경로 1개 약 110초 + 실패 경로 1개 약 50초. 실제 영상: 정상 1 + 실패 2, 2분 29초(DELIVERABLES.md `video/` 줄) | 3절, 4절 |
+| 구성 | 계획: 정상 경로 1개 약 110초 + 실패 경로 1개 약 50초. 실제 영상: 정상 · 경계 · 방어, 2분 49초(DELIVERABLES.md `video/` 줄) | 3절, 4절 |
 | 근거 재료 | 배포 스모크 28단계 [smoke_..._232814.json](../../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-10_232814.json), 키 없는 데모 질문 [DEMO.md](../../scripts/demo/DEMO.md), 거절·인젝션 EVAL_REPORT 6장 | |
-| 촬영 | 했다(11-17 운영 리비전, 2분 29초) | [DELIVERABLES.md](DELIVERABLES.md) `video/` 줄 |
+| 촬영 | 했다(11-17 운영 리비전, 2분 49초) | [DELIVERABLES.md](DELIVERABLES.md) `video/` 줄 |
 
-### 앞선 녹화본의 장면과 자막 (11-17 06:16, 1분 35초, 지금 영상으로 바뀜)
+### 폐기한 앞선 녹화본의 장면과 자막 (11-17 06:16, 지금 영상은 2분 49초 최종본)
 
 이 대본으로 계획한 뒤 11-17 06:16에 녹화했다(시연 전용 계정, main `28b14600`과 같은 코드). 화면마다 자막 한 문장이다. 아래는 영상에서 옮긴 자막이다.
 

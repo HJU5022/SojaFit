@@ -20,7 +20,7 @@
 | 표본 · 비교 판정 | 사양 표 표본 150개 대조 결과 확정, Codex v3 비교에서 규칙이 못 가린 5건 판정(11-13) | ADR 0013 "표본 대조는 조장이 판정했다", 1절 11-13 행 |
 | DB · 배포 전환 결정 | 운영 DB를 새 Supabase로 옮기되 코퍼스 4표만 이전하고 서비스 표는 새로 시작 | 1절 11-11 행 |
 | 주요 문서 검토 · 수정 | 루트 문서 6개와 `docs/adr/`, 제출 문서(EVAL_REPORT 6 · 8 · 11장, 실패 분석, 시연 스크립트)는 도구 초안을 검토하고 고쳐 확정 | [AGENTS.md](../../AGENTS.md) 팀 규칙 3 "주요 문서는 조장만 고칩니다" |
-| 시연 · 재측정 범위 | 시연 영상 시나리오(정상 1 + 실패 3)와 Langfuse 캡처 장면, v3 재측정 대상, 레포 정리 범위를 정함 | [DELIVERABLES.md](DELIVERABLES.md) `video/` · `langfuse/` 행, [EVAL_REPORT.md](../../EVAL_REPORT.md) 8.2절 |
+| 시연 · 재측정 범위 | 시연 영상 시나리오(정상 · 경계 · 방어 경로)와 Langfuse 캡처 장면, v3 재측정 대상, 레포 정리 범위를 정함 | [DELIVERABLES.md](DELIVERABLES.md) `video/` · `langfuse/` 행, [EVAL_REPORT.md](../../EVAL_REPORT.md) 8.2절 |
 | PR 검토 · 병합 · 배포 점검 | PR 검토 판단과 병합, 리뷰어 지정, 배포본에서 평가용 계정으로 하는 점검 | [AGENTS.md](../../AGENTS.md) 팀 규칙 3, [DELIVERABLES.md](DELIVERABLES.md) "남은 일" |
 
 ## 1. 사용 기록
