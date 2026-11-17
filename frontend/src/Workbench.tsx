@@ -1,4 +1,5 @@
 /** 프로젝트·대화·실행 작업대. 서버의 고정 회로 버전과 결과를 사용한다. 출처: SPEC 4·7·8절. */
+import { inputLabel } from './inputLabels';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -487,6 +488,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [error, setError] = useState<Error | null>(null),
     [stopped, setStopped] = useState(false),
     [pendingQuestion, setPendingQuestion] = useState(''),
+    [given, setGiven] = useState<{ runId: string; lines: string[] } | null>(null), // 조건 카드에 방금 적어 보낸 값(이 화면에서만 보인다)
     // 이번 실행에서 받은 진행 단계(SSE status의 stage)와 도착 시각(#42). 마지막이 지금 단계다
     [progress, setProgress] = useState<Progress | null>(null),
     [selected, setSelected] = useState<{ c: Candidate; r: Run } | null>(null),
@@ -926,6 +928,15 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   async function resume(body: any) {
     scrollToBottom();
     if (body.target) setTarget(body.target); // 고른 부품을 오른쪽 회로 패널의 연결 개념도 · 후보 상세에 바로 보인다
+    // [왜] 조건 카드에 적은 값이 보낸 뒤 대화에서 사라져, 무엇을 적었는지 · 그 값이 쓰였는지 볼 수 없었다(11-17 운영 실측).
+    //      적은 값을 그 질문 아래에 보인다. 서버는 이 값을 run 기록에 저장하지 않으므로(공개 결과 계약) 새로 고치면 사라진다
+    if (active && !body.target) {
+      const lines = Object.entries((body.answers ?? {}) as Record<string, string>).map(
+        ([code, value]) => `${inputLabel(code).replace(' (예/아니오)', '')}: ${value}`,
+      );
+      if (body.text) lines.push(String(body.text));
+      setGiven({ runId: active.id, lines: lines.length ? lines : ['모두 모름으로 계속'] });
+    }
     if (active) await execute(active.thread_id, `/runs/${active.id}/resume`, body);
   }
   async function older() {
@@ -1189,6 +1200,19 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     <div className="user-message">
                       <span className="sr-only">내 질문</span>
                       <p>{pendingQuestion}</p>
+                    </div>
+                  )}
+                  {given && given.runId === active?.id && (
+                    <div className="user-message">
+                      <span className="sr-only">조건 카드에 적은 값</span>
+                      <p>
+                        {given.lines.map((line, i) => (
+                          <span key={i}>
+                            {i > 0 && <br />}
+                            {line}
+                          </span>
+                        ))}
+                      </p>
                     </div>
                   )}
                   {active && running && !stopped && (
