@@ -1,7 +1,7 @@
 """그래프 최종 상태의 질문·근거·답으로 RAGAS Faithfulness·Context Precision을 재 Langfuse Score 칸에 붙일 값을 만든다.
 
 - 역할: 강의 03강과 같이 reference 없이 되는 두 지표만 잰다. 결과는 `run_gate`가 같은 trace에 `create_score`로 올린다(G6).
-- 하지 않는 일: 평가셋 고치기, reference가 필요한 Context Recall, 회귀 게이트 합격선 판정.
+- 하지 않는 일: 평가셋 고치기, reference가 필요한 Context Recall, 회귀 게이트 합격선 판정, 거절 답 채점(규칙 채점 `score_answer`가 본다).
 - 출처: 강의 `03강_RAGAS_실제로_실행하기`, docs/GATES.md G6, evals/runners/run_gate.py
 """
 from __future__ import annotations
@@ -11,6 +11,8 @@ import sys
 import types
 import warnings
 from typing import Any
+
+from evals.runners.score_answer import is_refusal_response, judgement_parts
 
 
 def _patch_vertexai_stub() -> None:
@@ -47,16 +49,20 @@ def contexts_from_state(state: dict) -> list[str]:
 
 
 def _add_judgement_contexts(judgement: dict, add) -> None:
-    """판정 결과의 역할 근거·조건 인용 글을 근거 목록에 넣는다(판정 길은 docs 칸이 비는 경우가 많다)."""
+    """판정 결과의 역할 근거와, 답 표에 나간 후보별 사양 행(위치 · 값 · 시험 조건 · 판정 기준)을 근거 목록에 넣는다(판정 길은 docs 칸이 비는 경우가 많다)."""
     for ev in judgement.get('role_evidence') or []:
         add(ev)
-    for result in judgement.get('results') or []:
-        if not isinstance(result, dict):
-            continue
-        for cond in result.get('conditions') or []:
-            if isinstance(cond, dict):
-                add(cond.get('citation'))
-        add(result.get('summary'))
+    # [왜] 판정 모델의 조건 칸은 checks다(backend/judge/verdict.py Judgement). 예전 코드는 없는 conditions 칸을 읽어
+    #      답 표의 후보 값이 근거에 하나도 안 들어가 Faithfulness가 0.1대로 나왔다(11-12 실행, 11-17 진단)
+    for part in judgement_parts(judgement):  # [왜] 답 글에 실제로 나간 후보만(찾기는 shown) 넣는다. score_answer와 같은 기준
+        lines = []
+        for c in part.get('checks') or []:
+            cite = c.get('citation') or {}
+            where = f"{cite.get('document', '')} {cite.get('page', '')}쪽 {cite.get('table', '')} {cite.get('row', '')}".strip() if cite else '—'
+            lines.append(f"{where}: {c.get('code')} = {c.get('value')} {c.get('unit') or ''}, 시험 조건 {c.get('condition') or '표 기본 조건'}"
+                         f"; 판정 기준 {c.get('code')} {c.get('op')} {c.get('threshold')} ({c.get('basis')})")
+        if lines:
+            add(f"{part.get('part')} 사양 행\n" + '\n'.join(lines))  # [왜] 후보 하나를 근거 하나로 묶어 15개 상한에 잘리지 않게 한다
 
 
 def question_text(item: dict, state: dict) -> str:
@@ -79,6 +85,9 @@ def score_ragas(item: dict, state: dict) -> dict[str, tuple]:
     contexts = contexts_from_state(state)
     question = question_text(item, state)
     if not answer or not question:
+        return {}
+    if is_refusal_response(state):
+        # [왜] 거절 답에는 근거로 뒷받침할 주장이 없어 Faithfulness 0점만 남는다(v3-41, 11-17 진단)
         return {}
     if not contexts:
         # [왜] 근거 없이 Faithfulness를 돌리면 거절·판정 답을 0점으로 벌주는 함정만 남긴다(강의 03강)
