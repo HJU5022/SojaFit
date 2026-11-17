@@ -1,5 +1,16 @@
 # jeongun 작업 기록
 
+## 2026-11-17 PR #157 운영 배포 · 운영에서 같은 대화 다시 확인
+- 배포 [실측]: PR #157 병합(`c786badc`, 18:11:59). 미리 시작한 `gcloud run deploy --source`는 작업 세션이 끊기며 로컬 gcloud가 죽었지만 Cloud Build `c1bfb6dc`는 끝까지 돌았다(18:03:49 ~ 18:13:50, 소스는 `a9a4e2ea`를 `git archive`로 푼 것). 그 이미지(`sha256:d3a51f53…28aab8`)로 `gcloud run deploy sojafit-api --image … --no-traffic --tag pre-a9a4e2ea --revision-suffix pre-a9a4e2ea-1117 --update-env-vars …`(18:14:08 ~ 18:14:38). `origin/main`과 `a9a4e2ea`의 트리가 같다(`adbdd0b9`).
+  - 무트래픽 점검(18:14:38): `/health` 200(14.4초, 콜드 스타트), `/login` · `/` · `/app` · `/quotes` 200, `/api/auth/me` · `/api/demo-circuits` 401, openapi 경로 42 · 동작 53, 화면 묶음 `index-Dfh3jnEa.js`, 환경변수 38개(`DEMO_MODE=0`, DB 비밀 `DATABASE_URL_NEW`).
+  - 트래픽 전환 18:15:07 ~ 18:15:16: `sojafit-api-pre-a9a4e2ea-1117` 100%. 운영 주소 같은 점검 통과.
+  - 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-pre-4c1b945e-1117=100 --project sojafit --region asia-northeast3`.
+- 운영에서 다시 확인 [실측 18:15 ~ 18:19, 조장 계정의 Chrome, 프로젝트 133(D2 값 DIODESOD), 새 대화 `d084d479`]: 아까 막혔던 순서로 물었다.
+  - "D2에 대한 부품을 대체품으로 찾아달란께" → 조건 카드(역할 "역극성 보호(직렬)" · 근거 3줄) → 모두 모름 → **답이 빈 칸**(아래).
+  - "다시 물어봐줘 그럼 적어줄게" → 조건 카드가 다시 뜸. 카드에 12 · 1을 적음 → 후보 100개(역할상 충분, TSD2G · TSD2GH · TSD3G 3장 + "나머지 97개 후보 보기"). 전에는 0개였다.
+  - "위 부품 견적서 작성해줘" → 후보 이름(TSD2G …)과 누를 자리. "D3의 대체품을 찾아줄래?" → "D3은 LED라서 … 검토할 수 있는 다이오드는 D2(DIODESOD)예요". "SparkFun:LED-0603" → "D1, D3, LED1의 값 · 풋프린트 이름이에요 …". "트랜지스터 찾아줘" → 다루지 않는 부품 안내. "내 견적서 사이드바에 왜없어" → 견적 위치. "두 번째 거는 어때?" → TSD2GH의 조건별 표.
+- 이때 찾은 것: 첫 답이 빈 칸이었다. 운영 로그의 단계 순서가 `대체 부품 판정 > Spec 에이전트 > 답 모으기 > Supervisor > 대상 확인 > 끝내기`다. 재계획이 받은 보고를 두고 끝내기를 골라 답 정리 · 거절을 거치지 않았다. `build.finish_node`가 보고가 있는데 답이 비었으면 받은 보고로 거절 글을 만들게 고쳤다(아직 배포 전).
+
 ## 2026-11-17 PR #155 운영 배포 · 배포 직후 운영 대화에서 찾은 문제 고치기
 - 배포 [실측]: PR #155 병합(`cd97c8bc`, 17:17:53). 병합 전에 `4c1b945e`를 `git archive`로 풀어(`.env` 없음) `gcloud run deploy sojafit-api --source . --project sojafit --region asia-northeast3 --no-traffic --tag pre-4c1b945e --revision-suffix pre-4c1b945e-1117 --update-env-vars WEB_PREFETCH=1,ANALYSIS_SERVICE_DAILY_TOKENS=100000000,ANALYSIS_USER_DAILY_TOKENS=20000000 --quiet`로 미리 빌드했다(17:09 ~ 17:18:01). `origin/main`과 `4c1b945e`의 트리가 같다(`8bbd82a8`).
   - 먼저 시작한 `3ebbd103` 빌드는 커밋을 더 올리며 로컬 gcloud를 멈추고 Cloud Build `ce1d8697`을 취소했다(리비전 없음).
