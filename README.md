@@ -17,7 +17,7 @@
 | 배포 점검 | 로그인 뒤 25단계 점검 24/24(재시작 단계 제외), 재시작 뒤 재개 통과 — [GATES G1](docs/GATES.md) |
 | 배포 DB | Supabase `SojaFit_2`(서울) |
 | 동결 | 채점 기준 `9c87ba36`(11-16 24:00), 최종 태그 `final-2026-11-17`(`a468c0ba`) |
-| 시연 영상 | [`sojafit-demo-2026-11-17.mp4`](docs/deliverables/video/sojafit-demo-2026-11-17.mp4)(4분 49초, 정상 경로 3 · 실패 경로 2, 운영 리비전에서 실제 모델로 녹화) · 대본 [`demo_script.md`](docs/deliverables/demo_script.md) |
+| 시연 영상 | [`sojafit-demo-2026-11-17.mp4`](docs/deliverables/video/sojafit-demo-2026-11-17.mp4)(2분 49초, 정상 · 경계 · 방어, 운영 리비전에서 실제 모델로 녹화) · 대본 [`demo_script.md`](docs/deliverables/demo_script.md) |
 
 ```bash
 curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.run.app/health   # {"status":"ok"} 200

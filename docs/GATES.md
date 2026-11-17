@@ -23,7 +23,7 @@
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-17 운영 리비전에서 조건 질문으로 멈춘 뒤 서버 재시작(같은 이미지의 새 리비전 `sojafit-api-pre-ef0138b2-rs`로 트래픽 이동, 19:52) → 재개 → 판정 완료 통과, [smoke_…_2026-11-17_195049.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-17_195049.json)(이 회차는 B 비밀번호 입력 실수로 B 단계 401 · 건너뜀, B 격리는 19:56 회차에서 통과). 그 전 11-13 [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 11-17 배포 리비전 코드(`2030f846`) 웹 켬 2세트 50/50 · 49/50(실패 v3-41 지어낸 답 1, [2026-11-17-deploy-ef0138b2-v3](../evals/results/graph/2026-11-17-deploy-ef0138b2-v3/report.txt)). 그 전 새벽 `799ae636` 49/50 · 49/50([d12](../evals/results/d12/README.md)). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
 | G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 충족 (점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 화면은 7장: 11-13 배포본 트레이스 3장, 11-17 배포 리비전 코드 v3 실행의 RAGAS 점수 트레이스 상세 · 점수 탭, Spec · RAG 두 에이전트 Timeline, 홈 대시보드 4장([langfuse/](deliverables/langfuse/) `04` ~ `07`)) |
-| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 충족 (비밀값: gitleaks 1,250 커밋 0건(11-17). 시연 영상 [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) 4분 49초, 정상 경로 3 + 실패 경로 2(운영 리비전 녹화, 필수 제출 목록의 5분 이내, 가이드 G7의 3분은 넘는다). 포트폴리오 3건 · AI 도구 기록 있음) |
+| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 충족 (비밀값: gitleaks 1,250 커밋 0건(11-17). 시연 영상 [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) 2분 49초, 정상 · 경계 · 방어 경로(운영 리비전 녹화, 3분 이내). 포트폴리오 3건 · AI 도구 기록 있음) |
 
 ## 게이트별 증거
 
@@ -177,7 +177,7 @@
 
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
-| 시연 영상 · 스크립트 | 영상 4분 49초(정상 3 + 실패 2, 11-17 운영 리비전 `sojafit-api-pre-b4a02113-1117`에서 녹화). 스크립트는 녹화 전 계획 | [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) · [demo_script.md](deliverables/demo_script.md) |
+| 시연 영상 · 스크립트 | 영상 2분 49초(정상 · 경계 · 방어, 11-17 운영 리비전 `sojafit-api-pre-b4a02113-1117`에서 녹화). 스크립트는 녹화 전 계획 | [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) · [demo_script.md](deliverables/demo_script.md) |
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
 | 포트폴리오 | 3건 있음(수치는 EVAL_REPORT 값만, 11-17) | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) · [portfolio-osc.md](deliverables/portfolio-osc.md) · [portfolio-sth.md](deliverables/portfolio-sth.md) |
