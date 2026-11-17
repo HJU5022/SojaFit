@@ -1,5 +1,22 @@
 # jeongun 작업 기록
 
+## 2026-11-17 팀원 버그 수정 14건 합치기(`1f31913e`) · SPEC 반영
+- 목적: 심태현 9건(BUG-001 ~ 004 · 006 ~ 010) · 오세창 5건(LOCAL-001 ~ 005)의 로컬 수정을 `jeongun`에 합치고, 바뀐 동작을 `SPEC.md`에 적는다. 두 사람 모두 기준은 `3e68d005`이고, 그 뒤 `main`은 해당 파일을 바꾸지 않았다.
+- 받은 것: 오세창 `sojafit-ui-bugfixes.patch`(12파일, +711 −52, sha256 `e5e2b949…`), 심태현 고친 파일 26개(패치가 아니라 파일 통째, 그중 16개가 윈도우 줄바꿈).
+- 합친 방법: `main` `7e1e2805`의 임시 작업 트리에서 세창 패치를 먼저 적용하고(깨끗이 붙음), 태현 파일은 줄바꿈을 LF로 바꿔 올렸다. 둘 다 고친 `frontend/src/Workbench.tsx`는 3방향 병합으로 자동으로 합쳐졌다. 충돌은 시험 파일 2개: `frontend/tests/account.spec.ts`(둘 다 끝에 시험을 덧붙여 양쪽을 모두 살림), `frontend/tests/demo.spec.ts`(같은 버튼 고르기를 세창 `.last()` · 태현 `.first()`로 달리 고쳐 세창 쪽을 택함). 변경 35개 파일(수정 34 + 새 `db/036_thread_continuations.sql`)을 `jeongun` 작업 트리로 옮겼고, 커밋 `1f31913e`에 그 35개가 그대로 들어갔다.
+- 합친 뒤 고친 것 3건(`1f31913e`에 포함): `docs/specs/d5-frontend-service.md`의 개인 PC 경로 구절 삭제, `backend/projects/repository.py` `import_netlist` 설명 주석을 새 동작에 맞춤, `tests/multi_agent/test_judge.py` 파일 끝 줄바꿈.
+- `SPEC.md` 반영 6곳(이 기록과 같은 변경): 4절 API 표의 `POST /api/projects/{id}/threads` 선택 쿼리 `circuit_version`과 `GET /api/threads/{id}`의 `previous_thread_id`, 8.3의 찾기 검색 조건 · 조건 모름, 8.5 삭제 범위의 `thread_continuations`, 8.8의 대화 중 회로 첨부 · 과거 회로 버전에서 검토 시작. 화면 수용 기준 AC-11 ~ AC-14는 D5 화면 작업서에 이미 있어 `SPEC.md`에는 넣지 않았다.
+- 실행한 명령 · 결과 [실측, macOS 호스트, 키 없이, 커밋 전 합본 기준]:
+  - `cd frontend && npm ci && npm test`: 44 통과 · 0 실패. `npm run format:check` 통과. `npm run build` 통과. `npx playwright test --list`: 21개가 오류 없이 읽힘(실행은 안 함).
+  - `uv run pytest -q tests/judge tests/multi_agent tests/conversations tests/projects tests/api tests/repo tests/db`: 1,970 통과 · 174 건너뜀 · 13 실패. 실패 13개는 모두 `tests/projects/test_schematic_render.py`이고, 고치기 전 코드에서도 같은 13개가 실패한다(맥에 회로도 그리기 도구가 없음).
+  - `pytest tests/repo` 5 통과, `evals/runners/freeze.py --check` "동결 이후 바뀐 파일: 없음", `git diff --check` 통과.
+  - gitleaks(CI와 같은 이미지, 저장소 `.gitleaks.toml`)를 바뀐 35개 파일에만: 유출 0건.
+  - 랜딩까지 합친 상태의 전체 시험 · 스모크 · 브라우저 시험 결과는 커밋 `2984d86b`의 메시지에 있다.
+- BUG-008 재현 [실측]: 고치기 전 코드(`53742fb2`, `main` `7e1e2805`와 판단 로직 차이 없음)에서 `data/circuits/collected/samples/attiny85_dev/converted/circuit.net`의 D1(값 `3.6 Zener`)에 질문 4개를 멀티 그래프로 넣었다(`DEMO_MODE=0 DEMO_REPLAY=0 LLM_PROVIDER=openrouter EVAL_WEB=0`, 인터럽트는 빈 답으로 1번 재개). 역할 질문은 답했고, 대체 질문 3개(조건 없음 · VZ 3.42 ~ 3.78 V와 5 mA를 준 것 · "3.6 V 제너 후보")는 모두 `candidate_find` → 후보 0개(`no_result`) → 거절 `not_found`였다. 원인은 `search_conditions`가 필수 조건 중 `orig.*`에 기대지 않는 것만 검색 조건으로 써서 R04는 조건이 0개가 되고, 조건이 없으면 찾기를 건너뛰는 것이다. 모델 호출 없이 23개 역할을 돌려 R04만 해당함을 확인했다. 합친 코드에서는 같은 값에서 검색 조건 3개(VZ 최소 · 최대, PD ≥ 0.027)가 나온다. 범위를 주지 않으면 여전히 0개다.
+  - [주의] 이 재현은 실제 모델 호출인데 시작 전 기록 없이 돌렸다(팀 규칙 10의 예외). 4문항, 문항당 4.3 ~ 6.7초. 비용은 재지 않았다.
+- 확인 못 한 것: 실제 모델 모드에서 합친 코드의 BUG-008 재확인, 운영 · 로컬 DB에 `db/036` 적용, `Workbench.tsx` 전체 정독(두 사람 합쳐 약 400줄 변경). 수신 끊김 복구의 상한(태현 문서: 최대 5회 · 합계 15초)은 코드에서 숫자를 확인하지 못해 `SPEC.md`에 적지 않았다.
+- 다음 할 일: 배포 전에 DB에 `db/036`을 먼저 적용한다(대화 상세 조회가 `thread_continuations`를 늘 조인하므로, 표가 없으면 대화 열기가 실패한다). 판정 코드 2곳(`verdict.py` · `judge.py`)이 바뀌었으니 v3를 다시 잰다.
+
 ## 2026-11-17 견적서 문서와 PDF 다운로드(커밋 없음)
 - 목적: 승인한 후보의 견적을 수량과 함께 문서로 내려받게 한다. 지금까지는 가격 카드와 "견적 목록"의 품번 · 수량만 있었다(조장 요청).
 - 바꾼 파일: `frontend/src/Approved.tsx`(`CaseQuote`: `/approved/{사례}/quote/{견적}` A4 한 장, "PDF 다운로드"), `frontend/src/report.ts`(`quoteFields`), `frontend/src/App.tsx`(주소 연결), `frontend/src/Candidate.tsx`(승인 뒤 "몇 개가 필요한가요?" 문구, 저장된 견적 줄의 "견적서 보기"), `frontend/src/Workbench.tsx`("견적 목록"의 "견적서 보기"), `frontend/src/types.ts` · `styles.css`, `frontend/package.json` · `package-lock.json`(`jspdf` 4.2.1 · `html2canvas` 1.4.1), `SPEC.md` 8.4절, `frontend/src/SRC.md` · `frontend/tests/TESTS.md`.
@@ -10,7 +27,7 @@
 
 ## 2026-11-17 웹 근거 파일명 `%20` 풀기(v3-16 `wrong_citation`)
 - 목적: 동결 v3-16이 정답과 같은 PDF · 같은 쪽을 인용하고도 `wrong_citation`으로 떨어졌다. 원인은 웹 근거 카드(`W1`…)의 `file` · `title`이 URL 파일명을 인코딩된 채(`UF4001%20SERIES_P2104.pdf`) 쓰는 것이다. 채점기(`evals/runners/score_answer.py`)는 인용한 카드의 `(file, page)`가 정답 위치 집합에 글자 그대로 있는지 보는데, 코퍼스 파일명은 공백(`UF4001 SERIES_P2104.pdf`)이다.
-- 바꾼 파일(`09cc4fe2`): `backend/services/exa.py`(`_search_evidence`가 카드 파일명에 `unquote`를 씀. `source_url`은 인코딩된 그대로), `tests/services/test_exa_parallel.py`(`%20` 파일명 시험 1개 추가). SPEC · 동결 평가셋 · 채점기는 바꾸지 않았다.
+- 바꾼 파일(`6b83e55d`): `backend/services/exa.py`(`_search_evidence`가 카드 파일명에 `unquote`를 씀. `source_url`은 인코딩된 그대로), `tests/services/test_exa_parallel.py`(`%20` 파일명 시험 1개 추가). SPEC · 동결 평가셋 · 채점기는 바꾸지 않았다.
 - 실행한 명령 · 결과 [실측, 임시 작업 트리 · 키와 네트워크 없이 `DEMO_MODE=1`]:
   - 새 시험 `uv run --frozen pytest tests/services/test_exa_parallel.py -k percent_encoded -q`: `unquote`를 뺀 코드에서 1 실패(`('UF4001%20SERIES_P2104.pdf', …) != ('UF4001 SERIES_P2104.pdf', …)`), 넣은 코드에서 1 통과.
   - 관련 시험 `uv run --frozen pytest tests/services/test_exa_parallel.py tests/services/test_exa_prefetch.py tests/services/test_datasheet_rows.py tests/multi_agent -k "exa or web or official or docs or datasheet" -q`: 269 통과 · 405 제외(새 시험 1개 포함. 고치기 전에는 268 통과).
