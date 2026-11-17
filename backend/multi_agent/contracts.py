@@ -149,6 +149,42 @@ class Plan(BaseModel):
         return self
 
 
+LAST_RESULT_KINDS = ('last_candidates', 'last_candidate', 'last_conditions')  # 앞 턴 판정으로 코드가 답하는 길(끝내기 노드)
+NO_REPLY = '그 질문은 제가 답하기 어려워요. 회로 부품의 역할 · 정격 확인과 대체 후보 검토를 도와드릴 수 있어요.'
+
+
+class FollowUpPlan(Plan):
+    """이어 묻는 턴(이 대화에 직전 판정이 있음)의 계획서: Plan에 '앞 결과로 답하기' 표시를 더한다.
+
+    [왜] Supervisor는 앞 턴의 자기 답을 보지 못해 "그래서 뭐 써?" · "두 번째 거는?" · "왜?"를 알아듣지 못했다(11-17 운영 대화). 직전 판정 요약을
+         계획 입력에 싣고(`supervisor.previous_turn`) 그 결과로 답하라는 표시를 받는다. 품번 · 판정 · 숫자는 코드가 저장된 판정에서 옮긴다.
+    [주의] 한 번 묻는 질문은 `Plan` 그대로다. 그 입력 글 · 형식은 전과 글자까지 같아 평가 문항 · 재생 기록이 달라지지 않는다.
+    """
+    reply_kind: Literal['', 'general', 'earlier_answer', 'last_candidates', 'last_candidate', 'last_conditions'] = Field(
+        default='', description="next=finish only: 'general' for a general electronics explanation (the code appends a fixed note), "
+                                "'earlier_answer' when the user asks to see an earlier answer or its evidence again, "
+                                "'last_candidates', 'last_candidate' or 'last_conditions' as the 'Previous turn' block of the input tells you "
+                                "(the code writes the answer from the stored result); empty otherwise")
+    about_part: str = Field(default='', max_length=40,
+                            description="reply_kind 'last_candidate' only: the part number of the earlier candidate the user asks about, "
+                                        "copied exactly from the candidate list of the 'Previous turn' block")
+
+    @model_validator(mode='before')
+    @classmethod
+    def repair_empty_finish(cls, data):
+        # [왜] 앞 턴 블록을 실으면 Haiku가 끝내기 계획의 reply를 비워 보내는 일이 생겼고, temperature 0이라 다시 불러도 같은 답이라
+        #      형식 재시도 3번(유료)을 다 쓰고 '시간이 너무 오래 걸려' 거절로 끝났다(11-17 실측: "오늘 날씨 어때" · "다이오드 뭐뭐 있어?").
+        #      코드가 고칠 수 있는 모양은 다시 부르지 않고 고친다(Plan이 part_kinds를 비우는 것과 같은 이유)
+        if isinstance(data, dict) and data.get('next') == 'finish' and not str(data.get('reply') or '').strip():
+            if data.get('question_type') in ('parts_list', 'price', 'quote'):
+                data = {**data, 'next': data['question_type']}  # 질문 종류는 맞게 골랐는데 길만 끝내기로 적었다
+            elif data.get('reply_kind') in LAST_RESULT_KINDS:
+                data = {**data, 'reply': '앞 결과로 답함'}  # 이 길의 답은 코드가 쓴다(끝내기 노드). reply는 쓰이지 않는다
+            elif data.get('reply_kind') != 'earlier_answer':
+                data = {**data, 'reply': NO_REPLY, 'reply_kind': ''}
+        return data
+
+
 class TaskReport(BaseModel):
     """서브에이전트가 할 일 하나를 마치고 올리는 보고서. 답 모으기 · 재계획은 요약 · 상태만 읽고, 마무리 코드가 부분 답 · 근거를 쓴다."""
     task: int

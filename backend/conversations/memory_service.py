@@ -81,6 +81,18 @@ def _reporting(progress):
         _progress.reset(token)
 
 
+def _last_judgement(mode: str, before: dict) -> dict:
+    """다음 턴에 싣는 직전 판정 요약(앞 실행의 상태에서 만든다). 판정 없는 턴을 지나면 앞 요약을 이어 쓴다.
+
+    [주의] 기록 재생(데모)에서는 싣지 않는다. 요약이 있으면 계획 입력 끝에 앞 턴 글이 붙고 판정이 되묻기를 건너뛰어, 한 대화에서
+          기록한 질문을 이어 물을 때 LLM 호출이 기록과 달라진다(`demo.ReplayMiss`). 기록은 질문마다 새 대화로 만들었다.
+    """
+    if mode == 'demo':
+        return {}
+    from backend.multi_agent.messages import judgement_summary
+    return judgement_summary(before.get('judgement') or {}, before.get('target') or '') or before.get('last_judgement') or {}
+
+
 def _conversation_history(contents, *, max_chars=MAX_CONVERSATION_HISTORY_CHARS):
     """이전 사용자 입력을 질문과 분리해, 온전한 항목 단위로 최근 문맥만 만든다.
 
@@ -630,11 +642,10 @@ class Conversations:
             # 현재 질문 문자열에 붙이면 회로 역할·조건이 섞이므로, 모델의 현재
             # 입력은 항상 이번 요청만 보게 한다.
             conversation_history = _conversation_history([r['content'] for r in history])
-            # [왜] 그래프는 턴마다 판정 칸을 비운다. 직전 판정의 요약만 따로 실어 "그래서 뭐 써?" · "조건이 뭐야?"에 코드가 답하게 한다(11-17).
+            # [왜] 그래프는 턴마다 판정 칸을 비운다. 직전 판정의 요약만 따로 실어 이어 묻는 턴의 계획 · 답 · 다음 판정이 쓰게 한다(11-17).
             #      판정 없는 턴(견적 안내 · 일상 대화)을 지나도 남도록 앞 요약을 이어 쓴다
-            from backend.multi_agent.messages import judgement_summary
             before = getattr(self.graph.get_state(self.config(thread)), 'values', None) or {}  # 새 대화는 앞 상태가 없다
-            last_judgement = judgement_summary(before.get('judgement') or {}) or before.get('last_judgement') or {}
+            last_judgement = _last_judgement(self.mode, before)
             inputs = {'input': content, 'conversation_history': conversation_history, 'last_judgement': last_judgement,
                       'connections': row['connections'], 'circuit': row['filename'], 'target': row['target'],
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,

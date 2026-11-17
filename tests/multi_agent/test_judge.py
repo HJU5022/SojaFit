@@ -370,6 +370,26 @@ def test_text_reply_is_read_again_once_and_does_not_ask_twice(monkeypatch):
     assert 'i_max' not in j['results'][0]['missing']
 
 
+def test_follow_up_on_the_same_target_keeps_the_role_and_given_values_and_does_not_ask_again(monkeypatch):
+    """같은 대상을 이어 묻는 턴(`prior`)은 앞에서 정한 역할과 알려 준 값을 이어 쓰고 되묻지 않는다(11-17: 턴마다 역할이 달리 읽혀 판정이 뒤집혔다)."""
+    monkeypatch.setattr(J, 'interrupt', lambda payload: pytest.fail('이어 묻는 턴은 되묻지 않는다'))
+    # 이번 읽기는 역할을 R02로 다르게 읽고 i_max도 못 읽었다. 앞 턴의 역할 R01과 i_max 150mA를 이어 쓴다
+    read = dict(READ, role='R02', role_alt=None, values=[v for v in READ['values'] if v['name'] != 'i_max'])
+    prior = {'roles': ['R01'], 'inputs': {'values_si': {'i_max': 0.15, 'unrelated_name': 1.0}, 'test_conditions': {}}}
+    j = J.judge_agent({**STATE, 'judge_read': read, 'prior': prior}, specs=specs_of(SPECS), find=None, retriever=None)['judgement']
+    assert j['roles'] == ['R01'] and j['asked'] == []
+    assert j['analysis_inputs']['values_si']['i_max'] == pytest.approx(0.15) and 'unrelated_name' not in j['analysis_inputs']['values_si']
+    assert 'i_max' not in j['results'][0]['missing']
+    # 이번 글에서 읽은 값이 앞 값보다 먼저다
+    j = J.judge_agent({**STATE, 'judge_read': dict(READ, role='R02', role_alt=None), 'prior': {**prior, 'inputs': {'values_si': {'i_max': 9.0}}}},
+                      specs=specs_of(SPECS), find=None, retriever=None)['judgement']
+    assert j['analysis_inputs']['values_si']['i_max'] != pytest.approx(9.0)
+    # 규칙에 없는 역할 이름은 버린다(읽은 역할 그대로)
+    monkeypatch.setattr(J, 'interrupt', lambda payload: {'answers': {}})
+    j = J.judge_agent({**STATE, 'judge_read': READ, 'prior': {'roles': ['R99']}}, specs=specs_of(SPECS), find=None, retriever=None)['judgement']
+    assert j['roles'] == [READ['role']]
+
+
 def test_text_reply_without_a_reader_is_ignored_like_an_empty_answer(monkeypatch):
     """읽기 함수를 받지 않는 호출(단일 그래프)은 글 답을 쓰지 않는다: 빈 답과 같다."""
     monkeypatch.setattr(J, 'interrupt', lambda payload: {'answers': {}, 'text': '최대 순방향 전류는 150mA야'})

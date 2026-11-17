@@ -998,12 +998,19 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
     text = '\n'.join(x for x in (current_text, history_text, render_read(state, {})) if x)
     direct_text = _direct_condition_text(current_text)
     roles = list(dict.fromkeys(r for r in (read.role, read.role_alt) if r and r != 'other'))  # 같은 역할을 두 번 적으면 하나로
+    # [왜] 같은 대상을 이어 묻는 턴: 읽기 LLM이 턴마다 역할을 다르게 읽어 앞 답과 판정이 뒤집혔다(11-17 실측: 찾기 R02 · 사양 동등 → 바로 뒤 판정 R01 · 확인 안 됨).
+    #      이 대화에서 이미 정한 역할(사용자가 되묻기에서 보거나 고른 역할)을 이어 쓴다. Supervisor가 같은 대상일 때만 `prior`를 넘긴다
+    prior = state.get('prior') or {}
+    prior_roles = [r for r in prior.get('roles') or [] if r in rules]
+    if prior_roles:
+        roles = prior_roles
     base = {'roles': roles, 'role_evidence': read.role_evidence, 'results': [], 'shown': [], 'unverified': [], 'terms': [],
             'capped': False, 'dropped': [], 'asked': []}
     if not roles:
         return {'judgement': {**base, 'kind': 'no_rule'}, 'path': ['판정'],
                 'reports': (state.get('reports') or []) + [_report('partial', 'role outside the 23 roles: no judging rule')]}
-    roles = _prefer_role_from_load(roles, rules, text)
+    if not prior_roles:
+        roles = _prefer_role_from_load(roles, rules, text)
     kinds = {k: v for r in roles for k, v in C.inputs(rules[r]).items()}
 
     def resolve_inputs(input_kinds: dict) -> tuple[dict, dict, list[str]]:
@@ -1026,6 +1033,11 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         return merged_values, merged_conds, dropped_values
 
     values, conds, dropped = resolve_inputs(kinds)
+    if prior_roles:
+        # 앞 턴에 사용자가 알려 준 회로 값도 이어 쓴다(그 턴에 사용자 글 인용 확인을 거친 값, AC-02). 이번 글에서 읽은 값이 먼저다
+        given = prior.get('inputs') or {}
+        values = {**{k: v for k, v in (given.get('values_si') or {}).items() if k in kinds}, **values}
+        conds = {**{k: v for k, v in (given.get('test_conditions') or {}).items() if k in kinds}, **conds}
     auto_selected = False
     if len(roles) > 1 and read.role_evidence:
         complete = [r for r in roles if not _required_missing(rules[r], _role_present(r, rules[r], values, conds, text))]
@@ -1057,6 +1069,8 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         if state.get('reply_role') in roles:
             roles = [state['reply_role']]
         asked = []
+    elif prior_roles:
+        asked = []  # 이 대상은 이 대화에서 이미 한 번 물었다. 이어 묻는 턴마다 같은 폼을 다시 띄우지 않는다(모르는 값은 원래 부품 기준으로 본다)
     elif asked or len(roles) > 1:
         # [주의] 인터럽트는 문항당 한 번이다(AC-08). 재개하면 이 노드가 처음부터 다시 돌지만, 읽기는 앞 노드에 남아 있어 LLM을 다시 부르지 않는다
         # [주의] 재개 값은 {'answers': {...}, 'role': ...} 모양이다. 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다(11-06 실측)

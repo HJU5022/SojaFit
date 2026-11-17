@@ -515,3 +515,95 @@ def test_first_introduced_input_is_recalled_beyond_twelve_messages():
     assert S._history_for_reference({**STATE, 'question': question, 'conversation_history': history}) == history
     assert S._history_for_reference({**STATE, 'question': '이 서비스를 처음 사용하는데 무엇을 할 수 있나요?',
                                      'conversation_history': history}) == []
+
+
+def test_plan_input_carries_the_previous_result_summary_only_on_follow_up_turns():
+    """직전 판정이 있는 대화는 계획 입력에 그 요약과 이어 묻기 규칙이 붙는다(11-17). 없으면 입력은 전과 글자까지 같고, 앞선 사용자 말 원문은 싣지 않는다."""
+    from backend.multi_agent import supervisor as S
+    base = {'question': '그래서 어떤 부품 써야 돼?', 'target': 'D2', 'target_part': {'ref': 'D2', 'value': 'SS34', 'nets': []}, 'conditions': '', 'facts': {},
+            'conversation_history': ['조건 답변:\ni_max: SECRET_MARKER']}
+    plain = S.render_plan(base, True)
+    assert 'Previous turn' not in plain and S.render_plan({**base, 'last_judgement': {}}, True) == plain
+    last = {'kind': 'find', 'roles': ['R02'], 'terms': [{'code': 'VRRM', 'gte': 40.0}], 'terms_from_original': True, 'missing': ['i_max'], 'assumed': ['v_reverse_max'],
+            'candidates': [{'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT', 'board_change': True}, {'part': 'SS36L', 'verdict': 'NOT_VERIFIED', 'board_change': True}]}
+    text = S.render_plan({**base, 'last_judgement': last}, True)
+    assert text.startswith(plain) and 'Previous turn of this conversation' in text
+    for want in ('a candidate search for target D2 SS34', 'circuit role R02', 'VRRM >= 40.0', 'original-part ratings stood in',
+                 '1. SS34L SPEC_EQUIVALENT, 2. SS36L NOT_VERIFIED', 'has not given: i_max, v_reverse_max', 'reply_kind `last_candidates`',
+                 'reply_kind `last_candidate`, about_part', 'reply_kind `last_conditions`', '`candidate_judge`', 'exactly as it would be without this block', 'Never use a `last_…` kind for these'):
+        assert want in text, want
+    assert 'SECRET_MARKER' not in text  # 앞선 사용자 말 원문은 이 블록에 싣지 않는다
+
+
+def test_follow_up_turns_use_the_extended_plan_and_single_turns_keep_the_plain_one():
+    """직전 판정이 있는 턴만 '앞 결과로 답하기' 표시가 있는 형식(FollowUpPlan)으로 부른다. 한 번 묻는 질문의 형식 · 입력은 그대로다(평가 · 재생 기록 보존)."""
+    from backend.multi_agent import supervisor as S
+    from backend.multi_agent.contracts import FollowUpPlan, Plan
+    seen = []
+
+    def chat(node, system, user, schema):
+        seen.append(schema)
+        return schema(question_type='chat', next='finish', reply='네')
+
+    state = {'question': '고마워', 'target': 'D2', 'target_part': {'ref': 'D2', 'value': 'SS34', 'nets': []}, 'conditions': '', 'facts': {}}
+    S.plan_node(state, chat=chat, judge_enabled=True)
+    last = {'kind': 'find', 'roles': ['R02'], 'candidates': [{'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT'}]}
+    out = S.plan_node({**state, 'last_judgement': last}, chat=chat, judge_enabled=True)
+    assert seen == [Plan, FollowUpPlan] and out['plan']['about_part'] == ''
+    assert 'about_part' not in Plan.model_json_schema()['properties'] and 'last_candidate' not in str(Plan.model_json_schema())
+
+
+def test_follow_up_plan_repairs_an_empty_finish_instead_of_failing_the_format():
+    """끝내기 계획의 reply가 비어 와도 형식 오류로 다시 부르지 않고 코드가 고친다(11-17 실측: 형식 재시도 3번 뒤 '시간이 너무 오래 걸려' 거절)."""
+    from backend.multi_agent.contracts import NO_REPLY, FollowUpPlan
+    for kind in ('last_candidates', 'last_candidate', 'last_conditions'):
+        assert FollowUpPlan(question_type='chat', next='finish', reply_kind=kind, about_part='SS34L').reply_kind == kind
+    assert FollowUpPlan(question_type='parts_list', next='finish').next == 'parts_list'
+    assert FollowUpPlan(question_type='quote', next='finish').next == 'quote'
+    lost = FollowUpPlan(question_type='chat', next='finish', reply_kind='general')
+    assert lost.reply == NO_REPLY and lost.reply_kind == ''
+    assert FollowUpPlan(question_type='candidate_find', next='tasks', reply_kind='last_candidates',
+                        tasks=[{'id': 1, 'agent': 'judge', 'kind': 'candidate_find', 'goal': 'x'}]).reply_kind == ''  # 끝내기 길에서만 쓴다
+
+
+def test_values_only_message_after_a_result_repeats_the_earlier_request_without_the_plan_llm():
+    """앞 판정 뒤에 회로 값만 준 말은 코드가 계획한다: 앞이 찾기면 찾기를, 특정 후보 판정이면 그 후보 판정을 그 값으로 다시 한다(#64, 11-17)."""
+    from backend.multi_agent import supervisor as S
+
+    def chat(*_):
+        raise AssertionError('계획 LLM을 부르면 안 된다')
+
+    state = {'question': '전원은 5V고 전류는 100mA야', 'target': 'D2', 'target_part': {'ref': 'D2', 'value': 'SS34', 'nets': []}, 'conditions': '', 'facts': {}}
+    found = {'kind': 'find', 'roles': ['R02'], 'candidates': [{'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT'}]}
+    out = S.plan_node({**state, 'last_judgement': found}, chat=chat, judge_enabled=True)
+    assert out['question_type'] == 'candidate_find' and out['question'] == state['question']
+    assert [(t['agent'], t['kind']) for t in out['plan']['tasks']] == [('judge', 'candidate_find')]
+    judged = {**found, 'kind': 'judge', 'candidates': [{'part': '1N5817', 'verdict': 'NOT_VERIFIED'}]}
+    out = S.plan_node({**state, 'last_judgement': judged}, chat=chat, judge_enabled=True)
+    assert out['question_type'] == 'candidate_judge' and out['question'] == 'D2를 1N5817로 바꿔도 돼? 전원은 5V고 전류는 100mA야'
+    # 품번이 있거나 묻는 말이면 코드가 정하지 않는다(계획 LLM이 본다)
+    assert S.carry_on_plan({**state, 'question': '5V 100mA면 SS36L 돼?', 'last_judgement': found}) is None
+    assert S.carry_on_plan(state) is None  # 직전 판정이 없다
+
+
+def test_judge_task_carries_the_role_and_given_values_of_the_same_target():
+    """같은 대상을 이어 물으면 Spec 에이전트 꾸러미에 앞에서 정한 역할과 사용자가 알려 준 값을 싣는다. 대상이 다르면 싣지 않는다(11-17)."""
+    from backend.multi_agent import supervisor as S
+    task = {'id': 1, 'agent': 'judge', 'kind': 'candidate_judge', 'goal': 'x'}
+    last = {'target': 'D2', 'roles': ['R02'], 'inputs': {'values_si': {'i_max': 0.1}, 'test_conditions': {}}, 'candidates': [{'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT'}]}
+    state = {'question': 'q', 'target': 'D2', 'last_judgement': last}
+    assert S.payload(state, task)['prior'] == {'roles': ['R02'], 'inputs': {'values_si': {'i_max': 0.1}, 'test_conditions': {}}}
+    assert 'prior' not in S.payload({**state, 'target': 'D1'}, task)
+    assert 'prior' not in S.payload({**state, 'last_judgement': {}}, task)
+    assert 'prior' not in S.payload(state, {**task, 'agent': 'docs', 'kind': 'rating', 'query': 'q'})
+
+
+def test_plan_input_tells_that_the_target_is_not_chosen_yet_when_the_circuit_has_several_diodes():
+    """대상 없이 시작한 대화(지원 다이오드 여럿)는 계획 입력에 고를 부품이 있다고 알린다. 대상이 있거나 후보가 없으면 전과 같다(11-17)."""
+    from backend.multi_agent import supervisor as S
+    base = {'question': '대체품 찾아줘', 'target': '', 'conditions': '', 'facts': {}}
+    assert 'Target part: (none)' in S.render_plan(base, True)
+    text = S.render_plan({**base, 'target_choices': [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'SS34'}]}, True)
+    assert 'Target part: (not chosen yet: the circuit has D1 SS34, D2 SS34.' in text and 'the user is then asked which part' in text
+    chosen = {**base, 'target': 'D2', 'target_part': {'ref': 'D2', 'value': 'SS34', 'nets': []}, 'target_choices': [{'ref': 'D1', 'value': 'SS34'}]}
+    assert 'Target part: D2 SS34' in S.render_plan(chosen, True) and 'not chosen yet' not in S.render_plan(chosen, True)

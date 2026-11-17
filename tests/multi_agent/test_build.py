@@ -339,6 +339,24 @@ def test_followup_questions_are_answered_from_the_last_judgement_summary():
     assert B.finish_node({**chat, 'question': '다른 조건은 없어?'})['answer'] == conds
     known = B.finish_node({**chat, 'last_judgement': {**last, 'missing': []}, 'question': '조건이 뭐야?'})['answer']
     assert '원래 부품 기준 대신 그 값으로 다시 판정해요' in known  # 원래 부품 기준으로 찾았으면 회로 값을 주면 다시 판정한다고 알린다
+    # 계획이 표시를 주면(낱말과 상관없이) 저장된 판정으로 답한다: 이해는 LLM이, 품번 · 판정은 코드가
+    marked = {**chat, 'plan': {'reply': '', 'reply_kind': 'last_candidates'}, 'question': '두 번째 거는?'}
+    assert B.finish_node(marked)['answer'] == pick
+    assert B.finish_node({**marked, 'plan': {'reply': '', 'reply_kind': 'last_conditions'}})['answer'] == conds
+    assert '앞에서 판정한 결과가 없어요' in B.finish_node({**marked, 'last_judgement': {}})['answer']
+    # 후보 하나를 묻는 말: 그 후보의 판정 · 기판 수정 여부 · 조건별 표(저장된 줄)로 답한다. 목록에 없는 품번은 없다고 알린다
+    detail = {**last, 'candidates': [{**last['candidates'][0], 'lines': ['**SS34L: 사양 동등**', '', '| 조건 | 기준 |', '| VRRM >= | 40 (orig.VRRM) |']}, *last['candidates'][1:]]}
+    one = lambda part: B.finish_node({**marked, 'last_judgement': detail, 'plan': {'reply': 'x', 'reply_kind': 'last_candidate', 'about_part': part}})['answer']
+    first = one('ss34l')
+    assert "SS34L의 판정은 '사양 동등'" in first and '기판 수정은 필요 없어요' in first and '| VRRM >= | 40 (orig.VRRM) |' in first and '이 후보 승인하기' in first
+    assert '**SS34L: 사양 동등**' not in first  # 제목 줄은 문장으로 바꿔 쓴다
+    assert "SS36L의 판정은 '문서로 확인 안 됨'" in one('SS36L') and '승인할 수 있는 판정은 아니에요' in one('SS36L') and 'v_reverse_max' in one('SS36L')
+    assert one('') == first  # 품번 없이 "왜?"만 물으면 승인할 수 있는 맨 위 후보
+    same = {**detail, 'candidates': [{'part': '1N4148', 'verdict': 'IDENTICAL', 'board_change': True, 'lines': []}]}
+    same_reply = B.finish_node({**marked, 'last_judgement': same, 'plan': {'reply': 'x', 'reply_kind': 'last_candidate', 'about_part': '1N4148'}})['answer']
+    assert '원래 부품과 같은 품번이에요' in same_reply and '기판 수정이 필요해요' not in same_reply  # 동일품은 풋프린트 확인만 알린다
+    missing_part = one('1N5817<script>')
+    assert '앞 검토 후보에 그 품번은 없어요' in missing_part and '1N5817' not in missing_part  # LLM이 준 글자는 답에 옮기지 않는다
     # 직전 판정이 없거나 되묻는 말이 아니면 LLM 글 그대로
     assert B.finish_node({**chat, 'last_judgement': {}, 'question': '그래서 어떤 부품 써야 돼'})['answer'] == '조금 더 구체적으로 알려 주세요.'
     assert B.finish_node({**chat, 'question': '안녕'})['answer'] == '조금 더 구체적으로 알려 주세요.'

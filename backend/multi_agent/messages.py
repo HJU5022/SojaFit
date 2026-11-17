@@ -48,46 +48,89 @@ ASKS_CONDITIONS = re.compile(r'조건')
 APPROVABLE = ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT')
 
 
-def followup_reply(question: str, last: dict) -> str:
-    """직전 판정 요약(`last_judgement`)으로 답할 수 있는 되물음이면 그 답, 아니면 빈 글자."""
+def last_result_reply(kind: str, last: dict, part: str = '') -> str:
+    """직전 판정 요약(`last_judgement`)으로 쓰는 답. 요약이 없으면 빈 글자.
+
+    kind: 'last_candidates'(무엇을 쓸지) · 'last_candidate'(후보 하나의 판정과 조건별 근거, `part`가 그 품번) · 'last_conditions'(무슨 조건으로 봤는지).
+    [주의] 품번 · 판정 · 숫자 · 근거 위치는 모두 저장된 판정에서 옮긴다(LLM이 쓴 글자는 `part` 하나뿐이고 후보 목록에 있을 때만 쓴다).
+    """
     cands = (last or {}).get('candidates') or []
     if not cands:
         return ''
-    question = question or ''
     named = lambda rows: ', '.join(f"{c['part']}({VERDICT_KO.get(c['verdict'], c['verdict'])})" for c in rows)
     missing = ', '.join(last.get('missing') or [])
-    if ASKS_CONDITIONS.search(question):
+    assumed = ', '.join(last.get('assumed') or [])
+    if kind == 'last_conditions':
         from backend.judge import conditions as C
         rules = C.load()
         roles = ', '.join(rules[r]['name'] for r in last.get('roles') or [] if r in rules) or '규칙 없는 역할'
-        terms = _terms_line({'terms': last.get('terms') or [], 'terms_from_original': last.get('terms_from_original')})
-        tail = (f'아직 모르는 값: {missing}. 알려 주시면 그 값으로 다시 판정해요.' if missing
+        terms = (_terms_line({'terms': last.get('terms') or [], 'terms_from_original': last.get('terms_from_original')}) + '. '
+                 if last.get('terms') or last.get('kind') == 'find' else '')
+        tail = (f'아직 모르는 회로 값: {missing}. 알려 주시면 그 값으로 다시 판정해요.' if missing
+                else f'회로 값({assumed})을 몰라 원래 부품의 정격을 기준으로 봤어요. 그 값을 알려 주시면 그 값으로 다시 판정해요.' if assumed
                 else '회로 전압 · 전류를 알려 주시면 원래 부품 기준 대신 그 값으로 다시 판정해요.' if last.get('terms_from_original')
                 else '더 알려 주실 값은 없어요.')
-        return f'앞 검토에서 본 조건이에요. 역할: {roles}. {terms}. {tail}'
+        checked = f"후보마다 본 항목: {', '.join(last['checked'])}. " if last.get('checked') else ''
+        return f"앞 검토에서 본 조건이에요. 역할: {roles}. {terms}{checked}항목별 기준과 결과는 후보 카드의 '조건과 근거 보기'에 있어요. {tail}"
+    if kind == 'last_candidate':
+        wanted = re.sub(r'[^A-Za-z0-9+./_-]', '', part or '').upper()
+        pick = next((c for c in cands if c['part'].upper() == wanted), None)
+        if wanted and not pick:
+            # LLM이 준 글자는 답에 옮기지 않는다(목록의 품번과 맞춰 보는 데만 쓴다)
+            return (f"앞 검토 후보에 그 품번은 없어요. 앞 검토의 후보는 {named(cands[:3])}예요. "
+                    "다른 품번은 'D1을 SS14로 바꿔도 될까?'처럼 물어보시면 판정해 드려요.")
+        pick = pick or next((c for c in cands if c['verdict'] in APPROVABLE), cands[0])
+        board = {False: '패키지가 같아 기판 수정은 필요 없어요.', True: '패키지가 달라 기판 수정이 필요해요.'}.get(
+            pick.get('board_change'), '패키지가 같은지는 문서로 확인하지 못했어요.')
+        if pick['verdict'] == 'IDENTICAL' and pick.get('board_change'):
+            # [왜] 기판 수정 여부는 회로의 풋프린트 이름에 후보 패키지 이름이 있는지로만 본다(verdict.board_change). 같은 품번인데 "기판 수정이 필요해요"라고만 하면 모순으로 읽힌다
+            board = '원래 부품과 같은 품번이에요. 다만 회로의 풋프린트 이름에 이 부품의 패키지 이름이 없어, 기판에 맞는지는 확인이 필요해요.'
+        verdict = VERDICT_KO.get(pick['verdict'], pick['verdict'])
+        tail = ("근거를 확인한 뒤 후보 카드에서 '이 후보 승인하기'를 누르면 견적을 만들 수 있어요. " if pick['verdict'] in APPROVABLE
+                else '승인할 수 있는 판정은 아니에요. ' + (f'빠진 값({missing})을 알려 주시면 다시 판정해요. ' if missing else ''))
+        return '\n'.join([f"앞 검토에서 {pick['part']}의 판정은 '{verdict}'이었어요. {board} 조건별로 본 내용이에요.", '',
+                          *(pick.get('lines') or [])[2:], '', tail + NO_GUARANTEE])
+    ready = [c for c in cands if c['verdict'] in APPROVABLE]
+    if ready:
+        easy = [c['part'] for c in ready if c.get('board_change') is False]
+        return (f'앞 검토 기준으로 승인할 수 있는 후보는 {named(ready[:3])}예요. '
+                + (f"이 가운데 기판 수정이 필요 없는 후보는 {', '.join(easy[:3])}예요. " if easy else '')
+                + "후보 카드의 '조건과 근거 보기'에서 근거를 확인하고 '이 후보 승인하기'를 누르면 견적을 만들 수 있어요. " + NO_GUARANTEE)
+    return (f"앞 검토에서는 확정된 후보가 없었어요. 가장 가까운 후보는 {', '.join(c['part'] for c in cands[:3])}예요. "
+            + (f'빠진 값({missing})을 알려 주시면 판정을 확정할 수 있어요.' if missing else '조건과 근거는 후보 카드에서 볼 수 있어요.'))
+
+
+def followup_reply(question: str, last: dict) -> str:
+    """계획이 표시를 주지 않은 되물음의 뒷받침: 낱말로 갈라 직전 판정 요약으로 답한다. 해당 없으면 빈 글자."""
+    question = question or ''
+    if ASKS_CONDITIONS.search(question):
+        return last_result_reply('last_conditions', last)
     if ASKS_PICK.search(question):
-        ready = [c for c in cands if c['verdict'] in APPROVABLE]
-        if ready:
-            easy = [c['part'] for c in ready if c.get('board_change') is False]
-            return (f'앞 검토 기준으로 승인할 수 있는 후보는 {named(ready[:3])}예요. '
-                    + (f"이 가운데 기판 수정이 필요 없는 후보는 {', '.join(easy[:3])}예요. " if easy else '')
-                    + "후보 카드의 '조건과 근거 보기'에서 근거를 확인하고 '이 후보 승인하기'를 누르면 견적을 만들 수 있어요. " + NO_GUARANTEE)
-        return (f"앞 검토에서는 확정된 후보가 없었어요. 가장 가까운 후보는 {', '.join(c['part'] for c in cands[:3])}예요. "
-                + (f'빠진 값({missing})을 알려 주시면 판정을 확정할 수 있어요.' if missing else '조건과 근거는 후보 카드에서 볼 수 있어요.'))
+        return last_result_reply('last_candidates', last)
     return ''
 
 
-def judgement_summary(judgement: dict) -> dict:
-    """판정 결과 → 다음 질문에 싣는 작은 요약(후보는 판정이 좋은 순 · 기판 수정이 필요 없는 순으로 8개까지). 판정이 없으면 빈 dict."""
+def judgement_summary(judgement: dict, target: str = '') -> dict:
+    """판정 결과 → 다음 질문에 싣는 요약(후보는 화면과 같은 순서: 판정이 좋은 순 · 기판 수정이 필요 없는 순으로 8개까지). 판정이 없으면 빈 dict.
+
+    담는 것: 대상 기호 · 판정 종류(find · judge) · 역할 · 건 조건 · 후보(품번 · 판정 · 기판 수정 · 조건별 표 줄) · 빠진 값 · 원래 부품 기준으로 본 값 ·
+    사용자가 알려 준 회로 값(`inputs`). 이어 묻는 턴의 계획 입력(`supervisor.previous_turn`) · 답(`last_result_reply`) · 다음 판정(`prior`)이 쓴다.
+    """
     results = (judgement or {}).get('results') or []
     if not results:
         return {}
     order = {v: i for i, v in enumerate(('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT', 'NOT_VERIFIED', 'NOT_SUFFICIENT'))}
     ranked = sorted(results, key=lambda c: (order.get(c.get('verdict'), 9), c.get('board_change') is not False))
-    return {'roles': list(judgement.get('roles') or []), 'terms': list(judgement.get('terms') or []),
+    given = judgement.get('analysis_inputs') or {}
+    return {'target': target, 'kind': judgement.get('kind') or '',
+            'roles': list(judgement.get('roles') or []), 'terms': list(judgement.get('terms') or []),
             'terms_from_original': bool(judgement.get('terms_from_original')),
-            'candidates': [{'part': c.get('part'), 'verdict': c.get('verdict'), 'board_change': c.get('board_change')} for c in ranked[:8]],
-            'missing': sorted({m for c in results for m in c.get('missing') or []})}
+            'candidates': [{'part': c.get('part'), 'verdict': c.get('verdict'), 'board_change': c.get('board_change'),
+                            'lines': _one(c) if 'checks' in c else []} for c in ranked[:8]],
+            'missing': sorted({m for c in results for m in c.get('missing') or []}),
+            'assumed': sorted({m for c in results for m in c.get('assumed') or []}),
+            'checked': list(dict.fromkeys(k['code'] for c in ranked[:8] for k in c.get('checks') or [])),  # 후보에서 본 항목 코드(VRRM · IF_AV …)
+            'inputs': {'values_si': dict(given.get('values_si') or {}), 'test_conditions': dict(given.get('test_conditions') or {})}}
 
 
 def screen_guide(question: str) -> str:
