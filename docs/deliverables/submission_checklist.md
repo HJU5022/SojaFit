@@ -22,7 +22,7 @@
 | 평가셋 · 동결 해시 · 원시 결과 | `freeze.py --check` 통과 | 됨(11-17 바뀐 파일 없음) | `evals/results/d12/checks/freeze_check.txt` |
 | EVAL_REPORT | 전후 · 지표 · 단일 대 멀티 · 대체재 · 실패 유형 · 신뢰 경계 | 됨 | [EVAL_REPORT.md](../../EVAL_REPORT.md) |
 | Langfuse 스크린샷 | 3장 이상, 트레이스 상세 1장 | 됨: 7장 | [langfuse/](langfuse/) |
-| 시연 영상 | 3분 이내, 정상 1 + 실패 1, 화면마다 한 문장 | 됨: 1분 35초, 정상 1 + 실패 3 | [video/](video/) |
+| 시연 영상 | 3분 이내, 정상 1 + 실패 1, 화면마다 한 문장 | 됨: 2분 29초, 정상 1 + 실패 2(운영 리비전 녹화) | [video/](video/) |
 | 비밀값 | 커밋 이력에 비밀값 없음 | 됨: gitleaks 1,250 커밋 0건(11-17) | `evals/results/d12/checks/` |
 
 ## 2. D12 항목

@@ -4,7 +4,8 @@
 - 조장 지적(22:58): 발표 자료가 필수 제출 목록의 목차(프로젝트 개요 · 팀 구성 및 역할 · 수행 절차 및 방법 · 수행 경과 · 자체 평가)와 PPT 안에 넣어야 할 다섯 가지를 따르지 않았다.
 - 고친 것 [실측]: 절 이름을 필수 목차 5개로 바꾸고 장 순서를 다시 놓았다. 새로 넣은 장은 3장 페르소나 카드와 고객 여정 지도(`docs/research/market/market-user-journey.md` 3-1 · 4절), 5장 팀 구성과 역할(README 7절), 7장 노드 설명(README 3절 노드 표), 14장 모델 비교(EVAL_REPORT 1-3 · 1-4 · 3절, README 3절 Supervisor 모델 선택 근거), 22장 데모 영상(`docs/deliverables/video/sojafit-demo-2026-11-17.mp4`를 발표 자료 안에 넣음)이다. 20장 → 25장. 편집 가능 검사 25장 통과, pptx 검사기 통과, Keynote 렌더로 새 장을 확인했다.
 - 5장 팀 역할 [결정 11-17]: 하정운 행에 임베딩 · 리랭커 비교, 검색 정확도 · 속도 측정을 넣고 부제의 오세창 몫을 "LLM(Supervisor) 모델 비교"로 적었다(README 7절, `docs/deliverables/portfolio-jeongun.md`, 커밋 `32450f38`과 같게).
-- 확인 못 한 것: PowerPoint에서의 렌더와 영상 재생. Keynote로 뽑은 PDF에서는 영상 자리가 빈 칸으로 보인다.
+- 확인 못 한 것: PowerPoint에서의 렌더와 영상 재생. PDF용 빌드는 22장에 영상 첫 화면 그림을 넣는다.
+- 시연 영상 교체 [실측]: 조장 지시로 운영 리비전 `sojafit-api-pre-b4a02113-1117`에서 다시 만든 영상(2분 29초, 1456×924, H.264, 정상 1 + 실패 2, 이메일 흐림)으로 `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`와 발표 자료 22장을 바꿨다. 길이 · 장면을 적은 README · SOJAFIT · GATES · DELIVERABLES · submission_checklist · demo_script · PRESENTATION을 맞췄다. 지난 기록(작업 기록 · AI 도구 기록 · 평가 리포트 상세본)의 1분 35초는 그때의 사실이라 두었다.
 
 ## 2026-11-17 밤 발표 덱 20장으로 교체(PR #165)
 - 조장 지시(22:44): 새 발표 덱을 저장소에 넣고 PR #165에 쌓는다. 제출 폴더의 발표 자료도 이 커밋 것으로 바꾼다.
