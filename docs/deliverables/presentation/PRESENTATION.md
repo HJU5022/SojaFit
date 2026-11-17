@@ -2,14 +2,14 @@
 
 - 상태: 현행
 - 기준일: 2026-11-17
-- 기준 커밋: `main` 태그 `final-2026-11-17`(`a468c0ba`, PR #161 병합. 측정한 배포 리비전 `sojafit-api-pre-ef0138b2-rs`의 소스 `2030f846`과 비교해 서비스 코드는 주석만 다르고, 측정 스크립트 2개(`scripts/smoke/http_smoke.py` `allow_duplicate`, `evals/runners/run_skill_pair.py` `--max-seconds`)가 바뀌었다). 그 뒤 발표 폴더(PR #162), 랜딩 그림 4장(`b4a02113`, PR #163), 제출물 검수에서 찾은 문서 · 주석 정리, 큰 파일 주석 보강, 쓰지 않는 prop · 중복 함수 2곳 삭제(동작 같음, 배포하지 않음)만 바꿨고 태그는 옮기지 않았다
+- 기준 커밋: `main` 태그 `final-2026-11-17`(`a468c0ba`). 발표 자료는 그 뒤 PR #166에서 바꿨다
 - 정본 여부: 비정본(발표용 요약). 수치의 정본은 [README.md](../../../README.md), [EVAL_REPORT.md](../../../EVAL_REPORT.md), [docs/GATES.md](../../GATES.md), [data/DATA.md](../../../data/DATA.md)
 - 관련 문서: [DELIVERABLES.md](../DELIVERABLES.md), [demo_script.md](../demo_script.md), [SPEC.md](../../../SPEC.md)
 
 ## 역할
-- 이 폴더: 2026-11-18 최종 발표 자료를 둔다(과제 가이드: 문제 정의 → 구조 → 지표 → 한계, 조원 모두 파트 발표).
+- 이 폴더: 2026-11-18 최종 발표 자료를 둔다(필수 목차: 프로젝트 개요 → 팀 구성 및 역할 → 수행 절차 및 방법 → 수행 경과 → 자체 평가, 조원 모두 파트 발표).
 - 넣는 것: 발표 자료 파일과 이 설명 파일.
-- 넣지 않는 것: 발표 자료를 만드는 스크립트(저장소 밖에서 만들었다), 시연 영상(`../video/`), 수치의 정본(위 정본 문서).
+- 넣지 않는 것: 발표 자료를 만드는 스크립트(저장소 밖에서 만들었다), 시연 영상 원본(`../video/`. 22장에는 같은 영상이 들어 있다), 수치의 정본(위 정본 문서).
 - 담당: 평가·문서
 
 ## 파일
@@ -74,15 +74,19 @@
 | 답 한 건(1 · 11) | v3-01: 1N4007G 역할상 충분 · 기판 수정 필요, VRRM ≥ 18.75 V / 1000 V · IF(AV) ≥ 0.171 A / 1 A · IFSM ≥ 2 A / 30 A, 근거 `1N4001G SERIES_P2104.pdf` 1쪽 | 운영 리비전 `sojafit-api-pre-ef0138b2-rs`의 11-17 19:56 25단계 실행에서 나온 판정의 후보 상세 화면 값. 판정 기준은 EVAL_REPORT 10장 v3-01 행 |
 | 넷리스트 실측(2) | 다이오드 554개 중 1N4148(100V) 53 · 1N4007(1000V) 11 | README 1절, `docs/research/evidence/netlist/manifest_diodes.json` |
 | 누가 · 지금은 어떻게 · 누가 지불(2) | 하드웨어 개발자, 유통사 사양 필터, 지불 주체는 가설 | docs/TOPIC.md |
+| 페르소나 · 고객 여정(3) | 페르소나 2명(쓰는 사람 · 승인하는 사람), 여정 6단계 | docs/research/market/market-user-journey.md 3-1절 · 4절 |
 | 범용 모델 비교(4 · 15) | Codex 45/50(오답 4 · 과잉 거절 1), Terra(웹) 41/50 | EVAL_REPORT 10장, `evals/results/graph/2026-11-12-codex-v3-50/TALLY.md`, `2026-11-16-terra-v3-50-isolated-web/TALLY.md` |
+| 팀 구성 · 역할 · 일정(5) | 하정운 · 심태현 · 오세창의 맡은 일, 11-03 ~ 11-17 일정 | README 7절 |
 | 구조 그림 · 상한(6) | `docs/assets/agent-flow.svg` 구조도를 도형으로 가로로 다시 그림. 재지시 최대 1번 · 할 일 최대 3개 · 재검색 1번 | README 3절, `docs/assets/agent-flow.svg`, `backend/multi_agent/contracts.py`의 `MAX_*` |
+| 노드 설명(7) | LLM 노드 4개(Supervisor · RAG 에이전트 · 회로 읽기 · 종합), 나머지는 코드 | README 3절 그래프와 노드 표, `backend/services/langfuse_prompts.py` `NODE_MODELS` |
 | LLM과 코드의 역할 · 단일 대 멀티(8) | LLM 노드 4개(Supervisor · RAG 에이전트 · 회로 읽기 · 종합), 판정은 코드. v2 70문항 단일 54 · 56 대 멀티 56 · 56, 비용 약 43배($1.82 대 $0.0426) | README 3절 노드 표, EVAL_REPORT 4절 "단일 대 멀티 비교", ADR 0014 · 0015 |
 | 승인 · 재개(9) | 운영 25단계 점검(재시작 단계 제외 24개) 24/24(11-17 19:56, `pre-ef0138b2-rs`), 재시작 뒤 재개는 19:50 실행에서 통과 | GATES G1 · G4, `scripts/results/smoke/`의 11-17 `195049` · `195638` |
 | 인젝션(10) | 공격 55 중 방어 54 · 실패 0 · 보류 1. 사람 응답 품질 판정 통과 88/110(품질 오류 22는 공격 이행 판정과 다르다). 못 막은 것 3가지 | EVAL_REPORT 6절 · 6-2절 · 6-3절 |
 | 코퍼스 · 청킹(11) | 1,360문서 · 7,725쪽 · 청크 51,967 · 품번 9,589, 표 한 행 162조각 41 · 41, 파싱 대조 99.993%(93,940 / 93,947) | data/DATA.md "코퍼스 수치", EVAL_REPORT 1절 · 1-1절 |
-| 검색 전후(13) | 확인용 38문항 Page Recall@5 0.579 → 0.908(넷을 함께 14승 1패, p 0.001), 11-17 `799ae636` 재측정 0.908. 검색어 재작성 +0.18(좋아짐 9 · 나빠짐 2). | EVAL_REPORT 3-A · 1-4절, `evals/results/retrieval/r1_steps_2026-11-04.json`, `evals/results/d12/retrieval/` |
-| 기대가 틀렸을 때(13) | 19문항으로는 비교 72개 중 개선 0개 → R1 84문항(고르기용 46 · 확인용 38)으로 늘림 | EVAL_REPORT 1-4절 ① · ② |
 | 평가셋(12) | v3 50문항(관련 25 · 비관련 25), 11-10 동결 · 11-12 재동결 | EVAL_REPORT 2절, `evals/FROZEN.json` |
+| 검색 전후(13) | 확인용 38문항 Page Recall@5 0.579 → 0.908(넷을 함께 14승 1패, p 0.001), 11-17 `799ae636` 재측정 0.908. 검색어 재작성 +0.18(좋아짐 9 · 나빠짐 2) | EVAL_REPORT 3-A · 1-4절, `evals/results/retrieval/r1_steps_2026-11-04.json`, `evals/results/d12/retrieval/` |
+| 기대가 틀렸을 때(13) | 19문항으로는 비교 72개 중 개선 0개 → R1 84문항(고르기용 46 · 확인용 38)으로 늘림 | EVAL_REPORT 1-4절 ① · ② |
+| 모델 비교(14) | 확인용 38문항 0.789 → 0.829(rerank-3) → 0.908(voyage-4-large). Supervisor: Sonnet 세트당 $0.17 ~ 0.32, Haiku만 교체 47 · 45/50, Haiku + 코드 보강 4세트 50/50 · $0.044 ~ 0.052. 264칸 비교 | EVAL_REPORT 1-3절 · 1-4절 ② · 3절, README 3절 "Supervisor 모델 선택 근거", ADR 0014 · 0017 |
 | v3 결과(15) | 배포 리비전 코드 50/50 · 49/50, p50 · p95 5.2 · 15.5초 / 4.4 · 7.5초, 지어낸 답 0 · 1(v3-41), 무관 거절 25/25 · 24/25 | README 4절, EVAL_REPORT 8.2 · 11-2절, `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/` |
 | 변이(16) | 28/28(시험 추가 전 22 → 1차 추가 25 → 2차 추가 28) | GATES "변이 확인", `evals/results/d10/mutation_2026-11-13.md` |
 | 운영 리비전(17) | `sojafit-api-pre-b4a02113-1117`(랜딩 그림 4장만 다름), 측정한 리비전 `sojafit-api-pre-ef0138b2-rs` · 소스 `2030f846`. API 이미지 1.79 → 1.04GB | README 맨 위 표, `docs/research/docker-cold-start-measurements.md` |
@@ -90,11 +94,7 @@
 | 기동(19) | 새 clone → `/health` 200 6회 중앙값 239.4초, 6회 모두 28/28(11-17, `799ae636`). 빌드 202.2초 내역은 11-13 측정 | GATES G2, `evals/results/d12/boot/` |
 | 운영 중단(20) | 11-14 22:43 ~ 11-15 21:26 시작 실패, 그 뒤 5분 주기 경보(11-16 09:43 시험으로 경보 열림 확인), 가동 확인 8,292번 모두 통과(11-16 09:41 ~ 11-17 04:55) | GATES G1, `evals/results/d10/alerting_2026-11-16.md`, `evals/results/d12/monitoring/` |
 | 비용 · 지연(21) | 단계별 p50(11-11 웹 끔), 문항당 LLM $0.00064 + 리랭크 $0.00013, 웹 문항 11.9초 · 그 밖 5.1초 | EVAL_REPORT 8장 · 8.2절, `evals/results/graph/2026-11-11-d8-stages/` |
-| 약점(23) | 품번 없는 8문항 Page Recall@5 0.125 → 0.625(찾은 문항 1 → 5), 나머지 세 종류 0.929 ~ 1.000. 표 약 216개(THERMAL 122, 표본 46개 중 14개 누락). p95 15.5 · 7.5초(웹에서 처음 받는 4문항 15 ~ 22초, 다음부터 3 ~ 5초) | EVAL_REPORT 1-4절 ② · 5절 유형 6 · 11장 · 11-2절, `evals/results/retrieval/r1_steps_2026-11-04.json`, README 맨 위 "핵심 지표" |
-| 페르소나 · 고객 여정(3) | 페르소나 2명(쓰는 사람 · 승인하는 사람), 여정 6단계 | docs/research/market/market-user-journey.md 3-1절 · 4절 |
-| 팀 구성 · 역할 · 일정(5) | 하정운 · 심태현 · 오세창의 맡은 일, 11-03 ~ 11-17 일정 | README 7절 |
-| 노드 설명(7) | LLM 노드 4개(Supervisor · RAG 에이전트 · 회로 읽기 · 종합), 나머지는 코드 | README 3절 그래프와 노드 표, `backend/services/langfuse_prompts.py` `NODE_MODELS` |
-| 모델 비교(14) | 확인용 38문항 0.789 → 0.829(rerank-3) → 0.908(voyage-4-large). Supervisor: Sonnet 세트당 $0.17 ~ 0.32, Haiku만 교체 47 · 45/50, Haiku + 코드 보강 4세트 50/50 · $0.044 ~ 0.052. 264칸 비교 | EVAL_REPORT 1-3절 · 1-4절 ② · 3절, README 3절 "Supervisor 모델 선택 근거", ADR 0014 · 0017 |
 | 데모 영상(22) | 1분 35초, 정상 1 + 실패 3. 발표 자료 안에 넣었다 | `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`, `docs/deliverables/demo_script.md` |
+| 약점(23) | 품번 없는 8문항 Page Recall@5 0.125 → 0.625(찾은 문항 1 → 5), 나머지 세 종류 0.929 ~ 1.000. 표 약 216개(THERMAL 122, 표본 46개 중 14개 누락). p95 15.5 · 7.5초(웹에서 처음 받는 4문항 15 ~ 22초, 다음부터 3 ~ 5초) | EVAL_REPORT 1-4절 ② · 5절 유형 6 · 11장 · 11-2절, `evals/results/retrieval/r1_steps_2026-11-04.json`, README 맨 위 "핵심 지표" |
 
 이 발표 자료에는 화면 캡처가 없다. 1 · 11장의 답 한 건은 운영 주소(리비전 `sojafit-api-pre-ef0138b2-rs`)에서 11-17 19:56 운영 25단계 실행 때 나온 v3-01 판정의 후보 상세 화면 값을 표와 글로 옮긴 것이다. 6장의 구조 그림은 [agent-flow.svg](../../assets/agent-flow.svg)를 도형으로 다시 그린 것이다.
