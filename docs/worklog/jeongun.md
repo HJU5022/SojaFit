@@ -1,5 +1,16 @@
 # jeongun 작업 기록
 
+## 2026-11-17 PR #159 운영 배포 · 운영 확인(코드 수정은 여기까지)
+- 조장 결정(11-17 18:5x): 코드 수정은 PR #159까지만 한다. 이후 순서는 (1) 머지 후 배포 (2) 측정값 · 자료 수집 (3) 이 배포를 기준으로 레포 전체 정리 후 동결(동결 뒤에는 레포에 올리지 않음) (4) 발표 자료. 단계마다 시작 전에 멈추고 지시를 받는다.
+- 배포 [실측]: PR #159 병합(`99ea59ad`, 18:47:47). `f38af6a5`를 `git archive`로 풀어 `gcloud run deploy sojafit-api --source . … --no-traffic --tag pre-f38af6a5 --revision-suffix pre-f38af6a5-1117`로 미리 빌드했다(18:46:34 ~ 18:56:41). `origin/main`과 `f38af6a5`의 트리가 같다(`8ee6d968`).
+  - 무트래픽 점검(18:57): `/health` 200(13.4초, 콜드 스타트), `/login` · `/` · `/app` · `/quotes` 200, `/api/auth/me` · `/api/demo-circuits` 401, openapi 경로 42 · 동작 53, 화면 묶음 `index-BtIPcoLB.js`(새 견적서 양식 글자 포함), 환경변수 38개(`DEMO_MODE=0`, DB 비밀 `DATABASE_URL_NEW`).
+  - 트래픽 전환 18:57:13 ~ 18:57:22: `sojafit-api-pre-f38af6a5-1117` 100%. 운영 주소 같은 점검 통과.
+  - 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-pre-ab2ff18e-1117=100 --project sojafit --region asia-northeast3`.
+- 운영 확인 [실측 18:58, 조장 계정의 Chrome]: 왼쪽 "견적서" 탭에 저장된 견적 1줄(1N4007G) → "견적서 보기"가 같은 탭에서 열림 → 새 양식(제목 "견 적 서", 수신/발행 칸, 합계 금액 380.5 KRW, 품목 표 9칸, 견적 조건 4줄, 승인 표). 가격 출처 Mouser Electronics, 조회 시각 18:57:55. "돌아가기" → 견적서 탭.
+- 이어서(조장 요청 19:0x, 2단계 전에): 회로 패널 "핀과 네트 연결"을 고정된 다이오드 기호 대신 넷리스트 연결을 dagre(`@dagrejs/dagre` 3.1.3, MIT)로 자동 배치한 그림으로 바꿨다(`frontend/src/circuit.ts` `layoutCircuit`, `ui.tsx` `CircuitDrawing`). 대상 부품 · 그 넷 · 넷마다 이웃 3개(+N). "원본 회로도"를 찾지 못하면 "원본 회로도를 보여 드릴 수 없어요"와 이유(넷리스트에는 위치 · 배선이 없음)를 한계로 적고 "회로도 파일(.kicad_sch) 첨부" 단추를 둔다(조장 결정: 넷리스트만으로 회로도를 자동 생성하지 않는다). 넷리스트 전체를 dagre로 그려 보는 것도 해 봤으나 32부품 회로에서 한 줄로 길게 눌려 읽을 수 없어 뺐다 [실측 8010 캡처].
+  - 확인 [실측]: 화면 시험 50 통과 · 서식 · 빌드 통과(묶음 547 kB → 약 620 kB). 8010에서 넷리스트만 올린 c01 회로: D1 위에 Net-(D1-K)와 U2 · C2, 아래에 VIN +2와 J7 · J1 · F1이 읽을 수 있는 크기로 보인다. "원본 회로도를 보여 드릴 수 없어요" 문구와 첨부 단추는 시험 서버가 외부 검색을 끈 상태(503 안내)라 보지 못했다(운영에서 확인할 것).
+- 남은 것 [실측]: 견적서 품목 표가 9칸이 되면서 문서 폭에서 "기호" · "수량" 머리글과 금액 칸이 두 줄로 꺾인다(읽을 수는 있다). 고치지 않았다(조장 결정: 수정은 여기까지).
+
 ## 2026-11-17 PR #158 운영 배포 · 운영 확인
 - 배포 [실측]: PR #158 병합(`390f13ad`, 18:36:58). 병합 전에 `ab2ff18e`를 `git archive`로 풀어 `gcloud run deploy sojafit-api --source . … --no-traffic --tag pre-ab2ff18e --revision-suffix pre-ab2ff18e-1117`로 미리 빌드했다(18:21 ~ 18:30:47). `origin/main`과 `ab2ff18e`의 트리가 같다(`d577afb7`).
   - 무트래픽 점검(18:31:05): `/health` 200(12.7초, 콜드 스타트), `/login` · `/` · `/app` · `/quotes` 200, `/api/auth/me` · `/api/demo-circuits` 401, openapi 경로 42 · 동작 53, 화면 묶음 `index-fCw38RH3.js`(견적서 탭 · 적은 값 말풍선 글자 포함), 환경변수 38개(`DEMO_MODE=0`, DB 비밀 `DATABASE_URL_NEW`).
