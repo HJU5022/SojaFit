@@ -834,6 +834,7 @@ SojaFit (proj3-b)
     │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 x 검색 방식 격자 본평가
     │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
+    │   ├── eval-report-detail-2026-11-17.md  <- 요약 재작성 전 EVAL_REPORT 전체 기록(11-17)
     │   ├── market/         <- 문제와 시장 근거: 고객 여정 · 채용 공고 · 수요 근거와 유사 서비스 가격
     │   │   ├── market-user-journey.md  <- 문제와 시장 근거
     │   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
@@ -886,19 +887,23 @@ SojaFit (proj3-b)
     │   ├── submission_checklist.md  <- 제출 체크리스트(항목별 증거 경로·상태)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
-    │   ├── portfolio-osc.md  <- 오세창 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
-    │   ├── portfolio-sth.md  <- 심태현 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
-    │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 운영 프로젝트 SojaFit_v2). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
+    │   ├── portfolio-osc.md  <- 오세창 포트폴리오(작업 기록 · PR 기준)
+    │   ├── portfolio-sth.md  <- 심태현 포트폴리오(작업 기록 · PR 기준)
+    │   ├── portfolio/      <- 세 포트폴리오를 A4 1장으로 뽑은 제출본 PDF(11-17, 마크다운과 같은 내용)
+    │   │   ├── portfolio-jeongun.pdf  <- 하정운
+    │   │   ├── portfolio-osc.pdf  <- 오세창
+    │   │   └── portfolio-sth.pdf  <- 심태현
+    │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 밤 배포 리비전 코드 v3 실행). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
     │   │   ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
     │   │   ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
     │   │   ├── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
-    │   │   ├── 04-trace-detail-scores-header.jpg  <- 평가 trace 상세 머리의 점수 칩(passed_cards · latency_s · question_type 등, 11-17)
-    │   │   ├── 05-trace-scores-tab.jpg  <- 같은 trace의 점수 탭(점수 13개가 trace에 붙음)
-    │   │   ├── 06-scores-list.jpg  <- 운영 프로젝트 점수 목록(점수마다 trace 연결)
-    │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 1.68K · 점수 22.25K · 비용 $1.17, 최근 1일)
+    │   │   ├── 04-trace-ragas-scores-header.jpg  <- RAGAS 점수 칩이 붙은 평가 trace 상세(gate v3-11, Faithfulness 0.89, 11-17)
+    │   │   ├── 05-trace-ragas-scores-tab.jpg  <- 같은 trace의 점수 탭(점수 17개)
+    │   │   ├── 06-trace-spec-rag-timeline.jpg  <- Spec · RAG 에이전트가 함께 도는 trace Timeline(gate v3-41, 올바른 거절)
+    │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 2.14K · 점수 23.27K · 비용 $1.46, 최근 1일)
     │   ├── presentation/   <- 최종 발표 덱(11-18)
     │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
-    │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 덱 20장(본편 17 + Q&A 백업 3)
+    │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 덱 20장
     │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "파일" 절
     │       └── sojafit-demo-2026-11-17.mp4  <- 1분 35초, 정상 경로(v3-01 판정·승인·견적·보고서) + 실패 경로 3개, 화면마다 자막
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름

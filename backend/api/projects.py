@@ -23,28 +23,33 @@ router = APIRouter(prefix="/api", tags=["projects"])
 
 
 class RenameProject(BaseModel):
+    """프로젝트 이름 바꾸기 요청 본문."""
     model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"name": "전원부 다이오드 교체 검토"}]})
     name: str
 
     @field_validator("name")
     @classmethod
     def valid_name(cls, value: str) -> str:
+        """이름 규칙은 저장소의 project_name이 정한다."""
         return project_name(value)
 
 
 class CreateProject(RenameProject):
+    """프로젝트 만들기 요청 본문. demo_id를 주면 그 데모 회로를 복제한다."""
     model_config = ConfigDict(json_schema_extra={"examples": [{"demo_id": "attiny85_dev", "name": "ATtiny85 보드 다이오드 검토"}]})
     demo_id: str | None = None
 
     @field_validator("demo_id")
     @classmethod
     def known_demo(cls, value: str | None) -> str | None:
+        """demo_id는 등록된 데모 회로(DEMOS) 중 하나여야 한다."""
         if value is not None and value not in DEMOS:
             raise ValueError("등록된 데모 회로를 선택해 주세요.")
         return value
 
 
 def repository():
+    """프로젝트 저장소 의존성. 저장소 예외를 404(없음) · 422(잘못된 값) · 503(DB 장애)으로 바꾼다."""
     try:
         yield ProjectRepository()
     except ProjectNotFound:
@@ -56,6 +61,7 @@ def repository():
 
 
 class DemoSchematic(BaseModel):
+    """데모 회로의 회로도 그림 주소와 원본 출처 · 라이선스."""
     image_url: str
     original_url: str
     source_repo: str
@@ -66,6 +72,7 @@ class DemoSchematic(BaseModel):
 
 
 class DemoCircuitResponse(BaseModel):
+    """데모 회로 목록의 한 줄. 그림이 없는 회로는 schematic이 null이다."""
     id: str
     name: str
     schematic: DemoSchematic | None
@@ -88,6 +95,7 @@ def demo_circuits(response: Response, q: str | None = Query(default=None, min_le
 
 @router.get("/projects", response_model=list[ProjectSummary])
 def list_projects(user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """내 프로젝트 목록."""
     return repo.list_owned(user_id)
 
 
@@ -106,6 +114,7 @@ class UploadLimit(MultiPartException):
 
 
 class MemoryUploadParser(MultiPartParser):
+    """파일 하나 · 칸 하나만 받고 파일 바이트 수를 세어 상한을 넘으면 바로 멈추는 multipart 해석기."""
     # 기본 1 MiB disk rollover를 막고, 이 값 전에 파일/전체 수신 제한으로 거절한다.
     spool_max_size = MAX_BYTES + 2
 
@@ -116,11 +125,13 @@ class MemoryUploadParser(MultiPartParser):
         self.finished = False
 
     def on_headers_finished(self):
+        """파일 칸이면 그 임시 파일을 기억해 두었다가 read_upload의 finally에서 닫는다."""
         super().on_headers_finished()
         if self._current_part.file is not None:
             self.uploads.append(self._current_part.file)
 
     def on_part_data(self, data, start, end):
+        """파일 칸의 받은 바이트를 더해 MAX_BYTES + 1을 넘으면 UploadLimit로 멈춘다."""
         if self._current_part.file is not None:
             self.file_bytes += end - start
             if self.file_bytes > MAX_BYTES + 1:
@@ -128,6 +139,7 @@ class MemoryUploadParser(MultiPartParser):
         super().on_part_data(data, start, end)
 
     def on_end(self):
+        """본문 끝 경계까지 읽었음을 표시한다. read_upload는 이 표시가 없는 업로드를 400으로 거절한다."""
         self.finished = True
         super().on_end()
 
@@ -143,6 +155,7 @@ UPLOAD_BODY = {"requestBody": {"required": True, "content": {"multipart/form-dat
 
 @router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)], openapi_extra=UPLOAD_BODY)
 async def upload_project(request: Request, allow_duplicate: bool = False, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """넷리스트(.net)나 회로도(.kicad_sch) 파일과 이름으로 새 프로젝트를 만든다. allow_duplicate면 같은 이름 · 같은 원본 검사를 건너뛴다."""
     normalized, schematic, name = await read_upload(request, with_name=True)
     options = {"allow_duplicate": True} if allow_duplicate else {}
     if schematic is not None:
@@ -152,6 +165,7 @@ async def upload_project(request: Request, allow_duplicate: bool = False, user_i
 
 
 async def read_upload(request: Request, *, with_name: bool):
+    """multipart 본문을 상한 안에서 직접 읽어 (정규화 회로, (파일 이름, 회로도 원문) 또는 None, 이름 또는 None)으로 바꾼다. 실패는 400 · 413 · 422, 회로도 렌더러 장애는 read_schematic의 503이다."""
     # File/Form 의존성은 인증 전에 원본을 디스크에 spool할 수 있으므로 직접 제한한다.
     async def bounded_stream():
         received = 0
@@ -234,6 +248,7 @@ async def read_schematic(raw: bytes, filename: str):
 
 
 class ImportNetlistResponse(BaseModel):
+    """넷리스트를 붙인 뒤의 프로젝트와 그 회로를 읽을 대화 id."""
     project: Project
     thread_id: UUID
 
@@ -277,6 +292,7 @@ def uploaded_schematic(project_id: int, circuit_version: int = Query(ge=1), user
 
 
 class PartCheck(BaseModel):
+    """부품 점검표의 한 줄(종류 · 판정 지원 여부 · 데이터시트)."""
     ref: str
     value: str
     footprint: str
@@ -291,12 +307,14 @@ class PartCheck(BaseModel):
 
 
 class KindCount(BaseModel):
+    """부품 종류 하나의 코드 · 이름 · 개수."""
     kind: str
     name: str
     count: int
 
 
 class PartsCheck(BaseModel):
+    """회로 버전 하나의 부품 점검표와 종류별 개수."""
     circuit_version: int
     parts: list[PartCheck]
     counts: list[KindCount]
@@ -339,11 +357,13 @@ def parts_check(project_id: int, circuit_version: int = Query(ge=0), user_id: in
 
 @router.get("/projects/{project_id}", response_model=Project)
 def get_project(project_id: int, thread_id: UUID | None = None, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """내 프로젝트 하나. thread_id를 주면 그 대화가 읽는 회로 버전으로 돌려준다."""
     return repo.get_owned(user_id, project_id, thread_id) if thread_id is not None else repo.get_owned(user_id, project_id)
 
 
 @router.patch("/projects/{project_id}", response_model=Project, dependencies=[Depends(auth.check_origin)])
 def rename_project(project_id: int, body: RenameProject, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """내 프로젝트의 이름을 바꾼다."""
     return repo.rename_owned(user_id, project_id, body.name)
 
 
@@ -369,6 +389,7 @@ def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
 
 @router.delete("/projects/{project_id}", status_code=204, dependencies=[Depends(auth.check_origin)])
 def delete_project(project_id: int, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """내 프로젝트와 딸린 분석 기록을 지운다. 진행 중인 분석이 있으면 409, 내 프로젝트가 아니면 404, 그 밖의 실패는 503."""
     try:
         delete_owned_with_checkpoints(user_id, project_id)
     except InvalidRunState:

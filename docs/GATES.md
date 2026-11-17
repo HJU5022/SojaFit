@@ -2,8 +2,8 @@
 
 - 상태: 현행
 - 기준일: 2026-11-17(배포 리비전 측정: v3 50문항 2세트 · 25단계, 대상 `main` `2030f846` = 운영 리비전 `sojafit-api-pre-ef0138b2-rs`. 그 전 11-17 새벽 재측정은 [evals/results/d12/](../evals/results/d12/README.md), 대상 `799ae636`)
-- 동결: 채점 기준 `9c87ba36`(11-16 24:00). 최종 동결 태그 `final-2026-11-17`(11-17 레포 정리 커밋 `a468c0ba`, 배포 소스 `2030f846`과 문서 · 주석만 다름). 그 뒤 발표 폴더(PR #162), 랜딩 그림 4장(`b4a02113`, PR #163), 제출물 검수에서 찾은 문서 · 주석 정리(백엔드는 주석 2곳, 배포하지 않음)만 바꿨고 태그는 옮기지 않았다. 그 전 태그 `freeze-2026-11-17`(PR #150)도 옮기지 않았다.
-- 기준 커밋: `2030f846`(`main`, PR #160 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-17 20:45 KST `sojafit-api-pre-b4a02113-1117`, 랜딩 그림 4장만 다름. 측정은 그 전 19:52 `sojafit-api-pre-ef0138b2-rs` · 19:27 `sojafit-api-pre-ef0138b2-1117`(같은 이미지)에서 했다).
+- 동결: 채점 기준 `9c87ba36`(11-16 24:00). 최종 동결 태그 `final-2026-11-17`(11-17 레포 정리 커밋 `a468c0ba`. 배포 소스 `2030f846`과 비교해 서비스 코드는 주석만 다르고, 측정 스크립트 2개(`scripts/smoke/http_smoke.py` `allow_duplicate`, `evals/runners/run_skill_pair.py` `--max-seconds`)가 바뀌었다). 그 뒤 발표 폴더(PR #162), 랜딩 그림 4장(`b4a02113`, PR #163), 제출물 검수에서 찾은 문서 · 주석 정리, 큰 파일 주석 보강, 쓰지 않는 prop · 중복 함수 2곳 삭제(동작 같음, 배포하지 않음)만 바꿨고 태그는 옮기지 않았다. 그 전 태그 `freeze-2026-11-17`(PR #150)도 옮기지 않았다.
+- 기준 커밋: `2030f846`(`main`, PR #160 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-17 20:45 KST `sojafit-api-pre-b4a02113-1117`, 서비스 동작에서는 랜딩 그림 4장만 다름(그 밖은 주석 · 측정 스크립트, 위 「동결」 줄). 측정은 그 전 19:52 `sojafit-api-pre-ef0138b2-rs` · 19:27 `sojafit-api-pre-ef0138b2-1117`(같은 이미지)에서 했다).
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
 
@@ -17,13 +17,13 @@
 
 | 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
 |---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-17 19:56 운영 리비전 `sojafit-api-pre-ef0138b2-rs`에서 평가용 계정 A · B 25단계 **24/24 통과**(업로드 · 질문 · 조건 질문 멈춤 · 재개 · 판정 · 승인 · 같은 승인 409 · 견적 저장 · 목록 · 계정 B의 A 자원 7개 모두 404), 결과 [smoke_…_2026-11-17_195638.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-17_195638.json). 그 전 11-13 `574de79-rs`, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md)) |
+| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-17 19:56 운영 리비전 `sojafit-api-pre-ef0138b2-rs`에서 평가용 계정 A · B 25단계 점검(재시작 단계 제외 24개) **24/24**(업로드 · 질문 · 조건 질문 멈춤 · 재개 · 판정 · 승인 · 같은 승인 409 · 견적 저장 · 목록 · 계정 B의 A 자원 7개 모두 404), 재시작 뒤 재개는 19:50 실행에서 통과(G4), 결과 [smoke_…_2026-11-17_195638.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-17_195638.json). 그 전 11-13 `574de79-rs`, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md)) |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: 11-17 `main` `799ae636` 새 clone → `/health` 200 6회 중앙값 239.4초(148.9 ~ 296.0), 스모크 6회 모두 28/28, 원시 로그 [d12/boot](../evals/results/d12/README.md). 11-16 `3ce5abdc` 1회 242.8초. 한계는 G2 절) |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 충족 (운영 DB 청크 본문 51,967개를 직접 열어 다시 계산한 sha256이 모두 서로 다르고 저장소 해시 목록과 같다(11-16, [db_content_hash_check](../evals/results/d10/db_content_hash_check_2026-11-16.md)), 문서 1,360, 파싱 Docling + pdfplumber. 한계는 G3 절) |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-17 운영 리비전에서 조건 질문으로 멈춘 뒤 서버 재시작(같은 이미지의 새 리비전 `sojafit-api-pre-ef0138b2-rs`로 트래픽 이동, 19:52) → 재개 → 판정 완료 통과, [smoke_…_2026-11-17_195049.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-17_195049.json)(이 회차는 B 비밀번호 입력 실수로 B 단계 401 · 건너뜀, B 격리는 19:56 회차에서 통과). 그 전 11-13 [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 11-17 배포 리비전 코드(`2030f846`) 웹 켬 2세트 50/50 · 49/50(실패 v3-41 지어낸 답 1, [2026-11-17-deploy-ef0138b2-v3](../evals/results/graph/2026-11-17-deploy-ef0138b2-v3/report.txt)). 그 전 새벽 `799ae636` 49/50 · 49/50([d12](../evals/results/d12/README.md)). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
-| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 충족 (점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 화면은 7장: 11-13 배포본 트레이스 3장, 11-17 점수가 붙은 트레이스 상세 · 점수 탭 · 점수 목록 · 홈 대시보드 4장([langfuse/](deliverables/langfuse/) `04` ~ `07`)) |
-| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 충족 (비밀값: gitleaks 1,250 커밋 0건(11-17). 시연 영상 [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) 1분 35초, 정상 경로 1 + 실패 경로 3. 포트폴리오 3장 · AI 도구 기록은 오세창 · 심태현 본인 확인 전) |
+| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 충족 (점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 화면은 7장: 11-13 배포본 트레이스 3장, 11-17 배포 리비전 코드 v3 실행의 RAGAS 점수 트레이스 상세 · 점수 탭, Spec · RAG 두 에이전트 Timeline, 홈 대시보드 4장([langfuse/](deliverables/langfuse/) `04` ~ `07`)) |
+| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 충족 (비밀값: gitleaks 1,250 커밋 0건(11-17). 시연 영상 [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) 1분 35초, 정상 경로 1 + 실패 경로 3. 포트폴리오 3건 · AI 도구 기록 있음) |
 
 ## 게이트별 증거
 
@@ -162,14 +162,14 @@
 | 반복 평가 | v3 50문항 4세트(#50)가 세트마다 Langfuse 세션 하나에 트레이스 50개와 문항 점수를 남김 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7장 |
 | 서비스 분석 트레이스 | `user_id`(사용자) · `session_id`(대화)를 붙이고 질문 · 답 글은 보내지 않음(시험으로 확인) | `tests/services/test_langfuse_prompts.py` |
 | Skill 대표 흐름 | 대표 4건 · 직접 생성 13건의 generation 23개를 API로 확인, 상황별 기준 12/13 충족 | `evals/results/skill/skill_tool_summary_2026-11-03.json` |
-| 대시보드 스크린샷 7장 | `01-trace-list.jpg`(트레이스 목록) · `02-model-call-detail.jpg`(트레이스 타임라인과 모델 호출 상세: 모델 · 시간 · 토큰 · 비용) · `03-cost-dashboard.jpg`(비용 대시보드)는 2026-11-13 10:13~10:15 KST 캡처, 프로젝트 `SojaFit_v2`. `04` ~ `07`(점수가 붙은 트레이스 상세 · 점수 탭 · 점수 목록 · 홈 대시보드)은 2026-11-17 캡처 | [docs/deliverables/langfuse/](deliverables/langfuse/), [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
+| 대시보드 스크린샷 7장 | `01-trace-list.jpg`(트레이스 목록) · `02-model-call-detail.jpg`(트레이스 타임라인과 모델 호출 상세: 모델 · 시간 · 토큰 · 비용) · `03-cost-dashboard.jpg`(비용 대시보드)는 2026-11-13 10:13~10:15 KST 캡처, 프로젝트 `SojaFit_v2`. `04` ~ `07`(RAGAS 점수가 붙은 트레이스 상세 · 점수 탭, Spec · RAG 에이전트 Timeline, 홈 대시보드)은 2026-11-17 밤 캡처(배포 리비전 코드 로컬 v3 실행 트레이스) | [docs/deliverables/langfuse/](deliverables/langfuse/), [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
 | 느림 원인 사례 | 2건과 LLM 단계별 시간 · 비용 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7 · 8장 |
 
 확인 못 한 것:
 
 | 항목 | 이유 |
 |---|---|
-| 운영 리비전 트레이스의 점수 화면 | 점수가 붙은 화면은 11-17 `799ae636` 로컬 실행 트레이스로 캡처했다(`04` ~ `07`). 운영 리비전 트레이스로는 캡처하지 않았다. 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md). 2026-11-17 재조회: 운영 프로젝트 점수 57,198개(숫자 · 참거짓 40,826 + 범주 16,372)가 트레이스 4,109개에 붙어 있고, 11-17 `799ae636` 게이트 세트의 트레이스 50개에 700개가 붙었다. 캡처할 트레이스: `5fa5c6c56187c8a38326de96fd57dfa5`(v3-01, 점수 15개), [d12 README](../evals/results/d12/README.md) |
+| 운영 리비전 트레이스의 점수 화면 | 점수가 붙은 화면은 11-17 배포 리비전 코드(`2030f846` 백엔드)의 로컬 v3 실행 트레이스로 캡처했다(`04` ~ `07`). 운영 리비전 트레이스로는 캡처하지 않았다. 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md). 2026-11-17 재조회: 운영 프로젝트 점수 57,198개(숫자 · 참거짓 40,826 + 범주 16,372)가 트레이스 4,109개에 붙어 있고, 11-17 `799ae636` 게이트 세트의 트레이스 50개에 700개가 붙었다. 캡처할 트레이스: `5fa5c6c56187c8a38326de96fd57dfa5`(v3-01, 점수 15개), [d12 README](../evals/results/d12/README.md) |
 | 배포본 서비스 분석 트레이스의 Langfuse 수신 | 수신을 확인했다: 11-13 09:38~10:10 배포본 요청이 트레이스로 보인다(스크린샷 `01`, 최근 1일 루트 관측 약 101건). 403 원인은 [langfuse_403_2026-11-13.md](../evals/results/d10/langfuse_403_2026-11-13.md). 확인 시점의 리비전은 `fadde2a`이고 그 뒤의 100% 리비전(`574de79-rs`, 지금 리비전은 README 표 「배포 리비전」)에서 새로 캡처하지는 않았다 |
 | 현재 Skill 실행 UI | 확인하지 않았다 |
 
@@ -180,7 +180,7 @@
 | 시연 영상 · 스크립트 | 영상 1분 35초(정상 1 + 실패 3, 11-17 06:16 녹화, 코드 `28b14600`). 스크립트는 녹화 전 계획 | [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) · [demo_script.md](deliverables/demo_script.md) |
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
-| 포트폴리오 | 3건(수치는 EVAL_REPORT 값만, 11-17). 오세창 · 심태현은 본인 확인 전 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) · [portfolio-osc.md](deliverables/portfolio-osc.md) · [portfolio-sth.md](deliverables/portfolio-sth.md) |
+| 포트폴리오 | 3건 있음(수치는 EVAL_REPORT 값만, 11-17) | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) · [portfolio-osc.md](deliverables/portfolio-osc.md) · [portfolio-sth.md](deliverables/portfolio-sth.md) |
 | 개인정보 · 비밀값 점검 | 2026-11-17: 제출 문서 · 덱에서 메일 · 키 형식 검색 0건, Langfuse 화면 7장과 영상 프레임에 개인 메일 · 키 없음(영상의 계정은 `@sojafit.test` 시연 계정, 화면 왼쪽 아래 `DNS`는 Langfuse 계정 표시 이름). 서비스 트레이스는 남길 칸만 두고 입력 · 출력을 `[redacted]`로 바꿔 보냄(`backend/services/service_trace.py` `mask_otel_spans`), `user_id`는 숫자 로그인 id | [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
 | 비밀값 검사(재검사) | 2026-11-17, `main` `799ae636`, gitleaks `v8.30.1`(같은 이미지 digest), 저장소 `.gitleaks.toml`(허용 5) · `.gitleaksignore`(지문 14줄), `--redact`, 이력 전체 1,250 커밋 검사(`git rev-list --count` 1,494, 병합 제외 1,252), **발견 0건 · 종료 코드 0** | [gitleaks_full_history.txt](../evals/results/d12/checks/gitleaks_full_history.txt) |
 | 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/), 현재 HEAD 재검사: [secrets/after_2026-11-13_556384b.md](../evals/results/d10/secrets/after_2026-11-13_556384b.md) |
@@ -189,11 +189,8 @@
 
 | 항목 | 상태 |
 |---|---|
-| 시연 영상 파일 | 11-17 녹화: `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`(1:35, 채점 기준 동결 `9c87ba36`, 시연 · 배포 코드 `28b14600`). 상세는 [DELIVERABLES.md](deliverables/DELIVERABLES.md) 남은 일 |
 | GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다(11-17 `799ae636`에서 다시 돌려 0건, 위 G7 행) |
 | 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
-| 다른 조원 포트폴리오(오세창 · 심태현) | 11-17 초안 있음(조장이 작업 기록에서 옮겨 작성): [portfolio-osc.md](deliverables/portfolio-osc.md), [portfolio-sth.md](deliverables/portfolio-sth.md). 본인 확인 전 |
-
 ## 변이 확인
 
 핵심 코드를 한 줄 깨뜨렸을 때 테스트가 실제로 실패하는지 확인한 기록이다(G4 · G5). 28건 전체 표와 재현 명령은 [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)(정본)에 있고, 여기에는 기존 9건과 영역이 다른 대표 6건을 적는다. 28건을 모두 시험이 잡는다(N3b · N7 · N15는 처음에 못 잡았고 시험을 더해 잡게 됐다. 1차 기록은 `mutation/raw_25_of_28/`). 재작성 횟수 상한 테스트가 상수끼리 비교하면(`assert n == MAX_REWRITES`) 상한을 99로 올려도 통과하므로 리터럴과 비교한다(`assert n == 2`).

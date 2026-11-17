@@ -3,7 +3,7 @@
 - 상태: 현행(데이터 계약). 화면 표시 항목은 11-16 새 화면과 다르다(아래 "새 화면과 다른 점")
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
-- 새 화면과 다른 점(2026-11-17, `799ae636` `frontend/src/ui.tsx` 대조): 새 화면의 개념도(`Circuit`)는 선택 부품의 핀 · 넷 연결을 그리고, 이 문서의 2단계 연결과 7번 안내 문구는 화면 코드에서 찾지 못했다. 작업대 회로 구역의 개념도는 눌러 큰 창으로 본다(`zoomable`). 대상 부품은 사용자가 고르는 칸이 아니라 대화에서 코드가 정하거나 묻는다([SPEC.md](../../SPEC.md) 8.9)
+- 새 화면과 다른 점(2026-11-17, `2030f846` `frontend/src/ui.tsx` · `circuit.ts` 대조): 11-17 PR #160부터 새 화면의 연결 그림(`Circuit`)은 dagre(`@dagrejs/dagre` 3.1.3, `frontend/src/circuit.ts` `layoutCircuit`)가 위 → 아래로 배치한 대상 부품 · 그 핀의 넷 · 이웃 부품(넷마다 3개, 나머지는 "+N")을 그린다. 배치 시험은 `frontend/tests/circuit.test.ts`. 이 문서의 2단계 연결과 7번 안내 문구는 화면 코드에서 찾지 못했다. 작업대 회로 구역의 개념도는 눌러 큰 창으로 본다(`zoomable`). 대상 부품은 사용자가 고르는 칸이 아니라 대화에서 코드가 정하거나 묻는다([SPEC.md](../../SPEC.md) 8.9)
 - 정본 여부: 정본(연결 개념도의 데이터·표시 계약). 화면 배치는 [frontend/src/SRC.md](../../frontend/src/SRC.md)(11-16 새 화면. 옛 배치는 [frontend-screen-redesign.md](frontend-screen-redesign.md), 이력)
 - 관련 문서: [verified-circuit-and-datasheet-visuals.md](verified-circuit-and-datasheet-visuals.md)(원본 회로도 탭), [frontend-screen-redesign.md](frontend-screen-redesign.md)
 - 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
@@ -27,7 +27,7 @@
   - 연결 방향 데이터가 없으면 SVG 화살표를 만들지 않는다.
   - 누락된 전압·전류는 추정하지 않고 숨기거나 `정보 필요`로 표시한다.
   - loading, 연결 정보 없음, 대상 부품을 찾을 수 없음, 역할 분석 전, 사용 조건 부족, 판정 완료, 분석 오류 상태를 구분한다.
-- 범위 밖: 실제 PCB·회로도 렌더링, KiCad 화면 변환, 이미지 생성·검색·저장소, 새 그래프 라이브러리, 업로드 파일 영속 저장 확장, 견적 저장 확장, `connections.json` 변환 경로의 신규 구현
+- 범위 밖: 실제 PCB·회로도 렌더링, KiCad 화면 변환, 이미지 생성·검색·저장소, 새 그래프 라이브러리(11-17 PR #160에서 배치용 dagre만 들였다, 표시 계약), 업로드 파일 영속 저장 확장, 견적 저장 확장, `connections.json` 변환 경로의 신규 구현
 
 ## What
 
@@ -80,7 +80,7 @@ Edge Case
 
 ### 표시 계약
 
-- React + Vite의 기존 컴포넌트·스타일을 유지하고 새 그래프 라이브러리 없이 SVG와 CSS로 구현한다.
+- React + Vite의 기존 컴포넌트·스타일을 유지하고 SVG와 CSS로 그린다. 부품 · 넷 위치는 11-17 PR #160부터 dagre(`@dagrejs/dagre` 3.1.3, `frontend/src/circuit.ts` `layoutCircuit`)가 정한다.
 - 중앙 대상 노드의 시각적 우선순위가 가장 높다. 직접 연결은 안쪽, 2단계 연결은 바깥쪽·낮은 대비로 표시한다.
 - 연결 정보만 있을 때는 무방향 선을 사용한다. 별도 데이터로 전력·신호 방향이 명확할 때만 화살표를 허용한다.
 - 조건은 사용자가 제공했거나 판정 읽기에서 검증되어 안전한 응답에 포함된 값만 표시한다.
@@ -88,7 +88,7 @@ Edge Case
 
 ### 변경 경계
 
-- 프론트(11-16 새 화면): 연결 추출(`frontend/src/circuit.ts`), SVG 연결 개념도(`frontend/src/ui.tsx`), 상태 표시, 노드·후보 선택 연동
+- 프론트(11-16 새 화면): 연결 추출 · 배치(`frontend/src/circuit.ts`, 배치는 `layoutCircuit`), SVG 연결 개념도(`frontend/src/ui.tsx`), 상태 표시, 노드·후보 선택 연동
 - 백엔드: 역할 코드·이름을 제공하는 최소 인증 읽기 계약 `GET /api/judge/roles`(`backend/api/conversations.py:159-162`)
 - 수정하지 않음: 업로드·견적 영속화, 숫자 판정 규칙
 
@@ -138,7 +138,7 @@ AC-08 · 노드 상세
 
 | AC | 테스트 | 상태 |
 |---|---|---|
-| AC-01, AC-08 | (옛 화면 시험은 11-16 교체로 지워짐) 새 단위 시험 `frontend/tests/circuit.test.ts`는 부품 목록 · 핀 · 넷 뽑기만 본다 | 구현. 개념도 렌더링 시험은 없다 |
+| AC-01, AC-08 | (옛 화면 시험은 11-16 교체로 지워짐) 새 단위 시험 `frontend/tests/circuit.test.ts`는 부품 목록 · 핀 · 넷 뽑기와 연결 그림 배치(`layoutCircuit`: 대상 부품 · 그 넷 · 이웃 부품만, 큰 넷은 "+N", 합성 넷리스트)를 본다 | 구현. 배치 단위 시험 있음, `breadboard_supply` 대상 시험과 SVG 렌더링 시험은 없다 |
 | AC-02 | (옛 화면 시험은 지워짐) | 시험 없음 |
 | AC-03 | (옛 화면 시험은 지워짐) | 시험 없음 |
 | AC-04, AC-05, AC-06 | | 대응 테스트 미대조 |

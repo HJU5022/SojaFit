@@ -36,6 +36,7 @@ export function PriceLookup({ part, quantity }: { part: string; quantity?: numbe
   }
   return (
     <div className="price-lookup">
+      {/* [왜] 수량이 없으면(승인 전) 늘 누를 수 있고, 견적 수량이 1~100000 정수가 아니면 조회하지 않는다 */}
       <button onClick={load} disabled={loading || !validQuantity(quantity)}>
         <ShoppingCart size={16} />
         {loading ? '조회 중…' : '가격·재고 조회'}
@@ -66,6 +67,7 @@ export function PriceLookup({ part, quantity }: { part: string; quantity?: numbe
                         <span>{label}</span> {value}
                       </p>
                     ))}
+                  {/* [주의] 판매처 주소는 safeLink가 http · https로 확인한 것만 링크로 연다(javascript: 같은 주소를 막는다) */}
                   {safeLink(p.product_url) && (
                     <a href={safeLink(p.product_url)} target="_blank" rel="noreferrer">
                       판매처에서 보기 <ArrowUpRight size={14} />
@@ -129,11 +131,13 @@ export function CandidateDetails({
   roles: Role[];
   close: () => void;
 }) {
+  // [왜] 승인은 저장된 assistant 메시지에 붙는다. 메시지 id가 없는 결과는 승인 목록을 읽지 않는다
   const saved = useResource<Approval[]>(messageId ? `/messages/${messageId}/approvals` : null);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState<Error | null>(null),
     [quantity, setQuantity] = useState(100),
     [notice, setNotice] = useState('');
+  // [주의] approvable(승인 가능 판정 3종 · 완료 결과만)은 서버(backend/api/quotes.py의 Approvable)와 같은 규칙이다. 버튼 표시용이고 최종 거절(409)은 서버가 한다
   const { own: approval, other } = approvalState(saved.data, c),
     approvable =
       ['IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'].includes(c.verdict) &&
@@ -152,6 +156,7 @@ export function CandidateDetails({
       saved.reload();
       setNotice('후보 승인을 저장했습니다.');
     } catch (e) {
+      // [왜] 다른 탭이나 두 번 누름으로 이미 승인됐으면 오류 대신 저장된 승인을 다시 읽어 보인다
       if (e instanceof ApiError && e.code === 'ALREADY_APPROVED') {
         saved.reload();
         setNotice('이미 승인된 결과입니다. 저장된 승인을 확인합니다.');
@@ -378,6 +383,7 @@ export function CandidateDetails({
             {approval.quotes?.map((q) => (
               <p key={q.id} className="saved-quote">
                 {q.part_number} · {q.quantity.toLocaleString()}개 · 저장된 견적
+                {/* [주의] 견적서 주소에 승인 사례 id가 들어가므로 사례 id가 없으면 링크를 숨긴다 */}
                 {approval.case_id != null && (
                   <a href={`/approved/${approval.case_id}/quote/${q.id}`}>견적서 보기</a>
                 )}
@@ -395,6 +401,7 @@ export function CandidateDetails({
             </p>
           </>
         ) : approvable ? (
+          // [왜] 저장된 승인을 못 읽었으면(saved.error) 이미 승인됐는지 모르므로 승인 버튼을 막는다
           <button
             className="primary"
             disabled={busy || !messageId || !!saved.error}

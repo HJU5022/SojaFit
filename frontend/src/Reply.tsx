@@ -203,12 +203,9 @@ export function TargetChoice({
 export function Reply({
   run,
   onCandidate,
-  onCircuit,
 }: {
   run: Run;
   onCandidate: (c: Candidate, r: Run) => void;
-  /** [주의] 지금 넘기는 호출이 없다(Workbench.tsx의 두 `<Reply>` 모두 안 넘김). 답 머리 "회로 보기"는 11-17에 뺐고 prop만 남았다(#47) */
-  onCircuit?: () => void;
 }) {
   const r = run.result,
     candidates = rankCandidates(replyCandidates(r.judgement)),
@@ -225,7 +222,6 @@ export function Reply({
           AI 생성<span className="sr-only">: 생성형 AI를 이용해 만든 답변입니다</span>
         </small>{' '}
         <span className="reply-status">{statuses[r.status] ?? r.stage}</span>
-        {onCircuit && <CircuitLink onClick={onCircuit} />}
       </div>
       {/* [왜] 웹 검색 장애를 "못 찾음"과 구별해 알린다(#28) */}
       {r.web_search_unavailable && (

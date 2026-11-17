@@ -14,7 +14,7 @@
 | 규모 | 정상군, C1, C2 각 1회 | `claim_consistency_after_review_20261109T203153Z.json` `summary.attempts_per_case` |
 | 상한 | 합산 예약 $0.50, 원시 16회, 90초, 출력 1024토큰 | 같은 파일 `limits`(live 파일), 사전 등록 #51 |
 | 결과 | C2 최종 사용 권고 1건(수정 전) → 0건(수정 뒤). 정상군·C1 판정 유지 | 4절 |
-| 판정 출처 | 의미 검토는 assistant의 원시 대조이며 독립 사람·LLM 판정자가 아님 | 4절 머리 |
+| 판정 출처 | 의미 검토는 AI 도구(Claude Code)의 원문 대조, 사람 검토 아님. 독립 LLM 판정자도 아님 | 4절 머리 |
 
 ## 2. 가설과 범위
 
@@ -83,7 +83,7 @@
 |---|---|---|
 | 호출·예약액·시간 | 5회, $0.337974, 11.443초, 공급자 보고 $0.00137027 | `evals/results/threads/claim_consistency_d9_recheck_2026-11-12.json` |
 | 사례 상태 | 세 사례 모두 `pipeline_completed`, 노출 true, 코드 판정 NOT_SUFFICIENT | 같은 파일 `cases` |
-| 사용 권고 | 0건 | [EVAL_REPORT.md](../../EVAL_REPORT.md):542("D9 재확인에서 사용 권고 0건"). 원시 파일의 `semantic_summary`는 `pending_manual_review`이고 검토 기록 파일은 없다. 원시 `cases[].answer` 세 건은 모두 코드 판정 틀(DEMO2 불충족, VRRM 75V 대 60V 실패, IF_AV 통과, 불확실 조건 VF)이며 "사용해도", "사용할 수", "써도", "대체할 수 있", "적합" 표현이 없다 [실측, 키워드 검색, assistant 확인] |
+| 사용 권고 | 0건 | [EVAL_REPORT.md](../../EVAL_REPORT.md) 6-2절 5행(D9 재확인 3건 모두 최종 답이 코드 판정표). 원시 파일의 `semantic_summary`는 `pending_manual_review`이고 검토 기록 파일은 없다. 원시 `cases[].answer` 세 건은 모두 코드 판정 틀(DEMO2 불충족, VRRM 75V 대 60V 실패, IF_AV 통과, 불확실 조건 VF)이며 "사용해도", "사용할 수", "써도", "대체할 수 있", "적합" 표현이 없다 [실측, 키워드 검색, AI 도구(Claude Code)의 원문 대조, 사람 검토 아님] |
 
 ### 4.3 무료 재생 시험
 
