@@ -1,4 +1,9 @@
-/** 공개 회로 값을 화면에 투영한다. 회로 역할을 추론하지 않는다. 출처: backend/projects의 공개 Project. */
+/**
+ * 공개 회로 값을 화면에 투영한다. 회로 역할을 추론하지 않는다. 출처: backend/projects의 공개 Project.
+ * 넷리스트 연결 그림의 배치(`layoutCircuit`)는 dagre(MIT, 그래프 자동 배치)가 정한다. 부품 위치 · 배선이 없는 넷리스트에서
+ * 부품은 상자, 넷은 이름표, 선은 "이 부품의 핀이 이 넷에 붙어 있다"만 뜻한다(실제 회로도 배치 · 기호가 아니다).
+ */
+import dagre from '@dagrejs/dagre';
 import type { Project } from './types.ts';
 export function partsOf(project: Project | null) {
   return (project?.connections?.components ?? project?.connections?.parts ?? []) as {
@@ -100,4 +105,105 @@ export function filterParts<T extends { kind: string; judge_supported: boolean }
   supportedOnly: boolean,
 ) {
   return parts.filter((p) => (!kind || p.kind === kind) && (!supportedOnly || p.judge_supported));
+}
+
+/** 넷리스트 연결 그림의 배치 결과. 좌표는 SVG 단위(px)다. */
+export type CircuitLayout = {
+  width: number;
+  height: number;
+  parts: {
+    ref: string;
+    value: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    focus: boolean;
+  }[];
+  nets: { name: string; more: number; x: number; y: number; w: number; h: number }[];
+  wires: { x: number; y: number }[][];
+};
+// [왜] 글자 폭을 재지 않고 글자 수로 상자 폭을 정한다(배치는 화면 밖 계산이라 DOM이 없다). 한글 · 영문 평균 폭으로 넉넉히 잡는다
+const boxWidth = (texts: string[], px: number) => Math.max(...texts.map((t) => t.length)) * px + 18;
+/**
+ * 대상 부품의 넷리스트 연결을 dagre로 위 → 아래로 배치한다: 대상 부품, 그 부품의 핀이 붙은 넷, 그 넷에 붙은 이웃 부품.
+ * 핀 번호가 가장 작은 핀의 넷은 위, 나머지 넷은 아래에 놓는다. 넷마다 이웃은 perNet개(기본 3)까지 그리고 나머지 수는
+ * 넷 이름표에 "+N"으로 적는다(GND처럼 큰 넷이 그림을 덮지 않게). 대상 부품이나 그 넷이 없으면 null.
+ */
+export function layoutCircuit(
+  project: Project | null,
+  focus: string,
+  perNet = 3,
+): CircuitLayout | null {
+  const parts = partsOf(project);
+  const chosen = ((project?.connections?.nets ?? []) as any[])
+    .map((n) => ({
+      name: String(n.name ?? n.code ?? ''),
+      refs: [...new Set(((n.nodes ?? []) as any[]).map((x) => String(x.ref)))],
+    }))
+    .filter((n) => n.refs.includes(focus));
+  if (!parts.length || !chosen.length) return null;
+  const byRef = new Map(parts.map((p) => [p.ref, p]));
+  const g = new dagre.graphlib.Graph();
+  // [왜] 좁은 회로 패널에 맞게 위 → 아래로 놓는다(층마다 부품이 적어 폭이 좁다)
+  g.setGraph({ rankdir: 'TB', nodesep: 10, ranksep: 24, edgesep: 6, marginx: 6, marginy: 6 });
+  g.setDefaultEdgeLabel(() => ({}));
+  const addPart = (ref: string) => {
+    if (g.hasNode('p:' + ref)) return;
+    const value = String(byRef.get(ref)?.value ?? '').slice(0, 12);
+    g.setNode('p:' + ref, { width: boxWidth([ref, value], 7), height: value ? 38 : 26 });
+  };
+  addPart(focus);
+  // 핀 번호가 가장 작은 핀의 넷을 위에 둔다(넷 목록 순서는 넷리스트마다 달라 번호로 정한다)
+  const top = [...pinsOf(project, focus)].sort((a, b) =>
+    a.pin.localeCompare(b.pin, undefined, { numeric: true }),
+  )[0]?.net;
+  const more = new Map<string, number>();
+  chosen.forEach((n, i) => {
+    const id = 'n:' + i;
+    const others = n.refs.filter((r) => r !== focus);
+    const keep = others.slice(0, perNet);
+    more.set(id, others.length - keep.length);
+    const label = n.name + (others.length > keep.length ? ` +${others.length - keep.length}` : '');
+    g.setNode(id, { width: boxWidth([label], 6.6), height: 20, name: n.name });
+    // [왜] 선의 방향이 층을 정한다. 위 넷은 이웃 → 넷 → 대상, 나머지는 대상 → 넷 → 이웃으로 이어 대상이 가운데 놓인다
+    const above = n.name === top;
+    if (above) g.setEdge(id, 'p:' + focus);
+    else g.setEdge('p:' + focus, id);
+    for (const r of keep) {
+      addPart(r);
+      if (above) g.setEdge('p:' + r, id);
+      else g.setEdge(id, 'p:' + r);
+    }
+  });
+  dagre.layout(g);
+  const graph = g.graph() as { width?: number; height?: number };
+  const out: CircuitLayout = {
+    width: graph.width ?? 0,
+    height: graph.height ?? 0,
+    parts: [],
+    nets: [],
+    wires: [],
+  };
+  for (const id of g.nodes()) {
+    const node = g.node(id) as any;
+    const box = {
+      x: node.x - node.width / 2,
+      y: node.y - node.height / 2,
+      w: node.width,
+      h: node.height,
+    };
+    if (id.startsWith('p:')) {
+      const ref = id.slice(2);
+      out.parts.push({
+        ref,
+        value: String(byRef.get(ref)?.value ?? '').slice(0, 12),
+        focus: ref === focus,
+        ...box,
+      });
+    } else out.nets.push({ name: node.name, more: more.get(id) ?? 0, ...box });
+  }
+  for (const e of g.edges())
+    out.wires.push(((g.edge(e) as any).points ?? []).map((p: any) => ({ x: p.x, y: p.y })));
+  return out;
 }

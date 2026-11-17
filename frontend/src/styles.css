@@ -2168,6 +2168,11 @@ form {
   font-size: 15px;
   fill: currentColor;
 }
+/* 넷리스트 연결 그림(dagre 배치): 글자 크기는 그림 안에서 정한다 */
+.circuit svg.circuit-drawing {
+  margin: 14px auto 0;
+  color: #3d5763;
+}
 .circuit small {
   font-size: 13px;
   display: block;
@@ -4021,4 +4026,7 @@ form {
   .report h2 {
     break-after: avoid;
   }
+}
+.schematic-missing button {
+  margin-top: 10px;
 }

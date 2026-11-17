@@ -17,7 +17,14 @@ import { api, verdicts } from './api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { EVIDENCE_GRADES, evidenceGrade, explainAnswer, markdownUrl, safeLink } from './display';
-import { acceptsFile, isSchematicFile, partsOf, pinsOf } from './circuit';
+import {
+  acceptsFile,
+  isSchematicFile,
+  layoutCircuit,
+  partsOf,
+  pinsOf,
+  type CircuitLayout,
+} from './circuit';
 import type { Citation, Project, Verdict } from './types';
 export function navigate(url: string, replace = false) {
   history[replace ? 'replaceState' : 'pushState']({}, '', url);
@@ -508,6 +515,76 @@ export function Source({ cite }: { cite: Citation }) {
     </div>
   );
 }
+/**
+ * 넷리스트 연결 그림(`circuit.ts` `layoutCircuit`이 dagre로 배치한 결과)을 SVG로 그린다. 부품은 상자(대상은 진하게), 넷은 이름표, 선은 연결이다.
+ * 칸 너비에 맞추되 배치 크기보다 키우지 않는다(작은 그림의 글자가 커지지 않게).
+ */
+export function CircuitDrawing({ layout, label }: { layout: CircuitLayout; label: string }) {
+  return (
+    <svg
+      className="circuit-drawing"
+      viewBox={`0 0 ${layout.width} ${layout.height}`}
+      style={{ maxWidth: layout.width }}
+      role="img"
+      aria-label={label}
+    >
+      {layout.wires.map((w, i) => (
+        <polyline
+          key={i}
+          points={w.map((p) => `${p.x},${p.y}`).join(' ')}
+          fill="none"
+          stroke="#7c8f98"
+          strokeWidth="1.2"
+        />
+      ))}
+      {layout.nets.map((n) => (
+        <g key={'n' + n.name}>
+          <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" fill="#dfe8ec" stroke="#9fb1b9" />
+          <text
+            x={n.x + n.w / 2}
+            y={n.y + n.h / 2 + 4}
+            textAnchor="middle"
+            style={{ fontSize: 11 }}
+          >
+            {n.name}
+            {n.more > 0 ? ` +${n.more}` : ''}
+          </text>
+        </g>
+      ))}
+      {layout.parts.map((p) => (
+        <g key={'p' + p.ref}>
+          <rect
+            x={p.x}
+            y={p.y}
+            width={p.w}
+            height={p.h}
+            rx="4"
+            fill={p.focus ? '#24414d' : '#ffffff'}
+            stroke={p.focus ? '#24414d' : '#7c8f98'}
+          />
+          <text
+            x={p.x + p.w / 2}
+            y={p.y + (p.value ? 15 : p.h / 2 + 4)}
+            textAnchor="middle"
+            style={{ fontSize: 12, fontWeight: 600, fill: p.focus ? '#ffffff' : undefined }}
+          >
+            {p.ref}
+          </text>
+          {p.value && (
+            <text
+              x={p.x + p.w / 2}
+              y={p.y + 30}
+              textAnchor="middle"
+              style={{ fontSize: 10, fill: p.focus ? '#dfe8ec' : undefined }}
+            >
+              {p.value}
+            </text>
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+}
 /** 선택 부품의 핀·네트 연결 개념도. zoomable이면 그림을 눌러 큰 창으로 본다(작업대 오른쪽 회로 패널의 "회로" 구역). */
 export function Circuit({
   project,
@@ -521,30 +598,9 @@ export function Circuit({
   const part = partsOf(project).find((p) => p.ref === target),
     pins = pinsOf(project, target);
   const [open, setOpen] = useState(false);
-  const drawing = part && (
-    <svg viewBox="0 0 420 122" role="img" aria-label={`${target} ${part.value} 연결 개념도`}>
-      <path
-        d="M32 61H177m66 0h145M177 39v44l66-22-66-22Zm66 0v44"
-        stroke="currentColor"
-        strokeWidth="2"
-        fill="none"
-      />
-      <circle cx="32" cy="61" r="4" fill="currentColor" />
-      <circle cx="388" cy="61" r="4" fill="currentColor" />
-      <text x="210" y="22" textAnchor="middle">
-        {target} · {part.value}
-      </text>
-      {pins.slice(0, 2).map((p, i) => (
-        <g key={p.pin}>
-          <text x={i ? 365 : 55} y="48" textAnchor="middle">
-            핀 {p.pin}
-          </text>
-          <text x={i ? 365 : 55} y="98" textAnchor="middle">
-            {String(p.net).length > 19 ? String(p.net).slice(0, 16) + '…' : p.net}
-          </text>
-        </g>
-      ))}
-    </svg>
+  const layout = part ? layoutCircuit(project, target) : null;
+  const drawing = layout && (
+    <CircuitDrawing layout={layout} label={`${target} ${part!.value} 연결 그림`} />
   );
   return (
     <div className="circuit" aria-label="선택 부품 연결도">
@@ -576,7 +632,10 @@ export function Circuit({
               </span>
             ))}
           </div>
-          <small>연결 개념도 · 실제 기판 배치와 다릅니다.</small>
+          <small>
+            넷리스트 연결로 자동 배치한 그림입니다(부품 · 넷 · 연결만 뜻하고 실제 회로도 · 기판
+            배치와 다릅니다).
+          </small>
         </>
       ) : (
         <p>다이오드를 선택하면 연결을 표시합니다.</p>

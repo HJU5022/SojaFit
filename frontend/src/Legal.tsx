@@ -190,8 +190,8 @@ function Licenses() {
       <h2>오픈소스 소프트웨어</h2>
       {/* 출처: frontend/package.json · pyproject.toml 패키지의 license 메타데이터(11-16 확인) */}
       <p>
-        화면: React·React DOM·react-markdown·remark-gfm·Vite(MIT), Lucide 아이콘(ISC), Noto Sans KR
-        글꼴(OFL-1.1)
+        화면: React·React DOM·react-markdown·remark-gfm·Vite·dagre(회로 연결 그림 자동 배치)(MIT),
+        Lucide 아이콘(ISC), Noto Sans KR 글꼴(OFL-1.1)
       </p>
       <p>
         서버: FastAPI·Pydantic·LangGraph·LangChain OpenAI·Langfuse SDK·MCP
