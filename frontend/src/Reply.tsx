@@ -155,7 +155,7 @@ export function MissingInput({
     </div>
   );
 }
-/** 닫힌 회로 패널을 열고 회로 구역으로 내리는 작은 글자 단추(#47). 회로에 관한 답 머리에 둔다 */
+/** 닫힌 회로 패널을 여는 작은 글자 단추(#47). 지금은 대상 부품 고르기 카드(`TargetChoice`)만 쓴다. 답 머리의 같은 단추와 회로 구역으로 내리는 스크롤은 11-17에 뺐다(Workbench.tsx `showCircuit`) */
 function CircuitLink({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" className="circuit-link" onClick={onClick}>
@@ -207,7 +207,7 @@ export function Reply({
 }: {
   run: Run;
   onCandidate: (c: Candidate, r: Run) => void;
-  /** 회로가 있고 바꿀 부품이 정해진 대화의 답에만 준다(#47) */
+  /** [주의] 지금 넘기는 호출이 없다(Workbench.tsx의 두 `<Reply>` 모두 안 넘김). 답 머리 "회로 보기"는 11-17에 뺐고 prop만 남았다(#47) */
   onCircuit?: () => void;
 }) {
   const r = run.result,

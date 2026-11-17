@@ -1,5 +1,17 @@
 # jeongun 작업 기록
 
+## 2026-11-17 PR #160 배포 · 배포 리비전 측정(2단계) · 레포 정리(3단계)
+- PR #160 배포 [실측]: 병합 `2030f846`(19:21:37). `ef0138b2`를 `git archive`로 풀어 무트래픽 빌드(19:19:00 ~ 19:27), 점검 통과 뒤 19:27:49 ~ 19:27:57 `sojafit-api-pre-ef0138b2-1117` 100%. `origin/main`과 트리 같음(`be9d1e31`). 운영 주소 점검 통과, 화면 묶음 `index-CbemLx1L.js`. 운영에서 D2 연결 그림(dagre)이 보이는 것을 확인했다. "원본 회로도를 보여 드릴 수 없어요" 문구와 첨부 단추는 외부 검색이 1분 넘게 "찾는 중"이라 보지 못했다.
+- 조장 결정(19:3x): 3단계는 코드 동작을 바꾸지 않고 주석 · 문서만 고친다. 동결 뒤에도 `docs/deliverables/presentation/`만 고치는 커밋 하나는 예외로 둔다. 25단계는 서버 재시작 점검까지 한다. 평가용 계정 비밀번호는 바꾸지 않는다.
+- 25단계(조장이 계정 입력, 터미널) [실측]:
+  - 19:43 회차: 3단계 업로드 409(같은 이름 · 같은 넷리스트 해시의 프로젝트가 이미 있음)로 멈춤. `scripts/smoke/http_smoke.py` 업로드에 `allow_duplicate=true`를 붙였다(`tests/api/test_http_smoke.py` 9 통과).
+  - 19:50 회차(`--pause-before-resume`): 4단계 조건 질문에서 멈춘 동안 같은 이미지(`sha256:0a7a1b1b…2dd0`)로 `gcloud run deploy sojafit-api --image … --revision-suffix pre-ef0138b2-rs --no-traffic` → `update-traffic --to-revisions sojafit-api-pre-ef0138b2-rs=100`(19:51:54 ~ 19:52:19) → 재개 · 판정 · 승인 · 견적 통과. B 비밀번호 입력 실수로 B 로그인 401, B 단계 건너뜀(통과 16 · 실패 1 · 건너뜀 8).
+  - 19:56 회차(재시작 없음): **24/24 통과**(계정 B의 A 자원 7개 모두 404). 결과 `scripts/results/smoke/smoke_…_2026-11-17_195638.json`.
+  - 이 재시작으로 운영 리비전이 `sojafit-api-pre-ef0138b2-rs`가 됐다(같은 이미지). 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-pre-ef0138b2-1117=100 --project sojafit --region asia-northeast3`.
+- v3 50문항 2세트(사전 등록 19:48) [실측]: 처음 실행은 `RAGAS_ENABLED`를 정하지 않아 RAGAS 채점이 켜졌고 문항마다 약 1분(12문항 12분, 모두 통과)이라 19:58에 멈췄다(`evals/results/graph/2026-11-17-deploy-ef0138b2-v3-ragas-partial/`). `RAGAS_ENABLED=0`만 더해 다시 돌렸다(`…-deploy-ef0138b2-v3/`). 결과 [실측]: 50/50 · 49/50, p50 · p95 5.2 · 15.5초 / 4.4 · 7.5초, LLM $0.037 · $0.032. set2 실패 v3-41(수명 질문에 거절 대신 LL4148 판정, 같은 문항이 set1에서는 거절해 통과). set1 p95는 웹 데이터시트를 처음 받는 문항 3개(15 ~ 22초). 고치지 않음(동결). README 4절 · EVAL_REPORT 8.2 · 11-2절 · GATES G5 · 포트폴리오 3장 · PRESENTATION.md 숫자를 이 값으로 바꿨다.
+- 레포 정리(3단계, 숫자 제외 부분은 서브에이전트가 고치고 내가 검토): `demo_script.md` 머리(영상 있음), EVAL_REPORT v3-16 원인(`6b83e55d`), SPEC 371 무효 회차 표시 · 450 견적 안내(`quote_guide`) · 427 `NO_REVISION_ASKED`, README 화면 줄(견적서) · 평가 명령의 `RAGAS_ENABLED=0`, `SOJAFIT.md` · `frontend/src/SRC.md` 오늘 화면, 포트폴리오 조건 표시, `ai_tools_log.md` 51 배포 문장, `Reply.tsx` 주석 2줄. 화면은 주석만 바뀌어 빌드 결과 묶음 이름이 운영과 같다(`index-CbemLx1L.js`) [실측]. `backend db Dockerfile docker-compose.yml`은 `2030f846`과 차이 없음 [실측].
+- 남은 것(알려진 한계): 견적 위치 안내 문구(`messages.py`)가 왼쪽 "견적서" 탭을 말하지 않는다. `Reply`의 `onCircuit` prop은 넘기는 곳이 없다. 동결 뒤라 고치지 않는다.
+
 ## 2026-11-17 PR #159 운영 배포 · 운영 확인(코드 수정은 여기까지)
 - 조장 결정(11-17 18:5x): 코드 수정은 PR #159까지만 한다. 이후 순서는 (1) 머지 후 배포 (2) 측정값 · 자료 수집 (3) 이 배포를 기준으로 레포 전체 정리 후 동결(동결 뒤에는 레포에 올리지 않음) (4) 발표 자료. 단계마다 시작 전에 멈추고 지시를 받는다.
 - 배포 [실측]: PR #159 병합(`99ea59ad`, 18:47:47). `f38af6a5`를 `git archive`로 풀어 `gcloud run deploy sojafit-api --source . … --no-traffic --tag pre-f38af6a5 --revision-suffix pre-f38af6a5-1117`로 미리 빌드했다(18:46:34 ~ 18:56:41). `origin/main`과 `f38af6a5`의 트리가 같다(`8ee6d968`).
@@ -64,7 +76,7 @@
 - 남은 것 [실측]: 원래 부품의 문서가 코퍼스에 없고(1N4001 · 값이 DIODESOD처럼 품번이 아닌 경우) 회로 값도 모르면 첫 답은 여전히 "값을 알려 주세요"다. 넷 이름(+12V)에서 전압을 읽어 쓰지 않는다(읽기 프롬프트를 바꿔야 하고 재생 기록을 다시 만들어야 한다). 풋프린트 글자("SparkFun:LED-0603")만 보낸 말은 여전히 "자료를 찾지 못했어요"다.
 
 ## 2026-11-17 이어 묻기의 근본 원인 고치기(Supervisor가 직전 판정을 본다 · 역할과 값을 대화 안에서 이어 쓴다)
-- 목적: 앞 PR(`812c9724`)은 "그래서 뭐 써?" · "조건이 뭐야?"를 낱말(정규식)로 갈라 답했다. 조장 지적: 물어본 말만 맞춘 땜빵이고, Supervisor가 자기 앞 답을 보지 못하는 것이 원인이다. 원인을 고친다.
+- 목적: 앞 PR(`812c9724`)은 "그래서 뭐 써?" · "조건이 뭐야?"를 낱말(정규식)로 갈라 답했다. 조장 지적: 물어본 말만 맞춘 임시 처리이고, Supervisor가 자기 앞 답을 보지 못하는 것이 원인이다. 원인을 고친다.
 - 원인 [실측: 전체 코퍼스 대화 실행기 · 8010]: (1) 계획 입력에 앞 턴의 결과가 없다(이력은 사용자 입력만, 그것도 '아까' 같은 말이 있을 때만). (2) 읽기 LLM이 턴마다 역할을 달리 읽는다: 찾기에서 R02 · SS34L 사양 동등 → 바로 뒤 "그럼 SS34L는?"에서 R01 · 확인 안 됨. (3) 이어 묻는 턴마다 같은 되묻기 폼이 다시 뜬다. (4) 값만 준 말("전원은 5V고 전류는 100mA야")이 후보 없는 판정 할 일로 가 "자료를 찾지 못했어요".
 - 바꾼 것:
   - `backend/multi_agent/supervisor.py`: `previous_turn`(직전 판정 요약 + 이어 묻기 규칙을 계획 입력 끝에), `carry_on_plan`(값만 준 말은 코드가 앞 요청을 다시 계획), `payload`의 `prior`(같은 대상이면 역할 · 알려 준 값을 Spec 에이전트에), 직전 판정이 있는 턴만 `FollowUpPlan`으로 호출.

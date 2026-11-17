@@ -1,9 +1,9 @@
 # 시연 영상 스크립트
 
-- 상태: 계획
-- 기준일: 2026-11-12
-- 기준 커밋: 6707002
-- 정본 여부: 정본(촬영 순서). 영상 파일은 없다
+- 상태: 현행 (11-17 촬영)
+- 기준일: 2026-11-12 (대본 작성일)
+- 기준 커밋: 6707002 (대본 작성 시점)
+- 정본 여부: 정본(촬영 순서). 영상 파일은 [`video/sojafit-demo-2026-11-17.mp4`](video/sojafit-demo-2026-11-17.mp4)(1분 35초)다. 실제로 찍은 장면 · 촬영 코드 · 리비전은 [DELIVERABLES.md](DELIVERABLES.md) `video/` 줄이 정본이고, 이 대본과 다르다(실패 경로 3개, 나머지는 로컬 실제 모드)
 - 관련 문서: [DELIVERABLES.md](DELIVERABLES.md), [scripts/demo/DEMO.md](../../scripts/demo/DEMO.md), [GATES.md](../GATES.md)(G7), [EVAL_REPORT.md](../../EVAL_REPORT.md) 6장
 
 ## 1. 요약
@@ -13,7 +13,7 @@
 | 목표 길이 | 3분 이내 | 가이드 G7 |
 | 구성 | 정상 경로 1개 약 110초 + 실패 경로 1개 약 50초 | 3절, 4절 |
 | 근거 재료 | 배포 스모크 28단계 [smoke_..._232814.json](../../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-10_232814.json), 키 없는 데모 질문 [DEMO.md](../../scripts/demo/DEMO.md), 거절·인젝션 EVAL_REPORT 6장 | |
-| 촬영 | 안 함 | |
+| 촬영 | 했다(11-17, 1분 35초) | [DELIVERABLES.md](DELIVERABLES.md) `video/` 줄 |
 
 ## 2. 촬영 환경 (둘 중 하나)
 
@@ -59,7 +59,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 촬영 | 영상 파일 촬영(D11 11/16). 원본과 동결 시점 커밋 SHA, 배포 리비전 번호를 함께 남긴다 |
-| 영상 링크 | `README.md` 표 "시연 영상" 칸에 링크(저장소 안 또는 외부 URL) |
-| 이 문서 | 촬영 뒤 상태를 `현행`으로 바꾸고 촬영일을 적는다 |
-| 게이트 | `../GATES.md` G7 상태 갱신 |
+| 촬영 | 했다(11-17). 촬영 코드 · 배포 리비전 · 동결 커밋은 [DELIVERABLES.md](DELIVERABLES.md) `video/` 줄과 남은 일 표 |
+| 영상 링크 | 했다. `README.md` 표 "시연 영상" 칸 |
+| 이 문서 | 했다. 상태 `현행`, 촬영일 11-17 |
+| 게이트 | 했다. `../GATES.md` G7 |

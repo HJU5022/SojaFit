@@ -55,14 +55,14 @@
 | 범용 모델 비교(3) | Codex 45/50(관련 정답 20 · 오답 4 · 과잉 거절 1, 무관 25), Terra 41/50(관련 24 · 오답 1, 거절 17 · 환각 위험 8) | EVAL_REPORT 10장, `evals/results/graph/2026-11-12-codex-v3-50/TALLY.md`, `2026-11-16-terra-v3-50-isolated-web/TALLY.md` |
 | 상한(4 · 5) | 재계획 1 · 할 일 3 · Supervisor LLM 4 · 서브에이전트 6 · 문서 할 일당 검색 2 | README 3절, `backend/multi_agent/contracts.py` |
 | 단일 대 멀티(5) | v2 54 · 56 대 56 · 56, v3 48/50 대 50/50, 비용 $0.0426 대 약 $1.82 | EVAL_REPORT 4절 |
-| 승인 · 재개(6) | 배포 25단계 실패 0(11-13, `574de79-rs`), 로컬 재시작 재개 확인 14개 통과 | README 14행, GATES G1 · G4, `evals/results/d10/deploy_574de79/`, `evals/results/threads/local_g4_isolation_2026-11-09.json` |
+| 승인 · 재개(6) | 운영 25단계 24/24 통과(11-17 19:56, `pre-ef0138b2-rs`), 운영 서버 재시작 뒤 재개 통과(19:52), 그 전 11-13 `574de79-rs` 실패 0, 로컬 재시작 재개 확인 14개 통과 | GATES G1 · G4, `scripts/results/smoke/`의 11-17 `195049` · `195638`, `evals/results/d10/deploy_574de79/`, `evals/results/threads/local_g4_isolation_2026-11-09.json` |
 | 코퍼스(7) | 1,360문서 · 7,725쪽 · 청크 51,967(v4h) · 분류 13 · 품번 9,589 | data/DATA.md "코퍼스 수치", EVAL_REPORT 1절 |
 | 파싱 대조(7) | 99.993%(93,940/93,947) · 99.89%(93,493/93,600), 파서 5종 41 · 36 · 33 · 23 · 22, 운영 DB 해시 51,967/51,967 | EVAL_REPORT 1절 · 1-1절, `evals/results/d10/db_content_hash_check_2026-11-16.md` |
 | 청킹(7) | 고정 길이 33조각 41 · 31, HybridChunker 100조각 8 · 2, 표 한 행 162조각 41 · 41 | EVAL_REPORT 1-1절, `evals/results/search_compare/chunking_proxy_2026-11-01.json` |
 | 검색 전후(8) | R1 test Page Recall@5 0.579 → 0.763 → 0.789 → 0.829 → 0.908 → 0.934, 함께 14승 1패 23동(+0.329, p 0.001) | EVAL_REPORT 3절 3-A · 1-4절, `evals/results/retrieval/r1_steps_2026-11-04.json` |
 | 평가셋(9) | v1 · v2 · v3 동결 11/2 · 11/3 · 11/10, v3 관련 25 · 비관련 25, 해시 `2b99b2125d98…` → `05202314ed1d…` | EVAL_REPORT 2절, `evals/FROZEN.json` |
 | 개선 단계(10) | S4 · S5 · S8 · S0→S9 19/2, #46 47 · 45/50 되돌림, #49 50 · 48 → 50 · 49 | EVAL_REPORT 3-B · 3-C, README 3절 |
-| v3 결과(11) | 11-17 49/50 · 49/50(p95 16.7 · 9.1초), R1 50 · 48/50(10.5 · 12.1초), B0 47/50(10.9초), 헤드라인 50/50(10.0초, `DEMO_MODE` 미기록), 검색 21문항 Recall@5 1.0 · 쪽 MRR 0.9762 | README 4절, EVAL_REPORT 8.2 · 12절, `clean-meas`의 `evals/results/d12/gate/` |
+| v3 결과(11) | 11-17 배포 리비전 코드 50/50 · 49/50(p95 15.5 · 7.5초, 실패 v3-41), 새벽 `799ae636` 49/50 · 49/50(16.7 · 9.1초), R1 50 · 48/50(10.5 · 12.1초), B0 47/50(10.9초), 헤드라인 50/50(10.0초, `DEMO_MODE` 미기록), 검색 21문항 Recall@5 1.0 · 쪽 MRR 0.9762 | README 4절, EVAL_REPORT 8.2 · 12절, `clean-meas`의 `evals/results/d12/gate/` |
 | 변이(12) | 28/28(처음 25/28) | GATES "변이 확인", `evals/results/d10/mutation_2026-11-13.md` |
 | 인젝션(13) | 공격 55 중 방어 54 · 실패 0 · 보류 1, 사람 판정 88/110, 가드 최종 위험 4 → 2 | EVAL_REPORT 6절 |
 | 비용 · 지연(14) | 단계별 p50 · p95, 문항당 $0.00064 + $0.00013, 50문항 $0.032 · $0.036 | EVAL_REPORT 8장, `evals/results/graph/2026-11-11-d8-stages/` |
