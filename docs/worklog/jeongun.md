@@ -6,6 +6,7 @@
 - 랜딩 그림 [실측]: 4단계 중 2칸이 비어 자리 표시가 보였고, 있던 2장은 11-16 화면(`v_in_max * kV`, `>= 0.17142857142857143 A`, 데모 문구)이었다. 운영 평가 계정 A로 v3-01 질문을 새 대화로 보내(조건 질문 → 모두 모름 → 판정, LLM 2회) 질문 · 조건 질문 · 조건별 판정 · 근거 원문 4장을 찍고 사이드바를 뺀 같은 범위(1215×683)로 잘라 `frontend/public/assets/product/`에 넣었다(`b4a02113`). `npm test` 50/50, `npm run build` 통과.
 - 배포 [실측]: `b4a02113`을 `git archive`로 풀어 무트래픽 빌드 → 점검 → 20:45 `sojafit-api-pre-b4a02113-1117`로 트래픽 100%. 백엔드는 `2030f846`과 같아 v3 · 25단계를 다시 재지 않았다. 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-pre-ef0138b2-rs=100 --project sojafit --region asia-northeast3`.
 - 태그 `final-2026-11-17`(`a468c0ba`)은 옮기지 않았다.
+- 제출물 검수(독립 에이전트, 가이드 11절 · D12 기준) 뒤 문서 · 주석 정리(PR #164). 이어서 조장 결정(21:2x): 쓰지 않는 코드 중 동작이 같은 2곳만 지움(`Reply`의 넘기는 곳 없는 `onCircuit` prop, `api/profile.py`의 `analysis_service` 중복 함수), 빌드 파일(`VITE_LOCAL_ATTACHMENT_UI`, `frontend/Dockerfile.recovery`)은 둠. 큰 파일 9개에 docstring · `[왜]` 주석만 더함(파이썬 8개 AST 같음, 시험 1,660 통과 · 이 Mac에서 원래 실패하는 렌더 시험 제외). 포트폴리오 3장을 새 절 구조(문제 · 맡은 것 · 핵심 성과 · 판단 · 기술 · 근거)로 바꾸고 PR 번호 나열을 뺌(내용 · 숫자는 그대로). 배포하지 않음.
 
 ## 2026-11-17 PR #160 배포 · 배포 리비전 측정(2단계) · 레포 정리(3단계)
 - PR #160 배포 [실측]: 병합 `2030f846`(19:21:37). `ef0138b2`를 `git archive`로 풀어 무트래픽 빌드(19:19:00 ~ 19:27), 점검 통과 뒤 19:27:49 ~ 19:27:57 `sojafit-api-pre-ef0138b2-1117` 100%. `origin/main`과 트리 같음(`be9d1e31`). 운영 주소 점검 통과, 화면 묶음 `index-CbemLx1L.js`. 운영에서 D2 연결 그림(dagre)이 보이는 것을 확인했다. "원본 회로도를 보여 드릴 수 없어요" 문구와 첨부 단추는 외부 검색이 1분 넘게 "찾는 중"이라 보지 못했다.
