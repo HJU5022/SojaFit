@@ -365,10 +365,12 @@ export function CircuitSection({
   project,
   target,
   threadId,
+  onAttach,
 }: {
   project: Project | null;
   target: string;
   threadId: string | null;
+  onAttach?: () => void;
 }) {
   const usable = partsOf(project).filter((p) => !unsupportedPartReason(p));
   return (
@@ -380,7 +382,7 @@ export function CircuitSection({
           <Circuit key={ref} project={project} target={ref} zoomable />
         ),
       )}
-      {project && <SchematicSection project={project} threadId={threadId} />}
+      {project && <SchematicSection project={project} threadId={threadId} onAttach={onAttach} />}
     </section>
   );
 }
@@ -1088,7 +1090,12 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                           : '넷리스트를 대화에 첨부해 주세요.'
               }
             />
-            <CircuitSection project={project.data} target={target} threadId={threadId} />
+            <CircuitSection
+              project={project.data}
+              target={target}
+              threadId={threadId}
+              onAttach={() => attach.input.current?.click()}
+            />
           </aside>
           <section className="conversation" {...attach.dropZone}>
             <div className="conversation-heading">

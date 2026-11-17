@@ -94,9 +94,12 @@ function Figure({
 export function SchematicSection({
   project,
   threadId,
+  onAttach,
 }: {
   project: Project;
   threadId: string | null;
+  /** 회로도 파일 첨부 창을 연다(작업대 입력창의 첨부와 같은 길). 없으면 단추를 보이지 않는다 */
+  onAttach?: () => void;
 }) {
   // [왜] 저장된 그림은 데모 모드의 예제 프로젝트에만 있다. 목록이 404인 운영에서는 오류를 보이지 않고 웹 검색으로 넘어간다.
   const demos = useResource<Demo[]>(project.demo_id ? '/demo-circuits' : null);
@@ -216,10 +219,21 @@ export function SchematicSection({
       ) : (
         <>
           {missing ? (
-            <p className="schematic-missing">
-              <strong>찾지 못함</strong>
-              <span>{error?.message}</span>
-            </p>
+            // [왜] 넷리스트에는 부품 위치 · 배선이 없어 회로도를 만들 수 없다. 공개 원본도 찾지 못하면 그 한계를 그대로 알리고
+            //      회로도 파일(.kicad_sch)을 올리는 길을 바로 준다(11-17 조장 결정: 자동 생성은 하지 않고 한계로 적는다)
+            <div className="schematic-missing">
+              <strong>원본 회로도를 보여 드릴 수 없어요</strong>
+              <span>
+                넷리스트(.net)에는 부품 위치와 배선이 없어 SojaFit이 회로도 그림을 만들 수 없고,
+                연결이 같은 공개 원본도 찾지 못했어요. 회로도 파일(.kicad_sch)을 첨부하면 그 그림을
+                보여 드려요.
+              </span>
+              {onAttach && (
+                <button type="button" className="primary" onClick={onAttach}>
+                  회로도 파일(.kicad_sch) 첨부
+                </button>
+              )}
+            </div>
           ) : (
             <ErrorBox error={error} retry={() => search(query, true)} />
           )}

@@ -6,6 +6,7 @@ import {
   duplicateAction,
   filterParts,
   isSchematicFile,
+  layoutCircuit,
   partsOf,
   pinsOf,
   projectNameFromQuestion,
@@ -153,4 +154,42 @@ test('부품 점검표는 종류(빈 값이면 전체)와 판정 지원 부품�
   assert.deepEqual(refs('led', false), ['D2']);
   assert.deepEqual(refs('', true), ['D1']);
   assert.deepEqual(refs('led', true), []);
+});
+
+test('넷리스트 연결 그림: 대상 부품 · 그 넷 · 이웃 부품만 배치하고 큰 넷의 이웃은 줄여 "+N"으로 남긴다', () => {
+  const node = (ref: string, pin = '1') => ({ ref, pin });
+  const project = {
+    connections: {
+      components: [
+        { ref: 'D1', value: '1N4007' },
+        { ref: 'C1', value: '10u' },
+        { ref: 'R1', value: '1k' },
+        ...['U1', 'U2', 'U3', 'U4', 'U5'].map((ref) => ({ ref, value: 'IC' })),
+      ],
+      nets: [
+        { name: 'VIN', nodes: [node('D1', '2'), node('C1')] },
+        {
+          name: 'GND',
+          nodes: [node('D1', '1'), ...['R1', 'U1', 'U2', 'U3', 'U4', 'U5'].map((r) => node(r))],
+        },
+        { name: 'X', nodes: [node('U1', '2'), node('U2', '2')] },
+      ],
+    },
+  } as any;
+  const layout = layoutCircuit(project, 'D1')!;
+  assert.deepEqual(layout.parts.map((p) => p.ref).sort(), ['C1', 'D1', 'R1', 'U1', 'U2'].sort());
+  assert.deepEqual(layout.nets.map((n) => [n.name, n.more]).sort(), [
+    ['GND', 3],
+    ['VIN', 0],
+  ]);
+  assert.ok(layout.parts.find((p) => p.ref === 'D1')!.focus);
+  // 첫 핀(1)의 넷 GND는 대상 위, VIN은 아래
+  const y = (name: string) => layout.nets.find((n) => n.name === name)!.y;
+  const d1 = layout.parts.find((p) => p.ref === 'D1')!;
+  assert.ok(y('GND') < d1.y && y('VIN') > d1.y);
+  assert.ok(layout.width > 0 && layout.height > 0 && layout.wires.length === 1 + 1 + 1 + 3);
+  for (const w of layout.wires)
+    assert.ok(w.length >= 2 && w.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y)));
+  // 연결이 없으면 null
+  assert.equal(layoutCircuit({ connections: { components: [], nets: [] } } as any, 'D1'), null);
 });
