@@ -30,7 +30,7 @@
 | 판정·답 충돌 | C2 실제 모델 1회 관찰(수정 전), 출력 경계 수정 뒤 사전 등록 #51 재측정과 D9 재확인(사용 권고 0) | [c2-defense-recheck.md](../experiments/c2-defense-recheck.md) |
 | partial 재검색 | v3-20 실패 트레이스에서 검색어가 주문 정보에만 묶인 것을 확인, 사전 등록 #49 | EVAL_REPORT 5장 유형 14 |
 
-판정 출처: D9 재확인의 "사용 권고 0"은 `EVAL_REPORT.md:542`의 서술이다. 원시 파일(`claim_consistency_d9_recheck_2026-11-12.json`)의 `semantic_summary`는 `pending_manual_review`이고 사람 검토 기록은 없다. 원시 `answer` 세 건에 권고 표현이 없음은 키워드 검색으로 확인했다(assistant 확인). 수정 뒤 4단계 재측정(#51)의 의미 검토는 assistant의 원시 대조이며 독립 사람·LLM 판정이 아니다(`claim_consistency_after_review_20261109T203153Z.json` `reviewer`).
+판정 출처: D9 재확인의 "사용 권고 0"은 `EVAL_REPORT.md` 6절 표 5행(C2)의 서술이다. 원시 파일(`claim_consistency_d9_recheck_2026-11-12.json`)의 `semantic_summary`는 `pending_manual_review`이고 사람 검토 기록은 없다. 원시 `answer` 세 건에 권고 표현이 없음은 키워드 검색으로 확인했다(assistant 확인). 수정 뒤 4단계 재측정(#51)의 의미 검토는 assistant의 원시 대조이며 독립 사람·LLM 판정이 아니다(`claim_consistency_after_review_20261109T203153Z.json` `reviewer`).
 
 ## 4. 바꾼 것
 
