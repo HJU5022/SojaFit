@@ -30,6 +30,8 @@
 - [evidence/](evidence/EVIDENCE.md) — 시장 근거 원자료 복사본(`docs/TOPIC.md` 각주 [1]·[2]·[4]). 목록과 해시는 `evidence/EVIDENCE.md`
 
 이 폴더 바로 아래에 둔 파일. 같은 주제의 파일 중 코드 주석 · 시험 · 생성기(`evals/runners/report_supervisor_stage3.py`)가 경로를 적은 것이 있어, 그 주제는 하위 폴더로 옮기지 않았다.
+- 평가 리포트
+  - [eval-report-detail-2026-11-17.md](eval-report-detail-2026-11-17.md) — 요약 재작성 전 `EVAL_REPORT.md` 전체 기록(2026-11-17): 절별 과정 · 옛 측정 · 단계별 기록. 요약(정본)은 `../../EVAL_REPORT.md`
 - 검색 · 임베딩
   - [embedding-candidate-investigation.md](embedding-candidate-investigation.md) — 임베딩 후보 13종을 넣은 이유, 후보별 실행 범위, 중단·제외 사유(이력)
   - [model-licenses.md](model-licenses.md) — 임베딩 후보별 고정 revision, 라이선스·약관, 운영/연구 분류와 GitHub 포함 여부

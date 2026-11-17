@@ -15,8 +15,8 @@
 | `demo_script.md` | 제출물 | 시연 영상 촬영 스크립트 |
 | `portfolio.md` | 제출물 양식 | 포트폴리오 1장 양식. 조원마다 `portfolio-{이름}.md`로 복사 |
 | `portfolio-jeongun.md` | 제출물 | 하정운 포트폴리오 |
-| `portfolio-osc.md` | 제출물 | 오세창 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요) |
-| `portfolio-sth.md` | 제출물 | 심태현 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요) |
+| `portfolio-osc.md` | 제출물 | 오세창 포트폴리오(작업 기록 · PR 기준, 본인 확인 필요) |
+| `portfolio-sth.md` | 제출물 | 심태현 포트폴리오(작업 기록 · PR 기준, 본인 확인 필요) |
 | `portfolio/` | 제출물 | 위 세 포트폴리오를 A4 1장으로 뽑은 PDF(`portfolio-{이름}.pdf`, 11-17, 마크다운과 같은 내용) |
 | `submission_checklist.md` | 제출물 | 제출 체크리스트: 게이트·제출물 항목별 증거 경로와 상태 |
 | `langfuse/` | 제출물 | Langfuse 스크린샷 7장: 01~03 목록 · 트레이스 상세 · 비용(11-13 배포본), 04~07 RAGAS 점수가 붙은 평가 trace 상세 · 그 trace의 점수 탭(17개) · Spec · RAG 두 에이전트 Timeline · 홈 대시보드(11-17 밤, 프로젝트 SojaFit_v2). 설명은 아래 "Langfuse 스크린샷" 절 |

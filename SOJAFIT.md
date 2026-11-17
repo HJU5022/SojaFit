@@ -834,6 +834,7 @@ SojaFit (proj3-b)
     │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 x 검색 방식 격자 본평가
     │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
+    │   ├── eval-report-detail-2026-11-17.md  <- 요약 재작성 전 EVAL_REPORT 전체 기록(11-17)
     │   ├── market/         <- 문제와 시장 근거: 고객 여정 · 채용 공고 · 수요 근거와 유사 서비스 가격
     │   │   ├── market-user-journey.md  <- 문제와 시장 근거
     │   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
@@ -886,8 +887,8 @@ SojaFit (proj3-b)
     │   ├── submission_checklist.md  <- 제출 체크리스트(항목별 증거 경로·상태)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
-    │   ├── portfolio-osc.md  <- 오세창 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
-    │   ├── portfolio-sth.md  <- 심태현 포트폴리오 초안(11-17 조장이 작업 기록에서 옮겨 작성, 본인 확인 필요)
+    │   ├── portfolio-osc.md  <- 오세창 포트폴리오(작업 기록 · PR 기준, 본인 확인 전)
+    │   ├── portfolio-sth.md  <- 심태현 포트폴리오(작업 기록 · PR 기준, 본인 확인 전)
     │   ├── portfolio/      <- 세 포트폴리오를 A4 1장으로 뽑은 제출본 PDF(11-17, 마크다운과 같은 내용)
     │   │   ├── portfolio-jeongun.pdf  <- 하정운
     │   │   ├── portfolio-osc.pdf  <- 오세창
