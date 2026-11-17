@@ -9,9 +9,13 @@ def test_contexts_from_docs_and_judgement_citations():
         'docs': [{'content': 'chunk A VRRM 1000V'}],
         'reports': [{
             'docs': [{'content': 'chunk B IF 1A'}],
-            'judgement': {
+            'judgement': {  # 실제 판정 모양: results[].checks[] (backend/judge/verdict.py Judgement)
+                'kind': 'judge',
                 'role_evidence': ['D1 cathode toward load'],
-                'results': [{'conditions': [{'citation': '1N4001G SERIES p1 VRRM 1000V'}]}],
+                'results': [{'part': '1N4007G', 'checks': [{
+                    'code': 'VRRM', 'op': '>=', 'threshold': 6.5, 'basis': 'v_reverse_max * kV', 'value': 1000.0, 'unit': 'V',
+                    'condition': None, 'result': 'pass',
+                    'citation': {'document': '1N4001G SERIES.pdf', 'page': 1, 'table': 'MAXIMUM RATINGS', 'row': 'VRRM'}}]}],
             },
         }],
     }
@@ -19,7 +23,16 @@ def test_contexts_from_docs_and_judgement_citations():
     assert ctx[0] == 'chunk A VRRM 1000V'
     assert 'chunk B IF 1A' in ctx
     assert 'D1 cathode toward load' in ctx
-    assert '1N4001G SERIES p1 VRRM 1000V' in ctx
+    row = next(c for c in ctx if c.startswith('1N4007G 사양 행'))
+    assert '1N4001G SERIES.pdf 1쪽 MAXIMUM RATINGS VRRM: VRRM = 1000.0 V' in row  # 위치와 후보 값이 함께 들어간다
+    assert '판정 기준 VRRM >= 6.5 (v_reverse_max * kV)' in row
+
+
+def test_score_ragas_skips_refusal(monkeypatch):
+    monkeypatch.setenv('RAGAS_ENABLED', '1')
+    monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-test')
+    state = {'answer': '확인하지 못했어요.', 'path': ['계획', '거절'], 'docs': [{'content': 'c'}]}
+    assert S.score_ragas({'input': '질문: a'}, state) == {}
 
 
 def test_question_text_prefers_질문_line():

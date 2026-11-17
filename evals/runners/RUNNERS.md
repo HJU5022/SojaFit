@@ -22,7 +22,7 @@
 | `gate_report.py` | `run_gate` 결과 세트(`set*.json`)를 기준표로 집계: 관련 정답률, 무관 올바른 거절률, 지어낸 답·틀린 답·과잉 거절 비율, 문서·쪽 Recall@5·MRR, 응답 시간 p50·p95 | `uv run python -m evals.runners.gate_report <평가셋 jsonl> <결과 폴더> [--min 0.95] [--max-error 0.05] [--p95 10]` | 무료 | `<결과 폴더>/report.json`. 기준 미달이면 종료 코드 1 |
 | `score_answer.py` | 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표(`cited_gold`, `wrong_citation`, `over_refusal`, `correct_refusal`, `hallucination_risk`)를 규칙으로 채점. [작업서](../../docs/experiments/answer-refusal-scorer.md) | `uv run python -m evals.runners.score_answer <평가셋 jsonl> <실행 결과 json> [채점 결과 json]` | 무료 | 세 번째 인자 경로(생략하면 화면 출력) |
 | `score_compound.py` | 문항의 `parts`별 채점(답할 수 있는 부분은 정답 인용·판정 코드·찾기 후보, 답하면 안 되는 부분은 거절 여부). `run_gate`가 부름 | 단독 실행 없음 | 무료 | 호출한 실행기의 행 |
-| `score_ragas.py` | reference 없이 Faithfulness·LLMContextPrecisionWithoutReference 값을 만듦. `run_gate`가 같은 trace에 점수로 붙임 | 단독 실행 없음 | 유료(판정 LLM 호출) | Langfuse trace 점수 |
+| `score_ragas.py` | reference 없이 Faithfulness·LLMContextPrecisionWithoutReference 값을 만듦. 근거는 검색 청크와 답에 나간 후보별 사양 행(값 · 시험 조건 · 판정 기준), 거절 답은 건너뜀. `run_gate`가 같은 trace에 점수로 붙임 | 단독 실행 없음 | 유료(판정 LLM 호출) | Langfuse trace 점수 |
 | `stage_timing.py` | `run_gate`가 문항 행에 `stages`·`llm_call_log`·`voyage`를 쓰게 하는 기록기. 질문·답 본문은 담지 않음 | 단독 실행 없음 | 무료 | 호출한 실행기의 행 |
 
 ### 검색·그래프·판정
