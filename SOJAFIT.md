@@ -904,7 +904,6 @@ SojaFit (proj3-b)
     │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 2.14K · 점수 23.27K · 비용 $1.46, 최근 1일)
     │   ├── presentation/   <- 최종 발표 덱(11-18)
     │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
-    │   │   ├── sojafit-final-2026-11-18.pdf  <- 같은 발표 자료의 PDF(24장은 영상 대신 첫 화면)
     │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 자료 25장(데모 영상 포함)
     │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "파일" 절
     │       └── sojafit-demo-2026-11-17.mp4  <- 2분 49초, 운영 리비전에서 녹화한 정상 · 경계 · 방어 경로, 화면마다 자막
