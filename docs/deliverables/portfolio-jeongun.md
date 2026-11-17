@@ -1,6 +1,6 @@
 # 포트폴리오 — 하정운
 
-**조장 · 기획 · LangGraph 에이전트 · 평가** | SojaFit, KDT AI Human 7기 3차 프로젝트 2조(2026-10-30 ~ 11-17)
+**조장 · 오케스트레이션 · 기획 · LangGraph 에이전트 · 평가** | SojaFit, KDT AI Human 7기 3차 프로젝트 2조(2026-10-30 ~ 11-17)
 저장소 [aihuman-7th/proj3-b](https://github.com/aihuman-7th/proj3-b) · 배포 주소는 [README](../../README.md) 맨 위 표(평가용 계정은 적지 않는다) · 숫자는 모두 [EVAL_REPORT.md](../../EVAL_REPORT.md)의 값이고 괄호는 그 절이다(2026-11-17 기준)
 
 ## 문제
@@ -9,7 +9,7 @@
 
 ## 내가 맡은 것
 
-- 조장. 기획 · SPEC, LangGraph 에이전트, 평가셋 · 평가, 배포 · 게이트 문서
+- 조장. 오케스트레이션(Supervisor가 Spec · RAG 에이전트에 일을 나누는 멀티 에이전트 흐름), 기획 · SPEC, LangGraph 에이전트, 평가셋 · 평가, 배포 · 게이트 문서
 - 평가셋 v1 ~ v3 동결과 사전 등록 측정, 검색 · 판정 개선 루프, Supervisor · 판정 에이전트, Cloud Run · DB 전환
 - 평가셋 v1 50건 · v2 추가 20건 1차 판정, v3 50건 검수 · 최종 판정(2절 평가셋 표)
 
