@@ -416,6 +416,53 @@ def test_find_does_not_filter_by_original_part_values(monkeypatch):
     assert [t['code'] for t in seen[0]] == ['VRRM', 'IF_AV'] and j['terms'] == seen[0]
 
 
+def test_find_without_circuit_values_searches_by_original_part_ratings(monkeypatch):
+    """회로 값을 하나도 모르면 원래 부품의 같은 정격을 기준으로 후보를 모은다(11-17). 판정은 그대로 '문서로 확인 안 됨'이다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+
+    def find(conditions, category, package, limit, **near):
+        seen.append(conditions)
+        return [{'part': 'SS14', 'category': 'schottky-rectifier', 'packages': ['SMA']}]
+    table = {**SPECS, '1N4001': [r('1N4001', 'VRRM', 50.0), r('1N4001', 'IF_AV', 1.0, 'A')]}
+    read = dict(READ, original_part='1N4001', candidates=[], values=[])
+    out = J.judge_agent({**STATE, 'question': 'D1 다른 걸로 바꿀 거 있어?', 'conditions': '', 'question_type': 'candidate_find',
+                         'judge_read': read}, specs=specs_of(table), find=find, retriever=None)
+    j = out['judgement']
+    assert seen[0] == [{'code': 'VRRM', 'gte': 50.0}, {'code': 'IF_AV', 'gte': 1.0}] and j['terms'] == seen[0]
+    assert j['terms_from_original'] is True
+    assert [x['verdict'] for x in j['results']] == ['NOT_VERIFIED'] and j['shown'] == []  # 값이 없어 판정은 확인 안 됨, 견적 대상 아님
+    assert [x['part'] for x in j['unverified']] == ['SS14'] and 'v_in_max' in j['results'][0]['missing']
+    assert out['reports'][-1]['status'] == 'ok'  # 후보가 있는 답이라 거절로 가지 않는다
+
+
+def test_find_with_circuit_values_does_not_use_original_part_ratings(monkeypatch):
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {**SPECS, '1N4001': [r('1N4001', 'VRRM', 50.0), r('1N4001', 'IF_AV', 1.0, 'A')]}
+    j = J.judge_agent(find_state(read={'original_part': '1N4001'}), specs=specs_of(table), find=two_found, retriever=None)['judgement']
+    assert j['terms_from_original'] is False and j['terms'][0] == {'code': 'VRRM', 'gte': pytest.approx(15.0)}
+
+
+def test_find_without_values_and_without_original_rows_still_finds_nothing(monkeypatch):
+    """원래 부품 문서도 없으면 대신할 기준이 없어 찾지 않는다(전과 같음). 거절 문구가 읽은 역할을 보여 준다(test_build)."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    read = dict(READ, original_part='', candidates=[], values=[])
+    out = J.judge_agent({**STATE, 'conditions': '', 'question_type': 'candidate_find', 'judge_read': read},
+                        specs=specs_of(SPECS), find=lambda *a, **k: pytest.fail('조건 없이 찾기를 불렀다'), retriever=None)
+    assert out['judgement']['results'] == [] and out['judgement']['terms'] == [] and out['judgement']['terms_from_original'] is False
+
+
+@pytest.mark.parametrize('name, text, want', [
+    ('hot_test', '125', {'TJ': 125.0}), ('hot_test', '125°C', {'TJ': 125.0}), ('hot_test', '125도', {'TJ': 125.0}),
+    ('temp', '85', {'TA': 85.0}), ('temp', '-40 C', {'TA': -40.0}),
+    ('hot_test', 'TA=100°C', {'TA': 100.0}),  # 기호를 적었으면 적은 대로
+    ('vf_test', '1', None), ('hot_test', '뜨거움', None),  # 전류까지 받는 조건 · 숫자가 아닌 답은 전과 같이 버린다(= 모름)
+])
+def test_resume_reply_accepts_a_bare_number_for_temperature_only_conditions(name, text, want):
+    kinds = {'hot_test': 'condition', 'temp': 'condition', 'vf_test': 'condition'}
+    assert J.merge_reply({name: text}, {}, {}, kinds)[1].get(name) == want
+
+
 def test_find_passes_original_package_and_category_for_ranking(monkeypatch):
     """찾기는 원래 부품의 패키지 · 분류를 도구에 넘겨 50개로 자르기 전에 그 순서로 줄 세우게 한다(SPEC 8.3 찾기 순위). 모르면 None."""
     monkeypatch.setattr(J, 'interrupt', unknown)

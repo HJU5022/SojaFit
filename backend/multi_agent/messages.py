@@ -6,6 +6,7 @@
   앞 답 · 근거를 다시 보여 달라는 말에는 화면에 남은 근거 자리를 고정 안내로 알려 준다(`EARLIER_ANSWER`, 멀티 끝내기, #64).
   일반 개념 설명 끝 문장(`GENERAL_NOTE`, #66)도 LLM이 아니라 멀티 끝내기가 붙인다.
   판정 결과(`judgement`)를 코드 틀의 답 글로 바꾼다(`render_judgement`, 숫자 · 인용은 판정 결과를 그대로 옮긴다).
+  후보 찾기가 0개로 끝난 거절에는 읽은 역할 · 건 조건을 보여 준다(`empty_find_message`, 11-17).
 - 하지 않는 일: 거절 결정(Supervisor · 단일 그래프 라우팅), 코드 이름 노출, 숫자 비교(`backend/judge/`), 가격 · 재고 조회(`backend/services/mouser.py`).
   "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
 - 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05, 내부 코드와 사용자 문구 분리), SPEC 2절 가격 안내 · 6절 Mouser(ADR 0009)
@@ -105,14 +106,40 @@ def _one(j: dict) -> list[str]:
     return lines
 
 
+def _role_line(judgement: dict) -> str:
+    """답 맨 위의 역할 줄(읽은 역할과 그 근거)."""
+    return f"역할: {', '.join(judgement['roles']) or '규칙 없는 역할'} (근거: {'; '.join(judgement['role_evidence']) or '—'})"
+
+
+def _terms_line(judgement: dict) -> str:
+    """찾기에 건 조건 줄. 회로 값이 없어 원래 부품 정격으로 대신 찾았으면 그 사실을 붙인다(`terms_from_original`)."""
+    terms = ', '.join(f"{t['code']} {'≥' if 'gte' in t else '≤'} {_num(t.get('gte', t.get('lte')))}" for t in judgement['terms'])
+    note = ' (회로 값을 몰라 원래 부품의 정격을 기준으로 찾았어요)' if terms and judgement.get('terms_from_original') else ''
+    return f'사양 표에서 건 조건: {terms or "없음(빠진 값이 있어 거르지 못함)"}{note}'
+
+
+def empty_find_message(judgement: dict) -> str:
+    """후보 찾기가 0개로 끝났을 때의 안내: 읽은 역할 · 건 조건을 보여 주고 다음에 줄 것을 알려 준다(멀티 거절 노드가 쓴다).
+
+    [왜] 전에는 공통 문구('이 부품 자료를 찾지 못했어요')만 보여 이미 읽은 역할과 계산한 조건이 버려졌다. 사용자는 무엇을 고쳐 다시
+         물어야 하는지 알 수 없었다(11-17 조장 결정). 실행 상태는 그대로 거절이고 문구만 바뀐다.
+    """
+    lines = [_role_line(judgement), _terms_line(judgement)]
+    if judgement['terms']:
+        lines.append('이 조건을 모두 만족하는 부품을 찾지 못했어요. 값이 맞는지 다시 확인하시거나, 패키지 · 분류 같은 조건을 줄여 다시 물어봐 주세요.')
+    else:
+        lines.append('후보를 고를 기준이 되는 값이 없어 찾지 못했어요. 회로 전압 · 전류처럼 아는 값만 알려 주시면 다시 찾아볼게요. '
+                     '단위 없이 숫자만 적어도 돼요.')
+    return '\n'.join(lines)
+
+
 def render_judgement(judgement: dict) -> str:
     """판정 결과 → 답 글(코드 틀). 숫자와 인용은 판정 결과를 그대로 옮긴다(LLM이 다시 쓰지 않는다)."""
-    lines = [f"역할: {', '.join(judgement['roles']) or '규칙 없는 역할'} (근거: {'; '.join(judgement['role_evidence']) or '—'})", '']
+    lines = [_role_line(judgement), '']
     if judgement['kind'] == 'no_rule':
         lines.append('이 다이오드의 역할은 판정 규칙이 있는 23개 역할 밖이라 판정하지 않았어요.')
     elif judgement['kind'] == 'find':
-        terms = ', '.join(f"{t['code']} {'≥' if 'gte' in t else '≤'} {_num(t.get('gte', t.get('lte')))}" for t in judgement['terms'])
-        lines.append(f'사양 표에서 건 조건: {terms or "없음(빠진 값이 있어 거르지 못함)"}')
+        lines.append(_terms_line(judgement))
         if judgement['capped']:
             lines.append('후보가 50개 상한에 걸렸어요. 패키지나 분류를 좁혀 주세요.')
         if not judgement['shown']:

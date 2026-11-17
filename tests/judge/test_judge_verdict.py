@@ -235,6 +235,30 @@ source: x
     assert c.result == 'fail' and c.code == 'TRR' and c.basis == 'CJ <= 1e-12 또는 TRR <= 1e-9'
 
 
+def test_original_search_conditions_replace_missing_circuit_values_with_original_ratings():
+    """회로 값이 없으면 값이 빠진 필수 조건의 기준을 원래 부품의 같은 코드 값으로 대신한다(11-17). 시험 조건(at) 조건은 그대로 뺀다."""
+    orig = [row('1N4001', 'VRRM', 50.0), row('1N4001', 'IF_AV', 1.0, unit='A'), row('1N4001', 'VF', 1.1, 'IF = 1A', table=CHAR)]
+    assert V.search_conditions(R01, {}) == []  # 값이 없으면 기존 찾기 조건은 빈다
+    assert V.original_search_conditions(R01, {}, orig) == [{'code': 'VRRM', 'gte': 50.0}, {'code': 'IF_AV', 'gte': 1.0}]
+    # 값을 받은 조건은 대신하지 않는다(그 조건은 search_conditions가 낸다)
+    assert V.original_search_conditions(R01, {'v_in_max': 12.0}, orig) == [{'code': 'IF_AV', 'gte': 1.0}]
+    # 원래 문서가 VRRM 대신 VR만 적었으면 그 값을 쓰되 찾기 코드는 첫 코드(VRRM)다
+    assert V.original_search_conditions(R01, {}, [row('1N4148', 'VR', 75.0)]) == [{'code': 'VRRM', 'gte': 75.0}]
+    assert V.original_search_conditions(R01, {}, []) == []  # 원래 부품 문서가 없으면 대신할 값이 없다
+
+
+def test_original_search_conditions_skip_original_based_default_and_any_conditions():
+    """원래 부품 값(orig.*) 기준 · 기본값(default)으로 물러나는 조건 · "A 또는 B"는 시험 조건이 같은 행끼리 판정에서 봐야 해 찾기에 쓰지 않는다."""
+    rule = {'conditions': [
+        {'tier': 'required', 'code': 'IR', 'op': '<=', 'basis': 'ir_allowed', 'default': 'orig.IR'},
+        {'tier': 'required', 'code': 'TRR', 'op': '<=', 'basis': 'orig.TRR'},
+        {'tier': 'required', 'any': [{'code': 'IF_AV', 'op': '>=', 'basis': 'i_coil'}]},
+        {'tier': 'conditional', 'code': 'IFSM', 'op': '>=', 'basis': 'i_peak', 'when': 'i_peak'},
+        {'tier': 'required', 'code': 'PD', 'op': '>=', 'basis': 'p_load'}]}
+    orig = [row('X', c, 1.0) for c in ('IR', 'TRR', 'IF_AV', 'IFSM', 'PD')]
+    assert V.original_search_conditions(rule, {}, orig) == [{'code': 'PD', 'gte': 1.0}]
+
+
 def test_search_conditions_skip_any_groups():
     assert V.search_conditions(OR_RULE, {'v_in_max': 12.0, 'i_coil': 0.08}) == [{'code': 'VRRM', 'gte': pytest.approx(15.0)}]
 

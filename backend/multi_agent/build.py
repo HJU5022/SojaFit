@@ -23,7 +23,7 @@ from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import Reason, TaskReport
-from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, refusal_for
+from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, empty_find_message, refusal_for
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
 from backend.services.llm import is_llm_failure
@@ -124,6 +124,11 @@ def refuse_node(state: dict) -> dict:
     """거절: 이유 코드는 `refusal`에 남기고(Langfuse로), 사용자에게는 일상어 문구를 답으로 준다."""
     code = state.get('refusal_reason') or Reason.LIMIT_REACHED.value
     message = NEED_NETLIST if code == CIRCUIT_MISSING else refusal_for(Reason(code), state.get('facts') or {})
+    if code == Reason.NOT_FOUND.value:
+        # [왜] 후보 찾기가 0개로 끝난 거절은 공통 문구 대신 읽은 역할 · 건 조건을 보여 준다(11-17). 이유 코드 · 실행 상태(거절)는 그대로다
+        reports = state.get('final_reports') or state.get('reports') or []
+        empty = next((j for r in reversed(reports) if (j := r.get('judgement') or {}).get('kind') == 'find' and not j.get('results')), None)
+        message = empty_find_message(empty) if empty else message
     return {'answer': message, 'check': {}, 'refusal': {'code': code, 'message': message}, 'path': ['거절']}
 
 

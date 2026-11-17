@@ -398,6 +398,23 @@ def test_two_ok_docs_answers_are_joined_by_code_without_the_synth_llm():
     assert 'synth' not in chat.calls and out['path'][-3:] == ['답 정리', '답 검사', '끝'] and out['answer'].count('[7]') == 2
 
 
+def test_refusal_after_an_empty_candidate_find_shows_the_role_and_terms_instead_of_the_generic_text():
+    """후보 찾기가 0개로 끝난 거절(11-17): 이유 코드는 not_found 그대로이고, 문구는 읽은 역할 · 건 조건을 보여 준다."""
+    find = {'kind': 'find', 'roles': ['R02'], 'role_evidence': ['D3.K → +5V'], 'results': [], 'shown': [], 'unverified': [],
+            'terms': [{'code': 'VRRM', 'gte': 15.0}], 'capped': False}
+    report = {'task': 1, 'agent': 'judge', 'status': 'fail', 'reason': 'no_result', 'judgement': find}
+    out = B.refuse_node({'refusal_reason': Reason.NOT_FOUND.value, 'facts': {}, 'final_reports': [report]})
+    assert out['refusal']['code'] == 'not_found' and out['answer'] == out['refusal']['message']
+    assert out['answer'].startswith('역할: R02 (근거: D3.K → +5V)') and 'VRRM ≥ 15' in out['answer']
+    generic = refusal_for(Reason.NOT_FOUND, {})
+    # 찾기 판정이 없거나(문서 질문) 후보가 있었으면 공통 문구 그대로다
+    assert B.refuse_node({'refusal_reason': Reason.NOT_FOUND.value, 'facts': {}, 'final_reports': []})['answer'] == generic
+    docs = {'task': 1, 'agent': 'docs', 'status': 'fail', 'reason': 'no_result', 'judgement': {}}
+    assert B.refuse_node({'refusal_reason': Reason.NOT_FOUND.value, 'facts': {}, 'reports': [docs]})['answer'] == generic
+    # 다른 거절 사유에는 끼어들지 않는다
+    assert B.refuse_node({'refusal_reason': Reason.LIMIT_REACHED.value, 'facts': {}, 'final_reports': [report]})['answer'] == refusal_for(Reason.LIMIT_REACHED, {})
+
+
 def test_all_tasks_failing_ends_as_refusal_with_the_reason():
     # [왜] 설계 v2: 문서가 근거를 못 찾으면 Supervisor(계획)가 한 번 다시 계획한다. 재계획도 거절을 고르면 거절로 끝난다
     chat = scripted(supervisor=[Plan(question_type='rating', next='tasks', tasks=[docs_task()]),

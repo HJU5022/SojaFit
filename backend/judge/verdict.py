@@ -447,6 +447,32 @@ def search_conditions(rule: dict, values: dict) -> list[dict]:
     return out[:10]
 
 
+def original_search_conditions(rule: dict, values: dict, original_rows: list[dict]) -> list[dict]:
+    """회로 값이 없어 찾기 조건이 비었을 때 쓰는 찾기 조건: 값이 빠진 필수 조건의 기준을 원래 부품의 같은 코드 값으로 대신한다.
+
+    [왜] 사용자가 회로 값을 모르면 `search_conditions`가 비어 후보를 하나도 모으지 못하고 거절로 끝났다(11-17 조장 결정:
+         되묻기는 단서를 더 얻는 수단이지 답의 관문이 아니다). 원래 부품 정격 이상(상한 조건은 이하)인 품번을 후보로 모으기만 한다.
+    [주의] 판정은 바꾸지 않는다. 회로 값이 없는 조건은 `judge_part`에서 그대로 '문서로 확인 안 됨'이다.
+    [주의] `search_conditions`가 빼는 조건(시험 조건 `at` · 원래 부품 값 `orig.*` · "A 또는 B")은 여기서도 뺀다. 회로 값이 없을 때
+         원래 부품 값으로 물러나는 조건(`default`, R02 IR)도 시험 조건이 같은 행끼리 판정에서 봐야 해 뺀다. 범위 조건(`between`)도 뺀다.
+    """
+    orig = first_values(original_rows)
+    out = []
+    for cond in rule['conditions']:
+        if cond['tier'] != 'required' or cond.get('at') or cond.get('default') or 'any' in cond or _off(cond, values):
+            continue
+        bases = C._bases(cond)
+        if cond['op'] not in ('>=', '<=') or any(C.orig_codes(b) for b in bases) or C.evaluate(bases[0], values) is not None:
+            continue
+        codes = cond['code'] if isinstance(cond['code'], list) else [cond['code']]
+        bar = next((orig[c] for c in codes if c in orig), None)  # 대체 코드([VRRM, VR]) 중 원래 문서가 적은 첫 값
+        if bar is None:
+            continue
+        slot = {'slot': cond['slot']} if cond.get('slot') else {}
+        out.append({'code': codes[0], 'gte' if cond['op'] == '>=' else 'lte': bar, **slot})  # 찾기 코드는 search_conditions와 같이 첫 코드
+    return out[:10]
+
+
 def rank(judgements: list[Judgement], per_verdict: int = 3, total: int = 5,
          preferred: set[str] = frozenset()) -> tuple[list[Judgement], list[Judgement]]:
     """찾기 결과 → (보여 줄 후보, 확인 안 됨 후보). 불충족은 뺀다. 판정 순서 → 기판 수정 불필요 먼저 → 선호 후보(preferred) 먼저 → 품번 순."""
