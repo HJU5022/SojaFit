@@ -47,6 +47,8 @@ export type Result = {
     results?: Candidate[];
     shown?: Candidate[];
     unverified?: Candidate[];
+    /** 판정 종류: 후보 찾기 `find` · 후보 판정 `judge` · 규칙 없는 역할 `no_rule` */
+    kind?: string;
     roles?: string[];
     role_evidence?: string[];
     input_conditions?: { code: string; value: string }[];

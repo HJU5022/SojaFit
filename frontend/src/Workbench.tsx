@@ -1110,10 +1110,6 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   <p>{notice.text}</p>
                 </div>
               )}
-              <ErrorBox
-                error={error}
-                retry={() => (threadId ? setReload((v) => v + 1) : project.reload())}
-              />
               {loading ? (
                 <Loading label="검토 기록을 불러오는 중" />
               ) : (
@@ -1295,6 +1291,16 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
               )}
               {questions.error && (questions.error as ApiError).status !== 404 && (
                 <ErrorBox error={questions.error} retry={questions.reload} />
+              )}
+              {/* [왜] 보내기 · 재개 · 불러오기 실패 이유는 입력창 바로 위에 둔다. 대화 맨 위에 있을 때는 긴 대화에서 보이지 않아
+                  보낸 글이 말없이 되돌아온 것처럼 보였다(11-17). 한 곳에만 그린다(alert가 둘이 되지 않게) */}
+              <ErrorBox
+                error={error}
+                retry={() => (threadId ? setReload((v) => v + 1) : project.reload())}
+              />
+              {/* 첨부를 보내면 서버가 회로도를 그리고 읽는 데 10초쯤 걸린다. 그동안 무엇을 하는지 보인다 */}
+              {preparing && attachment && (
+                <Loading label="회로도 · 넷리스트를 읽는 중이에요 · 최대 20초" />
               )}
               <form
                 className="composer"

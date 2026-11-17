@@ -2,7 +2,12 @@
 import { useId, useState } from 'react';
 import { ArrowRight, MessageSquare, PanelRight } from 'lucide-react';
 import { statuses } from './api';
-import { replyCandidates, withoutCorpusCitations } from './display';
+import {
+  candidateSummary,
+  rankCandidates,
+  replyCandidates,
+  withoutCorpusCitations,
+} from './display';
 import { inputLabel, inputPlaceholder, isBooleanInput } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, GradeHelp, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
@@ -206,7 +211,11 @@ export function Reply({
   onCircuit?: () => void;
 }) {
   const r = run.result,
-    candidates = replyCandidates(r.judgement);
+    candidates = rankCandidates(replyCandidates(r.judgement)),
+    // [왜] 찾기 답은 후보가 수십 개다. 가장 가까운 3장만 먼저 보이고 나머지는 접는다(11-17)
+    [all, setAll] = useState(false),
+    FIRST = 3,
+    visible = all ? candidates : candidates.slice(0, FIRST);
   return (
     <div className="assistant-reply">
       <div className="reply-label">
@@ -227,9 +236,17 @@ export function Reply({
       {candidates.length ? (
         <>
           <h2>후보별 검토 결과입니다.</h2>
+          {/* 결론 한 줄은 후보 찾기 답에만 둔다. 품번을 정해 물은 판정은 카드의 판정이 곧 결론이다 */}
+          {r.judgement.kind === 'find' && (
+            <p className="candidate-summary">{candidateSummary(candidates)}</p>
+          )}
           <div className="candidate-list">
-            {candidates.map((c, i) => (
-              <button key={i} className="candidate-card" onClick={() => onCandidate(c, run)}>
+            {visible.map((c) => (
+              <button
+                key={c.part + '/' + c.role}
+                className="candidate-card"
+                onClick={() => onCandidate(c, run)}
+              >
                 <div>
                   <strong>{c.part}</strong>
                   <Badge verdict={c.verdict} />
@@ -247,6 +264,11 @@ export function Reply({
               </button>
             ))}
           </div>
+          {!all && candidates.length > FIRST && (
+            <button type="button" className="more-candidates" onClick={() => setAll(true)}>
+              나머지 {candidates.length - FIRST}개 후보 보기
+            </button>
+          )}
           <details className="full-answer">
             <summary>전체 답변 보기</summary>
             <div className="markdown">

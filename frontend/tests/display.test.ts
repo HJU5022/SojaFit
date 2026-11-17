@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   basisLabel,
+  candidateSummary,
   EVIDENCE_GRADES,
   evidenceGrade,
   explainAnswer,
   explainNames,
   opLabel,
+  rankCandidates,
   formatAmount,
   formatNumber,
   markdownUrl,
@@ -26,7 +28,7 @@ import {
   type Step,
 } from '../src/display.ts';
 import type { Candidate } from '../src/types.ts';
-import { INPUT_LABELS, isBooleanInput, inputPlaceholder } from '../src/inputLabels.ts';
+import { INPUT_LABELS, inputLabel, isBooleanInput, inputPlaceholder } from '../src/inputLabels.ts';
 
 test('formatNumber는 긴 소수만 줄이고 정수·짧은 소수는 그대로 둔다', () => {
   assert.equal(formatNumber(0.17142857142857143), '0.171');
@@ -275,4 +277,42 @@ test('근거 등급: 서버가 준 등급은 그대로, 웹 표시가 없는 근
     ],
   );
   assert.match(EVIDENCE_GRADES[2].use, /판정 근거로 쓰지 않습니다/);
+});
+
+test('후보 카드 순서: 판정이 좋은 순 → 기판 수정 불필요 먼저 → 서버 순서, 결론 한 줄은 서버 값만 읽는다', () => {
+  const c = (part: string, verdict: string, board_change: boolean | null, missing: string[] = []) =>
+    ({ part, role: 'R02', verdict, board_change, missing }) as Candidate;
+  const server = [
+    c('A', 'NOT_VERIFIED', true, ['v_reverse_max', 'i_max']),
+    c('B', 'NOT_VERIFIED', false, ['i_max']),
+    c('C', 'NOT_SUFFICIENT', false),
+    c('D', 'ROLE_SUFFICIENT', true),
+    c('E', 'SPEC_EQUIVALENT', null),
+    c('F', 'SPEC_EQUIVALENT', false),
+    c('G', 'NOT_VERIFIED', true),
+    c('H', 'IDENTICAL', true),
+  ];
+  const ranked = rankCandidates(server);
+  assert.deepEqual(
+    ranked.map((x) => x.part),
+    ['H', 'F', 'E', 'D', 'B', 'A', 'G', 'C'],
+  );
+  assert.deepEqual(
+    server.map((x) => x.part),
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+  ); // 받은 배열은 바꾸지 않는다
+  assert.equal(
+    candidateSummary(ranked),
+    '승인할 수 있는 후보는 4개예요: H(동일품), F(사양 동등), E(사양 동등) 등. 나머지 4개는 문서로 확인 안 됨이거나 불충족이에요.',
+  );
+  assert.equal(candidateSummary([server[7]]), '승인할 수 있는 후보는 1개예요: H(동일품).');
+  // 승인할 수 있는 후보가 없으면 빠진 값을 한국어 이름으로 한 번씩만 알려 준다
+  const open = candidateSummary(rankCandidates([server[0], server[1], server[6]]));
+  assert.match(open, /^아직 확정된 후보가 없어요\. 아래가 가장 가까운 후보이고, 빠진 값\(/);
+  assert.ok(open.includes(inputLabel('v_reverse_max')) && open.includes(inputLabel('i_max')));
+  assert.equal(open.split(inputLabel('i_max')).length, 2);
+  assert.equal(
+    candidateSummary([server[6]]),
+    '아직 확정된 후보가 없어요. 아래가 가장 가까운 후보예요.',
+  );
 });
