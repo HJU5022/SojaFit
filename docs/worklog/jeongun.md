@@ -1,5 +1,22 @@
 # jeongun 작업 기록
 
+## 2026-11-17 PR #153 병합 뒤 운영 배포(`main` `400b6d96`)
+- 목적: PR #153(`400b6d96`, 15:08 병합)을 운영에 올린다. 순서는 운영 DB `db/036` 적용 → API 무트래픽 배포 · 점검 → 트래픽 100%.
+- 배포 전 운영 상태 [실측 15:09]: 트래픽 100%는 문서의 `sojafit-api-main-28b14600-1117`이 아니라 `sojafit-api-00102-wts`(11-17 12:52 KST, Cloud 콘솔에서 생성)였다. 두 리비전은 이미지가 같고, 다른 점은 비밀 참조 `MOUSER_API_KEY`(Secret Manager `MOUSER_API_KEY`, latest) 추가 하나다. 새 리비전은 이 설정을 물려받았다.
+- 운영 DB `db/036_thread_continuations.sql` 적용 [실측 15:12:37 ~ 15:12:38]:
+  - 접속: 서비스가 쓰는 비밀 `DATABASE_URL_NEW`(`DATABASE_URL`은 옛 DB 주소라 쓰지 않음), `sslmode=verify-full` + 서비스 CA(`sojafit-service-db-ca`), TLSv1.3. 접속 문자열은 출력 · 기록하지 않았다.
+  - 적용 전: 문서 1,360 · 청크 51,967(운영 코퍼스와 같음), `public` 표 26개, `thread_continuations` 없음, 최근 마이그레이션 `035-circuit-schematics`.
+  - 명령: `git show origin/main:db/036_thread_continuations.sql`을 `psql -X -1 -v ON_ERROR_STOP=1 -f -`로 한 트랜잭션에 적용(SQL sha256 앞 16자 `8773e9f2cb6856f9`). 출력 `CREATE TABLE` · `CREATE INDEX` · `ALTER TABLE` · `REVOKE` · `DO` · `INSERT 0 1`, 종료 코드 0.
+  - 적용 뒤: 표 있음(칸 `thread_id` · `previous_thread_id`), RLS 켜짐, 인덱스 2개(`thread_continuations_pkey` · `ix_thread_continuations_previous`), `anon` · `authenticated` · `PUBLIC` 권한 0개, `app_migrations`에 `036-thread-continuations`, 행 0개, `public` 표 27개.
+  - 되돌리기: `DROP TABLE thread_continuations;` + `DELETE FROM app_migrations WHERE version='036-thread-continuations';`(옛 코드는 이 표를 쓰지 않는다).
+- 렌더러: 다시 배포하지 않았다. `28b14600` 이후 `Dockerfile` · `pyproject.toml` · `uv.lock`과 렌더러 앱이 쓰는 모듈(`backend/projects/schematic*.py`)이 바뀌지 않았다(`backend/projects`에서 바뀐 것은 `repository.py`뿐). 렌더러는 `sojafit-osc-kicad-renderer-main-28b14600-1117` 100% 그대로다.
+- API 배포 [실측]: `git archive origin/main`(1,785개 파일, `.env` 없음)을 임시 폴더에 풀어 `gcloud run deploy sojafit-api --source . --project sojafit --region asia-northeast3 --no-traffic --tag main-400b6d96 --revision-suffix main-400b6d96-1117 --update-env-vars WEB_PREFETCH=1 --quiet`. 빌드 15:12:57 ~ 15:21:41. 리비전 `sojafit-api-main-400b6d96-1117` Ready, 환경변수 36개(일반 24 = 기존 23 + `WEB_PREFETCH=1`, 비밀 참조 12), `DEMO_MODE=0`, `DATABASE_URL` → `DATABASE_URL_NEW`.
+- 무트래픽 점검(태그 주소, 15:21:59): `/health` 200(첫 요청 9.9초, 콜드 스타트), `/login` · `/` · `/app` 200, `/api/auth/me` 401, `/api/demo-circuits` 401, `/openapi.json` 경로 42 · 동작 53(전환 전 운영과 같음), 화면 묶음 `index-BfUCyCPL.js`에 "근거 등급" · "회로를 기준으로" 포함(전환 전 운영 묶음 `index-BUkzkF7u.js`에는 없음). 리비전 로그 ERROR 0건(WARNING 2건은 위 401 요청 기록).
+- 트래픽 전환 [실측 15:22:31 ~ 15:22:38]: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-main-400b6d96-1117=100`. 전환 뒤 운영 주소 같은 점검(15:22:45): `/health` 200(0.32초), `/login` · `/` · `/app` 200, `/api/auth/me` 401, 새 화면 묶음 확인, 서비스 ERROR 로그 0건(최근 10분).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-00102-wts=100 --project sojafit --region asia-northeast3`(직전 운영 리비전, 옛 코드는 새 표를 쓰지 않아 DB는 그대로 둬도 된다).
+- 확인 못 한 것: 로그인 뒤 흐름(평가용 계정 25단계는 조장 계정 필요), 실제 질문 1건의 답 · 근거 등급 배지(운영 계정 필요), 값 없는 찾기의 전체 코퍼스 동작, `WEB_PREFETCH=1`의 실제 효과. Cloud Build · Cloud Run 비용은 재지 않았다.
+- 다음 할 일: 배포 리비전 기준 측정(v3 50문항 · 25단계 · 인젝션 · 현장 입력), README 배포 리비전 줄 · GATES · EVAL_REPORT 갱신, 랜딩 미디어.
+
 ## 2026-11-17 근거 등급 배지(화면)
 - 목적: 조장 지적. 근거는 1 · 2 · 3등급으로 나뉘는데(SPEC 2절 표) 화면의 근거 줄은 3등급에만 "미검증 참고 정보"를 붙이고 1 · 2등급은 등급을 알 수 없었다.
 - 1차(`3483a47a`): 근거 한 건마다 긴 배지("근거 1등급 · 등록된 데이터시트" 등)를 붙였다. `display.ts` `evidenceGrade`(서버가 준 `evidence_grade` 2 · 3은 그대로, 웹 출처 표시 `source_type`이 없는 근거는 1등급, 등급 없는 웹 근거는 표기 안 함). 서버 코드 · API 응답은 바꾸지 않았다(등급 값은 이미 내려오고 있었다).
