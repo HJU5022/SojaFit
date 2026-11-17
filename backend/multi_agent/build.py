@@ -137,8 +137,10 @@ def judge_subgraph(*, chat, specs, find, retriever, web_search=None, web_search_
     from backend.multi_agent.agents.judge import judge_read_agent, judge_task_node
     g = StateGraph(JudgeState, output_schema=JudgeOut)  # [왜] 바깥 메모장에는 보고와 지나간 노드만 돌려준다. 다른 칸은 동시 실행 중 덮어쓰기 충돌이 난다
     g.add_node('회로 읽기', guarded(partial(judge_read_agent, chat=chat), 'judge', '판정 읽기'))
+    # [왜] 되묻기에 글로 답하면 판정 노드가 그 글로 읽기를 한 번 더 부른다(`reread`, 11-17). 읽기 노드와 같은 함수 · 같은 LLM 설정이다
     g.add_node('대체 부품 판정', guarded(partial(judge_task_node, specs=specs, find=find, retriever=retriever,
-                                          web_search=web_search, web_search_fallback=web_search_fallback), 'judge', '판정', skip_after_failure=True))
+                                          web_search=web_search, web_search_fallback=web_search_fallback,
+                                          reread=partial(judge_read_agent, chat=chat)), 'judge', '판정', skip_after_failure=True))
     g.add_edge(START, '회로 읽기')
     g.add_edge('회로 읽기', '대체 부품 판정')
     g.add_edge('대체 부품 판정', END)

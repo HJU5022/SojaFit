@@ -961,7 +961,7 @@ def display_inputs(values: dict, conds: dict) -> list[dict]:
     return rows[:60]
 
 
-def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:
+def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None, reread=None) -> dict:
     """그래프 노드: 코퍼스 밖 요구면 거절 사유로 보고하고, 아니면 빠진 값을 한 번 묻고 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
     rules = C.load()
     # 재개 시 읽기 LLM은 다시 부르지 않지만 고정 회로의 연결 검증은 유지한다.
@@ -1039,10 +1039,31 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                  and all(_identical(None, read.original_part, c)[0] for c in read.candidates))
     if same_part:
         asked = []
+    elif state.get('reply_text'):
+        # 글로 답한 뒤 다시 읽은 회차: 묻지 않고, 같이 온 폼 답 · 역할만 더한다(위 [왜])
+        values, conds = merge_reply(state.get('reply_answers') or {}, values, conds, kinds)
+        if state.get('reply_role') in roles:
+            roles = [state['reply_role']]
+        asked = []
     elif asked or len(roles) > 1:
         # [주의] 인터럽트는 문항당 한 번이다(AC-08). 재개하면 이 노드가 처음부터 다시 돌지만, 읽기는 앞 노드에 남아 있어 LLM을 다시 부르지 않는다
         # [주의] 재개 값은 {'answers': {...}, 'role': ...} 모양이다. 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다(11-06 실측)
-        reply = interrupt({'missing': asked, 'role_choices': roles if len(roles) > 1 else [], 'question': _ask_text(asked, roles, rules)}) or {}
+        # [왜] 되묻기 전에 에이전트가 회로에서 읽은 것(역할 · 근거)을 같이 보낸다. 화면이 값만 묻는 폼으로 보여 사용자는 아무것도
+        #      조사하지 않고 묻는다고 느꼈다(11-17 조장 결정: 되묻기는 단서를 더 얻는 수단). `roles`는 읽은 순서라 첫 값이 가장 유력하다
+        reply = interrupt({'missing': asked, 'role_choices': roles if len(roles) > 1 else [], 'question': _ask_text(asked, roles, rules),
+                           'roles': roles, 'role_evidence': read.role_evidence,
+                           # 역할 후보가 둘이면 역할마다 묻는 값이 다르다. 화면이 고른 역할의 값만 보이게 나눠 보낸다
+                           'role_missing': {r: [n for n in asked if n in C.inputs(rules[r])] for r in roles}}) or {}
+        note = str(reply.get('text') or '').strip()
+        if note and reread and not state.get('reply_text'):
+            # [왜] 사용자가 폼 대신 글로 답했다("전원은 5V, 전류는 잘 몰라"). 그 글을 사용 조건에 더해 읽기 LLM을 한 번 더 부르고(숫자는 같은
+            #      글 인용 확인을 거친다, AC-02), 더 묻지 않고 판정한다. 폼 답 · 고른 역할이 같이 왔으면 그 값이 먼저다
+            # [주의] 다시 읽은 뒤에는 인터럽트를 부르지 않는다(문항당 한 번, AC-08). `reply_text`가 그 표시다
+            again = {**state, 'conditions': f"{state.get('conditions', '')}\n{note}".strip(), 'reply_text': note,
+                     'reply_answers': reply.get('answers') or {}, 'reply_role': reply.get('role')}
+            again['judge_read'] = reread(again)['judge_read']
+            return judge_agent(again, specs=specs, find=find, retriever=retriever, web_search=web_search,
+                               web_search_fallback=web_search_fallback, reread=reread)
         values, conds = merge_reply(reply.get('answers') or {}, values, conds, kinds)
         if reply.get('role') in roles:
             roles = [reply['role']]
@@ -1261,11 +1282,11 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             'reports': (state.get('reports') or []) + [_report(status, summary, missing, reason=report_reason)]}
 
 
-def judge_task_node(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:
+def judge_task_node(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None, reread=None) -> dict:
     """멀티 하위 그래프 노드: 판정 노드(`judge_agent`)를 그대로 돌리고, 그 보고를 할 일 보고서(`TaskReport`)로 바꾼다."""
     # [왜] 판정 코드는 단일 그래프(D4 v2)와 같이 쓴다. 멀티만의 칸(할 일 번호 · 판정 결과)은 여기서 붙인다
     out = judge_agent(state, specs=specs, find=find, retriever=retriever, web_search=web_search,
-                      web_search_fallback=web_search_fallback)
+                      web_search_fallback=web_search_fallback, reread=reread)
     r, judgement = out['reports'][-1], out.get('judgement') or {}
     summary, reason = r['summary'], r.get('reason')
     if judgement.get('kind') == 'find':

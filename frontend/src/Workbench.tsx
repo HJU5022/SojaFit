@@ -835,6 +835,17 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   async function send(demo?: DemoQuestion) {
     // [왜] 실행 중에도 질문은 미리 쓸 수 있다. 보내기는 막는다(같은 대화의 두 번째 run은 서버가 409)
     if (busy || preparing || preparingRef.current) return;
+    if (waiting && !choosing && !demo && !attachment) {
+      // [왜] 조건을 묻는 동안 대화창에 적은 글은 새 질문이 아니라 그 물음의 답이다(11-17 조장 결정: 폼 말고 글로도 답한다).
+      //      같은 run을 글과 함께 재개한다. 역할을 물었으면 에이전트가 읽은 가장 유력한 역할로 보낸다
+      const text = question.trim();
+      if (!text) return;
+      questionRef.current = '';
+      setQuestion('');
+      const choices = active?.result.interrupt.role_choices ?? [];
+      await resume({ answers: {}, text, ...(choices.length ? { role: choices[0] } : {}) });
+      return;
+    }
     scrollToBottom();
     setError(null);
     if (!demo && !question.trim() && !attachment) return;
@@ -965,7 +976,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     sendDisabled =
       busy ||
       preparing ||
-      (!attachment && (!!waiting || !!running || !!targetReason || !question.trim())),
+      // 조건을 묻는 동안에는 글 답을 보낼 수 있다(부품을 고르는 중에는 막는다)
+      (!attachment &&
+        (!!choosing || !!running || (!waiting && !!targetReason) || !question.trim())),
     // 회로 없는 대화에서 회로가 필요한 질문의 답(SPEC 8.9). 회로를 붙이면 카드가 사라진다
     needsCircuit =
       !running &&
@@ -1309,13 +1322,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                     if (!sendDisabled) void send();
                   }}
                   maxLength={4000}
-                  // [왜] 실행 중에도 다음 질문을 쓸 수 있게 막지 않는다. 조건 입력을 기다릴 때만 막는다
-                  disabled={!!waiting}
+                  // [왜] 실행 중에도 다음 질문을 쓸 수 있게 막지 않는다. 조건을 묻는 동안에는 글로 답할 수 있고, 부품을 고르는 중에만 막는다
+                  disabled={!!choosing}
                   placeholder={
                     choosing
                       ? '위에서 바꿀 부품을 고르면 이어서 검토합니다.'
                       : waiting
-                        ? '위의 사용 조건을 입력하면 이어서 검토합니다.'
+                        ? '아는 조건을 글로 적어 보내도 돼요 (예: 전원은 5V, 전류는 잘 몰라)'
                         : // [왜] 특정 부품 번호를 예로 들지 않는다. 회로가 없으면 새 대화와 같은 안내(#45)
                           project.data?.circuit_version
                           ? '이 회로에서 궁금한 점이나 바꿀 부품을 물어보세요'

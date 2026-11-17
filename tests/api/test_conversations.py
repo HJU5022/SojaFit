@@ -1035,3 +1035,14 @@ def test_every_response_has_security_headers():
         assert headers['x-content-type-options'] == 'nosniff' and headers['x-frame-options'] == 'DENY'
         assert headers['referrer-policy'] == 'strict-origin-when-cross-origin' and 'max-age' in headers['strict-transport-security']
 
+
+
+def test_resume_body_accepts_a_free_text_reply_and_rejects_addresses_and_control_characters():
+    """되묻기에 글로 답할 수 있다(11-17). 앞뒤 공백은 떼고, 주소 · 제어 문자 · 1,000자 초과는 받지 않는다."""
+    from pydantic import ValidationError
+    from backend.api.conversations import ResumeRun
+    assert ResumeRun(answers={}, text='  전원은 5V, 전류는 잘 몰라\n온도는 실온  ').text == '전원은 5V, 전류는 잘 몰라\n온도는 실온'
+    assert ResumeRun(answers={}).text == ''
+    for bad in ('http://x.example/a', '5V\x00', 'x' * 1001):
+        with pytest.raises(ValidationError):
+            ResumeRun(answers={}, text=bad)

@@ -337,6 +337,47 @@ def test_ac08_interrupt_once_and_reply_fills_values(monkeypatch):
     assert out['judgement']['results'][0]['verdict'] == 'NOT_SUFFICIENT'
 
 
+def test_interrupt_carries_what_the_agent_read_from_the_circuit(monkeypatch):
+    """되묻기 전에 읽은 역할 · 근거를 같이 보낸다(11-17). 역할 후보가 둘이면 역할마다 묻는 값을 나눠 보낸다."""
+    calls = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: calls.append(payload) or {'answers': {}, 'role': 'R01'})
+    read = J.JudgeRead(role='R01', role_alt='R02', role_evidence=['D1.K → RAW'], original_part='1N4001',
+                       candidates=['1N5817']).model_dump(mode='json')
+    J.judge_agent({**STATE, 'conditions': '', 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    asked = calls[0]
+    assert asked['roles'] == ['R01', 'R02'] == asked['role_choices'] and asked['role_evidence'] == ['D1.K → RAW']
+    assert 'v_in_max' in asked['role_missing']['R01'] and 'v_in_max' not in asked['role_missing']['R02']
+    assert 'v_reverse_max' in asked['role_missing']['R02'] and 'v_reverse_max' not in asked['role_missing']['R01']
+    assert set(asked['role_missing']['R01']) | set(asked['role_missing']['R02']) == set(asked['missing'])
+
+
+def test_text_reply_is_read_again_once_and_does_not_ask_twice(monkeypatch):
+    """폼 대신 글로 답하면(11-17) 그 글을 사용 조건에 더해 읽기를 한 번 더 부르고, 더 묻지 않고 판정한다."""
+    asks, rereads = [], []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asks.append(payload) or {'answers': {}, 'text': '최대 순방향 전류는 150mA야'})
+    first = dict(READ, values=[v for v in READ['values'] if v['name'] != 'i_max'])
+
+    def reread(state):
+        rereads.append(state['conditions'])
+        return {'judge_read': READ}  # 글에서 i_max를 읽은 새 읽기(인용은 더해진 사용 조건 안에 있다)
+    conditions = '입력 전압의 최댓값은 20V이다. 주변 온도는 25°C이다.'
+    out = J.judge_agent({**STATE, 'conditions': conditions, 'judge_read': first}, specs=specs_of(SPECS), find=None, retriever=None,
+                        reread=reread)
+    assert len(asks) == 1 and 'i_max' in asks[0]['missing']  # 인터럽트는 한 번(AC-08)
+    assert rereads == [conditions + '\n최대 순방향 전류는 150mA야']
+    j = out['judgement']
+    assert j['analysis_inputs']['values_si']['i_max'] == pytest.approx(0.15) and j['asked'] == []
+    assert 'i_max' not in j['results'][0]['missing']
+
+
+def test_text_reply_without_a_reader_is_ignored_like_an_empty_answer(monkeypatch):
+    """읽기 함수를 받지 않는 호출(단일 그래프)은 글 답을 쓰지 않는다: 빈 답과 같다."""
+    monkeypatch.setattr(J, 'interrupt', lambda payload: {'answers': {}, 'text': '최대 순방향 전류는 150mA야'})
+    read = dict(READ, values=[v for v in READ['values'] if v['name'] != 'i_max'])
+    j = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)['judgement']
+    assert 'i_max' in j['results'][0]['missing']
+
+
 def test_empty_reply_keeps_found_values_and_is_not_verified(monkeypatch):
     read = dict(READ, values=[v for v in READ['values'] if v['name'] != 'i_max'])
     monkeypatch.setattr(J, 'interrupt', unknown)

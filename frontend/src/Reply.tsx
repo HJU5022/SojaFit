@@ -22,19 +22,47 @@ export function MissingInput({
 }) {
   const fieldId = useId();
   const [answers, setAnswers] = useState<Record<string, string>>({}),
-    [role, setRole] = useState('');
+    // [왜] 역할은 에이전트가 읽은 가장 유력한 쪽을 미리 고른다. 사용자가 고르지 않아도 계속할 수 있다(11-17 조장 결정)
+    [role, setRole] = useState(result.interrupt.role_choices?.[0] ?? '');
+  const name = (code: string) => roles.find((r) => r.code === code)?.name ?? code,
+    readRoles = result.interrupt.roles ?? [],
+    evidence = result.interrupt.role_evidence ?? [],
+    // 역할 후보가 둘이면 고른 역할이 받는 값만 묻는다(서버가 역할별 이름을 준다). 모르면 전부 보인다
+    mine = role ? result.interrupt.role_missing?.[role] : undefined,
+    asked = (result.interrupt.missing ?? []).filter((code) => !mine || mine.includes(code));
   return (
     <div className="missing-input" data-testid="requires-input">
       <div className="inline-heading">
         <MessageSquare size={20} />
-        <h2>조건을 알려주시면 이어서 검토합니다.</h2>
+        <h2>회로를 읽었어요. 아는 조건만 알려 주세요.</h2>
       </div>
-      <p>{result.interrupt.question}</p>
+      {readRoles.length > 0 && (
+        <div className="read-summary">
+          <strong>회로에서 읽은 내용</strong>
+          <p>
+            역할: {readRoles.map(name).join(' 또는 ')}
+            {readRoles.length > 1 && ' (더 유력한 쪽을 아래에 골라 두었어요)'}
+          </p>
+          {evidence.length > 0 && (
+            <ul>
+              {evidence.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      <p>
+        아래 값은 회로만으로는 알 수 없어요. 아는 것만 적어 주세요. 몰라도 계속할 수 있고, 아래
+        대화창에 글로 적어 보내도 됩니다.
+      </p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           onResume({
-            answers: Object.fromEntries(Object.entries(answers).filter(([, v]) => v.trim())),
+            answers: Object.fromEntries(
+              Object.entries(answers).filter(([k, v]) => v.trim() && asked.includes(k)),
+            ),
             ...(result.interrupt.role_choices?.length ? { role } : {}),
           });
         }}
@@ -43,7 +71,6 @@ export function MissingInput({
           <label>
             회로에서 맡은 역할
             <select value={role} onChange={(e) => setRole(e.target.value)} required>
-              <option value="">역할을 선택하세요</option>
               {result.interrupt.role_choices.map((code) => (
                 <option key={code} value={code}>
                   {roles.find((r) => r.code === code)?.name ?? code}
@@ -52,7 +79,7 @@ export function MissingInput({
             </select>
           </label>
         )}
-        {result.interrupt.missing?.map((code) =>
+        {asked.map((code) =>
           isBooleanInput(code) ? (
             <fieldset key={code} className="boolean-input" disabled={busy}>
               <legend>{inputLabel(code).replace(' (예/아니오)', '')}</legend>

@@ -2670,6 +2670,25 @@ form {
   font-size: 16px;
   font-weight: 550;
 }
+/* 조건 카드 위쪽: 에이전트가 회로에서 읽은 역할 · 근거(묻기 전에 먼저 보인다) */
+.missing-input .read-summary {
+  margin: 12px 0 14px;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.missing-input .read-summary p {
+  margin: 4px 0 0;
+}
+.missing-input .read-summary ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
 .missing-input > p {
   color: var(--muted);
   margin: 13px 0 20px;

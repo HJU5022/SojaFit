@@ -647,7 +647,7 @@ class Conversations:
             LOGGER.warning('profile_hints_unavailable')
             return []
 
-    def resume(self, user, thread, answers, role, version, request_id='', progress=None):
+    def resume(self, user, thread, answers, role, version, request_id='', progress=None, text=''):
         with self.locked(user, thread) as (conn, row):
             if version != row['version']:
                 raise HTTPException(409, '새 결과의 조건 질문을 다시 확인하세요.')
@@ -666,25 +666,25 @@ class Conversations:
                 recorded = demo.match(row['connections'], row['target'], record.get('question'), record.get('conditions'))
                 want = (recorded[0].get('resume') if recorded else None) or {}
                 # [왜] 재개 답도 프롬프트에 들어간다. 기록 때 보낸 답 · 역할과 같아야 재생된다
-                if not want or (answers, role) != (want['answers'], want['role']):
+                if not want or text or (answers, role) != (want['answers'], want['role']):  # 글 답은 기록에 없어 재생하지 못한다
                     shown = ', '.join(f'{k}={v}' for k, v in (want.get('answers') or {}).items()) or '모름'
                     raise HTTPException(422, f"키 없는 데모는 기록한 답(답: {shown}, 역할: {want.get('role') or '없음'})으로만 재개합니다. "
                                              "화면의 '기록한 답으로 계속하기'를 누르세요.")
             budget = self._budget(user)
-            content = '조건 답변:\n' + ('\n'.join(f'{key}: {value}' for key, value in answers.items()) or '모름')
+            content = '조건 답변:\n' + ('\n'.join([*(f'{key}: {value}' for key, value in answers.items()), *([text] if text else [])]) or '모름')
             if role:
                 content += f'\n선택한 역할: {role}'
             if 'target_choices' in pending[0]:  # 대상 부품을 물었다(호출자가 고른 부품을 분석 thread에 먼저 고정한다)
                 content = f"선택한 부품: {row['target']}"
             record = row.get('input_record') or {'version': version, 'question': None, 'conditions': None, 'resumes': []}
             record.pop('execution_limit_reached',None)
-            record['resumes'].append({'answers': answers, 'role': role})
+            record['resumes'].append({'answers': answers, 'role': role, **({'text': text} if text else {})})
             with conn.transaction():
                 conn.execute('UPDATE threads SET input_record=%s WHERE id=%s', (Jsonb(record), thread))
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
             hints = self._profile_hints(user, record.get('question'))
             with _reporting(progress):
-                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role, 'target': row['target']}), budget, request_id)
+                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role, 'target': row['target'], **({'text': text} if text else {})}), budget, request_id)
         return {**self.detail(user, thread, hints), 'web_search_unavailable': web_unavailable}
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):

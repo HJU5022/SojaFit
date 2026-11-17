@@ -211,12 +211,23 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
     if interrupt is None:
         interrupt = state.get('interrupt', {})
     if interrupt and status == 'requires_input':
-        patterns = {'missing': r'[A-Za-z][A-Za-z0-9_]{0,63}', 'role_choices': r'R(?:0[1-9]|1[0-9]|2[0-3])'}
+        patterns = {'missing': r'[A-Za-z][A-Za-z0-9_]{0,63}', 'role_choices': r'R(?:0[1-9]|1[0-9]|2[0-3])',
+                    'roles': r'R(?:0[1-9]|1[0-9]|2[0-3])'}  # roles: 에이전트가 회로에서 읽은 역할(유력한 순, 11-17)
         for key, pattern in patterns.items():
             value = interrupt.get(key)
             if isinstance(value, list):
                 safe_interrupt[key] = [v for v in value if isinstance(v, str) and re.fullmatch(pattern, v)][:30]
         safe_interrupt['question'] = '판정에 필요한 값을 알려 주세요.'
+        # 읽은 역할의 근거 글(판정 답의 '역할 … (근거: …)'와 같은 글). 길이 · 개수를 자르고 줄바꿈 · 제어 문자를 뺀다
+        evidence = [re.sub(r'[\x00-\x1f\x7f]+', ' ', x)[:300] for x in interrupt.get('role_evidence') or [] if isinstance(x, str) and x.strip()][:6]
+        if evidence:
+            safe_interrupt['role_evidence'] = evidence
+        # 역할별로 묻는 값 이름(missing 안의 이름만). 역할 후보가 둘일 때 화면이 고른 역할의 값만 보인다
+        by_role = interrupt.get('role_missing')
+        if isinstance(by_role, dict):
+            asked = set(safe_interrupt.get('missing') or [])
+            safe_interrupt['role_missing'] = {r: [n for n in names if n in asked] for r, names in by_role.items()
+                                              if r in (safe_interrupt.get('roles') or []) and isinstance(names, list)}
         choices = []
         for item in interrupt.get('target_choices') or []:
             try:
