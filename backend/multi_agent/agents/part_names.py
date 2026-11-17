@@ -37,7 +37,8 @@ def _key(name: str) -> str:
 
 def _is_part(word: str, refs: set[str]) -> bool:
     return (bool(re.search(r'[A-Za-z]', word) and re.search(r'\d', word))
-            and not (word in refs or QUANTITY.fullmatch(word) or REVISION.fullmatch(word) or STANDARD.fullmatch(word)))
+            and not (word.upper() in {r.upper() for r in refs}  # 회로 기호는 소문자로 적어도 품번이 아니다(11-17: 'd2 대체품'이 품번 없음 거절)
+                     or QUANTITY.fullmatch(word) or REVISION.fullmatch(word) or STANDARD.fullmatch(word)))
 
 
 def part_tokens(text: str, refs: set[str]) -> list[str]:

@@ -97,3 +97,10 @@ def test_current_particles_ga_i_eul_reul_are_all_read(sentence):
 def test_ga_particle_does_not_make_a_candidate_or_other_ref_current():
     assert current_part('D3에는 현재 SS14가 달려 있다.', 'D2를 SS24로 바꿔도 돼?', 'D2', {'D2', 'D3'}) is None
     assert current_part('', 'D2에 SS24가 달려 있으면 어때?', 'D2', {'D2'}) is None  # '지금/현재'가 없으면 현재 부품 표현이 아니다
+
+
+def test_circuit_reference_in_lower_case_is_not_a_part_number():
+    """회로 기호를 소문자로 적어도('d2') 품번으로 뽑지 않는다(11-17). 품번은 그대로 뽑는다."""
+    from backend.multi_agent.agents.part_names import part_tokens
+    assert part_tokens('d2 대체품 뭐 있음', {'D2', 'D1'}) == []
+    assert part_tokens('d2를 ss34l로 바꿔도 돼?', {'D2'}) == ['ss34l']
