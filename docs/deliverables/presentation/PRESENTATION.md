@@ -58,7 +58,7 @@
 | v3 결과(10 · 17) | 배포 리비전 코드 50/50 · 49/50, p50 · p95 5.2 · 15.5초 / 4.4 · 7.5초, 지어낸 답 0 · 1(v3-41), 무관 거절 25/25 · 24/25 | README 4절, EVAL_REPORT 8.2 · 11-2절, `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/` |
 | 변이(11) | 28/28(처음 25/28) | GATES "변이 확인", `evals/results/d10/mutation_2026-11-13.md` |
 | 인젝션(12) | 공격 55 중 방어 54 · 실패 0 · 보류 1, 사람 판정 88/110 | EVAL_REPORT 6절 |
-| 운영 리비전(13) | `sojafit-api-pre-ef0138b2-rs`, 소스 `2030f846` | README 맨 위 표 |
+| 운영 리비전(13) | `sojafit-api-pre-b4a02113-1117`(랜딩 그림 4장만 다름), 측정한 리비전 `sojafit-api-pre-ef0138b2-rs` · 소스 `2030f846` | README 맨 위 표 |
 | 기동(14) | 새 clone → `/health` 200 6회 중앙값 239.4초, 6회 모두 28/28(11-17, `799ae636`) | GATES G2, `evals/results/d12/boot/` |
 | 운영 중단(15) | 11-14 22:43 ~ 11-15 21:26 시작 실패, 그 뒤 5분 주기 경보 | GATES G1, `evals/results/d10/alerting_2026-11-16.md` |
 | 비용 · 지연(16) | 단계별 p50(11-11 웹 끔), 문항당 LLM $0.00064 + 리랭크 $0.00013, 웹 문항 11.9초 · 그 밖 5.1초 | EVAL_REPORT 8장 · 8.2절, `evals/results/graph/2026-11-11-d8-stages/` |
