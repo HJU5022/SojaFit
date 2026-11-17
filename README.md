@@ -148,7 +148,7 @@ graph TD;
 	Spec_에이전트_회로_읽기 --> Spec_에이전트_대체_부품_판정;
 	end
 	classDef default fill:#f2f0ff,line-height:1.2,color:#1f2328
-	classDef first fill-opacity:0
+	classDef first fill-opacity:0,color:#8b949e
 	classDef last fill:#bfb6fc,color:#1f2328
 ```
 
