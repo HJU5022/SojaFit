@@ -3866,6 +3866,80 @@ form {
 .quote-url {
   overflow-wrap: anywhere;
 }
+/* 표준 견적서 양식(11-17): 제목 가운데 · 수신/발행 칸 · 합계 금액 · 승인 표 */
+.quote-head {
+  text-align: center;
+}
+.quote-title {
+  font-size: 26px;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  margin-bottom: 12px;
+}
+.quote-head .report-facts {
+  display: flex;
+  justify-content: space-between;
+}
+.quote-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.report .quote-parties section {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+}
+.quote-parties dl {
+  margin: 0;
+}
+.quote-parties dl div {
+  display: flex;
+  gap: 8px;
+}
+.quote-parties dt {
+  min-width: 7em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.quote-parties dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.report .quote-lead {
+  margin-top: 16px;
+}
+.report .quote-total {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+}
+.quote-total strong {
+  margin-left: auto;
+  font-size: 18px;
+}
+.quote-total small {
+  color: var(--muted);
+}
+.quote-sign th {
+  width: 1%;
+  white-space: nowrap;
+  color: var(--muted);
+  font-weight: 500;
+}
+.quote-sign-blank {
+  min-width: 90px;
+}
+@media (max-width: 760px) {
+  .quote-parties {
+    grid-template-columns: 1fr;
+  }
+}
 .saved-quote a,
 .quote-item a + a {
   margin-left: 10px;

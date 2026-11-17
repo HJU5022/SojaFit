@@ -1414,12 +1414,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 {quoteCases.data
                   ?.filter((c) => c.approval_id === q.approval_id)
                   .map((c) => (
-                    <a
-                      key={c.id}
-                      href={`/approved/${c.id}/quote/${q.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
+                    <a key={c.id} href={`/approved/${c.id}/quote/${q.id}`}>
                       견적서 보기
                     </a>
                   ))}

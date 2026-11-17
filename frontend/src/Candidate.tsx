@@ -379,13 +379,7 @@ export function CandidateDetails({
               <p key={q.id} className="saved-quote">
                 {q.part_number} · {q.quantity.toLocaleString()}개 · 저장된 견적
                 {approval.case_id != null && (
-                  <a
-                    href={`/approved/${approval.case_id}/quote/${q.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    견적서 보기
-                  </a>
+                  <a href={`/approved/${approval.case_id}/quote/${q.id}`}>견적서 보기</a>
                 )}
               </p>
             ))}
