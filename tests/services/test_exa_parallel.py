@@ -58,6 +58,13 @@ def test_two_downloads_are_assembled_in_candidate_order(env):
     assert sorted(env['gets']) == [A, B]  # 세 번째 후보는 받지 않는다(MAX_DOWNLOADS)
 
 
+def test_percent_encoded_filename_is_decoded_like_corpus(env):
+    env['urls'] = [BASE + 'UF4001%20SERIES_P2104.pdf']
+    docs = run()
+    assert [(d['file'], d['title']) for d in docs] == [('UF4001 SERIES_P2104.pdf', 'UF4001 SERIES_P2104.pdf')] * 2
+    assert docs[0]['source_url'].endswith('UF4001%20SERIES_P2104.pdf')  # 받는 주소는 인코딩된 그대로다
+
+
 def test_two_downloads_overlap(env):
     env['delay'] = 0.3
     start = time.monotonic()
