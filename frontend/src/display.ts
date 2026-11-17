@@ -92,13 +92,16 @@ export function basisLabel(basis: string): { text: string; known: boolean } {
 
 /** 서버 답변(마크다운) 속 긴 소수를 줄이고 `(v_in_max * kV)` 같은 괄호 기준식을 한국어로 푼다. 알아볼 수 있는 식만 바꾼다. */
 export function explainAnswer(text: string): string {
-  return roundLongDecimals(text).replace(
-    /\(([A-Za-z_][\w.]*(?: [*/+-] [\w.]+)*)\)/g,
-    (match, inner: string) => {
-      if (!/_|^k[VI]\b|orig\./.test(inner)) return match;
-      const b = basisLabel(inner);
-      return b.known ? `(${b.text})` : match;
-    },
+  // [왜] 괄호 밖에 남은 회로 값 이름("빠진 값: v_reverse_max")도 화면 이름으로 바꾼다. 답 글에 내부 이름이 그대로 보였다(11-17)
+  return explainNames(
+    roundLongDecimals(text).replace(
+      /\(([A-Za-z_][\w.]*(?: [*/+-] [\w.]+)*)\)/g,
+      (match, inner: string) => {
+        if (!/_|^k[VI]\b|orig\./.test(inner)) return match;
+        const b = basisLabel(inner);
+        return b.known ? `(${b.text})` : match;
+      },
+    ),
   );
 }
 
