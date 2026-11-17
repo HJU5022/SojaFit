@@ -50,6 +50,8 @@ class Judgement(BaseModel):
     cautions: list[str] = Field(default_factory=list)   # 사람이 확인할 것(규칙의 cautions)
     board_change: bool | None = None                     # 패키지가 달라 기판 수정 필요(모르면 None)
     package_citation: dict | None = None                 # 기판 수정이 필요할 때 후보 패키지 행의 근거(답에 인용한다)
+    assumed: list[str] = Field(default_factory=list)    # 값이 없어 원래 부품 값을 기준으로 본 조건의 회로 값 이름(11-17)
+    not_worse: bool = False                              # 주요 정격이 원래 부품보다 못하지 않은가(판정을 다시 정할 때 쓴다)
 
 
 def _room(temp: dict) -> bool:
@@ -359,6 +361,23 @@ def _off(cond: dict, values: dict) -> bool:
     return v is not None and v is not False
 
 
+def _stand_in(cond: dict, original_rows: list[dict]) -> str | None:
+    """회로 값이 없을 때 원래 부품 값으로 대신 볼 수 있는 조건이면 그 항목 코드, 아니면 None.
+
+    [왜] 사용자가 회로 전압 · 전류를 모르면 필수 조건이 모두 '확인 안 됨'이 되어 어떤 후보도 승인 · 견적으로 가지 못했다
+         (11-17 조장 결정: 값을 모르면 원래 부품 기준으로 판정한다). 원래 부품이 그 회로에서 쓰이고 있었으므로,
+         후보가 원래 부품의 같은 정격 이상이면 그 조건은 통과로 본다.
+    [주의] `search_conditions`가 찾기에서 빼는 조건(시험 조건 `at` · 원래 부품 값 `orig.*` · "A 또는 B")과 이미 기본값(`default`)이 있는
+         조건은 대상이 아니다. 하한 · 상한 비교만 대신한다.
+    """
+    if (cond['tier'] != 'required' or 'any' in cond or cond.get('at') or cond.get('default') or cond['op'] not in ('>=', '<=')
+            or any(C.orig_codes(b) for b in C._bases(cond))):
+        return None
+    codes = cond['code'] if isinstance(cond['code'], list) else [cond['code']]
+    have = {o['code'] for o in original_rows}
+    return next((c for c in codes if c in have), None)
+
+
 def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows: list[dict], *,
                original_rows: list[dict] | None = None, identical: bool = False, identical_citation: dict | None = None,
                footprint: str | None = None, packages: list[str] | None = None) -> Judgement:
@@ -367,6 +386,7 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
     identical_citation: 주문 코드만 달라 동일품일 때의 근거(주문 정보 표 행). 주면 조건 표 맨 앞에 그 근거 줄을 넣는다.
     """
     checks, missing, uncertain = [], [], []
+    assumed = []  # 회로 값이 없어 원래 부품 값으로 대신 본 조건이 물었어야 할 회로 값 이름
     temp_known = 'temp' in conds
     if temp_known and _room(conds['temp']):
         # [왜] 사용 온도 25°C는 '모름'과 같이 25°C(또는 온도를 안 적은) 행을 쓴다. 읽기가 'TA=25°C'를 적은 회차만 온도를 안 적은 행이
@@ -383,6 +403,14 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
             if trigger is False:
                 continue
         check, lack, note = (_check_any if 'any' in cond else _check)(cond, values, conds, rows, original_rows or [])
+        if lack and check.result == 'unverified' and original_rows and (code := _stand_in(cond, original_rows)):
+            # 회로 값이 없다: 같은 조건을 '원래 부품의 그 항목 값 이상(이하)'으로 다시 본다. 통과일 때만 바꾼다.
+            # [주의] 원래 부품보다 못한 후보는 불충족이 아니다(회로가 그만큼을 요구하는지 모른다). 그대로 '확인 안 됨'에 빠진 값으로 남긴다
+            other, _, _ = _check({**cond, 'basis': f'orig.{code}'}, values, conds, rows, original_rows)
+            if other.result == 'pass':
+                note = f"{other.code}: 회로 값({', '.join(lack)})을 몰라 원래 부품 값을 기준으로 판정"
+                assumed += lack
+                check, lack = other, []
         defaulted = bool(note) and '기본값' in note
         if (cond['tier'] == 'conditional' or defaulted) and check.result == 'unverified' and check.why == '원래 부품 값 없음':
             # [왜] 회로 값이 없어 원래 부품 값으로 대신한(기본값) 조건도, 원래 부품 문서가 없으면 비교할 기준이 없다. 대신할 값이 없는 것이지
@@ -400,21 +428,28 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
     if identical_citation:
         checks.insert(0, Check(code='ORDER_CODE', tier='required', op='=', basis='같은 기본 품번, 주문 코드만 다름', condition='—',
                                citation=identical_citation, result='pass', why='동일품'))
+    not_worse = bool(original_rows) and _not_worse(rule.get('major') or {}, rows, original_rows)
     if identical:
         verdict = 'IDENTICAL'
     elif any(c.result == 'fail' for c in checks):
         verdict = 'NOT_SUFFICIENT'
     elif any(c.result == 'unverified' for c in checks):
         verdict = 'NOT_VERIFIED'
-    elif original_rows and _not_worse(rule.get('major') or {}, rows, original_rows):
+    elif not_worse:
         verdict = 'SPEC_EQUIVALENT'
+    elif assumed:
+        # [왜] '역할상 충분'은 회로 값으로 본 판정이다. 회로 값 없이 원래 부품 기준으로만 통과했는데 주요 정격이 원래보다 못하면
+        #      역할에 충분한지 알 수 없다. 확인 안 됨으로 두고 그 회로 값을 빠진 값으로 알린다
+        verdict = 'NOT_VERIFIED'
+        missing += assumed
     else:
         verdict = 'ROLE_SUFFICIENT'
     change = board_change(footprint, packages)
     # [왜] 기판 수정이 필요하다는 줄도 근거(후보 패키지 행)를 단다. v2 draft30-m04 · h04는 정답이 이 패키지 쪽이었다
     package_cite = next((r.get('citation') for r in rows if r['code'] == 'PACKAGE' and r.get('citation')), None) if change else None
     return Judgement(part=part, role=role, verdict=verdict, checks=checks, missing=list(dict.fromkeys(missing)),
-                     uncertain=uncertain, cautions=list(rule.get('cautions') or []), board_change=change, package_citation=package_cite)
+                     uncertain=uncertain, cautions=list(rule.get('cautions') or []), board_change=change, package_citation=package_cite,
+                     assumed=list(dict.fromkeys(assumed)), not_worse=not_worse)
 
 
 def search_conditions(rule: dict, values: dict) -> list[dict]:

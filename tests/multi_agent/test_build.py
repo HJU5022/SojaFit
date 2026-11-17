@@ -304,6 +304,48 @@ def test_quote_question_answers_the_fixed_quote_guide_without_search_or_judge():
     assert out['answer'] == QUOTE_GUIDE and out['check'] == {} and not out['refusal'] and not out['judgement'] and out['price_parts'] == []
 
 
+def test_screen_usage_questions_get_fixed_guides_instead_of_the_llm_reply():
+    """화면 사용법을 묻는 일상 대화(회로도 보기 · 승인 단추 위치)는 LLM 글 대신 고정 안내가 나간다(11-17). 있는 기능을 없다고 답했었다."""
+    import re
+    from pathlib import Path
+    from backend.multi_agent.messages import SCREEN_GUIDES, screen_guide
+    wrong = '회로도를 직접 그리거나 시각화하는 기능은 제공하지 않습니다.'
+    chat = {'question_type': 'chat', 'plan': {'reply': wrong}, 'facts': {}}
+    for question in ('회로도 그려봐', '회로도 원본은 왜 안보여주는데'):
+        answer = B.finish_node({**chat, 'question': question})['answer']
+        assert answer == screen_guide(question) and '회로 보기' in answer and wrong not in answer
+    assert '이 후보 승인하기' in B.finish_node({**chat, 'question': '어딨는데 버튼이'})['answer']
+    assert B.finish_node({**chat, 'question': '안녕', 'plan': {'reply': '안녕하세요.'}})['answer'] == '안녕하세요.'  # 다른 일상 대화는 그대로
+    # 따옴표 속 이름은 화면 글자 그대로여야 한다
+    screen = ''.join(Path(f'frontend/src/{name}').read_text(encoding='utf-8') for name in ('Reply.tsx', 'Candidate.tsx', 'Workbench.tsx'))
+    for _, text in SCREEN_GUIDES:
+        assert all(label in screen for label in re.findall(r"'([^']+)'", text))
+
+
+def test_followup_questions_are_answered_from_the_last_judgement_summary():
+    """직전 판정을 되묻는 일상 대화("그래서 뭐 써?" · "조건이 뭐야?")는 그 판정의 요약으로 코드가 답한다(11-17). 요약이 없으면 전처럼 LLM 글이다."""
+    from backend.multi_agent.messages import judgement_summary
+    j = {'roles': ['R02'], 'terms': [{'code': 'VRRM', 'gte': 40.0}, {'code': 'IF_AV', 'gte': 3.0}], 'terms_from_original': True, 'results': [
+        {'part': 'SS36L', 'verdict': 'NOT_VERIFIED', 'board_change': True, 'missing': ['v_reverse_max']},
+        {'part': 'SS34LH', 'verdict': 'SPEC_EQUIVALENT', 'board_change': True, 'missing': []},
+        {'part': 'SS34L', 'verdict': 'SPEC_EQUIVALENT', 'board_change': False, 'missing': []}]}
+    last = judgement_summary(j)
+    assert [c['part'] for c in last['candidates']] == ['SS34L', 'SS34LH', 'SS36L'] and last['missing'] == ['v_reverse_max']  # 좋은 판정 · 기판 수정 불필요 먼저
+    chat = {'question_type': 'chat', 'plan': {'reply': '조금 더 구체적으로 알려 주세요.'}, 'facts': {}, 'last_judgement': last}
+    pick = B.finish_node({**chat, 'question': '그ㅐ서 어떤 부품 써야대는데'})['answer']
+    assert 'SS34L(사양 동등), SS34LH(사양 동등)' in pick and '기판 수정이 필요 없는 후보는 SS34L' in pick and '이 후보 승인하기' in pick
+    conds = B.finish_node({**chat, 'question': '조건이 뭐야?'})['answer']
+    assert '역류 방지' in conds and 'VRRM ≥ 40, IF_AV ≥ 3' in conds and 'v_reverse_max' in conds
+    assert B.finish_node({**chat, 'question': '다른 조건은 없어?'})['answer'] == conds
+    # 직전 판정이 없거나 되묻는 말이 아니면 LLM 글 그대로
+    assert B.finish_node({**chat, 'last_judgement': {}, 'question': '그래서 어떤 부품 써야 돼'})['answer'] == '조금 더 구체적으로 알려 주세요.'
+    assert B.finish_node({**chat, 'question': '안녕'})['answer'] == '조금 더 구체적으로 알려 주세요.'
+    assert judgement_summary({}) == {} and judgement_summary({'results': []}) == {}
+    # 확정된 후보가 없으면 가까운 후보와 빠진 값을 알린다
+    none = judgement_summary({**j, 'results': [j['results'][0]]})
+    assert '확정된 후보가 없었어요' in B.finish_node({**chat, 'last_judgement': none, 'question': '그래서 뭐 써야 돼?'})['answer']
+
+
 def test_quote_guide_names_the_real_screen_labels():
     """견적 안내의 따옴표 속 이름은 화면 글자 그대로여야 한다(단추 이름이 바뀌면 안내가 틀린다). 예시 질문만 뺀다."""
     import re

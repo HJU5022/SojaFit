@@ -237,7 +237,7 @@ def test_render_find_with_no_candidates_says_so_and_shows_terms():
 def test_render_find_says_when_terms_came_from_the_original_part():
     j = {**JUDGEMENT, 'kind': 'find', 'results': [], 'shown': [], 'terms': [{'code': 'VRRM', 'gte': 50.0}]}
     assert '원래 부품의 정격을 기준으로' not in Msg.render_judgement(j)
-    assert 'VRRM ≥ 50 (회로 값을 몰라 원래 부품의 정격을 기준으로 찾았어요)' in Msg.render_judgement({**j, 'terms_from_original': True})
+    assert 'VRRM ≥ 50 (회로 값을 모르는 조건은 원래 부품의 정격을 기준으로 찾았어요)' in Msg.render_judgement({**j, 'terms_from_original': True})
 
 
 def test_empty_find_message_shows_role_and_terms_or_asks_for_values():

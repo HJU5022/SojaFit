@@ -21,6 +21,7 @@ class MultiState(TypedDict, total=False):
     # ── 입력 읽기 노드가 채운다 (단일 그래프와 같은 칸) ──
     input: str
     conversation_history: list[str]  # 현재 질문과 분리한 이전 사용자 입력. 답변·승인 기록은 포함하지 않는다
+    last_judgement: dict  # 이 대화의 직전 판정 요약(역할 · 건 조건 · 후보 품번과 판정 · 빠진 값). 코드가 만든 값이고 LLM에 주지 않는다(11-17)
     approved_memories: list[dict]  # 새 질문마다 서버가 갱신, 현재 조건·사양 근거와 분리
     memory_refs: list[str]  # 모델이 선택하고 현재 요청의 제공 사례와 대조한 ID
     user_id: str

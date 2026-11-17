@@ -23,7 +23,8 @@ from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import Reason, TaskReport
-from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, empty_find_message, refusal_for
+from backend.multi_agent.messages import (CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, empty_find_message, refusal_for,
+                                          followup_reply, screen_guide)
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
 from backend.services.llm import is_llm_failure
@@ -66,6 +67,10 @@ def finish_node(state: dict) -> dict:
     if not state.get('reports'):
         if (state.get('plan') or {}).get('reply_kind') == 'earlier_answer':
             return {'answer': EARLIER_ANSWER, 'path': ['끝']}  # 앞 답 · 근거 다시 보기는 LLM 글 대신 고정 안내(#64)
+        if state.get('question_type') == 'chat' and (guide := screen_guide(state.get('question') or '')):
+            return {'answer': guide, 'path': ['끝']}  # 화면 사용법은 LLM 글 대신 고정 안내(있는 기능을 없다고 답했다, 11-17)
+        if state.get('question_type') == 'chat' and (again := followup_reply(state.get('question') or '', state.get('last_judgement') or {})):
+            return {'answer': again, 'path': ['끝']}  # 직전 판정을 되묻는 말은 그 판정의 요약으로 답한다(11-17)
         reply = (state.get('plan') or {}).get('reply', '')
         if '승인사례:' in reply:
             reason = Reason.VERIFY_FAILED

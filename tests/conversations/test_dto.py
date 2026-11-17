@@ -328,3 +328,6 @@ def test_interrupt_exposes_read_roles_evidence_and_per_role_inputs_only_in_safe_
     assert asked['role_evidence'] == ['D1.K → RAW (커넥터 쪽)', 'x' * 300]
     assert asked['role_missing'] == {'R01': ['v_in_max'], 'R02': ['v_reverse_max']}
     assert asked['question'] == '판정에 필요한 값을 알려 주세요.'
+    # [주의] 실행을 끝낼 때 저장소가 같은 결과를 저장용 모델로 다시 검사한다. 새 칸이 그 모델에 없으면 저장에서 500이 난다(11-17 8010 실측)
+    from backend.conversations.models import SafeInterrupt
+    assert SafeInterrupt.model_validate(asked).model_dump()['role_missing'] == {'R01': ['v_in_max'], 'R02': ['v_reverse_max']}
