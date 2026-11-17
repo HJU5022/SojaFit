@@ -2,7 +2,7 @@
 
 > 초안 — 본인 확인 필요(조장이 작업 기록에서 옮겨 작성, 2026-11-17). 숫자는 모두 [EVAL_REPORT.md](../../EVAL_REPORT.md)에 있는 값이고, 괄호는 그 절이다.
 
-**LLM · 임베딩 · 리랭커 모델 비교 · 제조사 근거** | SojaFit, KDT AI Human 7기 3차 프로젝트 2조(2026-10-30 ~ 11-17)
+**LLM 모델 비교 · 제조사 근거 · 원본 회로도 · Docker 실측** | SojaFit, KDT AI Human 7기 3차 프로젝트 2조(2026-10-30 ~ 11-17)
 저장소 [aihuman-7th/proj3-b](https://github.com/aihuman-7th/proj3-b) · 배포 주소는 [README](../../README.md) 맨 위 표(평가용 계정은 적지 않는다)
 
 ## 문제
@@ -11,15 +11,15 @@
 
 ## 내가 맡은 것
 
-- LLM(Supervisor) · 임베딩 · 리랭커 모델 비교, 제조사 공식 PDF 근거, 원본 회로도 검색, Docker 기동 측정, 웹 검색 MCP 설계
+- LLM(Supervisor) 모델 비교, 임베딩 후보 조사, 제조사 공식 PDF 근거, 원본 회로도 검색, Docker · KiCad 실측, 웹 검색 MCP 설계
 - 1 → 2 → 3등급 근거 폴백, 공식 PDF 표 행 인용, 원본 회로도 검색 · PNG 변환
 
 ## 핵심 성과
 
-| LLM 비교(Supervisor) | 임베딩 · 검색 비교 | 리랭커 |
+| LLM 비교(Supervisor) | 임베딩 후보 조사 | Docker 이미지 실측 |
 |---|---|---|
-| **6종 × 70문항** | **264칸 → voyage-4-large** | **MRR 0.649 → 0.860** |
-| 동결 v2 70문항, 형식 유효 1/70 ~ 70/70 · 질문 유형 정답 최고 33/35, 855호출 $0.24(사전 등록 #33, [3차 결과](../research/supervisor-stage3-results.md)) | 임베딩 11종 × 필터 3 × 질의 2 × 리랭커 4, 고르기용 46문항 1위 Page Recall@5 0.859(1-4절) | `rerank-3`, 3-small 하이브리드 기준, 리랭크 p95 0.6초 이하(1-3절) |
+| **6종 × 70문항** | **13종 조사** | **1.79 → 1.04 GB** |
+| 동결 v2 70문항, 형식 유효 1/70 ~ 70/70 · 질문 유형 정답 최고 33/35, 855호출 $0.24(사전 등록 #33, [3차 결과](../research/supervisor-stage3-results.md)) | 후보 13종을 넣은 이유 · 실행 범위 · 멈춘 이유를 정리하고 4종 예비 기준선을 쟀다([조사](../research/embedding-candidate-investigation.md)) | KiCad 렌더러를 API에서 떼었을 때 API 이미지 크기. 첫 응답 시간은 줄지 않았다([실측](../research/docker-cold-start-measurements.md)) |
 
 | 그 밖의 결과 | 값 |
 |---|---|
@@ -37,7 +37,7 @@
 
 ## 기술
 
-OpenRouter(LLM 6종 비교) · Voyage(`voyage-4-large` · `rerank-3`) · Docker · KiCad(회로도 PNG 변환)
+OpenRouter(LLM 6종 비교) · Docker · KiCad(회로도 PNG 변환)
 
 ## 근거
 
