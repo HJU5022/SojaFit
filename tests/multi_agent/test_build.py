@@ -337,6 +337,8 @@ def test_followup_questions_are_answered_from_the_last_judgement_summary():
     conds = B.finish_node({**chat, 'question': '조건이 뭐야?'})['answer']
     assert '역류 방지' in conds and 'VRRM ≥ 40, IF_AV ≥ 3' in conds and 'v_reverse_max' in conds
     assert B.finish_node({**chat, 'question': '다른 조건은 없어?'})['answer'] == conds
+    known = B.finish_node({**chat, 'last_judgement': {**last, 'missing': []}, 'question': '조건이 뭐야?'})['answer']
+    assert '원래 부품 기준 대신 그 값으로 다시 판정해요' in known  # 원래 부품 기준으로 찾았으면 회로 값을 주면 다시 판정한다고 알린다
     # 직전 판정이 없거나 되묻는 말이 아니면 LLM 글 그대로
     assert B.finish_node({**chat, 'last_judgement': {}, 'question': '그래서 어떤 부품 써야 돼'})['answer'] == '조금 더 구체적으로 알려 주세요.'
     assert B.finish_node({**chat, 'question': '안녕'})['answer'] == '조금 더 구체적으로 알려 주세요.'

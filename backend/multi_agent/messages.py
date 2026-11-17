@@ -61,7 +61,9 @@ def followup_reply(question: str, last: dict) -> str:
         rules = C.load()
         roles = ', '.join(rules[r]['name'] for r in last.get('roles') or [] if r in rules) or '규칙 없는 역할'
         terms = _terms_line({'terms': last.get('terms') or [], 'terms_from_original': last.get('terms_from_original')})
-        tail = f'아직 모르는 값: {missing}. 알려 주시면 그 값으로 다시 판정해요.' if missing else '더 알려 주실 값은 없어요.'
+        tail = (f'아직 모르는 값: {missing}. 알려 주시면 그 값으로 다시 판정해요.' if missing
+                else '회로 전압 · 전류를 알려 주시면 원래 부품 기준 대신 그 값으로 다시 판정해요.' if last.get('terms_from_original')
+                else '더 알려 주실 값은 없어요.')
         return f'앞 검토에서 본 조건이에요. 역할: {roles}. {terms}. {tail}'
     if ASKS_PICK.search(question):
         ready = [c for c in cands if c['verdict'] in APPROVABLE]
