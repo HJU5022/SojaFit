@@ -10,6 +10,7 @@ import {
   Disclaimer,
   Empty,
   ErrorBox,
+  GradeHelp,
   Loading,
   Markdown,
   Modal,
@@ -115,6 +116,7 @@ function CaseDetail({ id, close }: { id: number; close: () => void }) {
             </section>
             <section>
               <h2>근거 문서</h2>
+              {d.evidence.length > 0 && <GradeHelp />}
               {d.evidence.length ? (
                 d.evidence.map((cite, i) => <Source key={i} cite={cite} />)
               ) : (

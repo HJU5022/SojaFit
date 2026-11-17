@@ -2947,18 +2947,89 @@ form {
   max-width: 100%;
   font-weight: 500;
 }
-/* 근거 등급 배지: 1 등록된 데이터시트 · 2 제조사 공식 문서 · 3 미검증 참고 정보(판정 배지와 같은 색 계열) */
-.citation .grade-1 {
+/* 근거 등급 배지: 1 등록된 데이터시트 · 2 제조사 공식 문서 · 3 미검증 참고 정보(판정 배지와 같은 색 계열). 뜻은 .grade-help 팝업 */
+.citation-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.grade-1 {
   color: #286c56;
   background: #e9f3ed;
 }
-.citation .grade-2 {
+.grade-2 {
   color: #225c79;
   background: #e6f0f6;
 }
-.citation .grade-3 {
+.grade-3 {
   color: #826018;
   background: #f6f0de;
+}
+.citation .badge,
+.grade-help-pop .badge {
+  padding: 1px 7px;
+  font-size: 12px;
+}
+/* [왜] .citation span의 회색이 배지 색을 덮지 않게 같은 무게로 다시 적는다 */
+.citation .grade-1 {
+  color: #286c56;
+}
+.citation .grade-2 {
+  color: #225c79;
+}
+.citation .grade-3 {
+  color: #826018;
+}
+/* 근거 등급 설명: 목록 맨 위의 "근거 등급 ?" 한 줄과, 누르면 그 아래 뜨는 작은 팝업 */
+.grade-help {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: max-content;
+  font-size: 12px;
+  color: var(--muted);
+}
+.grade-help > button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px;
+  color: var(--muted);
+}
+.grade-help-pop {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 5;
+  width: min(320px, 80vw);
+  padding: 12px 14px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px #1f303826;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.grade-help-pop p {
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+.grade-help-pop dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.grade-help-pop dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.grade-help-pop dd {
+  margin: 2px 0 0;
+  color: var(--muted);
 }
 .caution {
   margin: 15px 0;

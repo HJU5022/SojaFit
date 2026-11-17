@@ -4,7 +4,7 @@ import { ArrowRight, MessageSquare, PanelRight } from 'lucide-react';
 import { statuses } from './api';
 import { replyCandidates, withoutCorpusCitations } from './display';
 import { inputLabel, inputPlaceholder, isBooleanInput } from './inputLabels';
-import { Badge, Disclaimer, ErrorBox, Markdown, Source } from './ui';
+import { Badge, Disclaimer, ErrorBox, GradeHelp, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
 import type { Candidate, DemoQuestion, Result, Role, Run } from './types';
 export function MissingInput({
@@ -236,6 +236,7 @@ export function Reply({
       {r.evidence.length > 0 && (
         <details className="evidence-list">
           <summary>문서 근거</summary>
+          <GradeHelp />
           {r.evidence.map((s, i) => (
             <Source cite={s} key={i} />
           ))}
