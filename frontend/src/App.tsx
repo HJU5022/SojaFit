@@ -26,7 +26,7 @@ import {
 import { Landing } from './Landing';
 import { Auth } from './Auth';
 import { contactEmail, Settings } from './Account';
-import { ApprovedCases, CaseReport } from './Approved';
+import { ApprovedCases, CaseQuote, CaseReport } from './Approved';
 import { Admin } from './Admin';
 import { Library } from './Library';
 import { isLegalPath, LegalModal, LegalPage, legalDocs } from './Legal';
@@ -255,6 +255,9 @@ export default function App() {
   // 인쇄용 보고서는 사이드바 없이 화면 전체에 그린다(#44)
   const report = pathname.match(/^\/approved\/(\d+)\/report$/);
   if (report) return <CaseReport id={Number(report[1])} email={user.email} />;
+  const quote = pathname.match(/^\/approved\/(\d+)\/quote\/(\d+)$/);
+  if (quote)
+    return <CaseQuote caseId={Number(quote[1])} quoteId={Number(quote[2])} email={user.email} />;
   const params = new URLSearchParams(path.split('?')[1]),
     project = params.get('project'),
     thread = params.get('thread');

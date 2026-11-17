@@ -89,6 +89,22 @@ test('데모 로그인 → 검토 → 조건 재개 → 승인·견적 → 기�
   await page.getByRole('button', { name: '닫기', exact: true }).click();
   await page.getByRole('button', { name: '견적 목록', exact: true }).click();
   await expect(page.locator('.quote-item').first()).toContainText('100');
+  // 견적서 문서(SPEC 8.4): 견적 목록의 "견적서 보기"가 새 탭에 A4 문서를 열고, PDF 파일로 내려받는다.
+  // [왜] 데모 모드는 Mouser를 부르지 않아 단가·금액은 "조회 불가"다. 그래도 문서와 다운로드는 되어야 한다
+  const [quoteDoc] = await Promise.all([
+    page.context().waitForEvent('page'),
+    page.locator('.quote-item').first().getByRole('link', { name: '견적서 보기' }).click(),
+  ]);
+  await expect(quoteDoc.getByRole('heading', { name: '견적서', exact: true })).toBeVisible();
+  await expect(quoteDoc.locator('.quote-sheet')).toContainText(/SF-Q-\d+-\d+/);
+  await expect(quoteDoc.locator('.quote-items tbody')).toContainText('100개');
+  await expect(quoteDoc.locator('.quote-items tfoot')).toContainText('조회 불가');
+  const [pdf] = await Promise.all([
+    quoteDoc.waitForEvent('download'),
+    quoteDoc.getByRole('button', { name: 'PDF 다운로드' }).click(),
+  ]);
+  expect(pdf.suggestedFilename()).toMatch(/^견적서-SF-Q-\d+-\d+\.pdf$/);
+  await quoteDoc.close();
   await page.getByRole('button', { name: '닫기', exact: true }).click();
   // 사이드바 나무: 열린 대화는 그 프로젝트 아래에 강조되어 있고 ⋯ 메뉴로 그 자리에서 이름을 바꾼다
   await page.locator('.thread-row.selected').getByRole('button', { name: '대화 메뉴' }).click();

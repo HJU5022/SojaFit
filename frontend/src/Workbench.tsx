@@ -499,6 +499,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [previousDetails, setPreviousDetails] = useState<Detail[]>([]),
     [previousLoading, setPreviousLoading] = useState(false),
     [previousTruncated, setPreviousTruncated] = useState(false);
+  // [왜] 견적 목록 응답에는 사례 id가 없다. 창을 열 때 승인 사례 목록에서 그 승인의 사례를 찾아 견적서 주소를 만든다
+  const quoteCases = useResource<{ id: number; approval_id: number }[]>(
+    showQuotes ? '/approved-cases' : null,
+  );
   const controller = useRef<AbortController | null>(null),
     manualStop = useRef(false),
     runId = useRef<string | null>(null),
@@ -1372,6 +1376,18 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   {q.quantity.toLocaleString()}개 · {new Date(q.created_at).toLocaleString('ko-KR')}
                 </p>
                 <a href={`/app?project=${projectId}&thread=${q.thread_id}`}>검토로 돌아가기</a>
+                {quoteCases.data
+                  ?.filter((c) => c.approval_id === q.approval_id)
+                  .map((c) => (
+                    <a
+                      key={c.id}
+                      href={`/approved/${c.id}/quote/${q.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      견적서 보기
+                    </a>
+                  ))}
                 <PriceLookup part={q.part_number} quantity={q.quantity} />
               </article>
             ))

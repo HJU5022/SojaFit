@@ -129,12 +129,19 @@ export type DemoQuestion = {
 export type Role = { code: string; name: string };
 export type Quote = {
   id: number;
+  approval_id?: number; // 견적 목록에서 그 승인의 사례(견적서 주소)를 찾는 데 쓴다
   part_number: string;
   quantity: number;
   created_at: string;
   thread_id?: string;
 };
-export type Approval = { id: number; candidate_part: string; verdict: Verdict; quotes?: Quote[] };
+export type Approval = {
+  id: number;
+  case_id?: number | null; // 함께 만든 승인 사례. 견적서 주소(/approved/{사례}/quote/{견적})에 쓴다
+  candidate_part: string;
+  verdict: Verdict;
+  quotes?: Quote[];
+};
 /** GET /api/approved-cases/{id}: 승인 사례 하나의 기록. 후보·근거는 승인 때 저장한 값이다(다시 판정하지 않음). */
 export type ApprovedCaseDetail = {
   id: number;
@@ -162,6 +169,18 @@ export type PriceEstimate = {
   total: string;
   currency: string;
 };
+/** GET /api/prices 의 부품 한 줄(SPEC 4절). 견적서는 estimate가 있는 부품만 쓴다. */
+export type PricePart = {
+  part_number: string | null;
+  manufacturer: string | null;
+  availability: string | null;
+  product_url: string | null;
+  estimate?: PriceEstimate | null;
+};
+/** GET /api/prices 응답. available이 false면 Mouser 값 없이 사유(message)만 온다. */
+export type Prices =
+  | { available: true; source: string; fetched_at: string; parts: PricePart[] }
+  | { available: false; source: string; reason: string; message: string; parts: PricePart[] };
 export type Fact = { kind: string; value: string; text: string };
 export type User = { user_id: number; role: 'admin' | 'user'; email: string };
 /** GET /api/admin/users 한 줄. email은 서버가 가린 값이다. */

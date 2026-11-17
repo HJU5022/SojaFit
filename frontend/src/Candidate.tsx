@@ -167,7 +167,7 @@ export function CandidateDetails({
     try {
       await api(`/approvals/${approval.id}/quotes`, 'POST', { quantity });
       saved.reload();
-      setNotice('견적서를 저장했습니다. 프로젝트의 견적 목록에서 확인할 수 있습니다.');
+      setNotice('견적서를 저장했습니다. 아래 "견적서 보기"에서 열고 PDF로 받을 수 있습니다.');
     } catch (e) {
       setError(e as Error);
     } finally {
@@ -351,6 +351,7 @@ export function CandidateDetails({
             <p className="approved-mark">
               <Check size={17} /> 승인된 후보
             </p>
+            <p>몇 개가 필요한가요? 수량을 넣고 저장하면 견적서를 만듭니다.</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -376,6 +377,15 @@ export function CandidateDetails({
             {approval.quotes?.map((q) => (
               <p key={q.id} className="saved-quote">
                 {q.part_number} · {q.quantity.toLocaleString()}개 · 저장된 견적
+                {approval.case_id != null && (
+                  <a
+                    href={`/approved/${approval.case_id}/quote/${q.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    견적서 보기
+                  </a>
+                )}
               </p>
             ))}
           </>

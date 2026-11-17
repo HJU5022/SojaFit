@@ -3731,6 +3731,20 @@ form {
 .report-items td {
   height: 40px;
 }
+/* 견적서 문서(SPEC 8.4): 보고서와 같은 A4 종이 모양을 쓰고 품목 표만 따로 맞춘다. */
+.quote-items tfoot th {
+  text-align: right;
+}
+.quote-items tfoot td {
+  font-weight: 700;
+}
+.quote-url {
+  overflow-wrap: anywhere;
+}
+.saved-quote a,
+.quote-item a + a {
+  margin-left: 10px;
+}
 .report-part {
   margin-top: 22px;
   padding-top: 8px;

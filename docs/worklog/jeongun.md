@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-17 견적서 문서와 PDF 다운로드(커밋 없음)
+- 목적: 승인한 후보의 견적을 수량과 함께 문서로 내려받게 한다. 지금까지는 가격 카드와 "견적 목록"의 품번 · 수량만 있었다(조장 요청).
+- 바꾼 파일: `frontend/src/Approved.tsx`(`CaseQuote`: `/approved/{사례}/quote/{견적}` A4 한 장, "PDF 다운로드"), `frontend/src/report.ts`(`quoteFields`), `frontend/src/App.tsx`(주소 연결), `frontend/src/Candidate.tsx`(승인 뒤 "몇 개가 필요한가요?" 문구, 저장된 견적 줄의 "견적서 보기"), `frontend/src/Workbench.tsx`("견적 목록"의 "견적서 보기"), `frontend/src/types.ts` · `styles.css`, `frontend/package.json` · `package-lock.json`(`jspdf` 4.2.1 · `html2canvas` 1.4.1), `SPEC.md` 8.4절, `frontend/src/SRC.md` · `frontend/tests/TESTS.md`.
+- 설계: 서버 · DB는 바꾸지 않았다. 문서는 `GET /api/approved-cases/{id}`와 열 때 한 번 부르는 `GET /api/prices`만 쓰고, 가격 · 재고는 저장하지 않는다(ADR 0009). PDF는 브라우저에서 화면을 그림으로 떠 A4 한 쪽에 넣는다(글자 선택은 안 됨). 두 라이브러리는 단추를 누를 때만 불러와 첫 화면 묶음은 555 → 563 kB다.
+- 실행한 명령과 결과 [실측]: `cd frontend && npm test` 45 통과, `npm run format:check` · `npm run build` 통과. 키 없는 compose(8010, `DEMO_MODE=1 DEMO_REPLAY=1`)에서 `SOJAFIT_BASE_URL=http://localhost:8010 npx playwright test demo.spec.ts -g "데모 로그인"` 통과(승인 → 수량 100 → 저장 → 견적 목록의 "견적서 보기" → 문서에 `SF-Q-` 번호 · "100개" · "조회 불가" → `견적서-SF-Q-n-n.pdf` 다운로드). 내려받은 PDF는 A4 한 쪽, 약 200 kB(압축 전 6.5 MB).
+- 확인 못 한 것: 실제 Mouser 값이 들어온 견적서는 응답을 흉내 낸 화면으로만 봤다(데모 모드는 Mouser를 부르지 않음). 운영(`DEMO_MODE=0`, `MOUSER_API_KEY` 등록)에서 실제 값으로 연 견적서와 PDF는 배포 뒤 확인해야 한다. 좁은 화면(390px)의 문서 모양은 보지 않았다.
+- 다음 할 일: 배포 뒤 운영에서 견적서 1건을 열어 단가 · 금액 · 재고 · 조회 시각이 나오는지 확인한다.
+
 ## 2026-11-17 웹 근거 파일명 `%20` 풀기(v3-16 `wrong_citation`)
 - 목적: 동결 v3-16이 정답과 같은 PDF · 같은 쪽을 인용하고도 `wrong_citation`으로 떨어졌다. 원인은 웹 근거 카드(`W1`…)의 `file` · `title`이 URL 파일명을 인코딩된 채(`UF4001%20SERIES_P2104.pdf`) 쓰는 것이다. 채점기(`evals/runners/score_answer.py`)는 인용한 카드의 `(file, page)`가 정답 위치 집합에 글자 그대로 있는지 보는데, 코퍼스 파일명은 공백(`UF4001 SERIES_P2104.pdf`)이다.
 - 바꾼 파일(`09cc4fe2`): `backend/services/exa.py`(`_search_evidence`가 카드 파일명에 `unquote`를 씀. `source_url`은 인코딩된 그대로), `tests/services/test_exa_parallel.py`(`%20` 파일명 시험 1개 추가). SPEC · 동결 평가셋 · 채점기는 바꾸지 않았다.
