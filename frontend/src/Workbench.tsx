@@ -1,9 +1,12 @@
 /** 프로젝트·대화·실행 작업대. 서버의 고정 회로 버전과 결과를 사용한다. 출처: SPEC 4·7·8절. */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowRight,
   Check,
   CornerDownLeft,
+  ChevronDown,
+  Move,
   ListChecks,
   LoaderCircle,
   PanelRight,
@@ -46,6 +49,152 @@ import type {
   Role,
   Run,
 } from './types';
+/** 비모달 조건 창. 초안은 작업대가 보관하고 위치만 이 창에서 관리한다. */
+function ConditionsEditor({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const id = useId();
+  const toggle = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLElement>(null);
+  const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  function bounded(left: number, top: number) {
+    const box = panel.current!.getBoundingClientRect();
+    return {
+      left: Math.max(12, Math.min(left, window.innerWidth - box.width - 12)),
+      top: Math.max(12, Math.min(top, window.innerHeight - box.height - 12)),
+    };
+  }
+  useLayoutEffect(() => {
+    if (!open) return;
+    function fit() {
+      const box = panel.current!.getBoundingClientRect();
+      const composer = toggle.current!.closest('form')!.getBoundingClientRect();
+      setPosition((current) =>
+        bounded(
+          current?.left ?? composer.right - box.width,
+          current?.top ?? composer.top - box.height - 12,
+        ),
+      );
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, [open]);
+  function close() {
+    setOpen(false);
+    toggle.current?.focus();
+  }
+  function stopDrag(event: PointerEvent<HTMLButtonElement>) {
+    drag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+  return (
+    <div className="conditions-editor">
+      <button
+        type="button"
+        ref={toggle}
+        className="conditions-toggle"
+        aria-expanded={open}
+        aria-controls={`${id}-panel`}
+        onClick={() => (open ? close() : setOpen(true))}
+      >
+        <ChevronDown size={15} /> 사용 조건
+      </button>
+      {open &&
+        createPortal(
+          <section
+            ref={panel}
+            id={`${id}-panel`}
+            role="dialog"
+            aria-modal="false"
+            aria-labelledby={`${id}-title`}
+            className="conditions-panel"
+            style={{ left: position?.left ?? 12, top: position?.top ?? 12 }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                close();
+              }
+            }}
+          >
+            <div className="conditions-titlebar">
+              <button
+                type="button"
+                className="conditions-drag"
+                aria-label="사용 조건 창 이동"
+                onPointerDown={(event) => {
+                  if (event.button !== 0) return;
+                  const box = panel.current!.getBoundingClientRect();
+                  drag.current = {
+                    x: event.clientX,
+                    y: event.clientY,
+                    left: box.left,
+                    top: box.top,
+                  };
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                }}
+                onPointerMove={(event) => {
+                  if (drag.current)
+                    setPosition(
+                      bounded(
+                        drag.current.left + event.clientX - drag.current.x,
+                        drag.current.top + event.clientY - drag.current.y,
+                      ),
+                    );
+                }}
+                onPointerUp={stopDrag}
+                onPointerCancel={stopDrag}
+                onLostPointerCapture={() => {
+                  drag.current = null;
+                }}
+                onKeyDown={(event) => {
+                  const offset = {
+                    ArrowLeft: [-10, 0],
+                    ArrowRight: [10, 0],
+                    ArrowUp: [0, -10],
+                    ArrowDown: [0, 10],
+                  }[event.key];
+                  if (!offset) return;
+                  event.preventDefault();
+                  const box = panel.current!.getBoundingClientRect();
+                  setPosition(bounded(box.left + offset[0], box.top + offset[1]));
+                }}
+              >
+                <Move size={16} />
+                <span id={`${id}-title`}>사용 조건</span>
+              </button>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="사용 조건 창 닫기"
+                onClick={close}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <label>
+              전압·전류·온도 등
+              <textarea
+                value={value}
+                maxLength={2000}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder="알고 있는 조건을 입력하세요."
+              />
+            </label>
+          </section>,
+          document.body,
+        )}
+    </div>
+  );
+}
+
 const freshResult = (): Result => ({
   answer: '',
   status: 'running',
@@ -62,6 +211,7 @@ const pendingStart: {
 } = { current: null };
 // [왜] 새 대화 화면은 옮기면 사라지므로 작업대가 열릴 때 한 번 보일 한 줄 안내(#48 이미 있는 회로로 이어 가기)도 모듈에 둔다
 const startNotice: { current: { project: string; text: string } | null } = { current: null };
+const MAX_PREVIOUS_THREADS = 10;
 /** 프로젝트에 새 대화를 만들어 질문을 첫 질문으로 보낸다. 질문이 비면 그 회로의 작업대만 연다(빈 대화 화면이 무엇을 검토할지 묻는다). notice는 처음 열린 대화 위에만 보인다. */
 export async function openWithQuestion(projectId: number | string, question: string, notice = '') {
   const tid = question.trim()
@@ -332,6 +482,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [conditions, setConditions] = useState(''),
     [attachment, setAttachment] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
+    [preparing, setPreparing] = useState(false),
     [loading, setLoading] = useState(false),
     [error, setError] = useState<Error | null>(null),
     [stopped, setStopped] = useState(false),
@@ -344,10 +495,27 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     [remove, setRemove] = useState<'project' | 'thread' | null>(null),
     [rename, setRename] = useState(false),
     [reload, setReload] = useState(0),
-    [notice, setNotice] = useState<{ text: string; thread: string | null } | null>(null);
+    [notice, setNotice] = useState<{ text: string; thread: string | null } | null>(null),
+    [previousDetails, setPreviousDetails] = useState<Detail[]>([]),
+    [previousLoading, setPreviousLoading] = useState(false),
+    [previousTruncated, setPreviousTruncated] = useState(false);
+  // [왜] 견적 목록 응답에는 사례 id가 없다. 창을 열 때 승인 사례 목록에서 그 승인의 사례를 찾아 견적서 주소를 만든다
+  const quoteCases = useResource<{ id: number; approval_id: number }[]>(
+    showQuotes ? '/approved-cases' : null,
+  );
   const controller = useRef<AbortController | null>(null),
+    manualStop = useRef(false),
     runId = useRef<string | null>(null),
-    scope = useRef(0);
+    scope = useRef(0),
+    scrollRef = useRef<HTMLDivElement | null>(null),
+    shouldFollow = useRef(true),
+    preparingRef = useRef(false),
+    questionRef = useRef('');
+  const scrollToBottom = () => {
+    shouldFollow.current = true;
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
   const attach = useNetlistAttach('.net,.txt,.kicad_sch', setAttachment);
   const parts = partsOf(project.data),
     usable = parts.filter((p) => !unsupportedPartReason(p)),
@@ -401,6 +569,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             if (queued?.tid === threadId) {
               pendingStart.current = null;
               setLoading(false);
+              scrollToBottom();
               setTarget(queued.target);
               setPendingQuestion(queued.question);
               void execute(threadId, `/threads/${threadId}/runs`, {
@@ -421,6 +590,61 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       live = false;
     };
   }, [threadId, projectId, reload]);
+  useEffect(() => {
+    shouldFollow.current = true;
+    requestAnimationFrame(() => {
+      if (shouldFollow.current) scrollToBottom();
+    });
+  }, [threadId]);
+  useEffect(() => {
+    if (shouldFollow.current)
+      requestAnimationFrame(() => {
+        if (shouldFollow.current) scrollToBottom();
+      });
+  }, [
+    detail?.messages.length,
+    previousDetails.length,
+    pendingQuestion,
+    active?.result.stage,
+    active?.result.answer,
+    active?.result.status,
+    stopped,
+  ]);
+  useEffect(() => {
+    let live = true;
+    const first = detail?.previous_thread_id;
+    setPreviousDetails([]);
+    setPreviousTruncated(false);
+    if (!first) {
+      setPreviousLoading(false);
+      return;
+    }
+    setPreviousLoading(true);
+    void (async () => {
+      const found: Detail[] = [];
+      let truncated = false;
+      let next: string | null = first;
+      while (next && found.length < MAX_PREVIOUS_THREADS) {
+        const item: Detail = await api<Detail>(`/threads/${next}?limit=50`);
+        found.push(item);
+        next = item.previous_thread_id;
+        truncated ||= item.next_before_message_id !== null;
+      }
+      if (live) {
+        setPreviousDetails(found);
+        setPreviousTruncated(truncated || !!next);
+        setPreviousLoading(false);
+      }
+    })().catch((e) => {
+      if (live) {
+        setError(e as Error);
+        setPreviousLoading(false);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [detail?.previous_thread_id]);
   useEffect(() => () => controller.current?.abort(), []);
   useEffect(() => {
     // [왜] 사이드바에서 대화 이름을 바꾸면 제목만 고친다. 다시 읽으면 불러온 이전 메시지와 실행 중 수신이 끊긴다
@@ -513,6 +737,8 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   }
   async function execute(tid: string, path: string, body: any) {
     const localScope = scope.current;
+    manualStop.current = false;
+    if (path === `/threads/${tid}/runs`) setActive(null);
     setBusy(true);
     setError(null);
     setStopped(false);
@@ -521,10 +747,29 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     controller.current = abort;
     let liveRun = runId.current;
     let terminal: Result | null = null;
+    const recoverSavedRun = async () => {
+      if (!liveRun || manualStop.current || localScope !== scope.current) return null;
+      let saved: Run | null = null;
+      for (const delay of [0, 1000, 2000, 4000, 8000]) {
+        if (delay) await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
+        if (manualStop.current || localScope !== scope.current || abort.signal.aborted) return null;
+        try {
+          saved = await api<Run>('/runs/' + liveRun);
+          if (manualStop.current || localScope !== scope.current || abort.signal.aborted)
+            return null;
+          if (saved.result.status !== 'running') return saved;
+        } catch {
+          return null;
+        }
+      }
+      return saved;
+    };
     try {
       await streamRun(path, body, abort.signal, (event, data) => {
         if (localScope !== scope.current) return;
         if (event === 'run_started') {
+          if (typeof body.conditions === 'string')
+            setConditions((draft) => (draft === body.conditions ? '' : draft));
           liveRun = data.run_id;
           runId.current = data.run_id;
           setActive({ id: data.run_id, thread_id: tid, message_id: null, result: freshResult() });
@@ -542,16 +787,45 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       });
       if (localScope !== scope.current) return;
       if (liveRun) {
-        const saved = await api<Run>('/runs/' + liveRun);
+        let saved = await api<Run>('/runs/' + liveRun);
+        if (!terminal && saved.result.status === 'running')
+          saved = (await recoverSavedRun()) ?? saved;
+        if (localScope !== scope.current) return;
+        if (manualStop.current || abort.signal.aborted) {
+          setStopped(true);
+          return;
+        }
         if (terminal) saved.result = terminal;
+        if (saved.result.status !== 'running') {
+          setActive(saved);
+          setRuns((x) => ({ ...x, [saved.id]: saved }));
+          setStopped(false);
+          await refreshDetail(tid);
+          setPendingQuestion('');
+          return;
+        }
         setActive(saved);
         setRuns((x) => ({ ...x, [saved.id]: saved }));
+        setStopped(true);
       }
       await refreshDetail(tid);
       setPendingQuestion('');
     } catch (e) {
       if (localScope !== scope.current) return;
       // [왜] 실행을 시작하기 전에 거절된 요청(422 · 409 · 429 · 503)은 오류만 보인다. '수신 멈춤'은 시작된 실행의 스트림이 끊겼을 때만이다(#69)
+      if (liveRun && !manualStop.current && (e as Error).name !== 'AbortError') {
+        const saved = await recoverSavedRun();
+        if (localScope !== scope.current) return;
+        if (manualStop.current || abort.signal.aborted) return;
+        if (saved && saved.result.status !== 'running') {
+          setActive(saved);
+          setRuns((x) => ({ ...x, [saved.id]: saved }));
+          setStopped(false);
+          await refreshDetail(tid);
+          setPendingQuestion('');
+          return;
+        }
+      }
       if (liveRun) setStopped(true);
       if ((e as Error).name !== 'AbortError') setError(e as Error);
     } finally {
@@ -560,9 +834,21 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
   }
   async function send(demo?: DemoQuestion) {
     // [왜] 실행 중에도 질문은 미리 쓸 수 있다. 보내기는 막는다(같은 대화의 두 번째 run은 서버가 409)
-    if (busy) return;
+    if (busy || preparing || preparingRef.current) return;
+    scrollToBottom();
     setError(null);
     if (!demo && !question.trim() && !attachment) return;
+    const submittedQuestion = (demo?.question ?? question).trim();
+    const submittedConditions = demo?.conditions ?? conditions;
+    const submittedTarget = demo?.target ?? target;
+    const userDraft = !demo && submittedQuestion;
+    preparingRef.current = true;
+    setPreparing(true);
+    if (userDraft) {
+      questionRef.current = '';
+      setQuestion('');
+    }
+    if (submittedQuestion) setPendingQuestion(submittedQuestion);
     try {
       let tid = threadId;
       if (attachment) {
@@ -570,8 +856,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
           throw new Error('넷리스트·회로도는 5 MiB 이하여야 합니다.');
         const body = new FormData();
         body.set('file', attachment);
-        // [왜] 회로 없이 시작한 대화면 같은 대화에 회로를 붙인다(서버가 조건을 다시 본다, SPEC 4절). 아니면 새 버전 · 새 대화
-        const same = tid && !project.data?.circuit_version ? '?thread_id=' + tid : '';
+        // [왜] 서버가 원래 대화를 previous_thread_id로 연결하고 새 회로 버전에 새 대화를 만든다.
+        //      회로 없는 대화에 붙이면 같은 대화를 유지하고, 기존 회로 대화면 새 대화로 이동한다.
+        const same = tid ? '?thread_id=' + tid : '';
         const imported = await api<{ project: Project; thread_id: string }>(
           `/projects/${projectId}/netlist${same}`,
           'POST',
@@ -581,9 +868,18 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         project.setData(imported.project);
         setTarget('');
         refreshNavigation();
-        if (imported.thread_id !== tid)
+        if (imported.thread_id !== tid) {
+          if (submittedQuestion) {
+            pendingStart.current = {
+              tid: imported.thread_id,
+              question: submittedQuestion,
+              conditions: submittedConditions,
+              target: '',
+            };
+          }
           return navigate(`/app?project=${projectId}&thread=${imported.thread_id}`);
-        if (!question.trim()) return; // 같은 대화에 붙였고 함께 쓴 질문이 있으면 이어서 보낸다
+        }
+        if (!submittedQuestion) return; // 같은 대화에 붙였고 함께 쓴 질문이 있으면 이어서 보낸다
       }
       if (targetReason) throw new Error(targetReason);
       if (demo || !tid) {
@@ -592,29 +888,33 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
         // [왜] 새 대화 이동과 첫 실행을 분리해 이전 대화의 비동기 결과가 새 화면을 덮지 않게 한다.
         pendingStart.current = {
           tid,
-          question: demo?.question ?? question,
-          conditions: demo?.conditions ?? conditions,
-          target: demo?.target ?? target,
+          question: submittedQuestion,
+          conditions: submittedConditions,
+          target: submittedTarget,
         };
-        setQuestion('');
         navigate(`/app?project=${projectId}&thread=${tid}`);
         return;
       }
-      const text = question,
-        cond = conditions;
-      setPendingQuestion(text);
-      setQuestion('');
       runId.current = null;
       await execute(tid!, `/threads/${tid}/runs`, {
-        question: text,
-        ...(target ? { target_ref: target } : {}),
-        conditions: cond,
+        question: submittedQuestion,
+        ...(submittedTarget ? { target_ref: submittedTarget } : {}),
+        conditions: submittedConditions,
       });
     } catch (e) {
+      if (!demo && submittedQuestion && !questionRef.current.trim()) {
+        setQuestion(submittedQuestion);
+        questionRef.current = submittedQuestion;
+      }
+      setPendingQuestion((p) => (p === submittedQuestion ? '' : p));
       setError(e as Error);
+    } finally {
+      preparingRef.current = false;
+      setPreparing(false);
     }
   }
   async function resume(body: any) {
+    scrollToBottom();
     if (body.target) setTarget(body.target); // 고른 부품을 오른쪽 회로 패널의 연결 개념도 · 후보 상세에 바로 보인다
     if (active) await execute(active.thread_id, `/runs/${active.id}/resume`, body);
   }
@@ -628,6 +928,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
       const loaded = await Promise.all(
         [...new Set(older.messages.map((m) => m.run_id))].map((id) => api<Run>('/runs/' + id)),
       );
+      const el = scrollRef.current;
+      const oldHeight = el?.scrollHeight ?? 0;
+      const oldTop = el?.scrollTop ?? 0;
+      shouldFollow.current = false;
       setRuns((x) => ({ ...x, ...Object.fromEntries(loaded.map((r) => [r.id, r])) }));
       setDetail((d) =>
         d
@@ -638,6 +942,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
             }
           : d,
       );
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = oldTop + el.scrollHeight - oldHeight;
+      });
     } catch (e) {
       setError(e as Error);
     }
@@ -656,7 +963,9 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     choosing = waiting && !!active?.result.interrupt.target_choices?.length,
     running = busy || active?.result.status === 'running',
     sendDisabled =
-      busy || (!attachment && (!!waiting || !!running || !!targetReason || !question.trim())),
+      busy ||
+      preparing ||
+      (!attachment && (!!waiting || !!running || !!targetReason || !question.trim())),
     // 회로 없는 대화에서 회로가 필요한 질문의 답(SPEC 8.9). 회로를 붙이면 카드가 사라진다
     needsCircuit =
       !running &&
@@ -667,8 +976,13 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
     circuitLink = project.data?.circuit_version && target ? showCircuit : undefined,
     lastQuestion =
       detail?.messages.filter((m) => m.role === 'user').slice(-1)[0]?.content ?? pendingQuestion;
-  const previous =
+  const previousReplies =
     detail?.messages.filter((m) => m.role === 'assistant' && m.run_id !== active?.id) ?? [];
+  const pendingSaved =
+    !!active?.id &&
+    !!detail?.messages.some(
+      (m) => m.role === 'user' && m.run_id === active.id && m.content === pendingQuestion,
+    );
   return (
     <div className="workbench">
       <div className="workbench-header">
@@ -770,7 +1084,14 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 </button>
               )}
             </div>
-            <div className="conversation-scroll">
+            <div
+              className="conversation-scroll"
+              ref={scrollRef}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                shouldFollow.current = el.scrollHeight - el.scrollTop - el.clientHeight <= 96;
+              }}
+            >
               {notice?.thread === threadId && (
                 <div className="notice" role="status">
                   <p>{notice.text}</p>
@@ -784,6 +1105,37 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 <Loading label="검토 기록을 불러오는 중" />
               ) : (
                 <>
+                  {previousLoading && <Loading label="이전 회로의 대화를 불러오는 중" />}
+                  {previousDetails.map((old) => (
+                    <section className="previous-transcript" key={old.id}>
+                      <div className="notice" role="status">
+                        <p>
+                          이전 회로의 대화 · 버전 {old.circuit_version}{' '}
+                          <a href={`/app?project=${old.project_id}&thread=${old.id}`}>
+                            원래 대화 열기
+                          </a>
+                        </p>
+                      </div>
+                      {old.messages.map((message) =>
+                        message.role === 'user' ? (
+                          <div className="user-message" key={message.id}>
+                            <span className="sr-only">이전 질문</span>
+                            <p>{message.content}</p>
+                          </div>
+                        ) : (
+                          <div className="assistant-message" key={message.id}>
+                            <span className="sr-only">이전 답변</span>
+                            <Markdown>{message.content}</Markdown>
+                          </div>
+                        ),
+                      )}
+                    </section>
+                  ))}
+                  {previousTruncated && (
+                    <p className="muted" role="status">
+                      이전 대화는 최근 50개 메시지까지만 보입니다. 원래 대화에서 더 볼 수 있습니다.
+                    </p>
+                  )}
                   {!detail?.messages.length && !pendingQuestion && !active && (
                     // 새 대화 화면 안내와 같은 모양(가운데 맞춤 제목 + 흐린 짧은 글, #41)
                     <div className="conversation-start">
@@ -806,7 +1158,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                           <span className="sr-only">내 질문</span>
                           <p>{m.content}</p>
                         </div>
-                        {previous
+                        {previousReplies
                           .filter((a) => a.run_id === m.run_id)
                           .map((a) =>
                             runs[a.run_id] ? (
@@ -828,18 +1180,18 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                           )}
                       </div>
                     ))}
-                  {pendingQuestion &&
-                    !detail?.messages.some((m) => m.content === pendingQuestion) && (
-                      <div className="user-message">
-                        <span className="sr-only">내 질문</span>
-                        <p>{pendingQuestion}</p>
-                      </div>
-                    )}
+                  {pendingQuestion && !pendingSaved && (
+                    <div className="user-message">
+                      <span className="sr-only">내 질문</span>
+                      <p>{pendingQuestion}</p>
+                    </div>
+                  )}
                   {active && running && !stopped && (
                     <RunProgress
                       progress={progress}
                       stage={active.result.stage}
                       onStop={() => {
+                        manualStop.current = true;
                         controller.current?.abort();
                         setStopped(true);
                       }}
@@ -947,7 +1299,10 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 <textarea
                   id="question"
                   value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
+                  onChange={(e) => {
+                    questionRef.current = e.target.value;
+                    setQuestion(e.target.value);
+                  }}
                   onKeyDown={(e) => {
                     if (!isSendKey(e.nativeEvent)) return; // Shift+Enter · 한글 조합 중 Enter는 그대로(#38)
                     e.preventDefault();
@@ -970,18 +1325,7 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                 <div className="composer-controls">
                   {/* 실행 중에도 파일은 고를 수 있다. 보내기는 아래 버튼이 막는다 */}
                   {attach.button}
-                  <details className="conditions-editor">
-                    <summary>사용 조건</summary>
-                    <label>
-                      전압·전류·온도 등
-                      <textarea
-                        value={conditions}
-                        maxLength={2000}
-                        onChange={(e) => setConditions(e.target.value)}
-                        placeholder="알고 있는 조건을 입력하세요."
-                      />
-                    </label>
-                  </details>
+                  <ConditionsEditor value={conditions} onChange={setConditions} />
                   {running && (
                     <small className="composer-hint">답변이 끝나면 보낼 수 있습니다.</small>
                   )}
@@ -1032,6 +1376,18 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
                   {q.quantity.toLocaleString()}개 · {new Date(q.created_at).toLocaleString('ko-KR')}
                 </p>
                 <a href={`/app?project=${projectId}&thread=${q.thread_id}`}>검토로 돌아가기</a>
+                {quoteCases.data
+                  ?.filter((c) => c.approval_id === q.approval_id)
+                  .map((c) => (
+                    <a
+                      key={c.id}
+                      href={`/approved/${c.id}/quote/${q.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      견적서 보기
+                    </a>
+                  ))}
                 <PriceLookup part={q.part_number} quantity={q.quantity} />
               </article>
             ))
@@ -1045,13 +1401,28 @@ export function Workbench({ projectId, threadId }: { projectId: string; threadId
           projectId={projectId}
           version={project.data.circuit_version}
           close={() => setShowParts(false)}
-          onReview={(text) => {
-            // [왜] openWithQuestion은 새 대화를 만들고 바로 보낸다. 새 대화 화면 입력창에 써 두기만 하고 보내기는 사용자가 누른다(#68).
-            //      작업대는 프로젝트마다 한 번 그려져(App의 key) 대화를 옮겨도 입력 글이 남는다
+          onReview={async (text) => {
+            // [왜] 과거 대화의 점검표에서 고른 부품은 그 회로 버전으로 검토한다.
+            //      빈 대화만 만들고 질문은 초안으로 둔다. 분석은 보내기를 누를 때 시작한다.
             setShowParts(false);
-            setQuestion(text);
-            if (threadId) navigate('/app?project=' + projectId);
-            requestAnimationFrame(() => document.getElementById('question')?.focus());
+            setError(null);
+            try {
+              const draft = threadId
+                ? await api<{ id: string }>(
+                    `/projects/${projectId}/threads?circuit_version=${project.data!.circuit_version}`,
+                    'POST',
+                  )
+                : null;
+              questionRef.current = text;
+              setQuestion(text);
+              if (draft) {
+                refreshNavigation();
+                navigate(`/app?project=${projectId}&thread=${draft.id}`);
+              }
+              requestAnimationFrame(() => document.getElementById('question')?.focus());
+            } catch (e) {
+              setError(e as Error);
+            }
           }}
           onAttach={() => {
             setShowParts(false);

@@ -1,5 +1,104 @@
 # jeongun 작업 기록
 
+## 2026-11-17 근거 등급 배지(화면)
+- 목적: 조장 지적. 근거는 1 · 2 · 3등급으로 나뉘는데(SPEC 2절 표) 화면의 근거 줄은 3등급에만 "미검증 참고 정보"를 붙이고 1 · 2등급은 등급을 알 수 없었다.
+- 1차(`3483a47a`): 근거 한 건마다 긴 배지("근거 1등급 · 등록된 데이터시트" 등)를 붙였다. `display.ts` `evidenceGrade`(서버가 준 `evidence_grade` 2 · 3은 그대로, 웹 출처 표시 `source_type`이 없는 근거는 1등급, 등급 없는 웹 근거는 표기 안 함). 서버 코드 · API 응답은 바꾸지 않았다(등급 값은 이미 내려오고 있었다).
+- 2차(조장 결정: 줄에는 색 · 짧은 배지만, 설명은 위에서 한 번 또는 ? 팝업): 배지를 "1등급" · "2등급" · "3등급"으로 줄여 문서 이름 앞에 두고, 근거 목록 맨 위에 "근거 등급 ?" 버튼(`ui.tsx` `GradeHelp`)을 두었다. 누르면 세 등급의 이름 · 쓰임을 작은 팝업으로 보이고 Esc · 바깥 누름으로 닫힌다. 이름 · 쓰임은 `display.ts` `EVIDENCE_GRADES` 한 곳에 둔다.
+- 적용되는 곳: 답의 "문서 근거" 목록, 후보 창의 조건별 근거(배지만) · 문서 근거, 승인 사례의 근거 문서. 견적서 문서의 "4. 근거" 글 목록은 바꾸지 않았다.
+- 확인 [실측]: `cd frontend && npm test` 46 통과 · `npm run format:check` 통과 · `npm run build` 통과. 8010(시험용 복제본, 데모 코퍼스)에서 Chrome으로 답의 문서 근거를 열어 실제 근거 11건의 "1등급" 배지, 팝업 열기, Esc 닫힘, 바깥 누름 닫힘을 확인.
+- 확인 못 한 것: 운영에서 실제 2 · 3등급 근거(웹 검색)가 붙은 답의 화면(2 · 3등급은 응답에 견본을 끼워 색 · 글만 확인). 후보 창 · 승인 사례 화면은 열어 보지 않았다(같은 조각). Playwright 전체는 다시 돌리지 않았다(키 없는 재생 서버가 필요).
+
+## 2026-11-17 값 없는 후보 찾기 · 0개 거절 안내 · 숫자만 적은 온도 답
+- 목적: 조장 지적. 가볍게 물은 찾기 질문("D3 지금 다른걸로 바꿀거 있어?")이 되묻기 뒤 공통 거절 문구("이 부품 자료를 찾지 못했어요")로 끝났다. 되묻기는 단서를 더 얻는 수단이지 답의 관문이 아니다(조장 결정 11-17). 재현은 아래 항목(전체 코퍼스 1건)과 8010 기록.
+- 원인: (1) 회로 값이 없으면 찾기 조건이 비어 찾기를 아예 하지 않았다(`found = … if terms else []`). (2) 후보 0개는 실패 보고(`no_result`) → 재계획 → 거절 `not_found`로 가고, 거절 문구는 판정이 읽은 역할 · 건 조건을 쓰지 않았다. (3) 되묻기 답 `hot_test: "125"`는 기호(`TJ=`)가 없어 버려졌다.
+- 바꾼 것:
+  - `backend/judge/verdict.py` `original_search_conditions`: 찾기 조건이 비면 값이 빠진 필수 조건의 기준을 원래 부품의 같은 코드 값으로 대신한다(시험 조건 · `orig.*` · `default` · "A 또는 B" 조건 제외). 판정 함수는 그대로다.
+  - `backend/multi_agent/agents/judge.py`: 찾기에서 그 조건을 쓰고 판정 결과에 `terms_from_original`을 남긴다. `merge_reply`가 `temp` · `hot_test`의 숫자만 적은 답을 받는다(TA · TJ).
+  - `backend/multi_agent/messages.py` `empty_find_message` · `backend/multi_agent/build.py` 거절 노드: 후보 찾기 0개 거절에 읽은 역할 · 건 조건 · 다음에 줄 것을 보여 준다. 이유 코드 `not_found`와 실행 상태(거절)는 그대로다.
+  - `SPEC.md` 8.3(회로 값 없는 찾기 · 되묻기 답 읽기) · 거절 사유별 문구, 사전 등록 1건.
+- 확인 [실측]:
+  - `uv run pytest -q`: 3,023 통과 · 13 실패 · 203 건너뜀. 실패 13개는 모두 `tests/projects/test_schematic_render.py`(이 맥에 cairo · kicad-cli 없음, 수정 전과 같음). 새 시험 16개(판정 코드 2 · 판정 노드 11 · 답 글 2 · 거절 노드 1).
+  - 값이 없을 때 역할별 찾기 조건(가짜 원래 부품 행으로 23개 역할 계산): 18개 역할이 원래 부품 정격으로 찾는다. R13 · R14는 고정 조건(TRR), R04 · R15 · R18은 조건 없음(전과 같음).
+  - 8010(시험용 복제본, 실제 모델, 데모 코퍼스 42문서, `DEMO_MODE=1 DEMO_REPLAY=0`), Franzininho DIY D3(`1N4148`), 같은 질문 각 1회:
+    - 되묻기에 빈 답: 전에는 거절이었고 지금은 완료. 건 조건 `VRRM ≥ 100, IF_AV ≥ 0.15 (회로 값을 몰라 원래 부품의 정격을 기준으로 찾았어요)`, `1N4148` 동일품, 문서로 확인 안 됨 8개(`1N4448` · `1N914B` · `1N4148WH` · `1N4148WS` · `1N4148WSH` · `1N4148WTH` · `1N4448WS` · `1N914BWS`), 빠진 값 `v_reverse_max` · `i_max` 안내.
+    - 조장이 넣은 답(`i_max` 1 · `v_reverse_max` 12 · `hot_test` 125 · `vf_selects_source` 예): 거절 그대로(데모 코퍼스에 IF_AV ≥ 1.43 A 후보 없음)이고 문구가 `역할: R02 (근거 …)` · `사양 표에서 건 조건: VRRM ≥ 15, IF_AV ≥ 1.429` · 다시 물을 방법으로 바뀌었다.
+- 확인 못 한 것: 운영(전체 코퍼스)에서의 값 없는 찾기 답 · 걸리는 시간 · 비용은 재지 않았다. v3 50문항 재측정은 배포 뒤 한다(기대는 사전 등록). 실제 모델 확인은 각 1회라 흔들림은 모른다. 단일 그래프(D4)의 거절 문구는 그대로다. 답 글의 역할 줄은 전부터 역할 번호(`R02`)로 보인다(이번에 바꾸지 않음).
+
+## 2026-11-17 D3 대체 질문 거절 재현 1건(실제 모델, 커밋 없음)
+- 목적: 데모 코퍼스(42문서) 서버에서 "D3 지금 다른걸로 바꿀거 있어?"(Franzininho DIY, D3 `1N4148`)가 후보 0개 → 거절 `not_found`로 끝났다. 전체 코퍼스 DB에서도 같은지 본다.
+- 조건(실행 전 기록 14:25): 코드 `jeongun` `62f7464f`(임시 작업 트리 `.claude/worktrees/bug-d3-1117`), 멀티 그래프, `DEMO_MODE=0 DEMO_REPLAY=0 LLM_PROVIDER=openrouter EVAL_WEB=0`, 넷리스트 `data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net`, 대상 D3, 사용 조건 없음. 되묻기에는 `i_max` 1 · `v_reverse_max` 12 · `hot_test` 125 · `vf_selects_source` 예를 넣어 1번 재개한다.
+- 명령: 저장소 밖 일회성 스크립트로 평가 실행기의 `make_app(True)`를 불러 1문항을 넣고, 찾기 도구 호출(검색 조건 · 결과 수)을 찍는다. 결과 파일 · Langfuse 기록은 남기지 않는다.
+- 예산 · 중단 조건: 1문항, 재개 1번, 다시 실행 없음. 오류가 나면 그대로 멈춘다. LLM 비용은 몇 센트로 어림한다(재지 않음).
+- 결과 [실측 14:27, 1회]: 거절이 아니라 완료(`completed`)였다. 15.9초. 경로는 입력 읽기 → 기억 읽기 → 사실 확인 → 계획 → 판정 읽기 → 판정 → 모으기 → 답 정리 → 답 검사 → 끝(재계획 없음).
+  - 질문 종류 `candidate_find`, 읽은 역할 R02(역류 방지). 되물은 값은 `v_reverse_max` · `i_max` · `vf_selects_source` · `hot_test` 넷이고 정해 둔 답으로 1번 재개했다.
+  - 검색 조건: VRRM ≥ 15, IF_AV ≥ 1.4286(데모 코퍼스 서버와 같음). 찾기 4번: 분류 `switching-diode`로 2번은 0개, 분류를 뺀 2번은 4개(앞 3개 TSD2G · TSD2GH · TSD3G).
+  - 판정 4개, 보여 준 후보 0개(`4 candidates judged, 0 shown`, 빠진 값 `vf_test`). 답은 "조건을 모두 만족하는 부품을 찾지 못했어요"에 이어 문서로 확인 안 됨 후보(TSD2G 등)를 조건 표와 함께 보였다.
+  - 읽는 법: `i_max` 1(A)이면 IF_AV ≥ 1.43 A가 되어 원래 부품 1N4148과 같은 분류(소신호 스위칭)에는 맞는 품번이 없다. 전체 코퍼스는 분류를 넓혀 정류 다이오드 4개를 찾았고, 데모 코퍼스(42문서)는 넓혀도 0개라 거절로 끝난 것으로 본다 [추정].
+- 확인 못 한 것: 1회 실행이라 흔들림은 모른다. 코퍼스 DB는 본 클론 환경 설정이 가리키는 원격 DB였다(문서 1,360 · 청크 51,967, 읽기만 함). 웹 근거는 껐다(`EVAL_WEB=0`). 비용은 재지 않았다.
+
+## 2026-11-17 팀원 버그 수정 14건 합치기(`1f31913e`) · SPEC 반영
+- 목적: 심태현 9건(BUG-001 ~ 004 · 006 ~ 010) · 오세창 5건(LOCAL-001 ~ 005)의 로컬 수정을 `jeongun`에 합치고, 바뀐 동작을 `SPEC.md`에 적는다. 두 사람 모두 기준은 `3e68d005`이고, 그 뒤 `main`은 해당 파일을 바꾸지 않았다.
+- 받은 것: 오세창 `sojafit-ui-bugfixes.patch`(12파일, +711 −52, sha256 `e5e2b949…`), 심태현 고친 파일 26개(패치가 아니라 파일 통째, 그중 16개가 윈도우 줄바꿈).
+- 합친 방법: `main` `7e1e2805`의 임시 작업 트리에서 세창 패치를 먼저 적용하고(깨끗이 붙음), 태현 파일은 줄바꿈을 LF로 바꿔 올렸다. 둘 다 고친 `frontend/src/Workbench.tsx`는 3방향 병합으로 자동으로 합쳐졌다. 충돌은 시험 파일 2개: `frontend/tests/account.spec.ts`(둘 다 끝에 시험을 덧붙여 양쪽을 모두 살림), `frontend/tests/demo.spec.ts`(같은 버튼 고르기를 세창 `.last()` · 태현 `.first()`로 달리 고쳐 세창 쪽을 택함). 변경 35개 파일(수정 34 + 새 `db/036_thread_continuations.sql`)을 `jeongun` 작업 트리로 옮겼고, 커밋 `1f31913e`에 그 35개가 그대로 들어갔다.
+- 합친 뒤 고친 것 3건(`1f31913e`에 포함): `docs/specs/d5-frontend-service.md`의 개인 PC 경로 구절 삭제, `backend/projects/repository.py` `import_netlist` 설명 주석을 새 동작에 맞춤, `tests/multi_agent/test_judge.py` 파일 끝 줄바꿈.
+- `SPEC.md` 반영 6곳(이 기록과 같은 변경): 4절 API 표의 `POST /api/projects/{id}/threads` 선택 쿼리 `circuit_version`과 `GET /api/threads/{id}`의 `previous_thread_id`, 8.3의 찾기 검색 조건 · 조건 모름, 8.5 삭제 범위의 `thread_continuations`, 8.8의 대화 중 회로 첨부 · 과거 회로 버전에서 검토 시작. 화면 수용 기준 AC-11 ~ AC-14는 D5 화면 작업서에 이미 있어 `SPEC.md`에는 넣지 않았다.
+- 실행한 명령 · 결과 [실측, macOS 호스트, 키 없이, 커밋 전 합본 기준]:
+  - `cd frontend && npm ci && npm test`: 44 통과 · 0 실패. `npm run format:check` 통과. `npm run build` 통과. `npx playwright test --list`: 21개가 오류 없이 읽힘(실행은 안 함).
+  - `uv run pytest -q tests/judge tests/multi_agent tests/conversations tests/projects tests/api tests/repo tests/db`: 1,970 통과 · 174 건너뜀 · 13 실패. 실패 13개는 모두 `tests/projects/test_schematic_render.py`이고, 고치기 전 코드에서도 같은 13개가 실패한다(맥에 회로도 그리기 도구가 없음).
+  - `pytest tests/repo` 5 통과, `evals/runners/freeze.py --check` "동결 이후 바뀐 파일: 없음", `git diff --check` 통과.
+  - gitleaks(CI와 같은 이미지, 저장소 `.gitleaks.toml`)를 바뀐 35개 파일에만: 유출 0건.
+  - 랜딩까지 합친 상태의 전체 시험 · 스모크 · 브라우저 시험 결과는 커밋 `2984d86b`의 메시지에 있다.
+- BUG-008 재현 [실측]: 고치기 전 코드(`53742fb2`, `main` `7e1e2805`와 판단 로직 차이 없음)에서 `data/circuits/collected/samples/attiny85_dev/converted/circuit.net`의 D1(값 `3.6 Zener`)에 질문 4개를 멀티 그래프로 넣었다(`DEMO_MODE=0 DEMO_REPLAY=0 LLM_PROVIDER=openrouter EVAL_WEB=0`, 인터럽트는 빈 답으로 1번 재개). 역할 질문은 답했고, 대체 질문 3개(조건 없음 · VZ 3.42 ~ 3.78 V와 5 mA를 준 것 · "3.6 V 제너 후보")는 모두 `candidate_find` → 후보 0개(`no_result`) → 거절 `not_found`였다. 원인은 `search_conditions`가 필수 조건 중 `orig.*`에 기대지 않는 것만 검색 조건으로 써서 R04는 조건이 0개가 되고, 조건이 없으면 찾기를 건너뛰는 것이다. 모델 호출 없이 23개 역할을 돌려 R04만 해당함을 확인했다. 합친 코드에서는 같은 값에서 검색 조건 3개(VZ 최소 · 최대, PD ≥ 0.027)가 나온다. 범위를 주지 않으면 여전히 0개다.
+  - [주의] 이 재현은 실제 모델 호출인데 시작 전 기록 없이 돌렸다(팀 규칙 10의 예외). 4문항, 문항당 4.3 ~ 6.7초. 비용은 재지 않았다.
+- 확인 못 한 것: 실제 모델 모드에서 합친 코드의 BUG-008 재확인, 운영 · 로컬 DB에 `db/036` 적용, `Workbench.tsx` 전체 정독(두 사람 합쳐 약 400줄 변경). 수신 끊김 복구의 상한(태현 문서: 최대 5회 · 합계 15초)은 코드에서 숫자를 확인하지 못해 `SPEC.md`에 적지 않았다.
+- 다음 할 일: 배포 전에 DB에 `db/036`을 먼저 적용한다(대화 상세 조회가 `thread_continuations`를 늘 조인하므로, 표가 없으면 대화 열기가 실패한다). 판정 코드 2곳(`verdict.py` · `judge.py`)이 바뀌었으니 v3를 다시 잰다.
+
+## 2026-11-17 견적서 문서와 PDF 다운로드(커밋 없음)
+- 목적: 승인한 후보의 견적을 수량과 함께 문서로 내려받게 한다. 지금까지는 가격 카드와 "견적 목록"의 품번 · 수량만 있었다(조장 요청).
+- 바꾼 파일: `frontend/src/Approved.tsx`(`CaseQuote`: `/approved/{사례}/quote/{견적}` A4 한 장, "PDF 다운로드"), `frontend/src/report.ts`(`quoteFields`), `frontend/src/App.tsx`(주소 연결), `frontend/src/Candidate.tsx`(승인 뒤 "몇 개가 필요한가요?" 문구, 저장된 견적 줄의 "견적서 보기"), `frontend/src/Workbench.tsx`("견적 목록"의 "견적서 보기"), `frontend/src/types.ts` · `styles.css`, `frontend/package.json` · `package-lock.json`(`jspdf` 4.2.1 · `html2canvas` 1.4.1), `SPEC.md` 8.4절, `frontend/src/SRC.md` · `frontend/tests/TESTS.md`.
+- 설계: 서버 · DB는 바꾸지 않았다. 문서는 `GET /api/approved-cases/{id}`와 열 때 한 번 부르는 `GET /api/prices`만 쓰고, 가격 · 재고는 저장하지 않는다(ADR 0009). PDF는 브라우저에서 화면을 그림으로 떠 A4 한 쪽에 넣는다(글자 선택은 안 됨). 두 라이브러리는 단추를 누를 때만 불러와 첫 화면 묶음은 555 → 563 kB다.
+- 실행한 명령과 결과 [실측]: `cd frontend && npm test` 45 통과, `npm run format:check` · `npm run build` 통과. 키 없는 compose(8010, `DEMO_MODE=1 DEMO_REPLAY=1`)에서 `SOJAFIT_BASE_URL=http://localhost:8010 npx playwright test demo.spec.ts -g "데모 로그인"` 통과(승인 → 수량 100 → 저장 → 견적 목록의 "견적서 보기" → 문서에 `SF-Q-` 번호 · "100개" · "조회 불가" → `견적서-SF-Q-n-n.pdf` 다운로드). 내려받은 PDF는 A4 한 쪽, 약 200 kB(압축 전 6.5 MB).
+- 확인 못 한 것: 실제 Mouser 값이 들어온 견적서는 응답을 흉내 낸 화면으로만 봤다(데모 모드는 Mouser를 부르지 않음). 운영(`DEMO_MODE=0`, `MOUSER_API_KEY` 등록)에서 실제 값으로 연 견적서와 PDF는 배포 뒤 확인해야 한다. 좁은 화면(390px)의 문서 모양은 보지 않았다.
+- 다음 할 일: 배포 뒤 운영에서 견적서 1건을 열어 단가 · 금액 · 재고 · 조회 시각이 나오는지 확인한다.
+
+## 2026-11-17 웹 근거 파일명 `%20` 풀기(v3-16 `wrong_citation`)
+- 목적: 동결 v3-16이 정답과 같은 PDF · 같은 쪽을 인용하고도 `wrong_citation`으로 떨어졌다. 원인은 웹 근거 카드(`W1`…)의 `file` · `title`이 URL 파일명을 인코딩된 채(`UF4001%20SERIES_P2104.pdf`) 쓰는 것이다. 채점기(`evals/runners/score_answer.py`)는 인용한 카드의 `(file, page)`가 정답 위치 집합에 글자 그대로 있는지 보는데, 코퍼스 파일명은 공백(`UF4001 SERIES_P2104.pdf`)이다.
+- 바꾼 파일(`6b83e55d`): `backend/services/exa.py`(`_search_evidence`가 카드 파일명에 `unquote`를 씀. `source_url`은 인코딩된 그대로), `tests/services/test_exa_parallel.py`(`%20` 파일명 시험 1개 추가). SPEC · 동결 평가셋 · 채점기는 바꾸지 않았다.
+- 실행한 명령 · 결과 [실측, 임시 작업 트리 · 키와 네트워크 없이 `DEMO_MODE=1`]:
+  - 새 시험 `uv run --frozen pytest tests/services/test_exa_parallel.py -k percent_encoded -q`: `unquote`를 뺀 코드에서 1 실패(`('UF4001%20SERIES_P2104.pdf', …) != ('UF4001 SERIES_P2104.pdf', …)`), 넣은 코드에서 1 통과.
+  - 관련 시험 `uv run --frozen pytest tests/services/test_exa_parallel.py tests/services/test_exa_prefetch.py tests/services/test_datasheet_rows.py tests/multi_agent -k "exa or web or official or docs or datasheet" -q`: 269 통과 · 405 제외(새 시험 1개 포함. 고치기 전에는 268 통과).
+  - `uv run --frozen pytest tests/repo -q` 5 통과, `uv run --frozen python evals/runners/freeze.py --check` "동결 이후 바뀐 파일: 없음".
+  - 전체 `uv run --frozen pytest -q -p no:cacheprovider`(macOS 호스트): 2,986 통과 · 15 실패 · 202 건너뜀(70.8초). 실패 15개는 시험 이름이 `evals/results/d12/checks/pytest_full_macos_after_hang_fix.txt`(`83960166`, 15 실패)와 같다. 13개는 `tests/projects/test_schematic_render.py`(그중 11개는 호스트에서 cairo 라이브러리를 찾지 못함), 2개(`test_external_schematic.py` · `test_official_schematic.py`)는 로그 레코드의 파일 경로에 작업 트리 위치 `/private/tmp/…`의 `private`이 들어가 떨어졌다.
+- v3-16 1문항 확인 [실측, 다른 임시 작업 트리에서 잰 값. 원시 결과 파일은 임시 폴더라 저장소에 없다]: 코드 main `7e1e2805`(`53742fb2`와 같은 트리), `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=0`, 로컬 코퍼스 DB, 3회씩.
+  - 고치기 전: 3/3 실패 `wrong_citation`, 20.7 · 15.7 · 12.4초, 인용 `W1` · `W4`, Exa 첫 파일 `UF4001%20SERIES_P2104.pdf` 2쪽.
+  - 고친 뒤: 3/3 통과 `cited_gold`, 16.6 · 10.1 · 11.8초, 답 글은 같음, Exa 첫 파일 `UF4001 SERIES_P2104.pdf` 2쪽.
+- 확인 못 한 것: v3 50문항 전체(웹 켠 조건)의 새 값과 다른 문항에 준 영향, Linux 전체 pytest, 배포 환경. 로컬 `jeongun`에만 있고 푸시 · PR은 하지 않았다.
+- 다음 할 일: 50문항을 다시 잴 때는 `evals/guides/preregister.md`에 먼저 등록한다.
+
+## 2026-11-17 공통 로고·파비콘 교체(커밋 없음)
+- 목적: 특정 부품 기호 대신 회로 속 자리와 검토할 후보를 나타내는 로고를 적용한다. 사용자 요청에 따라 다른 작업이 바꾼 Landing.tsx·styles.css를 수정하지 않고, 로그인 뒤 문구·회로 도식은 조사만 한다.
+- 적용안 A: 마주 보는 두 모서리 + 가운데 후보 사각형. 청록 #0d7480의 단색 면, viewBox 28×28. B는 빈 자리와 조각, C는 각진 S. 저장소 밖 `../logo-options/option-a.svg`, `option-b.svg`, `option-c.svg`에 저장했다. A는 적용 파비콘과 같은 파일 내용이다.
+- 바꾼 파일: `frontend/src/ui.tsx` Brand의 SVG만 교체(회로 도식·앱 문구 유지), `frontend/public/assets/sojafit-icon.svg`, `frontend/index.html`의 파비콘 주소에 `?v=fit-1`, `frontend/public/assets/ASSETS.md` 설명, `SOJAFIT.md` 아이콘 설명 한 줄, `SPEC.md` 공통 로고 계약, 이 기록. 새 npm 의존성 없음.
+- 확인 [실측]: `rsvg-convert`로 세 시안을 16px·28px와 확대 크기로 렌더링하고 비교판 PNG를 열어 봤다. Python XML 파싱 3개 정상, Brand·파비콘·A의 도형 및 빌드 산출물 아이콘 일치, 빌드 HTML의 파비콘 연결 확인. `shasum -a 256 -c`로 Landing.tsx·styles.css 모두 작업 전과 같음을 확인했다.
+- 실행한 명령과 결과 [실측]: `cd frontend && npm test && npm run format:check && npm run build` — 43 통과/0 실패, Prettier 통과, 타입 검사·빌드 통과. 500 kB 초과 청크 경고(index JS 약 548 kB)는 남아 있다. `git diff --check` 통과. `grep -rn "M2 14h6m12 0h6" frontend` 출력 없음(종료 코드 1, node_modules·dist 포함).
+- 앱에서 발견했지만 바꾸지 않은 곳: `ui.tsx:461` 연결 개념도의 삼각형·막대, `ui.tsx:516` 선택 안내; `Conversations.tsx:366` "지금 지원: 다이오드"; `Account.tsx:188`·`:192` 지원/미지원; `Workbench.tsx:99`·`:100`·`:103` 대상 목록·대상 없음; `Projects.tsx:88` 프로젝트 이름 예시; `circuit.ts:48`·`:59`·`:60` 대상 제외 이유·고르기 안내; `inputLabels.ts:37`·`:40`·`:50`·`:56`·`:60`·`:64` 조건 입력 이름·질문; `libraryQuery.ts:36`부터 `:47`까지 실제 데이터시트 분류 이름. 마지막 두 종류는 서비스 전체 소개가 아니라 개별 조건·분류 이름이다.
+- 별도 발견: `frontend/index.html:1` 검색 설명에도 "다이오드 대체 후보"가 남는다. 이번 작업은 그 파일의 파비콘 링크만 바꿨다. 랜딩 예시의 회로 도식과 정적 원본 회로 이미지는 브랜드 로고가 아니므로 유지했다.
+- 확인 못 한 것: 브라우저 탭·앱 화면에서의 실제 렌더와 캐시 갱신은 확인하지 않았다(앞선 작업의 브라우저 실행 제한). 새 로고의 SVG 래스터 렌더는 확인했다. 전체 E2E·평가셋 재측정은 실행하지 않았다. 커밋·푸시 없음.
+
+## 2026-11-17 랜딩 전체 재설계(커밋 없음)
+- 목적: 승인된 첫 화면 방향을 전체 페이지로 확장하고, 특정 부품 종류로 서비스 범위를 좁히는 문구를 없앤다. 사용자 후속 지시를 따른다. 로그인 뒤 앱·판정 코드는 바꾸지 않는다.
+- 바꾼 파일: `frontend/src/Landing.tsx`(전체 문구·예시·미디어를 `LANDING`에 모음, 아래 구간 전면 재작성, 별도 영상 자리, 새 푸터), `frontend/src/styles.css`(랜딩 전체 구성·모바일·모션, 옛 구간 CSS 제거), `SPEC.md` 2절(공개 랜딩 계약·범위 한정 문장 제거), 이 기록.
+- 위에서 아래로: 탐색·히어로 검토 장면 → 독립 제품 영상(`#overview`) → 회로와 사용 조건(`#workflow`) → 데이터시트 근거(`#evidence`) → 사람의 승인·기록(`#approval`) → 큰 워드마크와 고지 링크 푸터. 기존 기준식·판정 5종 장문 구간은 제거했다. 탐색은 workflow/evidence/approval로 연결한다. 푸터는 기존 LegalModal과 고지 목록을 재사용하며 로그인·다른 화면의 Footer는 바꾸지 않는다.
+- 디자인: design-taste-frontend의 The product performs(seed 420126817) 방향을 유지. 첫 화면의 기록 v3-01 장면은 항상 보인다. 별도 영상, 회로 연결 구성도, 기존 실제 화면 PNG 두 장, 보고서 구성 예시를 서로 다른 크기로 배치했다. 새 npm 의존성·외부 사진 없음. 큰 제목 스타일은 랜딩 main 내부로 한정해 고지 문서 창에 적용되지 않게 했다.
+- 데이터 교체: `LANDING`에 전체 문구·탐색·링크·섹션 내용·푸터 내용을 모음. `LANDING.example`에 기록된 품번·수치·판정·쪽·표·행, `LANDING.media`에 미디어 경로·대체 글·캡션. 고지 제목·주소와 문의 메일은 공통 정본을 참조한다. 이미지/GIF와 mp4·webm·ogv를 경로 확장자로 구분하고 영상은 사용자가 재생한다. 경로가 없거나 로드에 실패하면 해당 구간의 기본 구성도/안내를 유지한다. media.hero를 채워도 ReviewScene은 사라지지 않는다.
+- 미디어 자리/권장 촬영: `media.hero` = 업로드→질문→판정→근거, 1920×1080, 12~18초; `media.circuit` = 넷리스트·대상 부품·연결 확인, 1200×1200, PNG 또는 6~10초; `media.conditions` = 조건 행→인용 근거, 1200×1100, PNG 또는 5~8초; `media.missing` = 추가 조건 입력→재개, 1600×900, PNG 또는 5~8초; `media.report` = 승인→견적·보고서, 1200×1400, PNG 또는 8~12초. 현재 conditions/missing은 기존 실제 제품 PNG이며 나머지는 코드 구성 예시다.
+- 실행한 명령과 결과 [실측]: `cd frontend && npm test && npm run format:check && npm run build` 최종 실행: 단위 시험 43 통과/0 실패, Prettier 통과, 타입 검사·Vite 빌드 통과. 500 kB 초과 청크 경고(index JS 약 547 kB)는 남아 있다. `git diff --check` 통과. 디자인 소스 lint(`Landing.tsx`) 0 FAIL/0 WARN.
+- 범위 문구 확인 [실측]: `grep -n "다이오드" frontend/src/Landing.tsx` 출력 없음(종료 코드 1). SPEC에 앞서 추가했던 지원 범위 한정 문장도 제거했다. 모든 부품이 지원된다는 주장은 추가하지 않았다.
+- 정적 구조 검사 [실측]: Node assert로 시작 링크 이름·`/login`, 탐색 앵커 3개, 미디어 5곳, 참조 PNG 2개의 파일 시그니처, 히어로 내 ReviewScene이 LandingMedia 밖에 있음, 로그인 뒤 앱의 `:root`가 HEAD와 같음을 확인. 처음 시도한 TypeScript AST 검사는 설치 버전에 ScriptTarget API가 없어 실패했고, 직접 작성한 설정 객체와 소스 구조를 읽는 정적 검사로 바꿔 통과했다. 임시 검사·로그는 /tmp에만 둔다.
+- 확인 못 한 것: 앞선 실행에서 inspect.mjs·Playwright의 Chrome이 시작 직후 종료됐고 CUA는 browser access host unavailable이었다. 이번 후속 작업은 사용자 허용대로 브라우저 검사를 건너뛰었다. 실제 스크린샷·390px 가로 스크롤·끝까지 스크롤·클릭/키보드·동작 줄이기·미디어 실패 대체 화면은 미확인이다. 화면 기반 디자인 점수는 매기지 않는다. Docker·백엔드가 필요한 demo.spec.ts 전체 E2E와 평가셋 재측정은 실행하지 않았다.
+- 다음 할 일: 팀 환경에서 1440/768/390px 화면과 페이지 끝까지 스크롤을 확인하고 기존 E2E를 실행한다. 실제 미디어 경로를 교체한다. 커밋·푸시 없음.
+- 문구 다듬기(같은 날, 커밋 없음): 어색한 문장 · 끊긴 문장을 고치고 겹치는 문장 3개(큰 글자 "쪽. 표. 행.", 연결 그림 설명, 승인 구간 끝 문장)를 뺐다. 첫 화면 회로 그림의 부품 기호를 이름표가 붙은 상자로 바꿨다. 문단에 `text-wrap: pretty`를 줬다. [실측] `npm test` 43 통과, `npm run format:check` · `npm run build` 통과, 1280px 전체 화면을 헤드리스 크롬으로 찍어 확인. Playwright E2E는 돌리지 않았다.
+
 ## 2026-11-17 RAGAS 채점기 근거 고침
 - 목적: 11-12 `d9-langfuse-capture`의 Faithfulness가 판정 · 찾기 문항에서 0.0~0.43(평균 0.14 · 0.13), 문서 답 4문항에서 0.6~0.83이었다. 원인은 `contexts_from_state`가 실제 판정 모양(`results[].checks[]`, `backend/judge/verdict.py` `Judgement`)에 없는 `conditions` 칸을 읽어, 답 표의 후보 값이 RAGAS 근거에 하나도 들어가지 않은 것이다. 거절 답(v3-41)도 근거가 비어 있지 않아 0점으로 채점됐다.
 - 바꾼 파일: `evals/runners/score_ragas.py`(답에 나간 후보(`score_answer.judgement_parts`)마다 위치 · 후보 값 · 단위 · 시험 조건 · 판정 기준을 근거 하나로 묶어 넣음, `score_answer.is_refusal_response`가 거절이면 건너뜀), `tests/evals/test_score_ragas.py`(실제 판정 모양으로 고침, 거절 건너뜀 시험 추가), `evals/runners/RUNNERS.md` 한 줄.

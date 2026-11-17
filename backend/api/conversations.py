@@ -138,6 +138,7 @@ class SavedRun(BaseModel):
 
 class ThreadDetail(Thread):
     circuit_version: int
+    previous_thread_id: UUID | None = None
     title: str
     target_ref: str | None
     target_locked: bool
@@ -229,8 +230,9 @@ def thread_detail(thread_id: UUID, response: Response, limit: int = Query(50, ge
 
 
 @router.post('/projects/{project_id}/threads', status_code=201, response_model=Thread, dependencies=[Depends(auth.check_origin)])
-def create_thread(project_id: int, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
-    return {'id': repo.create_thread(user_id, project_id), 'project_id': project_id}
+def create_thread(project_id: int, circuit_version: int | None = Query(None, ge=0, le=9223372036854775807),
+                  user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    return {'id': repo.create_thread(user_id, project_id, circuit_version), 'project_id': project_id}
 
 
 @router.delete('/threads/{thread_id}', status_code=204, dependencies=[Depends(auth.check_origin)])

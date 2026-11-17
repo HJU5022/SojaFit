@@ -4,7 +4,7 @@
  * 출처: SPEC.md 3절(화면 표기), backend/judge/conditions.py(기준식 문법).
  */
 import { inputLabel, INPUT_LABELS } from './inputLabels.ts';
-import type { Candidate, PriceEstimate, Result } from './types.ts';
+import type { Candidate, Citation, PriceEstimate, Result } from './types.ts';
 
 /** 기준식의 kV · kI 여유 계수. backend/judge/conditions.py의 MARGINS와 같은 값이다. */
 const MARGIN_LABELS: Record<string, string> = {
@@ -123,6 +123,38 @@ export function safeLink(url?: string | null): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * 근거 등급(SPEC 2절 근거 등급 표)의 이름과 쓰임. 근거 줄의 배지는 짧게(`short`), 설명 팝업은 이름 · 쓰임까지 보인다.
+ */
+export const EVIDENCE_GRADES = [
+  { grade: 1, short: '1등급', name: '등록된 데이터시트', use: '판정 근거로 씁니다.' },
+  {
+    grade: 2,
+    short: '2등급',
+    name: '제조사 공식 문서',
+    use: '웹에서 받아 검증한 표 행입니다. 판정 근거로 씁니다.',
+  },
+  {
+    grade: 3,
+    short: '3등급',
+    name: '미검증 참고 정보',
+    use: '참고용 링크입니다. 판정 근거로 쓰지 않습니다.',
+  },
+] as const;
+export type EvidenceGrade = (typeof EVIDENCE_GRADES)[number];
+/**
+ * 근거 한 건의 등급. 서버가 등급을 붙인 웹 근거는 그 등급을, 웹 출처 표시가 없는 근거는 등록된 데이터시트(1등급)를 돌려준다.
+ * [주의] 웹 근거인데 등급이 없으면(서버가 검사하지 못한 옛 기록) 등급을 지어내지 않고 null을 돌려준다.
+ */
+export function evidenceGrade(
+  cite: Pick<Citation, 'evidence_grade' | 'source_type'>,
+): EvidenceGrade | null {
+  if (cite.evidence_grade === 3) return EVIDENCE_GRADES[2];
+  if (cite.evidence_grade === 2) return EVIDENCE_GRADES[1];
+  if (cite.source_type) return null;
+  return EVIDENCE_GRADES[0];
 }
 
 /** react-markdown의 urlTransform용: http(s)가 아닌 주소는 빈 문자열(링크 없음)로 바꾼다. */

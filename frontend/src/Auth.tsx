@@ -29,8 +29,11 @@ export function Auth({ path, onLogin }: { path: string; onLogin: () => Promise<v
   useEffect(() => {
     if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
   }, []);
-  const signup = path.startsWith('/signup') || path === '/verify-email',
-    reset = path.startsWith('/password-reset') || path === '/reset-password',
+  const signup = path === '/signup' || path === '/signup/confirm' || path === '/verify-email',
+    reset =
+      path === '/password-reset' ||
+      path === '/password-reset/confirm' ||
+      path === '/reset-password',
     confirm = !!token || path.endsWith('/confirm');
   const [error, setError] = useState<Error | string | null>(null),
     [busy, setBusy] = useState(false),

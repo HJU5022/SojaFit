@@ -1,5 +1,5 @@
-/** 인쇄용 대체 검토 보고서의 ECO 칸 값을 저장한 사례 값만으로 만드는 순수 함수(#56). 없는 값은 null(손으로 적는 빈칸)이고 지어 넣지 않는다. */
-import type { ApprovedCaseDetail } from './types.ts';
+/** 인쇄용 대체 검토 보고서의 ECO 칸 값과 견적서 문서의 값을 저장한 사례 값만으로 만드는 순수 함수(#56). 없는 값은 null(손으로 적는 빈칸)이고 지어 넣지 않는다. */
+import type { ApprovedCaseDetail, Prices, Quote } from './types.ts';
 
 /**
  * - role: 회로 역할 표기("RECT 정류"), 모르면 null. verdict: 판정 이름(`verdicts[d.verdict]`).
@@ -30,5 +30,33 @@ export function ecoFields(d: ApprovedCaseDetail, role: string | null, verdict: s
       null,
       null,
     ],
+  };
+}
+
+/**
+ * 견적서 문서의 값(SPEC 8.4 "견적서 문서"). 가격은 문서를 열 때 조회한 응답만 쓰고 저장하지 않는다(ADR 0009).
+ * - estimate가 null이면 단가 · 금액은 "조회 불가"이고, 조회는 됐는데 못 쓴 이유가 unavailable에 있다.
+ * - prices가 null이면 아직 조회 전이거나 요청이 실패한 것이라 unavailable도 null이다(화면이 따로 알린다).
+ */
+export function quoteFields(d: ApprovedCaseDetail, quote: Quote, prices: Prices | null) {
+  // [왜] Mouser는 비슷한 품번을 여럿 돌려줄 수 있다. 서버가 이 수량의 금액을 계산해 준(estimate) 부품만 쓴다
+  const part = prices?.available ? (prices.parts.find((p) => p.estimate) ?? null) : null;
+  let unavailable: string | null = null;
+  if (prices && !prices.available) unavailable = prices.message;
+  else if (prices && !part) unavailable = '이 품번과 수량에 맞는 가격을 확인하지 못했습니다.';
+  return {
+    number: `SF-Q-${d.id}-${quote.id}`,
+    file: `견적서-SF-Q-${d.id}-${quote.id}.pdf`,
+    ref: d.target_ref,
+    original: d.target_value,
+    part: quote.part_number,
+    quantity: quote.quantity,
+    manufacturer: part?.manufacturer ?? null,
+    availability: part?.availability ?? null,
+    url: part?.product_url ?? null,
+    estimate: part?.estimate ?? null,
+    source: prices?.available ? prices.source : null,
+    fetchedAt: prices?.available ? prices.fetched_at : null,
+    unavailable,
   };
 }

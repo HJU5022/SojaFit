@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" fill="none">
-  <title>SojaFit</title>
-  <path d="M2 14h6m12 0h6M8 6v16l12-8L8 6Zm12 0v16" stroke="#0d7480" stroke-width="2" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" fill="#0d7480">
+  <title>SojaFit — 자리와 후보</title>
+  <desc>마주 보는 두 모서리가 회로 속 자리를, 가운데 사각형이 검토할 후보를 나타냅니다.</desc>
+  <path d="M3 3h14v5H8v9H3Z"/>
+  <path d="M25 25H11v-5h9v-9h5Z"/>
+  <rect x="11" y="11" width="6" height="6"/>
 </svg>

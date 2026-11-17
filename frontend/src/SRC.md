@@ -1,17 +1,20 @@
 # src
 
 ## 역할
+
 - 넣는 것: 화면 소스(React·TypeScript·CSS).
 - 넣지 않는 것: 판정·검색·인증 로직(`backend/`), 빌드 산출물, 비밀값, 단위 시험(`../tests/`).
 - 담당: 서비스·운영.
 
 ## 경계
+
 - 화면은 서버가 보낸 DTO만 그립니다. 숫자 비교와 판정은 `backend/judge/`에서만 합니다.
 - 서버와의 통신은 `api.ts`의 `api()`와 `streamRun()` 둘뿐입니다. 쿠키 세션을 쓰고 자동 재전송을 하지 않습니다. 401은 `session-expired` 이벤트로 알리고 `App.tsx`가 화면 상태와 `sessionStorage`를 비웁니다.
 - 경로는 라우터 라이브러리 없이 `ui.tsx`의 `navigate()` · `useLocation()`으로 다룹니다. 경로 표는 `App.tsx` 한 곳입니다.
 - 스타일은 `styles.css` 한 파일의 일반 CSS입니다.
 
 ## 파일
+
 - `SRC.md` — 이 폴더 설명.
 - `main.tsx` — React 진입점·글꼴·스타일.
 - `App.tsx` — 경로 표와 세션 경계. 공개 경로(`/` · `/login` · `/signup` · `/password-reset`, 하단 고지 문서 `/terms` · `/privacy` · `/ai-notice` · `/licenses`, 메일 링크용 `/verify-email` · `/reset-password`)와 로그인 뒤 경로(`/app`: 인자 없으면 새 대화 화면, `?project=&thread=`는 작업대 · `/settings` · `/approved` · `/library` · `/admin` · `/admin/users`, 옛 `/projects`는 `/app`으로 바꿈). `/approved/{id}/report`(인쇄용 보고서)만 사이드바 없이 그린다(#44). 사이드바 맨 위는 "새 대화"이고 프로젝트·대화 나무는 `Conversations.tsx`가 그린다. 사이드바 오른쪽 경계선으로 너비를 바꾼다. 사이드바 맨 아래는 계정 줄 하나이고, 누르면 위로 여는 계정 메뉴(`RowMenu`: 내 설정 · 사용자 관리(관리자) · 고지 문서 4개(`LegalModal`) · 문의 · 로그아웃, #43)가 열린다.
@@ -20,14 +23,14 @@
 - `stream.ts` — SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트).
 - `circuit.ts` — 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 회로 없는 대화의 넷리스트 요청 답 글자(`NEEDS_CIRCUIT`, 서버 `NEED_NETLIST`와 같음), 질문으로 지은 프로젝트 이름(`projectNameFromQuestion`), 업로드 409 중복 목록으로 할 일 정하기(`duplicateAction`: 같은 넷리스트면 그 프로젝트로 계속, 이름만 겹치면 새로 만들기, #48), 첨부 파일 종류(`acceptsFile`: 받는 확장자인지, `isSchematicFile`: `.kicad_sch` 회로도인지, #52). `unsupportedPartReason`은 LED·표시기·다이오드가 아닌 부품을 판정 대상에서 빼고 서버(`_require_supported_target`)와 같은 문구로 이유를 보인다(서버가 최종 판단). 회로 패널은 고르라는 말 없는 사실 한 줄 `unsupportedPartNote`("이 회로의 D2(LED)는 …", #50)를 쓴다. 부품 점검표(#68)의 거르기 `filterParts`(종류 · 판정 지원만)와 "이 부품 검토" 질문 `reviewQuestion`(ref 받침으로 을/를). 시험 `../tests/circuit.test.ts`.
 - `approval.ts` — 한 검토 결과의 승인 목록에서 후보 하나의 승인 상태(이 후보 승인, 다른 후보 승인)를 가르는 순수 함수. 서버는 사례가 남은 활성 승인만 돌려주므로 사례를 지우면 다시 승인할 수 있다. 시험 `../tests/approval.test.ts`.
-- `report.ts` — 인쇄용 보고서 ECO 칸 값(`ecoFields`: 변경 내용 문장 · 변경 영향 줄 · 영향받는 품목 줄)을 저장한 사례 값만으로 만드는 순수 함수(#56). 없는 값은 null(손으로 적는 빈칸)이고 지어 넣지 않는다. `Approved.tsx` `CaseReport`가 쓴다. 시험 `../tests/report.test.ts`.
+- `report.ts` — 인쇄용 보고서 ECO 칸 값(`ecoFields`: 변경 내용 문장 · 변경 영향 줄 · 영향받는 품목 줄)을 저장한 사례 값만으로 만드는 순수 함수(#56). 없는 값은 null(손으로 적는 빈칸)이고 지어 넣지 않는다. `Approved.tsx` `CaseReport`가 쓴다. 시험 `../tests/report.test.ts`. 견적서 문서의 값(`quoteFields`: 견적 번호 · 파일 이름 · 품목 · 조회한 단가와 금액, 못 가져오면 사유)도 여기서 만든다(SPEC 8.4 "견적서 문서").
 - `display.ts` — 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수와 입력창 보내기 키 판정(`isSendKey`: Enter만, Shift+Enter · 한글 조합 중 제외, #38), 진행 단계 시간(`addStep` · `stepMs` · `seconds`: status 도착 시각으로 단계마다 재고 재계획은 이어 더함, #42): 긴 소수는 유효숫자 3자리로(받은 값은 마우스를 올리면 보임), 판정 기준식(`v_in_max * kV`)은 한국어로, 답변 속 등록된 말뭉치 인용 번호(`[79]`)는 숨기고, 링크는 http(s)만, 수량별 가격 조회 경로(`/prices?parts=…&quantity=…`)와 예상 금액 줄(적용 구간·단가·금액, 계산을 보류한 경우 안내), 답의 판정 후보 모으기(`replyCandidates`, #55). 시험 `../tests/display.test.ts`.
 - `inputLabels.ts` — 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내(`inputPlaceholder`). 이름과 뜻은 `backend/judge/rules/roles.yaml` 머리말과 짝이다.
-- `ui.tsx` — 경로 이동(`navigate` · `useLocation`)·자원 훅(`useResource`)·공통 조각(로고·불러오는 중·오류·빈 상태·판정 배지·면책 문구·창·⋯ 메뉴 `RowMenu`(사이드바 대화 줄·작업대 상단·입력창 + 단추·사이드바 계정 줄이 같이 씀, Esc·바깥 클릭으로 닫힘, `up`이면 위로 펼침, 항목별 구분선 `sep` · 굵게 `strong`)·입력창 넷리스트 · 회로도 첨부 `useNetlistAttach`(+ 메뉴의 넷리스트·회로도 첨부, 영역 전체 끌어 놓기와 덮개, 받는 확장자 밖이면 짧은 알림, #40)·입력창 안 첨부 카드 `AttachmentCard`(아이콘 · 말줄임한 이름 · 종류 "KiCad 넷리스트"/"KiCad 회로도", 올리거나 초점이 가면 보이는 ×, #49)·근거 출처)·세로 경계선 너비 조절(`ResizeHandle`, 사이드바·오른쪽 창·작업대 회로 패널, CSS 변수와 localStorage, #35)·회로 도식(`Circuit`, `zoomable`이면 눌러 큰 창). `Markdown`은 서버 답을 그리되 그림은 빼고 http(s) 아닌 링크는 글자로만 보인다.
+- `ui.tsx` — 경로 이동(`navigate` · `useLocation`)·자원 훅(`useResource`)·공통 조각(로고·불러오는 중·오류·빈 상태·판정 배지·근거 한 건 `Source`(근거 등급 색 배지)·근거 등급 설명 `GradeHelp`(? 버튼 팝업)·면책 문구·창·⋯ 메뉴 `RowMenu`(사이드바 대화 줄·작업대 상단·입력창 + 단추·사이드바 계정 줄이 같이 씀, Esc·바깥 클릭으로 닫힘, `up`이면 위로 펼침, 항목별 구분선 `sep` · 굵게 `strong`)·입력창 넷리스트 · 회로도 첨부 `useNetlistAttach`(+ 메뉴의 넷리스트·회로도 첨부, 영역 전체 끌어 놓기와 덮개, 받는 확장자 밖이면 짧은 알림, #40)·입력창 안 첨부 카드 `AttachmentCard`(아이콘 · 말줄임한 이름 · 종류 "KiCad 넷리스트"/"KiCad 회로도", 올리거나 초점이 가면 보이는 ×, #49)·근거 출처)·세로 경계선 너비 조절(`ResizeHandle`, 사이드바·오른쪽 창·작업대 회로 패널, CSS 변수와 localStorage, #35)·회로 도식(`Circuit`, `zoomable`이면 눌러 큰 창). `Markdown`은 서버 답을 그리되 그림은 빼고 http(s) 아닌 링크는 글자로만 보인다.
 - `Landing.tsx` — 공개 랜딩.
 - `Auth.tsx` — 로그인·가입·비밀번호 재설정·Google 계정 연결.
 - `Account.tsx` — 내 설정(기억해 두는 정보 · 지원 범위 안내(#37) · 계정)·개인정보처리방침 본문(`PrivacyText`)과 운영자 연락 메일(`contactEmail`).
-- `Approved.tsx` — 승인 사례 목록(`/approved`)과 "기록 보기" 창: `GET /api/approved-cases/{id}`의 원래 대화 링크(`/app?project=&thread=`)·질문·바꿀 부품·조건별 판정(필요 값·후보 값·결과·인용)·근거 문서·승인 때의 답·견적. 목록 줄과 창의 "보고서" 단추는 인쇄용 부품 대체 검토 보고서(`CaseReport`, `/approved/{id}/report`, 맨 위 ECO 양식(저장 값 없는 칸은 손으로 적는 빈칸, #56) · 기술 검토 근거 7절 · 부서 줄을 더한 빈 서명 칸 · `window.print()`, ECO 칸 값은 순수 함수 `report.ts` `ecoFields`, 시험 `../tests/report.test.ts`, 인쇄 CSS는 `styles.css` 끝, #44)를 연다. 보고서 조건표 숫자는 후보 상세와 같은 `Candidate.tsx` `Amount`(긴 소수는 유효숫자 3자리, 받은 값은 title)로 그린다. 저장한 값만 보이고 다시 판정하지 않는다.
+- `Approved.tsx` — 승인 사례 목록(`/approved`)과 "기록 보기" 창: `GET /api/approved-cases/{id}`의 원래 대화 링크(`/app?project=&thread=`)·질문·바꿀 부품·조건별 판정(필요 값·후보 값·결과·인용)·근거 문서·승인 때의 답·견적. 목록 줄과 창의 "보고서" 단추는 인쇄용 부품 대체 검토 보고서(`CaseReport`, `/approved/{id}/report`, 맨 위 ECO 양식(저장 값 없는 칸은 손으로 적는 빈칸, #56) · 기술 검토 근거 7절 · 부서 줄을 더한 빈 서명 칸 · `window.print()`, ECO 칸 값은 순수 함수 `report.ts` `ecoFields`, 시험 `../tests/report.test.ts`, 인쇄 CSS는 `styles.css` 끝, #44)를 연다. 보고서 조건표 숫자는 후보 상세와 같은 `Candidate.tsx` `Amount`(긴 소수는 유효숫자 3자리, 받은 값은 title)로 그린다. 저장한 값만 보이고 다시 판정하지 않는다. 견적서 문서(`CaseQuote`, `/approved/{사례}/quote/{견적}`): 저장한 견적 하나를 A4 한 장으로 보이고 "PDF 다운로드"가 그 화면을 PDF 파일로 내려 준다(`jspdf` · `html2canvas`는 누를 때 불러옴). 가격·재고는 열 때 `/api/prices`로 한 번 조회해 보이기만 한다(ADR 0009).
 - `Library.tsx` — 데이터시트 서재(`/library`, #67): 머리 한 줄(판정 근거는 서재가 먼저이고 서재에 없는 값은 제조사 공식 PDF의 검증한 표 행으로 보충할 수 있음, 그 밖의 웹 자료는 참고만), 품번·시리즈·제조사 검색칸 · 분류 고르기(서버가 준 분류 이름 그대로와 문서 수) · 표(품번 시리즈(검색어가 든 표지 품번) · 제조사 · 분류 · 판본 · 수집일 · 원문 PDF 새 탭) · 전체 수 · 쪽 이동. `GET /api/datasheets`만 읽고, 검색 조건은 주소(`?q=&category=&page=`)가 정본이라 깊은 링크 `/library?q=SS34`가 된다. 표는 `.audit-scroll` 안에서만 가로로 밀린다.
 - `libraryQuery.ts` — 서재 주소의 검색 조건 읽기·쓰기(`readLibraryQuery` · `libraryQueryString`, 빈 값과 1쪽은 뺌)와 검색어가 든 표지 품번(`matchedParts`), 분류 슬러그의 한국어 이름(`categoryName`). 시험 `../tests/libraryQuery.test.ts`.
 - `Admin.tsx` — 관리자 영역(`/admin`): 계정 목록(서버가 가린 이메일), 사유(5~500자)를 적은 가림 해제(원문은 60초만 화면 메모리에), 확인 창을 거치는 정지·탈퇴 처리(탈퇴는 계정 번호 다시 입력), 재활성화, 작업 이력 표. 관리자 계정은 정지·탈퇴 버튼이 꺼져 있고 서버도 403이다.
@@ -42,3 +45,7 @@
 - `Candidate.tsx` — 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회.
 - `styles.css` — 전체 스타일.
 - `vite-env.d.ts` — Vite 환경 타입.
+- `Workbench.tsx`의 회로 버전 전환 — 새 대화에 질문을 한 번 보내고 `previous_thread_id`를 따라 최대 10개 이전 대화를 버전·원래 대화 링크와 함께 읽기 전용으로 보인다(각 GET은 최대 50개, 잘린 경우 안내).
+- `Workbench.tsx`의 대화 스크롤 — 새 질문·조건 재개·답 진행은 사용자가 하단 근처에 있을 때만 자동 하단 추적하고, 위로 읽는 중에는 점프하지 않는다. 이전 대화 불러오기는 기존 시야를 보존한다. terminal 없는 SSE는 저장된 run을 제한 조회해 복구한다.
+- 새 질문 실행을 시작할 때는 이전 완료 답을 `active` 진행 상태에서 분리해 기존 transcript를 계속 보인다. 조건 재개는 같은 실행의 상태를 유지한다.
+- 전송은 질문 스냅샷을 먼저 잡아 입력을 비우고 pending 말풍선을 보인다. 첨부·새 대화 생성 중에는 `preparing`으로 중복 전송을 막으며, 실패 때 사용자가 새 초안을 쓰지 않은 경우에만 원문을 복원한다. 새 대화 화면도 준비 중 제출 질문을 별도 표시한다.

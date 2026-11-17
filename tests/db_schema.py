@@ -29,5 +29,5 @@ def apply_service_schema(conn, agent=False):
     """conn(psycopg 연결)에 서비스 표를 만든다. 트랜잭션은 호출한 쪽이 정한다."""
     conn.execute(baseline_sql(agent))
     for name in ("027_google_user_login.sql", "029_email_account_security.sql", "030_google_onboarding.sql", "031_circuit_versions.sql", "032_approval_reselection.sql",
-                 "033_thread_titles.sql", "034_admin_audit.sql", "035_circuit_schematics.sql"):
+                 "033_thread_titles.sql", "034_admin_audit.sql", "035_circuit_schematics.sql", "036_thread_continuations.sql"):
         conn.execute((DB_DIR / name).read_text(encoding="utf-8").replace("public.", ""))

@@ -243,6 +243,18 @@ RANGE_ONLY = {'vz_min', 'vz_max'}  # 사용자가 범위로 정한 값만 받는
 QTY = re.compile(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%Ω]*)')  # 인용 글의 숫자와 바로 뒤 단위
 REPLY = re.compile(r'^\s*(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%]*)\s*$')
 YES, NO = {'예', '네', '응', 'yes', 'true', 'y'}, {'아니오', '아니', 'no', 'false', 'n'}
+# [왜] 온도 하나만 받는 조건 값(사용 온도 · 고온 사용 온도)은 '125' · '125°C' · '125도'처럼 기호 없이 적어도 받는다. 화면 예시(TA=25 °C · TJ=125 °C)의
+#      기호를 쓴다. 전에는 기호(TJ=)가 없으면 못 읽는 답으로 버렸다(11-17 조장 결정: 사용자는 값을 형식에 맞춰 주지 않는다)
+# [주의] 전류 · 펄스까지 받는 조건 값(vf_test · pulse_test · surge_test)은 숫자 하나로 뜻을 정할 수 없어 넣지 않는다
+BARE_TEMP = {'temp': 'TA', 'hot_test': 'TJ'}
+BARE_TEMP_REPLY = re.compile(r'^\s*(-?\d+(?:\.\d+)?)\s*(?:°\s*C|℃|도|C)?\s*$', re.I)
+# 현재 사용자가 전체 조건을 줄 수 없다고 명시한 경우에만 추가 수치 질문을 생략한다.
+NO_MORE_CONDITIONS = re.compile(
+    r'(?:사용\s*조건|회로\s*조건|추가\s*(?:사용\s*)?조건)\s*(?:[은는을를이가]\s*)?(?:잘\s*)?'
+    r'(?:모르겠(?:어(?:요)?|습니다|다|음)|모릅니다|모른다|모름|몰라(?:요)?|'
+    r'(?:알|확인할|알려줄|알려드릴|제공할)\s*수\s*없(?:어(?:요)?|습니다|다|음))(?=[\s.!?。]|$)'
+    r'|추가\s*(?:사용\s*)?조건으로\s*확인할\s*수\s*있는\s*(?:내용|정보)(?:은|는|이|가)?\s*없(?:어(?:요)?|습니다|다|음)?(?=[\s.!?。]|$)'
+)
 
 
 def _norm(s: str) -> str:
@@ -315,6 +327,8 @@ def merge_reply(answers: dict, values: dict, conds: dict, kinds: dict) -> tuple[
             values[name] = _si(float(m.group(1)), m.group(2))
         elif kind == 'condition' and (parsed := S.parse(text)):
             conds[name] = parsed
+        elif name in BARE_TEMP and (m := BARE_TEMP_REPLY.match(text)):
+            conds[name] = {BARE_TEMP[name]: float(m.group(1))}
     return values, conds
 
 
@@ -1015,6 +1029,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         asked = list(dict.fromkeys(_required_missing(rules[roles[0]], set(values) | set(conds))))
     else:
         asked = list(dict.fromkeys(n for r in roles for n in C.needed(rules[r], set(values) | set(conds))))
+    if (NO_MORE_CONDITIONS.search(current_text)
+            or state.get('conditions', '').strip().rstrip('.!') in {'모름', '몰라', '몰라요', '모르겠어', '모르겠어요', '모르겠습니다'}):
+        asked = []
     read = read.model_copy(update={'original_part': _original_from_text(read, text)})
     # [왜] 후보가 모두 원래 부품과 같은 품번이면 회로 값 · 역할과 상관없이 동일품이다(SPEC 3절). 6개 값을 물은 뒤 동일품을 냈다(#65).
     #      주문 코드만 다른 품번은 문서 행을 찾아야 동일품이라 묻고, 원래 부품의 제조사가 다르거나 모르면 근거가 없어 묻는다(EC-05)
@@ -1100,6 +1117,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
             terms = V.search_conditions(rules[roles[0]], values)
+            # [왜] 사용자가 회로 값을 몰라 찾기 조건이 비면 원래 부품의 같은 정격을 기준으로 후보를 모은다. 전에는 후보 0개 → 거절이었다
+            #      (11-17 조장 결정: 되묻기는 단서를 더 얻는 수단이지 답의 관문이 아니다). 판정은 그대로라 값이 없는 조건은 '확인 안 됨'이다
+            from_original = not terms and bool(terms := V.original_search_conditions(rules[roles[0]], values, original_rows))
             # [왜] 원래 부품의 패키지 · 분류를 주면 도구가 그 순서로 모두 줄 세운 뒤 50개에서 자른다(SPEC 8.3 찾기 순위)
             near = {'original_packages': [x['text'] for x in original_rows if x['code'] == 'PACKAGE' and x.get('text')] or None,
                     'original_category': next((x['category'] for x in original_rows if x.get('category')), None)}
@@ -1146,7 +1166,7 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             prefer = '' if mount else state.get('mount_preference') or ''
             preferred = {c[0] for c in candidates if prefer and prefer in mount_of(c[2])}
         else:
-            terms, found, prefer, preferred = [], [], '', set()
+            terms, found, prefer, preferred, from_original = [], [], '', set(), False
             candidates = [(p, '', None) for p in read.candidates]
         results = []
         if prefetch and candidates:
@@ -1230,7 +1250,8 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         shown, unverified = results, []
     judgement = {**base, 'kind': 'find' if state.get('question_type') == 'candidate_find' else 'judge', 'roles': roles,
                  'results': [j.model_dump(mode='json') for j in results], 'shown': [j.model_dump(mode='json') for j in shown],
-                 'unverified': [j.model_dump(mode='json') for j in unverified], 'terms': terms, 'capped': len(found) >= 50,
+                 'unverified': [j.model_dump(mode='json') for j in unverified], 'terms': terms, 'terms_from_original': from_original,
+                 'capped': len(found) >= 50,
                  'dropped': dropped, 'asked': asked, 'preferred_mount': prefer}  # 순서에 쓴 선호 실장 방식(트레이스 · API에서 보이게)
     missing = sorted({m for j in results for m in j.missing})
     status = 'ok' if results else 'partial'

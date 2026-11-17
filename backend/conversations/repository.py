@@ -87,13 +87,21 @@ class ConversationRepository:
             checkpoint_delete(conn, [thread_id])
             conn.execute('DELETE FROM threads WHERE id=%s AND project_id=%s', (thread_id, project[0]))
 
-    def create_thread(self, user_id, project_id):
+    def create_thread(self, user_id, project_id, circuit_version=None):
         thread_id = uuid4()
         with auth.connection() as conn:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
                 raise ConversationNotFound
-            row = conn.execute('INSERT INTO threads(id,project_id) SELECT %s,id FROM projects WHERE id=%s AND user_id=%s RETURNING id',
-                               (thread_id, project_id, user_id)).fetchone()
+            if circuit_version is not None and conn.execute(
+                    'SELECT 1 FROM project_circuit_versions WHERE project_id=%s AND version=%s',
+                    (project_id, circuit_version)).fetchone() is None:
+                raise ConversationNotFound
+            if circuit_version is None:
+                row = conn.execute('INSERT INTO threads(id,project_id) SELECT %s,id FROM projects WHERE id=%s AND user_id=%s RETURNING id',
+                                   (thread_id, project_id, user_id)).fetchone()
+            else:
+                row = conn.execute('INSERT INTO threads(id,project_id,circuit_version) VALUES (%s,%s,%s) RETURNING id',
+                                   (thread_id, project_id, circuit_version)).fetchone()
             if row is None:
                 raise ConversationNotFound
         return str(thread_id)
@@ -185,7 +193,13 @@ class ConversationRepository:
 
     def thread_detail(self, user_id, thread_id, limit=50, before_message_id=None):
         with auth.connection() as conn:
-            row = conn.execute(f"SELECT t.id,t.project_id,{pinned_version('t')},t.title FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s", (thread_id, user_id)).fetchone()
+            row = conn.execute(f"SELECT t.id,t.project_id,{pinned_version('t')},t.title,"
+                               "CASE WHEN pp.id IS NULL THEN NULL ELSE tc.previous_thread_id END "
+                               "FROM threads t JOIN projects p ON p.id=t.project_id "
+                               "LEFT JOIN thread_continuations tc ON tc.thread_id=t.id "
+                               "LEFT JOIN threads pt ON pt.id=tc.previous_thread_id AND pt.project_id=t.project_id "
+                               "LEFT JOIN projects pp ON pp.id=pt.project_id AND pp.user_id=p.user_id "
+                               "WHERE t.id=%s AND p.user_id=%s", (thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
             title = conn.execute("SELECT m.content FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s AND m.role='user' ORDER BY m.id LIMIT 1", (thread_id, user_id)).fetchone()
@@ -202,7 +216,8 @@ class ConversationRepository:
         page = rows[:limit]
         # [왜] 회로 없이 시작한 대화의 분석 대상은 빈 글자다(memory_service.ensure_thread). 아직 정하지 않은 대상으로 보이고 고정되지 않는다
         ref = target[0] if target else None
-        return {'id': str(row[0]), 'project_id': row[1], 'circuit_version': row[2], 'title': row[3] or thread_title(title[0] if title else ''),
+        return {'id': str(row[0]), 'project_id': row[1], 'circuit_version': row[2], 'previous_thread_id': str(row[4]) if row[4] else None,
+                'title': row[3] or thread_title(title[0] if title else ''),
                 'target_ref': ref or None, 'target_locked': latest is not None and ref != '',
                 'latest_run': {'id': str(latest[0]), 'status': latest[1], 'message_id': latest[2]} if latest else None,
                 'messages': [{'id': r[0], 'run_id': str(r[1]), 'role': r[2], 'content': r[3], 'created_at': r[4]} for r in reversed(page)],

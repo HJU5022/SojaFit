@@ -1,11 +1,403 @@
 /**
- * 제품 소개. 예시 수치는 기록된 데모 결과(data/demo/recordings/outcomes.json, 질문 v3-01)에서 옮긴 값이고 실시간 판정이 아니다.
- * 판정 기준 구간(#criteria)의 숫자는 판정 규칙 코드에서 옮겼다(출처는 그 구간 주석). 판정을 계산하지 않는다.
+ * 공개 제품 소개와 기록된 판정 예시. 실시간 분석·판정 계산은 하지 않는다.
+ * 출처: SPEC 2절 공개 랜딩, data/demo/recordings/outcomes.json 질문 v3-01.
  */
-import { useEffect, useState } from 'react';
-import { ArrowRight, FileText, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
-import { Brand, Badge, Disclaimer } from './ui';
-import { Footer } from './Legal';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ArrowDown, ArrowRight, FileText, Check, ArrowUpRight } from 'lucide-react';
+import { Brand, Badge, plainClick } from './ui';
+import { legalDocs, LegalModal } from './Legal';
+import { contactEmail } from './Account';
+
+// [왜] 랜딩 전체의 문구·예시·미디어를 한곳에서 교체한다. 문구 안의 \\u00a0은 줄바꿈 없는 공백으로, 붙어 있어야 하는 낱말이 줄 끝에서 갈라지지 않게 한다. 히어로 검토 장면은 미디어와 독립적이다.
+// 이미지/GIF는 그대로, mp4·webm·ogv는 재생 컨트롤이 있는 영상으로 표시한다.
+const LANDING = {
+  title: ['대체 부품 검토,', '회로를 기준으로.'],
+  description:
+    '회로에서 부품이 맡은 역할과 대체 조건을 읽고, 데이터시트에서 판정 근거를 찾아 보여 줍니다.',
+  action: '내 회로 검토하기',
+  actionHref: '/login',
+  navigation: [
+    { label: '검토 과정', href: '#workflow' },
+    { label: '판정 근거', href: '#evidence' },
+    { label: '승인과 기록', href: '#approval' },
+  ],
+  login: '로그인',
+  navigationLabel: '주 탐색',
+  disclaimer: '같은 동작은 보장하지 않습니다.',
+  media: {
+    hero: {
+      src: '',
+      alt: '회로를 읽고 대체 후보의 조건과 데이터시트 근거를 확인하는 SojaFit 검토 화면',
+      caption: '회로 연결부터 근거 확인까지 이어지는 검토 흐름입니다.',
+    },
+    circuit: {
+      src: '',
+      alt: '넷리스트에서 부품의 연결과 회로 역할을 확인하는 제품 화면',
+      caption: '회로의 연결을 보고 부품이 맡은 역할을 확인합니다.',
+    },
+    report: {
+      src: '',
+      alt: '후보를 승인하고 견적과 검토 보고서를 확인하는 제품 화면',
+      caption: '사람이 확인하고 승인한 검토를 기록으로 남깁니다.',
+    },
+    fallback: '실제 검토 화면을 준비하고 있습니다.',
+  },
+  overview: {
+    title: ['질문에서 검토까지,', '하나의 작업대에서.'],
+    description:
+      '회로를 올리고 바꿀 부품을 물어보세요. 필요한 조건부터 후보의 판정과 근거까지 한 화면에서 보여 줍니다.',
+    preview: '검토 흐름 미리보기',
+    file: '내 회로.net',
+    fileType: 'KiCad 넷리스트',
+    question: '이 부품을 다른 부품으로 바꿔도 될까요?',
+    stages: ['회로 읽기', '조건 확인', '후보 검토', '근거 확인'],
+    answer: '회로가 요구하는 조건과 후보의 정격을 함께 확인합니다.',
+    output: '조건별 판정 · 데이터시트 출처',
+  },
+  workflow: {
+    title: ['품번만 보지 않고,', '쓰이는 회로를 봅니다.'],
+    description:
+      '같은 부품도 어디에 쓰이느냐에 따라 필요한 조건이 달라집니다. 검토는 부품이 연결된 자리에서 시작합니다.',
+    steps: [
+      {
+        title: '회로에서 부품의 연결 확인',
+        text: 'KiCad 넷리스트에서 바꿀 부품과 그 핀이 어디에 연결되는지 확인합니다.',
+      },
+      {
+        title: '부품의 역할과 사용 조건 정리',
+        text: '부품이 회로에서 맡은 역할을 읽고, 판정에 필요한 전압과 전류\u00a0조건을 정리합니다.',
+      },
+      {
+        title: '빠진 조건은 다시 질문',
+        text: '회로만으로 알 수 없는 값은 다시 묻고, 답을 받으면 이어서 검토합니다.',
+      },
+    ],
+    previewTitle: '검토가 시작되는 순서',
+    previewInput: 'KiCad 넷리스트',
+    previewTarget: '교체할 부품',
+    previewOutput: '회로 역할 · 필요한 조건',
+  },
+  evidence: {
+    title: ['판정 옆에는', '찾아갈 수 있는 근거.'],
+    description:
+      '비교한 조건과 값, 그리고 그 값이 있는 데이터시트의 쪽, 표, 행을 함께 보여 줍니다.',
+    stepsLabel: '검토 단계',
+    next: '다음 단계',
+    restart: '처음 단계로',
+    // [왜] 판정 장면을 큰 화면 하나에 두고 단계 버튼으로 넘겨 본다. src에 캡처 · GIF · 영상 경로를 넣으면 그 단계의 화면이 바뀌고, 비어 있으면 자리 표시가 보인다.
+    steps: [
+      {
+        label: '회로와 질문',
+        caption: '넷리스트를 올리고 바꿀 부품을 평소 쓰는 말로 묻습니다.',
+        src: '',
+        alt: '넷리스트를 첨부하고 부품 교체 검토를 묻는 제품 화면',
+      },
+      {
+        label: '빠진 조건 확인',
+        caption: '허용 전압강하처럼 빠진 사용 조건은 검토 중에 다시 묻습니다.',
+        src: '/assets/product/missing-condition.png',
+        alt: '허용 전압강하를 묻고 값을 입력해 재개하는 실제 데모 화면',
+      },
+      {
+        label: '조건별 판정',
+        caption: '필요 값과 후보 값을 조건마다 나란히 비교합니다.',
+        src: '/assets/product/condition-evidence.png',
+        alt: '1N4007G의 필요 역전압과 후보 값, 데이터시트 인용을 보여 주는 실제 데모 화면',
+      },
+      {
+        label: '근거 원문',
+        caption: '조건마다 데이터시트의 쪽, 표, 행을 열어 확인합니다.',
+        src: '',
+        alt: '판정 근거가 된 데이터시트 원문 위치를 여는 제품 화면',
+      },
+    ],
+    note: '판정은 데이터시트 값과 회로 조건을 비교한 결과입니다. 실제\u00a0적용\u00a0전에는 사용 조건과 실장 변경을 확인하세요.',
+  },
+  approval: {
+    title: ['마지막 결정은', '검토하는 사람이 합니다.'],
+    description:
+      '후보와 근거를 확인한 뒤 승인합니다. 견적과 검토 보고서는 사람이 승인한 뒤에만 남깁니다.',
+    previewTitle: '부품 교체 검토 보고서',
+    previewStatus: '승인 전 확인',
+    previewFields: [
+      { label: '검토 대상', value: '회로 · 교체할 부품' },
+      { label: '검토 내용', value: '필요 조건 · 후보별 판정' },
+      { label: '판정 근거', value: '데이터시트 · 인용 위치' },
+      { label: '승인 기록', value: '검토자 · 승인한 후보' },
+    ],
+    previewNote: '보고서 구성 예시',
+  },
+  footer: {
+    wordmark: 'SojaFit',
+    description: '회로를 읽는 전자부품 교체 검토',
+    top: '맨 위로',
+    contact: '문의',
+    contactHref: `mailto:${contactEmail}`,
+    copyright: '© 2026 SojaFit',
+    legalLabel: '서비스 고지',
+    links: legalDocs,
+  },
+  example: {
+    label: '기록된 검토 예시',
+    circuit: 'ATtiny85 Time Switch',
+    original: '1N4007RLG',
+    candidate: '1N4007G',
+    ref: 'D1',
+    role: '전원 입력 · 역극성 보호',
+    input: '15 V',
+    load: '120 mA',
+    diagramLabel: '연결 개념도',
+    partLabel: '교체할 부품',
+    inputLabel: '전원 입력',
+    loadLabel: '회로 부하',
+    question: 'D1을 이 부품으로 바꿔도 될까?',
+    resultLabel: '대체 후보',
+    verdict: 'ROLE_SUFFICIENT' as const,
+    result: '이 회로의 조건을 만족합니다.',
+    conditionLabel: '필요 조건',
+    valueLabel: '후보 정격',
+    sourceLabel: '데이터시트 근거',
+    sourceHint: '조건을 누르면 근거 행이 바뀝니다.',
+    document: '1N4001G SERIES_P2104.pdf',
+    location: '1쪽 · ABSOLUTE MAXIMUM RATINGS',
+    temperature: 'TA = 25°C unless otherwise noted',
+    manufacturer: 'Taiwan Semiconductor',
+    notice: '패키지가 달라 기판 수정이 필요합니다. 순방향 전압은 이번 판정에서 제외했습니다.',
+    recorded: '기록된 검토 결과(v3-01)를 다시 그린 화면입니다.',
+    conditions: [
+      {
+        name: '역전압',
+        symbol: 'VRRM',
+        required: '18.75 V 이상',
+        value: '1000',
+        unit: 'V',
+        row: 'Repetitive peak reverse voltage',
+        note: '최대 입력 전압 15 V에 여유를 둔 조건입니다.',
+      },
+      {
+        name: '순방향 전류',
+        symbol: 'IF',
+        required: '0.171 A 이상',
+        value: '1',
+        unit: 'A',
+        row: 'Average forward current',
+        note: '연속 전류 120 mA에 여유를 둔 조건입니다.',
+      },
+      {
+        name: '서지 전류',
+        symbol: 'IFSM',
+        required: '2 A 이상',
+        value: '30',
+        unit: 'A',
+        row: 'Peak forward surge current',
+        note: '초기 접합온도 25°C, 8.3 ms 단발 반정현파 조건입니다.',
+      },
+    ],
+  },
+};
+
+/** 이미지 로드 확인 뒤 표시하며, 비어 있거나 손상된 미디어는 대체 장면을 유지한다. */
+function LandingMedia({ src, alt, children }: { src: string; alt: string; children: ReactNode }) {
+  const [loaded, setLoaded] = useState('');
+  const [failed, setFailed] = useState('');
+  const isVideo = /\.(mp4|webm|ogv)(?:[?#]|$)/i.test(src);
+  useEffect(() => {
+    if (!src || isVideo) return;
+    let active = true;
+    const image = new Image();
+    image.onload = () => {
+      if (active) setLoaded(src);
+    };
+    image.onerror = () => {
+      if (active) setFailed(src);
+    };
+    image.src = src;
+    return () => {
+      active = false;
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [src, isVideo]);
+  if (!src || failed === src) return <>{children}</>;
+  if (isVideo)
+    return (
+      <video
+        key={src}
+        src={src}
+        controls
+        playsInline
+        preload="metadata"
+        aria-label={alt}
+        onError={() => setFailed(src)}
+      />
+    );
+  return loaded === src ? (
+    <img src={src} alt={alt} onError={() => setFailed(src)} />
+  ) : (
+    <>{children}</>
+  );
+}
+
+/** 준비 전이나 로드 실패 시에도 미디어 영역과 설명을 유지한다. */
+function MediaPlaceholder() {
+  return (
+    <div className="landing-media-placeholder">
+      <FileText size={36} aria-hidden="true" />
+      <p>{LANDING.media.fallback}</p>
+    </div>
+  );
+}
+
+/** 판정 장면을 큰 화면 하나에 두고 단계 버튼으로 넘긴다. 화면만 바꾸며 서버에 요청하지 않는다. */
+function EvidenceSteps() {
+  const { steps } = LANDING.evidence;
+  const [current, setCurrent] = useState(0);
+  const step = steps[current];
+  const last = current === steps.length - 1;
+  return (
+    <div className="evidence-stage landing-reveal">
+      <div className="evidence-steps" role="group" aria-label={LANDING.evidence.stepsLabel}>
+        {steps.map((item, index) => (
+          <button
+            key={item.label}
+            aria-pressed={current === index}
+            aria-controls="evidence-screen"
+            onClick={() => setCurrent(index)}
+          >
+            <b>{index + 1}</b>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
+      <figure className="evidence-screen" id="evidence-screen">
+        {/* [왜] key로 단계마다 미디어를 새로 올려, 앞 단계 화면이 남아 보이지 않게 한다 */}
+        <div className="landing-media-frame" key={step.label}>
+          <LandingMedia src={step.src} alt={step.alt}>
+            <MediaPlaceholder />
+          </LandingMedia>
+        </div>
+        <figcaption aria-live="polite">
+          <span>
+            {current + 1}. {step.caption}
+          </span>
+          <button className="evidence-next" onClick={() => setCurrent(last ? 0 : current + 1)}>
+            {last ? LANDING.evidence.restart : LANDING.evidence.next}
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+        </figcaption>
+      </figure>
+    </div>
+  );
+}
+
+/** 기록된 조건의 선택만 바꾸며 서버에 판정을 요청하지 않는다. */
+function ReviewScene() {
+  const [selected, setSelected] = useState(0);
+  const sample = LANDING.example;
+  const condition = sample.conditions[selected];
+  return (
+    <div className="review-scene" data-ui>
+      <div className="circuit-scene">
+        <div className="circuit-caption">
+          <span>{sample.circuit}</span>
+          <ArrowUpRight size={20} aria-hidden="true" />
+        </div>
+        <div className="circuit-part">
+          <span>{sample.ref}</span>
+          <strong>{sample.original}</strong>
+        </div>
+        <svg
+          className="circuit-drawing"
+          viewBox="0 0 420 180"
+          role="img"
+          aria-label={`${sample.inputLabel} ${sample.input}, ${sample.ref}, ${sample.loadLabel} ${sample.load} ${sample.diagramLabel}`}
+        >
+          <g fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M24 90h138m90 0h144" className="circuit-wire" />
+            {/* [왜] 특정 부품 기호 대신 이름표가 붙은 상자를 그린다. 이 장면이 한 부품 종류만 다루는 것처럼 보이지 않게 한다 */}
+            <rect x="162" y="60" width="90" height="60" rx="6" strokeWidth="3" />
+            <circle cx="24" cy="90" r="5" fill="currentColor" />
+            <circle cx="396" cy="90" r="5" fill="currentColor" />
+            <path d="M326 90v30m-16 0h32m-32 8h32m-16 0v24m-12 0h24m-19 6h14m-10 6h6" />
+          </g>
+          <circle className="circuit-signal" cx="24" cy="90" r="5" />
+          <text className="circuit-part-label" x="207" y="95" textAnchor="middle">
+            {sample.partLabel}
+          </text>
+          <text x="24" y="35">
+            {sample.input}
+          </text>
+          <text x="396" y="35" textAnchor="end">
+            {sample.load}
+          </text>
+        </svg>
+        <div className="circuit-terminals">
+          <span>{sample.inputLabel}</span>
+          <span>{sample.loadLabel}</span>
+        </div>
+        <p className="circuit-role">
+          <span className="signal-dot" />
+          {sample.role}
+        </p>
+        <p className="circuit-question">{sample.question}</p>
+      </div>
+      <div className="review-result">
+        <div className="review-result-title">
+          <span>{sample.resultLabel}</span>
+          <Badge verdict={sample.verdict} />
+        </div>
+        <strong className="candidate-name">{sample.candidate}</strong>
+        <p>{sample.result}</p>
+        <div className="condition-labels">
+          <span>{sample.conditionLabel}</span>
+          <span>{sample.valueLabel}</span>
+        </div>
+        <div className="condition-buttons" aria-label={sample.conditionLabel}>
+          {sample.conditions.map((item, index) => (
+            <button
+              key={item.symbol}
+              aria-pressed={selected === index}
+              aria-controls="hero-evidence"
+              onClick={() => setSelected(index)}
+            >
+              <span>
+                <b>{item.name}</b>
+                <small>{item.required}</small>
+              </span>
+              <strong>
+                {item.value} <small>{item.unit}</small>
+              </strong>
+              <Check size={18} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+        <p className="review-hint">{sample.sourceHint}</p>
+      </div>
+      <div className="evidence-scene" id="hero-evidence" aria-live="polite" aria-atomic="true">
+        <div className="evidence-title">
+          <FileText size={20} aria-hidden="true" />
+          <span>{sample.sourceLabel}</span>
+        </div>
+        <div className="evidence-content" key={condition.symbol}>
+          <p className="evidence-maker">{sample.manufacturer}</p>
+          <p className="evidence-location">{sample.location}</p>
+          <div className="evidence-extract">
+            <span>{condition.symbol}</span>
+            <p>{condition.row}</p>
+            <strong>
+              {condition.value}
+              <small>{condition.unit}</small>
+            </strong>
+          </div>
+          <p className="evidence-temperature">{sample.temperature}</p>
+          <p className="evidence-note">{condition.note}</p>
+        </div>
+        <span className="evidence-file">{sample.document}</span>
+      </div>
+    </div>
+  );
+}
+
 export function Landing() {
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -18,366 +410,211 @@ export function Landing() {
         }),
       { threshold: 0.1 },
     );
-    document
-      .querySelectorAll(
-        '.landing section>h2,.landing section>p,.how li,.criteria>ol,.rules,.limits>div,.product-proof figure',
-      )
-      .forEach((e) => {
-        e.classList.add('reveal');
-        observer.observe(e);
-      });
+    document.querySelectorAll('.landing .landing-reveal').forEach((e) => {
+      e.classList.add('reveal');
+      observer.observe(e);
+    });
     return () => observer.disconnect();
   }, []);
-  const [basis, setBasis] = useState<'original' | 'role'>('role');
+  const [legalPath, setLegalPath] = useState<string | null>(null);
   return (
-    <div className="landing">
+    <div className="landing" id="top">
       <header className="landing-nav">
         <Brand />
-        <nav>
-          <a href="#how">검토 과정</a>
-          <a href="#criteria">판정 기준</a>
-          <a href="/login">
-            로그인 <ArrowUpRight size={15} />
+        <nav aria-label={LANDING.navigationLabel}>
+          {LANDING.navigation.map((item) => (
+            <a key={item.href} href={item.href}>
+              {item.label}
+            </a>
+          ))}
+          <a className="landing-login" href={LANDING.actionHref}>
+            {LANDING.login}
+            <ArrowUpRight size={17} aria-hidden="true" />
           </a>
         </nav>
       </header>
       <main>
         <section className="hero">
-          <h1>대체 부품을 내 회로에 써도 되는지 데이터시트로 판정합니다.</h1>
-          <p className="hero-copy">
-            KiCad 넷리스트에서 부품의 회로 역할과 필요한 전압·전류 조건을 정하고, 후보 데이터시트의
-            표 값과 비교해 판정합니다. 판정마다 데이터시트의 쪽·표·행을 인용합니다.
-          </p>
-          {/* [주의] 판정 규칙은 다이오드에만 있다(SPEC 1절 "하는 일"·"하지 않는 것"). 역할 23종은 backend/judge/rules/roles.yaml R01~R23. 다른 부품이 된다고 읽히게 쓰지 않는다 */}
-          <p className="hero-scope">
-            지금 지원: 다이오드(소형 MCU 회로, 회로 역할 23종). 다른 부품은 아직 판정하지 않습니다.
-          </p>
-          <a className="button primary" href="/login">
-            내 회로 검토하기 <ArrowRight size={18} />
-          </a>
-          <div className="hero-sample">
-            <div className="sample-top">
-              <span>검토 예시</span>
-              <span>기록된 데모 결과 · v3-01</span>
+          <div className="hero-intro">
+            <h1>
+              {LANDING.title.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </h1>
+            <div className="hero-action">
+              <p>{LANDING.description}</p>
+              <a className="hero-cta" href={LANDING.actionHref}>
+                {LANDING.action}
+                <ArrowUpRight size={22} aria-hidden="true" />
+              </a>
             </div>
-            <div className="sample-body">
-              <div className="sample-circuit">
-                <span>ATtiny85 Time Switch · D1 · 1N4007RLG</span>
-                <svg viewBox="0 0 320 100" aria-label="D1 다이오드 교체 예시 연결" role="img">
-                  <path
-                    d="M20 50h105m70 0h105M125 20v60l70-30-70-30Zm70 0v60"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <text x="20" y="90">
-                    15 V
-                  </text>
-                  <text x="265" y="90">
-                    0.12 A
-                  </text>
-                </svg>
-                <p>D1을 TSC 1N4007G로 바꿔도 될까요?</p>
-              </div>
-              <div className="sample-verdict">
-                <div>
-                  <strong>1N4007G</strong>
-                  <Badge verdict="ROLE_SUFFICIENT" />
+          </div>
+          <div className="hero-stage">
+            <div className="hero-stage-caption">
+              <span>{LANDING.example.label}</span>
+              <span>{LANDING.example.recorded}</span>
+            </div>
+            <ReviewScene />
+            <div className="hero-footnote">
+              <p>{LANDING.example.notice}</p>
+              <p className="disclaimer">{LANDING.disclaimer}</p>
+            </div>
+          </div>
+        </section>
+        <section className="landing-overview" id="overview" aria-labelledby="overview-title">
+          <div className="landing-section-heading landing-reveal">
+            <h2 id="overview-title">
+              {LANDING.overview.title.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </h2>
+            <p>{LANDING.overview.description}</p>
+          </div>
+          <figure className="landing-film landing-reveal">
+            <LandingMedia {...LANDING.media.hero}>
+              <div className="film-preview" data-ui>
+                <div className="film-preview-input">
+                  <div className="film-file">
+                    <FileText size={32} aria-hidden="true" />
+                    <span>
+                      <strong>{LANDING.overview.file}</strong>
+                      <small>{LANDING.overview.fileType}</small>
+                    </span>
+                  </div>
+                  <p>{LANDING.overview.question}</p>
+                  <span className="film-preview-label">{LANDING.overview.preview}</span>
                 </div>
-                <p>회로가 요구하는 전압·전류 조건을 만족합니다.</p>
+                <div className="film-preview-output">
+                  <ol>
+                    {LANDING.overview.stages.map((stage) => (
+                      <li key={stage}>
+                        <Check size={18} aria-hidden="true" />
+                        {stage}
+                      </li>
+                    ))}
+                  </ol>
+                  <p>{LANDING.overview.answer}</p>
+                  <strong>{LANDING.overview.output}</strong>
+                </div>
+              </div>
+            </LandingMedia>
+            <figcaption>{LANDING.media.hero.caption}</figcaption>
+          </figure>
+        </section>
+        <section className="landing-workflow" id="workflow" aria-labelledby="workflow-title">
+          <div className="workflow-copy">
+            <h2 className="landing-reveal" id="workflow-title">
+              {LANDING.workflow.title.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </h2>
+            <p className="landing-section-copy landing-reveal">{LANDING.workflow.description}</p>
+            <ol className="workflow-steps">
+              {LANDING.workflow.steps.map((step) => (
+                <li className="landing-reveal" key={step.title}>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <figure className="workflow-media landing-reveal">
+            <LandingMedia {...LANDING.media.circuit}>
+              <div className="connection-preview" data-ui>
+                <p>{LANDING.workflow.previewTitle}</p>
+                <div className="connection-source">
+                  <FileText size={42} aria-hidden="true" />
+                  <strong>{LANDING.workflow.previewInput}</strong>
+                </div>
+                <ArrowDown size={32} aria-hidden="true" />
+                <div className="connection-target">{LANDING.workflow.previewTarget}</div>
+                <ArrowDown size={32} aria-hidden="true" />
+                <div className="connection-result">{LANDING.workflow.previewOutput}</div>
+              </div>
+            </LandingMedia>
+            <figcaption>{LANDING.media.circuit.caption}</figcaption>
+          </figure>
+        </section>
+        <section className="landing-evidence" id="evidence" aria-labelledby="evidence-title">
+          <div className="landing-section-heading landing-reveal">
+            <h2 id="evidence-title">
+              {LANDING.evidence.title.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </h2>
+            <p>{LANDING.evidence.description}</p>
+          </div>
+          <EvidenceSteps />
+          <p className="evidence-boundary landing-reveal">{LANDING.evidence.note}</p>
+        </section>
+        <section className="landing-approval" id="approval" aria-labelledby="approval-title">
+          <figure className="approval-media landing-reveal">
+            <LandingMedia {...LANDING.media.report}>
+              <div className="report-preview" data-ui>
+                <div className="report-preview-heading">
+                  <FileText size={28} aria-hidden="true" />
+                  <span>{LANDING.approval.previewStatus}</span>
+                </div>
+                <p className="report-preview-title">{LANDING.approval.previewTitle}</p>
                 <dl>
-                  <div>
-                    <dt>역전압</dt>
-                    <dd>
-                      18.75 V 이상 <ArrowRight size={14} /> <b>1000 V</b>
-                      <Check size={16} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>순방향 전류</dt>
-                    <dd>
-                      0.171 A 이상 <ArrowRight size={14} /> <b>1 A</b>
-                      <Check size={16} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>서지 전류</dt>
-                    <dd>
-                      2 A 이상 <ArrowRight size={14} /> <b>30 A</b>
-                      <Check size={16} />
-                    </dd>
-                  </div>
+                  {LANDING.approval.previewFields.map((field) => (
+                    <div key={field.label}>
+                      <dt>{field.label}</dt>
+                      <dd>{field.value}</dd>
+                    </div>
+                  ))}
                 </dl>
-                <small>
-                  허용 전압강하를 알 수 없어 순방향 전압은 판정에서 뺐고, 패키지가 달라 기판 수정이
-                  필요합니다.
-                </small>
-                <Disclaimer />
+                <small>{LANDING.approval.previewNote}</small>
               </div>
-            </div>
-          </div>
-        </section>
-        <section id="principle" className="principle">
-          <h2>비교 기준: 원래 부품 정격과 회로 조건</h2>
-          <p>같은 후보라도 무엇을 기준으로 보느냐에 따라 판단이 달라집니다.</p>
-          <div className="comparison">
-            <div className="segmented" aria-label="비교 기준">
-              <button aria-pressed={basis === 'original'} onClick={() => setBasis('original')}>
-                원래 부품의 정격
-              </button>
-              <button aria-pressed={basis === 'role'} onClick={() => setBasis('role')}>
-                이 회로의 역할
-              </button>
-            </div>
-            <h3>
-              {basis === 'role'
-                ? '15 V·120 mA 회로에서 필요한 여유를 봅니다.'
-                : '원래 부품의 정격을 기준으로 비교합니다.'}
-            </h3>
-            {basis === 'role' ? (
-              <>
-                <div className="equations">
-                  <div>
-                    <span>필요 역전압</span>
-                    <strong>15 V × 1.25</strong>
-                    <b>18.75 V 이상</b>
-                  </div>
-                  <div>
-                    <span>필요 순방향 전류</span>
-                    <strong>0.12 A × 1.43</strong>
-                    <b>0.171 A 이상</b>
-                  </div>
-                </div>
-                <p>
-                  1N4007G: 1000 V / 1 A <ArrowRight size={16} /> <Badge verdict="ROLE_SUFFICIENT" />
-                </p>
-              </>
-            ) : (
-              <div className="original-copy">
-                <p>원래 부품의 주요 정격을 모두 같거나 넘는지 확인합니다.</p>
-                <p>
-                  회로가 실제로 요구하는 조건은 별도로 살펴야 합니다. 원래 부품의 정격에 못 미쳐도
-                  회로 역할에 충분한 후보가 있습니다.
-                </p>
-              </div>
-            )}
-            <small>
-              ATtiny85 Time Switch의 기록된 데모 질문(v3-01) 결과입니다. 실제 후보 판정은 업로드한
-              회로와 서버 결과를 따릅니다.
-            </small>
-          </div>
-        </section>
-        <section id="how" className="how">
-          <h2>검토 과정</h2>
-          <ol>
-            <li>
-              <FileText />
-              <div>
-                <h3>넷리스트를 올리고 부품을 고르세요.</h3>
-                <p>KiCad 넷리스트에서 바꿀 부품(지금은 다이오드)과 핀 연결을 확인합니다.</p>
-              </div>
-            </li>
-            <li>
-              <MessageSquare />
-              <div>
-                <h3>평소 쓰는 말로 물어보세요.</h3>
-                <p>“D1을 이 부품으로 바꿔도 될까?” 빠진 사용 조건은 검토 중에 다시 묻습니다.</p>
-              </div>
-            </li>
-            <li>
-              <Check />
-              <div>
-                <h3>조건별 판정과 원문을 확인하세요.</h3>
-                <p>
-                  필요 값, 후보 값, 시험 조건을 나란히 보고 데이터시트의 쪽·표·행으로 돌아갑니다.
-                </p>
-              </div>
-            </li>
-          </ol>
-        </section>
-        <section className="product-proof">
-          <h2>실제 검토 화면</h2>
-          <p>기록된 데모를 이 작업대에서 실행한 화면입니다.</p>
-          <div>
-            <figure>
-              <a
-                href="/assets/product/missing-condition.png"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="추가 조건 입력 화면 크게 보기"
-              >
-                <img
-                  src="/assets/product/missing-condition.png"
-                  alt="허용 전압강하를 묻고 값을 입력해 재개하는 실제 데모 화면"
-                  width="872"
-                  height="366"
-                  loading="lazy"
-                />
-              </a>
-              <figcaption>허용 전압강하처럼 빠진 사용 조건을 확인합니다.</figcaption>
-            </figure>
-            <figure>
-              <a
-                href="/assets/product/condition-evidence.png"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="조건별 판정 근거 화면 크게 보기"
-              >
-                <img
-                  src="/assets/product/condition-evidence.png"
-                  alt="1N4007G의 필요 역전압 18.75 V와 후보 값 1000 V, 데이터시트 인용을 보여 주는 실제 데모 화면"
-                  width="622"
-                  height="551"
-                  loading="lazy"
-                />
-              </a>
-              <figcaption>필요 값과 후보 값을 비교하고, 데이터시트 원문으로 돌아갑니다.</figcaption>
-            </figure>
-          </div>
-        </section>
-        {/* 판정 방법·기준식·판정 5종. 숫자와 순서는 코드에서 옮겼다. 규칙이 바뀌면 이 구간도 같이 고친다.
-            - 1.25 · ÷0.7: backend/judge/rules/roles.yaml 머리 주석(kV = 1.25, kI = 1/0.7), 역할 수 23: 같은 파일 R01~R23
-            - 역할 예 3종: 같은 파일 R01(역극성 보호) · R05(AC · 브리지 정류) · R13(플라이백 전원 출력 정류)
-            - 질문에 적은 규격을 필수 조건으로 더함: backend/judge/conditions.py user_conditions
-            - 판정 순서: backend/judge/verdict.py judge_part(동일품 → 불충족 → 확인 안 됨 → 사양 동등 → 역할상 충분), 뜻은 SPEC 3절
-            - 역할상 충분 = 조건 모두 통과 + 사양 동등 확인 실패: verdict.py _not_worse가 거짓(major 없는 역할 R13 · R14 · R17 포함)
-            - 예시가 역할상 충분인 이유(원래 1N4007RLG 데이터시트 없음): data/demo/recordings/outcomes.json v3-01 답 */}
-        <section id="criteria" className="criteria">
-          <h2>판정 방법과 기준</h2>
-          <p>회로 조건과 데이터시트 값을 코드로 비교하고, 조건마다 데이터시트 위치를 인용합니다.</p>
-          <ol className="method">
-            <li>
-              <b>1. 회로 조건</b>
-              넷리스트의 핀 연결로 부품의 회로 역할을 정하고, 입력 최대 전압·최대 전류 같은 회로
-              값을 받습니다. 빠진 값은 되묻습니다.
-            </li>
-            <li>
-              <b>2. 데이터시트 값</b>
-              후보 데이터시트의 표 행에서 정격 값과 시험 조건(온도·펄스 폭 등)을 읽습니다.
-            </li>
-            <li>
-              <b>3. 코드로 비교</b>
-              기준식 계산과 숫자·단위 비교는 모델이 아니라 판정 코드가 합니다. 시험 조건이 다르면
-              비교하지 않습니다.
-            </li>
-            <li>
-              <b>4. 근거 인용</b>
-              조건마다 데이터시트 파일과 쪽·표·행을 붙입니다.
-            </li>
-          </ol>
-          <h3>필수 조건의 기준식</h3>
-          <p>
-            대부분의 역할은 정격에 여유를 둡니다. 전압은 정격의 80%까지만 쓰도록 회로 값 × 1.25,
-            전류는 70%까지만 쓰도록 회로 값 ÷ 0.7(약 × 1.43) 이상인 정격을 요구합니다. 다이오드 회로
-            역할 23종마다 조건과 기준식이 있고, 아래는 그중 3종입니다. 질문에 적은 규격(예: 서지
-            전류 2 A 이상)도 필수 조건으로 더합니다.
-          </p>
-          <div className="rules">
-            <div>
-              <strong>역극성 보호(직렬)</strong>
-              <dl>
-                <div>
-                  <dt>역전압 VRRM·VR</dt>
-                  <dd>입력 최대 전압 × 1.25 이상</dd>
-                </div>
-                <div>
-                  <dt>평균 순방향 전류 IF(AV)</dt>
-                  <dd>최대 전류 ÷ 0.7 이상</dd>
-                </div>
-                <div>
-                  <dt>순방향 전압 VF</dt>
-                  <dd>허용 전압강하 이하(값을 알려 준 경우만)</dd>
-                </div>
-              </dl>
-            </div>
-            <div>
-              <strong>AC · 브리지 정류</strong>
-              <dl>
-                <div>
-                  <dt>역전압 VRRM</dt>
-                  <dd>AC 실효값 × √2 × 1.25 이상(DC 입력이면 입력 최대 전압 × 1.25)</dd>
-                </div>
-                <div>
-                  <dt>평균 순방향 전류 IF(AV)</dt>
-                  <dd>부하 전류 ÷ 0.7 이상(다이오드 4개를 따로 쓰면 그 절반)</dd>
-                </div>
-              </dl>
-            </div>
-            <div>
-              <strong>플라이백 전원 출력 정류</strong>
-              <dl>
-                <div>
-                  <dt>역전압 VRRM</dt>
-                  <dd>(출력 전압 + 입력 최대 전압 × 권선비) × 2 이상(스너버가 있으면 × 1.25)</dd>
-                </div>
-                <div>
-                  <dt>평균 순방향 전류 IF(AV)</dt>
-                  <dd>출력 전류 ÷ 0.7 이상</dd>
-                </div>
-                <div>
-                  <dt>역회복 시간 trr</dt>
-                  <dd>75 ns 이하</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-          <h3>판정 5종</h3>
-          <p>후보마다 위에서부터 차례로 따져, 처음 맞는 판정 하나를 냅니다.</p>
-          <ol className="verdict-order">
-            <li>
-              <Badge verdict="IDENTICAL" />
-              <p>
-                같은 품번, 같은 기본 품번에 주문 코드만 다른 품번, 또는 제조사가 같은 제품이라고
-                밝힌 품번입니다.
-              </p>
-            </li>
-            <li>
-              <Badge verdict="NOT_SUFFICIENT" />
-              <p>
-                조건 중 하나라도 기준에 못 미칩니다. 다른 조건을 확인하지 못했어도 불충족입니다.
-              </p>
-            </li>
-            <li>
-              <Badge verdict="NOT_VERIFIED" />
-              <p>
-                필요한 값이 데이터시트에 없거나 시험 조건이 달라 비교하지 못했습니다. 견적에 넣지
-                않습니다.
-              </p>
-            </li>
-            <li>
-              <Badge verdict="SPEC_EQUIVALENT" />
-              <p>
-                조건을 모두 통과했고, 역할마다 정한 주요 정격(역전압·평균 전류·서지 전류 등)도 같은
-                시험 조건에서 원래 부품과 같거나 낫습니다. 원래 부품의 데이터시트가 있어야 합니다.
-              </p>
-            </li>
-            <li>
-              <Badge verdict="ROLE_SUFFICIENT" />
-              <p>
-                조건은 모두 통과했지만 사양 동등을 확인하지 못했습니다. 원래보다 낮은 주요 정격이
-                있거나, 같은 시험 조건의 원래 값이 없거나, 원래 부품의 데이터시트가 없거나, 그
-                역할에 주요 정격이 정해져 있지 않은 경우입니다. 첫 화면의 1N4007G 예시는 원래 부품
-                1N4007RLG의 데이터시트를 찾지 못해 이 판정입니다.
-              </p>
-            </li>
-          </ol>
-        </section>
-        <section className="limits">
-          <h2>판정의 한계와 승인</h2>
-          <div>
-            {/* [왜] "같은 동작은 보장하지 않습니다"는 위 예시 결과(Disclaimer)에 있어 이 화면에서 두 번 쓰지 않는다 */}
-            <p>
-              판정은 데이터시트에 적힌 값과 회로 조건의 비교입니다. 실제 적용 전에는 사용 조건과
-              실장(패키지·기판) 변경을 확인해야 합니다.
-            </p>
-            <p>사람이 후보를 승인한 뒤에만 수량을 넣어 견적서를 저장합니다.</p>
-            <a className="button primary" href="/login">
-              내 회로 검토하기 <ArrowRight size={18} />
+            </LandingMedia>
+            <figcaption>{LANDING.media.report.caption}</figcaption>
+          </figure>
+          <div className="approval-copy">
+            <h2 className="landing-reveal" id="approval-title">
+              {LANDING.approval.title.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </h2>
+            <p className="landing-section-copy landing-reveal">{LANDING.approval.description}</p>
+            <a className="hero-cta landing-reveal" href={LANDING.actionHref}>
+              {LANDING.action}
+              <ArrowUpRight size={22} aria-hidden="true" />
             </a>
           </div>
         </section>
       </main>
-      <Footer />
+      <footer className="landing-footer">
+        <div className="landing-footer-top">
+          <p>{LANDING.footer.description}</p>
+          <a href="#top">
+            {LANDING.footer.top}
+            <ArrowUpRight size={18} aria-hidden="true" />
+          </a>
+        </div>
+        <a className="landing-wordmark" href="#top" aria-label={LANDING.footer.top}>
+          {LANDING.footer.wordmark}
+        </a>
+        <div className="landing-footer-bottom">
+          <nav aria-label={LANDING.footer.legalLabel}>
+            {LANDING.footer.links.map(([path, title]) => (
+              <a
+                key={path}
+                href={path}
+                onClick={(event) => {
+                  if (!plainClick(event)) return;
+                  event.preventDefault();
+                  setLegalPath(path);
+                }}
+              >
+                {path === '/privacy' ? <strong>{title}</strong> : title}
+              </a>
+            ))}
+            <a href={LANDING.footer.contactHref}>{LANDING.footer.contact}</a>
+          </nav>
+          <small>{LANDING.footer.copyright}</small>
+        </div>
+      </footer>
+      {legalPath && <LegalModal path={legalPath} close={() => setLegalPath(null)} />}
     </div>
   );
 }

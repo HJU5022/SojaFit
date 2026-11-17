@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode }
 import {
   AlertCircle,
   ArrowUpRight,
+  CircleHelp,
   CircuitBoard,
   Ellipsis,
   FileText,
@@ -15,7 +16,7 @@ import {
 import { api, verdicts } from './api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { explainAnswer, markdownUrl, safeLink } from './display';
+import { EVIDENCE_GRADES, evidenceGrade, explainAnswer, markdownUrl, safeLink } from './display';
 import { acceptsFile, isSchematicFile, partsOf, pinsOf } from './circuit';
 import type { Citation, Project, Verdict } from './types';
 export function navigate(url: string, replace = false) {
@@ -80,16 +81,14 @@ export function useResource<T>(path: string | null) {
   }, [path, version]);
   return { data, loading, error, reload: () => setVersion((v) => v + 1), setData };
 }
+/** 회로 속 자리와 후보를 나타내는 공통 로고. 파비콘과 같은 도형을 쓴다(SPEC 2절). */
 export function Brand() {
   return (
     <a className="brand" href="/" aria-label="SojaFit 홈">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-        <path
-          d="M2 14h6m12 0h6M8 6v16l12-8L8 6Zm12 0v16"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="currentColor" aria-hidden="true">
+        <path d="M3 3h14v5H8v9H3Z" />
+        <path d="M25 25H11v-5h9v-9h5Z" />
+        <rect x="11" y="11" width="6" height="6" />
       </svg>
       <span>SojaFit</span>
     </a>
@@ -424,10 +423,76 @@ export function useNetlistAttach(accept: string, onFile: (file: File) => void) {
     ),
   };
 }
+/**
+ * 근거 등급 설명(? 버튼): 누르면 세 등급의 이름 · 쓰임을 작은 팝업으로 보인다. 근거 목록 맨 위에 한 번만 둔다.
+ * [왜] 근거 줄마다 긴 설명을 붙이면 목록이 길어진다. 줄에는 색 배지만 두고 뜻은 여기서 한 번 알려 준다(11-17 조장 결정).
+ * 닫기는 메뉴(`RowMenu`)와 같다: Esc · 바깥 누름.
+ */
+export function GradeHelp() {
+  const [open, setOpen] = useState(false),
+    ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent) {
+        if (e.key !== 'Escape') return;
+        ref.current?.querySelector('button')?.focus(); // [왜] 팝업이 사라져도 초점이 ? 버튼에 남게 한다
+      } else if (ref.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [open]);
+  return (
+    <div className="grade-help" ref={ref}>
+      <span>근거 등급</span>
+      <button
+        type="button"
+        className="icon-button"
+        aria-label="근거 등급 설명"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <CircleHelp size={15} />
+      </button>
+      {open && (
+        <div className="grade-help-pop" role="note">
+          <p>근거는 믿을 수 있는 정도에 따라 세 등급으로 나눕니다.</p>
+          <dl>
+            {EVIDENCE_GRADES.map((g) => (
+              <div key={g.grade}>
+                <dt>
+                  <span className={`badge grade-${g.grade}`}>{g.short}</span> {g.name}
+                </dt>
+                <dd>{g.use}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+    </div>
+  );
+}
+/** 근거 한 건: 등급 배지(색 · 1~3등급, 뜻은 `GradeHelp`) · 문서 · 위치 · 원문 링크. */
 export function Source({ cite }: { cite: Citation }) {
+  const grade = evidenceGrade(cite);
   return (
     <div className="citation">
-      <strong>{cite.document || '문서명 미제공'}</strong>
+      <div className="citation-head">
+        {grade && (
+          <span
+            className={`badge grade-${grade.grade}`}
+            title={`근거 ${grade.short} · ${grade.name}`}
+          >
+            {grade.short}
+          </span>
+        )}
+        <strong>{cite.document || '문서명 미제공'}</strong>
+      </div>
       <span>
         {[cite.page != null ? `${cite.page}쪽` : null, cite.table, cite.row, cite.section]
           .filter(Boolean)
@@ -440,7 +505,6 @@ export function Source({ cite }: { cite: Citation }) {
       ) : (
         <span className="muted">원문 링크 미제공</span>
       )}
-      {cite.evidence_grade === 3 && <span>미검증 참고 정보</span>}
     </div>
   );
 }
@@ -532,6 +596,11 @@ export function Markdown({ children }: { children: string }) {
       urlTransform={markdownUrl}
       disallowedElements={['img']}
       components={{
+        table: ({ children }) => (
+          <div className="markdown-table-scroll" role="region" aria-label="답변 표" tabIndex={0}>
+            <table>{children}</table>
+          </div>
+        ),
         a: ({ href, children: label }) =>
           href ? (
             <a href={href} target="_blank" rel="noreferrer noopener">

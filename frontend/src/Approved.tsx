@@ -1,22 +1,23 @@
 /** 승인 사례 목록과 사례 하나의 기록(원래 대화·판정·근거·견적)·인쇄용 보고서. 저장한 값을 보이기만 하고 다시 판정하지 않는다. 출처: SPEC 4절·8.4절. */
-import { useEffect, useState } from 'react';
-import { ArrowLeft, FileText, Printer, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Download, FileText, Printer, Trash2 } from 'lucide-react';
 import { api, verdicts } from './api';
 import { Amount } from './Candidate';
-import { formatAmount, opLabel, safeLink } from './display';
-import { ecoFields } from './report';
+import { formatAmount, opLabel, pricesPath, safeLink } from './display';
+import { ecoFields, quoteFields } from './report';
 import {
   Badge,
   Disclaimer,
   Empty,
   ErrorBox,
+  GradeHelp,
   Loading,
   Markdown,
   Modal,
   Source,
   useResource,
 } from './ui';
-import type { ApprovedCaseDetail, Role, Verdict } from './types';
+import type { ApprovedCaseDetail, Prices, Role, Verdict } from './types';
 const RESULTS: Record<string, string> = { pass: '통과', fail: '불충족' };
 const reportLink = (id: number) => (
   <a className="button" href={`/approved/${id}/report`}>
@@ -115,6 +116,7 @@ function CaseDetail({ id, close }: { id: number; close: () => void }) {
             </section>
             <section>
               <h2>근거 문서</h2>
+              {d.evidence.length > 0 && <GradeHelp />}
               {d.evidence.length ? (
                 d.evidence.map((cite, i) => <Source key={i} cite={cite} />)
               ) : (
@@ -134,7 +136,10 @@ function CaseDetail({ id, close }: { id: number; close: () => void }) {
                   {d.quotes.map((q) => (
                     <li key={q.id}>
                       {q.part_number} · {q.quantity}개 ·{' '}
-                      {new Date(q.created_at).toLocaleString('ko-KR')} 저장
+                      {new Date(q.created_at).toLocaleString('ko-KR')} 저장 ·{' '}
+                      <a href={`/approved/${id}/quote/${q.id}`} target="_blank" rel="noreferrer">
+                        견적서 보기
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -269,6 +274,210 @@ export function CaseReport({ id, email }: { id: number; email: string }) {
         <ErrorBox error={detail.error} retry={detail.reload} />
       ) : (
         d && <ReportBody d={d} roles={roles.data} email={email} />
+      )}
+    </div>
+  );
+}
+/** 저장한 견적 하나의 견적서 문서(A4 한 장)와 PDF 다운로드. 가격·재고는 열 때 한 번 조회해 보이기만 하고 저장하지 않는다(SPEC 8.4, ADR 0009). */
+export function CaseQuote({
+  caseId,
+  quoteId,
+  email,
+}: {
+  caseId: number;
+  quoteId: number;
+  email: string;
+}) {
+  const detail = useResource<ApprovedCaseDetail>(`/approved-cases/${caseId}`),
+    d = detail.data,
+    quote = d?.quotes.find((q) => q.id === quoteId),
+    prices = useResource<Prices>(quote ? pricesPath(quote.part_number, quote.quantity) : null),
+    sheet = useRef<HTMLElement>(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState<Error | null>(null);
+  const f = d && quote ? quoteFields(d, quote, prices.data) : null;
+  async function download() {
+    if (!sheet.current || !f) return;
+    setBusy(true);
+    setError(null);
+    try {
+      // [왜] PDF 라이브러리는 크기가 커서 단추를 누를 때만 불러온다
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+      const canvas = await html2canvas(sheet.current, { scale: 2, backgroundColor: '#ffffff' });
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+      // [왜] A4(210×297mm)에 여백 10mm를 두고, 문서가 길어도 한 쪽에 들어오게 비율을 지켜 줄인다
+      const k = Math.min(190 / canvas.width, 277 / canvas.height);
+      // [왜] 압축 없이 넣으면 한 장이 6MB를 넘는다. FAST 압축으로 수백 kB로 줄인다
+      pdf.addImage(
+        canvas.toDataURL('image/png'),
+        'PNG',
+        10,
+        10,
+        canvas.width * k,
+        canvas.height * k,
+        undefined,
+        'FAST',
+      );
+      pdf.save(f.file);
+    } catch (e) {
+      setError(e as Error);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const checks = d?.candidate?.checks ?? [],
+    passed = checks.filter((check) => check.result.toLowerCase() === 'pass').length,
+    // [왜] 조회는 됐는데 못 쓴 이유(quoteFields)와 조회 요청 자체가 실패한 경우를 한 줄로 알린다
+    reason = f?.unavailable ?? (prices.error ? '가격·재고를 조회하지 못했습니다.' : null),
+    money = (value: string | undefined) =>
+      f?.estimate && value
+        ? `${value} ${f.estimate.currency}`
+        : prices.loading
+          ? '조회 중'
+          : '조회 불가';
+  return (
+    <div className="report-page">
+      <div className="report-actions">
+        <a className="button" href="/approved">
+          <ArrowLeft size={16} />
+          돌아가기
+        </a>
+        <button className="primary" onClick={download} disabled={!f || prices.loading || busy}>
+          <Download size={16} />
+          {busy ? 'PDF 만드는 중…' : 'PDF 다운로드'}
+        </button>
+      </div>
+      <ErrorBox error={error} />
+      {detail.loading ? (
+        <Loading />
+      ) : detail.error ? (
+        <ErrorBox error={detail.error} retry={detail.reload} />
+      ) : !d || !quote || !f ? (
+        <Empty title="견적을 찾지 못했습니다">
+          <p>승인 사례에서 저장한 견적을 다시 확인해 주세요.</p>
+        </Empty>
+      ) : (
+        <article className="report quote-sheet" ref={sheet}>
+          <header>
+            <h1>견적서</h1>
+            <dl className="report-facts">
+              {[
+                ['견적 번호', f.number],
+                ['작성일', new Date(quote.created_at).toLocaleDateString('ko-KR')],
+                ['프로젝트(회로)', d.project_name],
+                ['요청자', email],
+                ['서비스', 'SojaFit'],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </header>
+          <section>
+            <h2>품목</h2>
+            <div className="report-table">
+              <table className="quote-items">
+                <thead>
+                  <tr>
+                    <th>기호</th>
+                    <th>원래 품번</th>
+                    <th>대체 품번</th>
+                    <th>제조사</th>
+                    <th>수량</th>
+                    <th>적용 구간</th>
+                    <th>단가</th>
+                    <th>금액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{f.ref ?? '—'}</td>
+                    <td>{f.original ?? '—'}</td>
+                    <td>
+                      <strong>{f.part}</strong>
+                    </td>
+                    <td>{f.manufacturer ?? '—'}</td>
+                    <td>{f.quantity.toLocaleString()}개</td>
+                    <td>
+                      {f.estimate ? `${f.estimate.break_quantity.toLocaleString()}개부터` : '—'}
+                    </td>
+                    <td>{money(f.estimate?.unit_price)}</td>
+                    <td>{money(f.estimate?.total)}</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th colSpan={7}>합계</th>
+                    <td>{money(f.estimate?.total)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            {reason && <p role="status">가격 조회 불가: {reason}</p>}
+          </section>
+          <section>
+            <h2>가격·재고 출처</h2>
+            {f.source && f.fetchedAt ? (
+              <>
+                <p>
+                  {f.source} 실시간 조회 · {new Date(f.fetchedAt).toLocaleString('ko-KR')}
+                </p>
+                <p>재고: {f.availability ?? '미제공'}</p>
+                {safeLink(f.url) && <p className="quote-url">판매처: {safeLink(f.url)}</p>}
+              </>
+            ) : (
+              <p>
+                {prices.loading ? '가격·재고를 조회하는 중입니다.' : '조회한 가격·재고가 없습니다.'}
+              </p>
+            )}
+            <p>
+              세금·배송비·환율은 들어 있지 않습니다. 가격·재고는 조회한 시점의 값이며 SojaFit은
+              저장하지 않습니다. 주문 전에 판매처에서 다시 확인해 주세요.
+            </p>
+          </section>
+          <section>
+            <h2>검토 근거</h2>
+            <p>
+              <Badge verdict={d.verdict} />{' '}
+              {checks.length ? `조건 ${checks.length}개 중 ${passed}개 통과` : null}
+            </p>
+            {/* [왜] 같은 표를 조건마다 인용하면 같은 줄이 겹친다. 문서 · 쪽 · 표가 같은 근거는 한 번만 적는다 */}
+            {[
+              ...new Set(
+                d.evidence.map(
+                  (e) =>
+                    e.document +
+                    (e.page != null ? ` ${e.page}쪽` : '') +
+                    (e.table ? `, ${e.table}` : ''),
+                ),
+              ),
+            ]
+              .slice(0, 3)
+              .map((line) => (
+                <p key={line}>근거 문서: {line}</p>
+              ))}
+            <p>조건별 비교는 부품 대체 검토 보고서 SF-{d.id}에 있습니다.</p>
+          </section>
+          <section>
+            <h2>승인</h2>
+            <dl className="report-facts">
+              <div>
+                <dt>승인 시각</dt>
+                <dd>{new Date(d.created_at).toLocaleString('ko-KR')}</dd>
+              </div>
+              <div>
+                <dt>승인자</dt>
+                <dd>{email}</dd>
+              </div>
+            </dl>
+          </section>
+          <Disclaimer />
+        </article>
       )}
     </div>
   );

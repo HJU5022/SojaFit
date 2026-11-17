@@ -234,6 +234,22 @@ def test_render_find_with_no_candidates_says_so_and_shows_terms():
     assert 'VRRM ≥ 15' in text and '조건을 모두 만족하는 부품을 찾지 못했어요.' in text and '50개 상한' in text
 
 
+def test_render_find_says_when_terms_came_from_the_original_part():
+    j = {**JUDGEMENT, 'kind': 'find', 'results': [], 'shown': [], 'terms': [{'code': 'VRRM', 'gte': 50.0}]}
+    assert '원래 부품의 정격을 기준으로' not in Msg.render_judgement(j)
+    assert 'VRRM ≥ 50 (회로 값을 몰라 원래 부품의 정격을 기준으로 찾았어요)' in Msg.render_judgement({**j, 'terms_from_original': True})
+
+
+def test_empty_find_message_shows_role_and_terms_or_asks_for_values():
+    """후보 찾기 0개 안내(11-17): 건 조건이 있으면 그 조건을, 없으면 값이 필요하다는 것을 알려 준다. 공통 문구는 쓰지 않는다."""
+    j = {**JUDGEMENT, 'kind': 'find', 'results': [], 'terms': [{'code': 'VRRM', 'gte': 15.0}, {'code': 'IF_AV', 'gte': 1.4286}]}  # 값은 답 틀의 표시 자릿수로 보인다
+    with_terms, without = Msg.empty_find_message(j), Msg.empty_find_message({**j, 'terms': []})
+    for text in (with_terms, without):
+        assert text.startswith('역할: R01 (근거: D1.K → RAW)') and '이 부품 자료를 찾지 못했어요' not in text
+    assert 'VRRM ≥ 15, IF_AV ≥ 1.429' in with_terms and '이 조건을 모두 만족하는 부품을 찾지 못했어요' in with_terms
+    assert '없음(빠진 값이 있어 거르지 못함)' in without and '숫자만 적어도 돼요' in without
+
+
 def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():
     seen = []
     r = run(task(parts=['TS40P05G']), llm(D.DocsAnswer(grade='enough', answer='TJ는 150°C이다 [3].')), docs=[doc(3, 'TJ 150 °C')], seen=seen,

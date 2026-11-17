@@ -80,7 +80,7 @@ SojaFit (proj3-b)
 │   │       ├── samples/    <- 공개 라이선스 넷리스트(화면 입구는 #58에서 뺐고 파일만 둠)
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
-│   │       └── sojafit-icon.svg <- 다이오드 기호 아이콘(파비콘, 앱 로고와 같은 기호)
+│   │       └── sojafit-icon.svg <- 자리·후보 기호 아이콘(파비콘, 앱 로고와 같은 기호)
 │   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)과 브라우저 시험(Playwright)
 │   │   ├── TESTS.md        <- 폴더 설명
 │   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄·보내기 키(#38)·진행 단계 시간(#42)·판정 후보 모으기(#55) 시험
@@ -346,6 +346,7 @@ SojaFit (proj3-b)
 │   ├── 033_thread_titles.sql <- 사용자가 고친 대화 이름 칸(threads.title, NULL이면 첫 질문 이름)
 │   ├── 034_admin_audit.sql <- 관리자 작업 이력 표 admin_audit(가림 해제 사유 · 정지 · 재활성화 · 탈퇴 처리, 앱은 INSERT만)
 │   ├── 035_circuit_schematics.sql <- 회로 버전에 붙은 업로드 KiCad 회로도 원문 표 circuit_schematics(그림은 저장 안 함, #52)
+│   ├── 036_thread_continuations.sql <- 새 회로 버전의 대화와 이전 대화를 잇는 표(메시지·판정 복사 없음)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명

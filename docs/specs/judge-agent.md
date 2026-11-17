@@ -46,7 +46,7 @@
    - 필수: 사양 값과 회로 값으로 코드가 계산할 수 있는 조건
    - 조건부 필수: 발동 조건(PWM, 데이터선, 고온, OP앰프 없음 등)이 있을 때만 필수
    - 주의(사람 확인): 문서로 계산할 수 없는 것. 판정을 바꾸지 않고 답에 목록으로 붙인다
-5. 묻기(그래프 인터럽트): 필수 조건이나 발동 여부에 필요한 회로 값이 빠졌으면 한 번에 모아 묻는다. 사용자가 답하면 같은 thread에서 이어 간다.
+5. 묻기(그래프 인터럽트): 필수 조건이나 발동 여부에 필요한 회로 값이 빠졌으면 한 번에 모아 묻는다. 사용자가 답하면 같은 thread에서 이어 간다. 현재 질문/사용 조건에서 전체 사용 조건을 모르거나 추가 조건을 확인·제공할 수 없다고 명시하면 수치 재질문을 생략한다. 단일 항목/제조사 모름·가정문에는 적용하지 않고 역할 선택은 유지한다. 이미 준 값과 판정 기준은 유지하며 빠진 값은 미확인으로 남긴다.
    판정 질문의 후보가 모두 원래 부품과 같은 품번(제조사 이름 · 대소문자만 다름)이면 값 · 역할을 묻지 않고 동일품으로 판정하며 빠진 값을 남기지 않는다. 주문 코드만 다르거나 원래 부품의 제조사를 모르면 지금처럼 묻고, 다른 품번이 섞이면 한 번 묻는다(#65). 읽기가 원래 부품을 후보에서 빼 후보가 비면, 지금 질문의 품번이 원래 품번 하나뿐일 때만 그 품번을 후보로 쓴다(판정 읽기 `judge_read_agent`).
 6. 값 읽기(코드): 원래 부품과 후보의 사양 행(값·시험 조건·인용)을 카드 읽기 도구로 읽는다(`backend/rag/card_specs.py`, ADR 0016). 코드가 먼저 읽고 못 읽은 카드만 LLM(`card_read.md`)이 읽는다(`backend/rag/card_read.py`).
 7. 비교와 판정(코드, `backend/judge/verdict.py`): 조건마다 통과·실패·확인 안 됨을 정하고 SPEC 3절 순서로 판정 5종을 낸다. 패키지가 다르면 판정과 별도로 "기판 수정 필요"를 붙인다.
@@ -159,6 +159,7 @@ R01:
 | AC-07 규칙이 없는 역할은 판정하지 않는다 | 읽기가 `role = other`를 내면 판정 코드 없이 찾은 값과 "이 역할은 판정 규칙이 없다"를 답한다 | `tests/multi_agent/test_judge.py::test_ac07_other_role_gives_no_verdict` |
 | AC-08 호출 상한 | 인터럽트는 1번을 넘지 않고 재개 값이 회로 값을 채운다 | `tests/multi_agent/test_judge.py::test_ac08_interrupt_once_and_reply_fills_values`, `test_judge_read_calls_llm_once_with_roles_and_circuit` |
 | AC-09 숫자 비교는 judge에서만 | 기준 계산과 비교는 `backend/judge/verdict.py` 함수로만 하고 에이전트와 프롬프트는 숫자를 비교하지 않는다 | `tests/multi_agent/test_judge.py::test_ac09_numbers_are_compared_in_verdict_only` |
+| AC-10 명시적 전체 조건 모름 | Given 현재 사용자가 전체 조건 모름/추가 확인 불가를 명시, When 판정, Then 수치를 다시 묻지 않고 없는 필수 값은 미확인으로 남긴다. 알려진 값·불충족 결과·역할 선택은 유지하고 개별/가정/과거/회로 문장은 전체 거절로 보지 않는다 | `tests/multi_agent/test_judge.py`의 declined/declining/other_unknowns/unknown_conditions_only 회귀 |
 | AC-10 대상 핀은 잘리지 않는다 | 대상 다이오드가 노드 9개 이상인 GND 넷에 붙어 있어도 `circuit_around`의 보이는 노드에 대상 자신의 핀이 있다 | `tests/graph/test_graph_read_input.py` |
 
 ## 구현 상태

@@ -9,7 +9,7 @@ from contextvars import ContextVar, copy_context
 from datetime import datetime, timezone
 from threading import Event, Lock
 from time import monotonic
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 from ipaddress import ip_address
 
 import httpx
@@ -379,7 +379,8 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
                         LOGGER.debug('datasheet_candidate_rejected stage=fetch reason=unreadable_pdf url=%s', urlsplit(url).path[:160])
                     if not rows:
                         LOGGER.debug('datasheet_candidate_rejected stage=row_parser reason=no_exact_verified_row url=%s', urlsplit(url).path[:160])
-                title = urlsplit(url).path.rsplit('/', 1)[-1]
+                # [왜] URL 파일명은 공백이 `%20`이다. 그대로 두면 같은 문서가 코퍼스 파일명과 달라진다(`UF4001%20SERIES_P2104.pdf` ↔ `UF4001 SERIES_P2104.pdf`)
+                title = unquote(urlsplit(url).path.rsplit('/', 1)[-1])
                 for row in rows[:MAX_RESULTS - len(docs)]:
                     docs.append({**row, 'chunk_id': f'W{len(docs)+1}', 'file': title,
                                  'title': title, 'source_type': 'external_web', 'source_url': url,

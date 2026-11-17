@@ -1,5 +1,5 @@
 /** 대화가 먼저인 입구: 사이드바의 대화 목록·프로젝트 폴더와 "새 대화" 빈 화면. 프로젝트 하나는 회로 하나다. 출처: SPEC 2절, 4절, 8.8. */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronRight, CornerDownLeft, FilePlus, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError } from './api';
 import { duplicateAction, projectNameFromQuestion } from './circuit';
@@ -16,7 +16,7 @@ import {
 } from './ui';
 import { NewProject, refreshNavigation } from './Projects';
 import { openWithQuestion } from './Workbench';
-import type { Project, ThreadListItem } from './types';
+import type { Demo, Project, ThreadListItem } from './types';
 /** 펼친 프로젝트 번호를 이 브라우저에 남기는 키(사이드바 나무, #31). */
 const EXPANDED = 'sojafit.sidebar.expanded';
 /**
@@ -296,17 +296,41 @@ export function ConversationNav({
     </div>
   );
 }
-/** "새 대화" 화면: 가운데 공통 안내(첨부 한 줄과 지원 범위 한 줄, 예제 회로를 건네는 입구는 두지 않음), 아래 질문 입력창 하나(#30 #41 #45 #58). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
+/** "새 대화" 화면: 가운데 공통 안내(첨부 한 줄과 안내 한 줄. 데모 모드에서만 그 아래 데모 회로 목록), 아래 질문 입력창 하나(#30 #41 #45 #58). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
 export function NewConversation() {
   const [question, setQuestion] = useState(''),
+    [submitted, setSubmitted] = useState(''),
     [attachment, setAttachment] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<Error | null>(null);
+  const questionRef = useRef('');
   // [왜] 새 대화 업로드(POST /api/projects/upload)는 .net · .kicad_sch만 받는다. 작업대 첨부는 .txt도 받는다
   const attach = useNetlistAttach('.net,.kicad_sch', setAttachment);
-  async function start() {
+  // [주의] 운영(DEMO_MODE=0)은 /demo-circuits가 404라 데모 회로 목록이 보이지 않는다. 로컬 데모(DEMO_MODE=1)에서만 보인다
+  const demos = useResource<Demo[]>('/demo-circuits');
+  /** 데모 회로로 프로젝트를 만들고 그 작업대를 연다. 질문은 보내지 않는다(작업대에서 고른다). */
+  async function startDemo(demo: Demo) {
     setBusy(true);
     setError(null);
+    try {
+      const project = await api<Project>('/projects?allow_duplicate=true', 'POST', {
+        name: demo.name,
+        demo_id: demo.id,
+      });
+      refreshNavigation();
+      await openWithQuestion(project.id, '');
+    } catch (e) {
+      setError(e as Error);
+      setBusy(false);
+    }
+  }
+  async function start() {
+    const submittedQuestion = question.trim();
+    setBusy(true);
+    setError(null);
+    setSubmitted(submittedQuestion);
+    questionRef.current = '';
+    setQuestion('');
     try {
       let project: Project;
       if (attachment) {
@@ -332,7 +356,7 @@ export function NewConversation() {
           if (next.action === 'continue')
             return await openWithQuestion(
               next.projectId,
-              question,
+              submittedQuestion,
               `이미 있는 회로라 그 프로젝트(${next.name})에서 이어서 검토해요`,
             );
           project = await api('/projects/upload?allow_duplicate=true', 'POST', body);
@@ -340,12 +364,17 @@ export function NewConversation() {
       } else
         // [왜] 회로 없는 대화도 프로젝트 하나에 담는다(대화는 프로젝트에 속한다). 질문에서 지은 이름은 겹쳐도 되니 409를 묻지 않는다
         project = await api('/projects?allow_duplicate=true', 'POST', {
-          name: projectNameFromQuestion(question),
+          name: projectNameFromQuestion(submittedQuestion),
         });
       refreshNavigation();
-      await openWithQuestion(project.id, question);
+      await openWithQuestion(project.id, submittedQuestion);
     } catch (e) {
       setError(e as Error);
+      if (!questionRef.current.trim()) {
+        questionRef.current = submittedQuestion;
+        setQuestion(submittedQuestion);
+      }
+      setSubmitted('');
       setBusy(false);
     }
   }
@@ -363,10 +392,28 @@ export function NewConversation() {
         </div>
         <p>
           <Info size={14} />
-          지금 지원: 다이오드 · 판정마다 데이터시트 인용
+          판정마다 데이터시트 인용
         </p>
+        {!!demos.data?.length && (
+          <div className="start-demos">
+            <p>데모 회로로 시작</p>
+            <div className="actions">
+              {demos.data.map((demo) => (
+                <button
+                  key={demo.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void startDemo(demo)}
+                >
+                  {demo.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       {busy && <Loading label="대화를 준비하는 중" />}
+      {submitted && <div className="user-message">{submitted}</div>}
       <ErrorBox error={error} />
       <form
         className="composer"
@@ -384,7 +431,10 @@ export function NewConversation() {
           value={question}
           autoFocus
           maxLength={4000}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={(e) => {
+            questionRef.current = e.target.value;
+            setQuestion(e.target.value);
+          }}
           onKeyDown={(e) => {
             if (!isSendKey(e.nativeEvent)) return; // Shift+Enter · 한글 조합 중 Enter는 그대로(#38)
             e.preventDefault();

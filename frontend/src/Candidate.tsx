@@ -16,7 +16,7 @@ import {
   validQuantity,
 } from './display';
 import { inputLabel } from './inputLabels';
-import { Badge, Disclaimer, ErrorBox, Loading, Modal, Source, useResource } from './ui';
+import { Badge, Disclaimer, ErrorBox, GradeHelp, Loading, Modal, Source, useResource } from './ui';
 import type { Approval, Candidate as CandidateType, Project, Result, Role } from './types';
 /** 누를 때만 가격·재고를 조회한다. quantity가 있으면 그 수량의 적용 구간·단가·예상 금액도 보인다. */
 export function PriceLookup({ part, quantity }: { part: string; quantity?: number }) {
@@ -167,7 +167,7 @@ export function CandidateDetails({
     try {
       await api(`/approvals/${approval.id}/quotes`, 'POST', { quantity });
       saved.reload();
-      setNotice('견적서를 저장했습니다. 프로젝트의 견적 목록에서 확인할 수 있습니다.');
+      setNotice('견적서를 저장했습니다. 아래 "견적서 보기"에서 열고 PDF로 받을 수 있습니다.');
     } catch (e) {
       setError(e as Error);
     } finally {
@@ -318,6 +318,7 @@ export function CandidateDetails({
       </section>
       <section>
         <h2>문서 근거</h2>
+        {result.evidence.length > 0 && <GradeHelp />}
         {result.evidence.length ? (
           result.evidence.map((cite, i) => <Source cite={cite} key={i} />)
         ) : (
@@ -351,6 +352,7 @@ export function CandidateDetails({
             <p className="approved-mark">
               <Check size={17} /> 승인된 후보
             </p>
+            <p>몇 개가 필요한가요? 수량을 넣고 저장하면 견적서를 만듭니다.</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -376,6 +378,15 @@ export function CandidateDetails({
             {approval.quotes?.map((q) => (
               <p key={q.id} className="saved-quote">
                 {q.part_number} · {q.quantity.toLocaleString()}개 · 저장된 견적
+                {approval.case_id != null && (
+                  <a
+                    href={`/approved/${approval.case_id}/quote/${q.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    견적서 보기
+                  </a>
+                )}
               </p>
             ))}
           </>

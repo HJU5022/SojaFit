@@ -264,6 +264,21 @@ def test_thread_endpoint_requires_login():
     assert response.status_code == 401
 
 
+def test_thread_create_accepts_optional_circuit_version(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    calls = []
+    monkeypatch.setattr(ConversationRepository, 'create_thread',
+                        lambda self, user, project, circuit_version=None:
+                        calls.append((user, project, circuit_version)) or str(uuid4()))
+    with web(None, None) as client:
+        default = client.post('/api/projects/7/threads', headers=ORIGIN)
+        pinned = client.post('/api/projects/7/threads?circuit_version=3', headers=ORIGIN)
+        invalid = client.post('/api/projects/7/threads?circuit_version=-1', headers=ORIGIN)
+    assert default.status_code == 201 and pinned.status_code == 201
+    assert invalid.status_code == 422
+    assert calls == [(1, 7, None), (1, 7, 3)]
+
+
 def test_saved_thread_requires_login():
     with TestClient(app, raise_server_exceptions=False) as client:
         assert client.get(f'/api/threads/{uuid4()}').status_code == 401

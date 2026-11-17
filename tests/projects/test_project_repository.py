@@ -204,22 +204,27 @@ def test_empty_project_imports_versions_and_preserves_old_threads(storage):
     empty_thread = conversations.create_thread(owner, empty.id)
     raw = Path("tests/fixtures/netlists/minimal.net").read_bytes()
     first = normalize_netlist(raw)
-    def import_file(normalized):
+    def import_file(normalized, thread_id=None):
         return repo.import_netlist(owner, empty.id, connections=normalized.connections,
-                                   source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+                                   source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION,
+                                   thread_id=thread_id)
     project, thread1 = import_file(first)
     assert project.id == empty.id and project.circuit_version == 1
     assert [(p.id, p.has_circuit) for p in repo.list_owned(owner)] == [(empty.id, True)]
     run, circuit = conversations.start(owner, thread1, {"question": "D1 질문"})
     conversations.finish(owner, thread1, run, "requires_input")
     second = normalize_netlist(raw.replace(b"D1", b"D9"))
-    project2, thread2 = import_file(second)
+    project2, thread2 = import_file(second, thread1)
     assert project2.id == empty.id and project2.circuit_version == 2 and thread1 != thread2
     assert repo.get_owned(owner, empty.id, thread1).connections == project.connections
     # 회로 없이 시작한 대화(버전 0)는 처음 올린 회로(1)를 읽고, 그 뒤 업로드(2)로는 바뀌지 않는다(SPEC 4절 netlist의 thread_id)
     assert repo.get_owned(owner, empty.id, empty_thread).circuit_version == 1
     assert conversations.get_thread(owner, thread1)[2] == circuit
     assert conversations.get_thread(owner, thread2)[2] == project2.connections
+    assert conversations.thread_detail(owner, thread2)['previous_thread_id'] == thread1
+    with connect() as conn:
+        assert str(conn.execute('SELECT previous_thread_id FROM thread_continuations WHERE thread_id=%s', (thread2,)).fetchone()[0]) == thread1
+        assert conn.execute('SELECT count(*) FROM messages WHERE thread_id=%s', (thread2,)).fetchone()[0] == 0
     conversations.resume(owner, thread1, run)
     assert conversations.get_thread(owner, thread1)[2] == circuit
     latest_thread = conversations.create_thread(owner, empty.id)
