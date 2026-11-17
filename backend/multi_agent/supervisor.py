@@ -163,6 +163,13 @@ def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> 
     #      부품 목록 노드와 같은 함수로 개수만 준다(부품 글자는 주지 않는다). nodes.py가 이 파일을 import해 citations처럼 함수 안에서 가져온다
     from backend.graph.nodes import circuit_parts
     count = len(circuit_parts(state))
+    choices = [] if target else state.get('target_choices') or []
+    if choices:
+        # [왜] 지원 다이오드가 여럿인 대화는 대상 없이 시작한다. 계획이 `(none)`만 보고 "대체품 찾아줘" · "다이오드 뭐로 바꿔?"를 품번 없음 · 다른 제조사로
+        #      거절해, 계획 뒤에 고를 부품을 묻는 `대상 확인`까지 가지 못했다(11-17 실측). 고를 부품이 있다는 사실을 알려 준다(평가 · 재생 입력에는 이 칸이 없다)
+        target = ('(not chosen yet: the circuit has ' + ', '.join(f"{c.get('ref', '')} {c.get('value', '')}".strip() for c in choices[:6])
+                  + '. A request to replace a part or to find substitutes is planned as a normal judge task instead of being refused for a missing '
+                    'part number or maker: the user is then asked which part. Everything else is planned as usual)')
     lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}',
              f'Circuit attached: {f"yes ({count} parts)" if count else "no"}', f"Conditions: {state.get('conditions', '')}",
              *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents),

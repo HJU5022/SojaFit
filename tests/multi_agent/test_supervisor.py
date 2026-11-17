@@ -597,3 +597,13 @@ def test_judge_task_carries_the_role_and_given_values_of_the_same_target():
     assert 'prior' not in S.payload({**state, 'last_judgement': {}}, task)
     assert 'prior' not in S.payload(state, {**task, 'agent': 'docs', 'kind': 'rating', 'query': 'q'})
 
+
+def test_plan_input_tells_that_the_target_is_not_chosen_yet_when_the_circuit_has_several_diodes():
+    """대상 없이 시작한 대화(지원 다이오드 여럿)는 계획 입력에 고를 부품이 있다고 알린다. 대상이 있거나 후보가 없으면 전과 같다(11-17)."""
+    from backend.multi_agent import supervisor as S
+    base = {'question': '대체품 찾아줘', 'target': '', 'conditions': '', 'facts': {}}
+    assert 'Target part: (none)' in S.render_plan(base, True)
+    text = S.render_plan({**base, 'target_choices': [{'ref': 'D1', 'value': 'SS34'}, {'ref': 'D2', 'value': 'SS34'}]}, True)
+    assert 'Target part: (not chosen yet: the circuit has D1 SS34, D2 SS34.' in text and 'the user is then asked which part' in text
+    chosen = {**base, 'target': 'D2', 'target_part': {'ref': 'D2', 'value': 'SS34', 'nets': []}, 'target_choices': [{'ref': 'D1', 'value': 'SS34'}]}
+    assert 'Target part: D2 SS34' in S.render_plan(chosen, True) and 'not chosen yet' not in S.render_plan(chosen, True)
