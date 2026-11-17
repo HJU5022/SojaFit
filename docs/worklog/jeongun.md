@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-17 밤 README를 결과 요약으로 다시 씀
+- 조장 지적(23:35): 대표 README가 긴 서술문이라 읽기 어렵고, 3절 그래프가 GitHub 다크 모드에서 노드 글자가 보이지 않는다. 요약해서 결과만 적는다.
+- 고친 것 [실측]: `README.md`를 절 번호(1 ~ 8)와 앵커는 그대로 두고 표와 짧은 줄로 다시 썼다(약 38,400자 → 16,500자). 첫 문장은 AGENTS.md 프로젝트 개요의 표현(회로를 읽고 대체 조건을 정해 후보 부품을 판정, 첫 지원 범위는 소형 MCU 회로의 다이오드)에 맞췄다. 요약 전 원문은 `docs/research/readme-detail-2026-11-17.md`로 옮겼다(상대 링크만 고침, EVAL_REPORT 상세본과 같은 방식). `SOJAFIT.md` 트리와 `docs/research/RESEARCH.md`에 한 줄씩 넣었다.
+- 그래프 [실측]: `tests/multi_agent/test_readme_graph.py`의 `normalize`가 `classDef default` · `last`에 `color:#1f2328`을 붙이게 하고 README 3절 블록에 같은 값을 넣었다. 노드 · 간선은 바꾸지 않았다.
+- 시연 영상 줄 [실측]: README에 2분 29초(정상 1 · 실패 2)로 남아 있던 것을 지금 파일(`ffprobe` 289초 = 4분 49초, 정상 3 · 실패 2)에 맞췄다.
+- 확인 [실측]: `uv run pytest tests/multi_agent/test_readme_graph.py tests/repo -q` 6 통과. README와 상세본의 상대 링크 · 앵커가 모두 실제 파일 · 제목을 가리키는지 스크립트로 대조(깨진 것 0).
+- 확인 못 한 것: 전체 pytest는 다시 돌리지 않았다(문서와 위 시험 파일만 바꿈).
+
 ## 2026-11-17 밤 발표 자료를 필수 목차에 맞춤(25장)
 - 조장 지적(22:58): 발표 자료가 필수 제출 목록의 목차(프로젝트 개요 · 팀 구성 및 역할 · 수행 절차 및 방법 · 수행 경과 · 자체 평가)와 PPT 안에 넣어야 할 다섯 가지를 따르지 않았다.
 - 고친 것 [실측]: 절 이름을 필수 목차 5개로 바꾸고 장 순서를 다시 놓았다. 새로 넣은 장은 3장 페르소나 카드와 고객 여정 지도(`docs/research/market/market-user-journey.md` 3-1 · 4절), 5장 팀 구성과 역할(README 7절), 7장 노드 설명(README 3절 노드 표), 14장 모델 비교(EVAL_REPORT 1-3 · 1-4 · 3절, README 3절 Supervisor 모델 선택 근거), 22장 데모 영상(`docs/deliverables/video/sojafit-demo-2026-11-17.mp4`를 발표 자료 안에 넣음)이다. 20장 → 25장. 편집 가능 검사 25장 통과, pptx 검사기 통과, Keynote 렌더로 새 장을 확인했다.

@@ -835,6 +835,7 @@ SojaFit (proj3-b)
     │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
     │   ├── eval-report-detail-2026-11-17.md  <- 요약 재작성 전 EVAL_REPORT 전체 기록(11-17)
+    │   ├── readme-detail-2026-11-17.md  <- 요약 재작성 전 README 전체 기록(11-17)
     │   ├── market/         <- 문제와 시장 근거: 고객 여정 · 채용 공고 · 수요 근거와 유사 서비스 가격
     │   │   ├── market-user-journey.md  <- 문제와 시장 근거
     │   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
