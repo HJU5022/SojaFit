@@ -1,0 +1,1927 @@
+{
+  "modes": {
+    "without": {
+      "evaluated": 50,
+      "relevant_total": 25,
+      "irrelevant_total": 25,
+      "excluded_ids": [],
+      "candidate_find_ids": [],
+      "missing_ids": [],
+      "metrics": {
+        "cited_gold_rate": {
+          "count": 16,
+          "total": 25,
+          "rate": 0.64,
+          "ids": [
+            "draft30-e02",
+            "draft30-e03",
+            "draft30-e04",
+            "draft30-e08",
+            "draft30-m01",
+            "draft30-m02",
+            "draft30-m03",
+            "draft30-m05",
+            "draft30-m07",
+            "draft30-h01",
+            "draft30-h02",
+            "draft50-n01",
+            "draft50-n03",
+            "draft50-n06",
+            "draft50-n07",
+            "draft50-n08"
+          ]
+        },
+        "wrong_citation_rate": {
+          "count": 1,
+          "total": 25,
+          "rate": 0.04,
+          "ids": [
+            "draft30-e05"
+          ]
+        },
+        "over_refusal_rate": {
+          "count": 8,
+          "total": 25,
+          "rate": 0.32,
+          "ids": [
+            "draft30-e01",
+            "draft30-m04",
+            "draft30-h04",
+            "draft30-h05",
+            "draft50-n02",
+            "draft50-n04",
+            "draft50-n05",
+            "draft52-n21"
+          ]
+        },
+        "correct_refusal_rate": {
+          "count": 25,
+          "total": 25,
+          "rate": 1.0,
+          "ids": [
+            "draft30-e06",
+            "draft30-e07",
+            "draft30-e09",
+            "draft30-e10",
+            "draft30-m06",
+            "draft30-m08",
+            "draft30-m09",
+            "draft30-m10",
+            "draft30-h03",
+            "draft30-h06",
+            "draft30-h07",
+            "draft30-h08",
+            "draft30-h09",
+            "draft30-h10",
+            "draft50-n09",
+            "draft50-n10",
+            "draft50-n11",
+            "draft50-n12",
+            "draft50-n14",
+            "draft50-n15",
+            "draft50-n16",
+            "draft50-n17",
+            "draft50-n18",
+            "draft50-n19",
+            "draft50-n20"
+          ]
+        },
+        "hallucination_risk_rate": {
+          "count": 0,
+          "total": 25,
+          "rate": 0.0,
+          "ids": []
+        }
+      },
+      "rows": [
+        {
+          "id": "draft30-e01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e03",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ],
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "wrong_citation",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ],
+            [
+              "1N5817 SERIES_H2104.pdf",
+              5
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e06",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e07",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e08",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "SS32 SERIES_Q2412.pdf",
+              1
+            ],
+            [
+              "SS32 SERIES_Q2412.pdf",
+              3
+            ]
+          ],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "SS32 SERIES_Q2412.pdf",
+              1
+            ],
+            [
+              "SS32 SERIES_Q2412.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m03",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              3
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              1
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              6
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m06",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m07",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "BZX84C2V4 SERIES_F2001.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "BZX84C2V4 SERIES_F2001.pdf",
+              2
+            ],
+            [
+              "BZX84C2V4 SERIES_F2001.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m08",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h03",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ],
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h06",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h07",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h08",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ],
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BAS70 SERIES_G2606.pdf",
+              1
+            ],
+            [
+              "BAS70 SERIES_G2606.pdf",
+              3
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n03",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              3
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              1
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              4
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n06",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n07",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ],
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n08",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n11",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n12",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n14",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n15",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n16",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n17",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n18",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n19",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n20",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft52-n21",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        }
+      ]
+    },
+    "with": {
+      "evaluated": 50,
+      "relevant_total": 25,
+      "irrelevant_total": 25,
+      "excluded_ids": [],
+      "candidate_find_ids": [],
+      "missing_ids": [],
+      "metrics": {
+        "cited_gold_rate": {
+          "count": 19,
+          "total": 25,
+          "rate": 0.76,
+          "ids": [
+            "draft30-e01",
+            "draft30-e02",
+            "draft30-e03",
+            "draft30-e04",
+            "draft30-e08",
+            "draft30-m01",
+            "draft30-m02",
+            "draft30-m03",
+            "draft30-m05",
+            "draft30-m07",
+            "draft30-h01",
+            "draft30-h02",
+            "draft30-h05",
+            "draft50-n02",
+            "draft50-n03",
+            "draft50-n04",
+            "draft50-n06",
+            "draft50-n08",
+            "draft52-n21"
+          ]
+        },
+        "wrong_citation_rate": {
+          "count": 1,
+          "total": 25,
+          "rate": 0.04,
+          "ids": [
+            "draft50-n05"
+          ]
+        },
+        "over_refusal_rate": {
+          "count": 5,
+          "total": 25,
+          "rate": 0.2,
+          "ids": [
+            "draft30-e05",
+            "draft30-m04",
+            "draft30-h04",
+            "draft50-n01",
+            "draft50-n07"
+          ]
+        },
+        "correct_refusal_rate": {
+          "count": 25,
+          "total": 25,
+          "rate": 1.0,
+          "ids": [
+            "draft30-e06",
+            "draft30-e07",
+            "draft30-e09",
+            "draft30-e10",
+            "draft30-m06",
+            "draft30-m08",
+            "draft30-m09",
+            "draft30-m10",
+            "draft30-h03",
+            "draft30-h06",
+            "draft30-h07",
+            "draft30-h08",
+            "draft30-h09",
+            "draft30-h10",
+            "draft50-n09",
+            "draft50-n10",
+            "draft50-n11",
+            "draft50-n12",
+            "draft50-n14",
+            "draft50-n15",
+            "draft50-n16",
+            "draft50-n17",
+            "draft50-n18",
+            "draft50-n19",
+            "draft50-n20"
+          ]
+        },
+        "hallucination_risk_rate": {
+          "count": 0,
+          "total": 25,
+          "rate": 0.0,
+          "ids": []
+        }
+      },
+      "rows": [
+        {
+          "id": "draft30-e01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e03",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ],
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ],
+            [
+              "1N5817 SERIES_H2104.pdf",
+              5
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e06",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e07",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e08",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "SS32 SERIES_Q2412.pdf",
+              1
+            ],
+            [
+              "SS32 SERIES_Q2412.pdf",
+              3
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "SS32 SERIES_Q2412.pdf",
+              1
+            ],
+            [
+              "SS32 SERIES_Q2412.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-e10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m03",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              3
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              1
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              6
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m06",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m07",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "BZX84C2V4 SERIES_F2001.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "BZX84C2V4 SERIES_F2001.pdf",
+              2
+            ],
+            [
+              "BZX84C2V4 SERIES_F2001.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m08",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-m10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": true,
+          "gold_locations": [],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h03",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ],
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h06",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h07",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h08",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft30-h10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n01",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ],
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n02",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "BAS70 SERIES_G2606.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "BAS70 SERIES_G2606.pdf",
+              1
+            ],
+            [
+              "BAS70 SERIES_G2606.pdf",
+              3
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n03",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n04",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              2
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              3
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n05",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "wrong_citation",
+          "is_refusal": false,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              1
+            ],
+            [
+              "BZT52C2V4 SERIES_G1804.pdf",
+              4
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n06",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n07",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "over_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n08",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "cited_netlist": true,
+          "gold_locations": [
+            [
+              "1N4148 SERIES_K2301.pdf",
+              1
+            ]
+          ],
+          "needs_netlist": true,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n09",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n10",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n11",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n12",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "unknown_entity",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n14",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "missing_attribute",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n15",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n16",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n17",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "wrong_period",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n18",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n19",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft50-n20",
+          "kind": "irrelevant",
+          "question_type": null,
+          "irrelevant_type": "out_of_domain",
+          "metric": "correct_refusal",
+          "is_refusal": true,
+          "cited_locations": [],
+          "cited_netlist": false,
+          "gold_locations": [],
+          "needs_netlist": false,
+          "fake_citations": []
+        },
+        {
+          "id": "draft52-n21",
+          "kind": "relevant",
+          "question_type": null,
+          "irrelevant_type": null,
+          "metric": "cited_gold",
+          "is_refusal": false,
+          "cited_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "cited_netlist": false,
+          "gold_locations": [
+            [
+              "1N5817 SERIES_H2104.pdf",
+              2
+            ]
+          ],
+          "needs_netlist": false,
+          "fake_citations": []
+        }
+      ]
+    }
+  }
+}

@@ -193,7 +193,8 @@ def upload_project(smoke, client, q, step):
     path, name = ROOT / q['netlist'], f"smoke {q['id']} {datetime.now(KST):%m-%d %H:%M}"
     started = time.monotonic()
     try:
-        response = client.post('/api/projects/upload', files={'file': (path.name, path.read_bytes())}, data={'name': name})
+        # [왜] 같은 계정으로 다시 돌리면 같은 이름 · 같은 넷리스트 해시의 프로젝트가 이미 있어 409(DuplicateProject)였다(11-17 운영 실측). 새 프로젝트로 만든다
+        response = client.post('/api/projects/upload', params={'allow_duplicate': 'true'}, files={'file': (path.name, path.read_bytes())}, data={'name': name})
     except httpx.HTTPError as exc:
         smoke.add(step, f"프로젝트 업로드({q['id']})", 'A', 'POST /api/projects/upload', '201', 'fail', started=started, note=type(exc).__name__)
         return None
