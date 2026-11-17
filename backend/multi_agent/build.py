@@ -88,6 +88,13 @@ def finish_node(state: dict) -> dict:
         if (state.get('plan') or {}).get('reply_kind') == 'general':
             reply = f'{reply.rstrip().removesuffix(GENERAL_NOTE).rstrip()} {GENERAL_NOTE}'  # 고정 문장은 코드가 붙인다(#66)
         return {'answer': reply, 'path': ['끝']}
+    if not str(state.get('answer') or '').strip():
+        # [왜] 재계획(Supervisor 두 번째 호출)이 받은 보고를 두고 '끝내기'를 고르면 답 정리 · 거절을 거치지 않아 빈 답이 그대로 나갔다
+        #      (11-17 운영 실측: 값을 몰라 후보를 못 낸 찾기 → 답 모으기 → Supervisor → 끝내기 → 화면에 빈 칸). 받은 보고로 거절 글을 만든다
+        reports = state.get('final_reports') or state.get('reports') or []
+        empty = next((j for r in reversed(reports) if (j := r.get('judgement') or {}).get('kind') == 'find' and not j.get('results')), None)
+        message = empty_find_message(empty) if empty else refusal_for(Reason.NOT_FOUND, state.get('facts') or {})
+        return {'answer': message, 'refusal': {'code': Reason.NOT_FOUND.value, 'message': message}, 'path': ['끝']}
     return {'path': ['끝']}
 
 

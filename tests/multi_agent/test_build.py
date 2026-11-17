@@ -959,3 +959,14 @@ def test_what_do_you_need_after_a_search_without_candidates_explains_what_is_mis
     assert last_result_reply('last_candidates', empty) == '' and last_result_reply('last_conditions', {}) == ''
     state = {'question_type': 'chat', 'plan': {'reply': 'x', 'reply_kind': 'last_conditions'}, 'facts': {}, 'last_judgement': empty, 'question': '뭘 줘야 찾아오는데'}
     assert B.finish_node(state)['answer'] == text
+
+
+def test_finish_with_reports_but_no_answer_never_returns_an_empty_answer():
+    """재계획이 받은 보고를 두고 끝내기를 고르면 답이 비어 나갔다(11-17 운영 실측: 화면에 빈 칸). 받은 보고로 거절 글을 만든다. 답이 이미 있으면 그대로다."""
+    find = {'kind': 'find', 'roles': ['R01'], 'role_evidence': [], 'results': [], 'terms': []}
+    report = {'task': 1, 'agent': 'judge', 'status': 'partial', 'judgement': find}
+    out = B.finish_node({'reports': [report], 'plan': {'next': 'finish', 'reply': '값을 알려 주세요'}, 'facts': {}, 'answer': ''})
+    assert "역할은 '역극성 보호(직렬)'이에요" in out['answer'] and out['refusal']['code'] == 'not_found'
+    docs = {'task': 1, 'agent': 'docs', 'status': 'fail', 'reason': 'no_result', 'judgement': {}}
+    assert B.finish_node({'reports': [docs], 'plan': {'next': 'finish'}, 'facts': {}})['answer'] == refusal_for(Reason.NOT_FOUND, {})
+    assert B.finish_node({'reports': [report], 'plan': {}, 'facts': {}, 'answer': '이미 만든 답'}) == {'path': ['끝']}
