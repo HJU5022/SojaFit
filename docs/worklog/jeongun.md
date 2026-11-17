@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-17 RAGAS 채점기 근거 고침
+- 목적: 11-12 `d9-langfuse-capture`의 Faithfulness가 판정 · 찾기 문항에서 0.0~0.43(평균 0.14 · 0.13), 문서 답 4문항에서 0.6~0.83이었다. 원인은 `contexts_from_state`가 실제 판정 모양(`results[].checks[]`, `backend/judge/verdict.py` `Judgement`)에 없는 `conditions` 칸을 읽어, 답 표의 후보 값이 RAGAS 근거에 하나도 들어가지 않은 것이다. 거절 답(v3-41)도 근거가 비어 있지 않아 0점으로 채점됐다.
+- 바꾼 파일: `evals/runners/score_ragas.py`(답에 나간 후보(`score_answer.judgement_parts`)마다 위치 · 후보 값 · 단위 · 시험 조건 · 판정 기준을 근거 하나로 묶어 넣음, `score_answer.is_refusal_response`가 거절이면 건너뜀), `tests/evals/test_score_ragas.py`(실제 판정 모양으로 고침, 거절 건너뜀 시험 추가), `evals/runners/RUNNERS.md` 한 줄.
+- 실행한 명령 · 결과 [실측]: `uv run pytest tests/evals -q` 397 통과 · 2 건너뜀. 1문항 확인 `DEMO_MODE=0 EVAL_WEB=0 WEB_PREFETCH=0 EXA_WEB_SEARCH_ENABLED=0 EXA_API_KEY= GATE_WARMUP=0 FIND_N_DOCS=5 RAGAS_ENABLED=1 uv run --env-file .env python -m evals.runners.run_gate <v3-02만 담은 임시 jsonl> --out <임시 폴더> --sets 1 --keep-going --p95 120`(git `cfe6cdfb+dirty`): v3-02 통과 · `cited_gold` · 15.2초 · 0.0028달러, `ragas_faithfulness` 0.0(11-12, `11dc216+dirty`) → 0.788(오늘, `cfe6cdfb+dirty`), `ragas_context_precision` 0.0 → 0.25. 두 리비전의 그래프도 달라 오른 몫이 모두 채점기 고침 덕인지는 가르지 못했다 `[추정]`. Langfuse API(`scores.get_many(trace_id=…)`)로 그 trace에 점수 17개(두 RAGAS 점수 포함, environment `eval`)가 들어간 것을 확인했다. 결과 파일은 임시 폴더라 저장소에 없다.
+- main `3e68d005`로 빨리감기한 뒤 `uv run pytest tests/evals tests/repo -q` 402 통과 · 2 건너뜀 [실측]. 위 1문항 확인은 빨리감기 전 `cfe6cdfb`에서 했다.
+- 확인 못 한 것: 찾기(`candidate_find`) · 문서 답 경로의 새 값, 50문항 전체 값, RAGAS를 켰을 때 실행 시간 · 비용. 근거에 판정 값을 넣었으므로 Faithfulness는 "답이 추출 값과 맞는지"를 보고, 추출이 맞는지는 규칙 채점이 본다.
+- 다음 할 일: 운영 버전으로 문서화할 때 `evals/guides/preregister.md`에 먼저 등록하고 `RAGAS_ENABLED=0` 없이 v3 50문항을 한 번에 다시 재고, 그 실행으로 Langfuse 트레이스 스크린샷(G6)을 바꾼다. README · EVAL_REPORT · 실험 문서의 재현 명령에 있는 `RAGAS_ENABLED=0`도 그때 정리한다. 11-12 값(Faithfulness 0.251)은 고치기 전 값이라 인용하지 않는다.
+
 ## 2026-11-15 web-to-main 동결 전 백엔드 수정(로컬 커밋만, 푸시 · PR 없음)
 - 목적: 11-15 점검(`reports/2026-11-15-점검/합본-동결전-목록.md`)의 백엔드 수정을 `web-to-main`에 커밋 하나에 목적 하나로 쌓아 PR 준비 상태로 둔다. `frontend/`는 건드리지 않는다. 상세 보고: `reports/2026-11-15-점검/fix-for-main.md`.
 - 그룹 1(올바른 입력의 동작 불변): A4 `a3411700`(macOS `RLIMIT_AS`, 웹 근거 시험 8건 복구), A1 `c4667658`(`None.result()` 크래시), A2(a) `4aa14a55`(외부 실패 WARNING 로그), D3 `f732afba` · `78ffad14`(`.env.example` 키 없는 데모 기본, 실제 모드로 바꿀 때 `DEMO_REPLAY`도 0으로).
