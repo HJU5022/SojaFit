@@ -461,14 +461,17 @@ SojaFit (proj3-b)
 │       │   └── v1-vs-v4h-2026-11-13/  <- 청킹 v1(tsc-cards-2026-11-01) 대 v4h를 같은 동결 v3·같은 임베딩·같은 검색 코드로 잰 검색 원시 결과(retrieval_v1·retrieval_v4h json)와 README.md·SHA256.txt
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
 │       ├── skill/          <- Skill·도구 개발 검증 요약
+│       ├── skill_pair_2026-11-17/  <- 생성 노드 도메인 Skill 유무 비교(run_skill_pair) 첫 실행 결과(result.json, 점수 파일 없음)
+│       ├── skill_pair_2026-11-17_run2/  <- 같은 비교의 재실행 결과 · 점수(사전 등록 「Skill 유무 비교 재실행」)
 │       ├── grader/         <- 채점기 기준선(eval_grader)
 │       ├── graph/          <- 그래프 전체 실행의 문항별 지표(run_graph, 단일 · 멀티)와 분석 thread · 기억 운영 확인
 │       │   ├── 2026-11-06-judge-steps/  <- 사전 등록 #39 ~ #42(동결 v2 70문항) 원시 결과를 lab에서 그대로 옮김과 출처 · sha256(sources_2026-11-10.json)
 │       │   ├── 2026-11-10-v3-haiku-sets/  <- 8장 인용 v3 50문항 Haiku 구성 측정(#50) 원시 결과를 그대로 옮김과 출처 · sha256(sources_2026-11-11.json)
 │       │   ├── 2026-11-11-d8-stages/  <- D8 현재 코드 v3 50문항 1세트(문항별 단계 시간 · 모델 호출별 비용)와 집계(stage_summary.json)
 │       │   ├── 2026-11-11-d8-stages-rerun/  <- 같은 측정에서 공급자 429로 실패한 8문항 재실행
-│       │   └── 2026-11-14-no-replan/  <- 코퍼스 밖 품번·판본 문서 실패는 재계획하지 않기(R1) 원시 결과와 README
-│       │       └── v3-15_cap_path_2026-11-14.md  <- 재계획 상한 등에 닿은 질문 한 건(R1 set2 v3-15, 28.9초)의 경로·상한·통과 판정 기록
+│       │   ├── 2026-11-14-no-replan/  <- 코퍼스 밖 품번·판본 문서 실패는 재계획하지 않기(R1) 원시 결과와 README
+│       │   │   └── v3-15_cap_path_2026-11-14.md  <- 재계획 상한 등에 닿은 질문 한 건(R1 set2 v3-15, 28.9초)의 경로·상한·통과 판정 기록
+│       │   └── 2026-11-17-deploy-ef0138b2-v3/  <- 배포 리비전 코드(`2030f846`) 운영 설정 v3 50문항 2세트(set1 · set2 · report, 사전 등록 「운영 리비전 기준 v3 50문항 2세트」)
 │       ├── threads/        <- 사용자 분석 thread 확인: 키 없는 compose의 체크포인트 재개 · 사용자 격리(G4), 입력 회귀, 실제 호출 smoke
 │       │   ├── injection_t3_live_2026-11-11_08.jsonl <- 미완료 상태 정리 후 T3 스모크08 원시 결과
 │       │   ├── injection_t3_live_2026-11-11_08.meta.json <- 스모크08 입력·코드 해시
