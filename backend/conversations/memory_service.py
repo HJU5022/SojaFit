@@ -634,7 +634,7 @@ class Conversations:
             #      판정 없는 턴(견적 안내 · 일상 대화)을 지나도 남도록 앞 요약을 이어 쓴다
             from backend.multi_agent.messages import judgement_summary
             before = getattr(self.graph.get_state(self.config(thread)), 'values', None) or {}  # 새 대화는 앞 상태가 없다
-            last_judgement = judgement_summary(before.get('judgement') or {}) or before.get('last_judgement') or {}
+            last_judgement = judgement_summary(before.get('judgement') or {}, before.get('target') or '') or before.get('last_judgement') or {}
             inputs = {'input': content, 'conversation_history': conversation_history, 'last_judgement': last_judgement,
                       'connections': row['connections'], 'circuit': row['filename'], 'target': row['target'],
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,

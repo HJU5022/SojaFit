@@ -77,6 +77,7 @@ class JudgeState(TypedDict, total=False):
     mount_preference: str  # 선호 실장 방식('smd' · 'tht' · ''). 찾기에서 같은 판정 안의 순서만 바꾼다
     round: int           # 이 할 일의 계획 회차(보고서에 그대로 적는다)
     judge_read: dict     # 읽기 노드 결과(인터럽트 재개 때 LLM을 다시 부르지 않게 남긴다)
+    prior: dict          # 같은 대상의 직전 판정에서 이어 쓰는 것 {'roles': [...], 'inputs': {'values_si', 'test_conditions'}}(11-17)
     reports: Annotated[list, add_or_reset]
     path: Annotated[list[str], operator.add]
 

@@ -22,9 +22,9 @@ from backend.graph.nodes import QUANTITY_CLAIM
 from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
-from backend.multi_agent.contracts import Reason, TaskReport
+from backend.multi_agent.contracts import LAST_RESULT_KINDS, Reason, TaskReport
 from backend.multi_agent.messages import (CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, empty_find_message, refusal_for,
-                                          followup_reply, screen_guide)
+                                          followup_reply, last_result_reply, screen_guide)
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
 from backend.services.llm import is_llm_failure
@@ -67,6 +67,10 @@ def finish_node(state: dict) -> dict:
     if not state.get('reports'):
         if (state.get('plan') or {}).get('reply_kind') == 'earlier_answer':
             return {'answer': EARLIER_ANSWER, 'path': ['끝']}  # 앞 답 · 근거 다시 보기는 LLM 글 대신 고정 안내(#64)
+        if (kind := (state.get('plan') or {}).get('reply_kind')) in LAST_RESULT_KINDS:
+            # [왜] 이어 묻는 말인지는 계획(LLM)이 앞 턴 요약을 보고 정하고, 답의 품번 · 판정 · 숫자는 코드가 저장된 판정에서 옮긴다(11-17)
+            again = last_result_reply(kind, state.get('last_judgement') or {}, (state.get('plan') or {}).get('about_part') or '')
+            return {'answer': again or "앞에서 판정한 결과가 없어요. 'D1 대체품 찾아줘'처럼 다시 물어봐 주세요.", 'path': ['끝']}
         if state.get('question_type') == 'chat' and (guide := screen_guide(state.get('question') or '')):
             return {'answer': guide, 'path': ['끝']}  # 화면 사용법은 LLM 글 대신 고정 안내(있는 기능을 없다고 답했다, 11-17)
         if state.get('question_type') == 'chat' and (again := followup_reply(state.get('question') or '', state.get('last_judgement') or {})):
