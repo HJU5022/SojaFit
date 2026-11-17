@@ -63,7 +63,7 @@ def chat_reply_is_safe(state: dict, reply: str) -> bool:
 
 
 def finish_node(state: dict) -> dict:
-    """끝내기: 일상 대화는 계획의 reply가 답이다. 서브에이전트를 거친 답은 이미 answer에 있다."""
+    """끝내기: 일상 대화는 계획의 reply가 답이다. 서브에이전트를 거친 답은 이미 answer에 있고, 보고를 받고도 답이 비었으면 그 보고로 거절 글을 만든다."""
     if not state.get('reports'):
         if (state.get('plan') or {}).get('reply_kind') == 'earlier_answer':
             return {'answer': EARLIER_ANSWER, 'path': ['끝']}  # 앞 답 · 근거 다시 보기는 LLM 글 대신 고정 안내(#64)
