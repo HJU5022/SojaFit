@@ -16,7 +16,7 @@ import {
 } from './ui';
 import { NewProject, refreshNavigation } from './Projects';
 import { openWithQuestion } from './Workbench';
-import type { Project, ThreadListItem } from './types';
+import type { Demo, Project, ThreadListItem } from './types';
 /** 펼친 프로젝트 번호를 이 브라우저에 남기는 키(사이드바 나무, #31). */
 const EXPANDED = 'sojafit.sidebar.expanded';
 /**
@@ -296,7 +296,7 @@ export function ConversationNav({
     </div>
   );
 }
-/** "새 대화" 화면: 가운데 공통 안내(첨부 한 줄과 지원 범위 한 줄, 예제 회로를 건네는 입구는 두지 않음), 아래 질문 입력창 하나(#30 #41 #45 #58). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
+/** "새 대화" 화면: 가운데 공통 안내(첨부 한 줄과 안내 한 줄. 데모 모드에서만 그 아래 데모 회로 목록), 아래 질문 입력창 하나(#30 #41 #45 #58). 넷리스트는 입력창의 + 메뉴나 화면에 끌어 놓기로 첨부한다(#40). 회로가 필요한 질문이면 에이전트가 대화 안에서 넷리스트나 기존 회로를 고르게 한다(SPEC 2절, 8.9). */
 export function NewConversation() {
   const [question, setQuestion] = useState(''),
     [submitted, setSubmitted] = useState(''),
@@ -306,6 +306,24 @@ export function NewConversation() {
   const questionRef = useRef('');
   // [왜] 새 대화 업로드(POST /api/projects/upload)는 .net · .kicad_sch만 받는다. 작업대 첨부는 .txt도 받는다
   const attach = useNetlistAttach('.net,.kicad_sch', setAttachment);
+  // [주의] 운영(DEMO_MODE=0)은 /demo-circuits가 404라 데모 회로 목록이 보이지 않는다. 로컬 데모(DEMO_MODE=1)에서만 보인다
+  const demos = useResource<Demo[]>('/demo-circuits');
+  /** 데모 회로로 프로젝트를 만들고 그 작업대를 연다. 질문은 보내지 않는다(작업대에서 고른다). */
+  async function startDemo(demo: Demo) {
+    setBusy(true);
+    setError(null);
+    try {
+      const project = await api<Project>('/projects?allow_duplicate=true', 'POST', {
+        name: demo.name,
+        demo_id: demo.id,
+      });
+      refreshNavigation();
+      await openWithQuestion(project.id, '');
+    } catch (e) {
+      setError(e as Error);
+      setBusy(false);
+    }
+  }
   async function start() {
     const submittedQuestion = question.trim();
     setBusy(true);
@@ -374,8 +392,25 @@ export function NewConversation() {
         </div>
         <p>
           <Info size={14} />
-          지금 지원: 다이오드 · 판정마다 데이터시트 인용
+          판정마다 데이터시트 인용
         </p>
+        {!!demos.data?.length && (
+          <div className="start-demos">
+            <p>데모 회로로 시작</p>
+            <div className="actions">
+              {demos.data.map((demo) => (
+                <button
+                  key={demo.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void startDemo(demo)}
+                >
+                  {demo.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       {busy && <Loading label="대화를 준비하는 중" />}
       {submitted && <div className="user-message">{submitted}</div>}

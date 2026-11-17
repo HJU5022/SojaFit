@@ -80,16 +80,14 @@ export function useResource<T>(path: string | null) {
   }, [path, version]);
   return { data, loading, error, reload: () => setVersion((v) => v + 1), setData };
 }
+/** 회로 속 자리와 후보를 나타내는 공통 로고. 파비콘과 같은 도형을 쓴다(SPEC 2절). */
 export function Brand() {
   return (
     <a className="brand" href="/" aria-label="SojaFit 홈">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-        <path
-          d="M2 14h6m12 0h6M8 6v16l12-8L8 6Zm12 0v16"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="currentColor" aria-hidden="true">
+        <path d="M3 3h14v5H8v9H3Z" />
+        <path d="M25 25H11v-5h9v-9h5Z" />
+        <rect x="11" y="11" width="6" height="6" />
       </svg>
       <span>SojaFit</span>
     </a>

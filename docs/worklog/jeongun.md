@@ -14,6 +14,30 @@
 - 확인 못 한 것: v3 50문항 전체(웹 켠 조건)의 새 값과 다른 문항에 준 영향, Linux 전체 pytest, 배포 환경. 로컬 `jeongun`에만 있고 푸시 · PR은 하지 않았다.
 - 다음 할 일: 50문항을 다시 잴 때는 `evals/guides/preregister.md`에 먼저 등록한다.
 
+## 2026-11-17 공통 로고·파비콘 교체(커밋 없음)
+- 목적: 특정 부품 기호 대신 회로 속 자리와 검토할 후보를 나타내는 로고를 적용한다. 사용자 요청에 따라 다른 작업이 바꾼 Landing.tsx·styles.css를 수정하지 않고, 로그인 뒤 문구·회로 도식은 조사만 한다.
+- 적용안 A: 마주 보는 두 모서리 + 가운데 후보 사각형. 청록 #0d7480의 단색 면, viewBox 28×28. B는 빈 자리와 조각, C는 각진 S. 저장소 밖 `../logo-options/option-a.svg`, `option-b.svg`, `option-c.svg`에 저장했다. A는 적용 파비콘과 같은 파일 내용이다.
+- 바꾼 파일: `frontend/src/ui.tsx` Brand의 SVG만 교체(회로 도식·앱 문구 유지), `frontend/public/assets/sojafit-icon.svg`, `frontend/index.html`의 파비콘 주소에 `?v=fit-1`, `frontend/public/assets/ASSETS.md` 설명, `SOJAFIT.md` 아이콘 설명 한 줄, `SPEC.md` 공통 로고 계약, 이 기록. 새 npm 의존성 없음.
+- 확인 [실측]: `rsvg-convert`로 세 시안을 16px·28px와 확대 크기로 렌더링하고 비교판 PNG를 열어 봤다. Python XML 파싱 3개 정상, Brand·파비콘·A의 도형 및 빌드 산출물 아이콘 일치, 빌드 HTML의 파비콘 연결 확인. `shasum -a 256 -c`로 Landing.tsx·styles.css 모두 작업 전과 같음을 확인했다.
+- 실행한 명령과 결과 [실측]: `cd frontend && npm test && npm run format:check && npm run build` — 43 통과/0 실패, Prettier 통과, 타입 검사·빌드 통과. 500 kB 초과 청크 경고(index JS 약 548 kB)는 남아 있다. `git diff --check` 통과. `grep -rn "M2 14h6m12 0h6" frontend` 출력 없음(종료 코드 1, node_modules·dist 포함).
+- 앱에서 발견했지만 바꾸지 않은 곳: `ui.tsx:461` 연결 개념도의 삼각형·막대, `ui.tsx:516` 선택 안내; `Conversations.tsx:366` "지금 지원: 다이오드"; `Account.tsx:188`·`:192` 지원/미지원; `Workbench.tsx:99`·`:100`·`:103` 대상 목록·대상 없음; `Projects.tsx:88` 프로젝트 이름 예시; `circuit.ts:48`·`:59`·`:60` 대상 제외 이유·고르기 안내; `inputLabels.ts:37`·`:40`·`:50`·`:56`·`:60`·`:64` 조건 입력 이름·질문; `libraryQuery.ts:36`부터 `:47`까지 실제 데이터시트 분류 이름. 마지막 두 종류는 서비스 전체 소개가 아니라 개별 조건·분류 이름이다.
+- 별도 발견: `frontend/index.html:1` 검색 설명에도 "다이오드 대체 후보"가 남는다. 이번 작업은 그 파일의 파비콘 링크만 바꿨다. 랜딩 예시의 회로 도식과 정적 원본 회로 이미지는 브랜드 로고가 아니므로 유지했다.
+- 확인 못 한 것: 브라우저 탭·앱 화면에서의 실제 렌더와 캐시 갱신은 확인하지 않았다(앞선 작업의 브라우저 실행 제한). 새 로고의 SVG 래스터 렌더는 확인했다. 전체 E2E·평가셋 재측정은 실행하지 않았다. 커밋·푸시 없음.
+
+## 2026-11-17 랜딩 전체 재설계(커밋 없음)
+- 목적: 승인된 첫 화면 방향을 전체 페이지로 확장하고, 특정 부품 종류로 서비스 범위를 좁히는 문구를 없앤다. 사용자 후속 지시를 따른다. 로그인 뒤 앱·판정 코드는 바꾸지 않는다.
+- 바꾼 파일: `frontend/src/Landing.tsx`(전체 문구·예시·미디어를 `LANDING`에 모음, 아래 구간 전면 재작성, 별도 영상 자리, 새 푸터), `frontend/src/styles.css`(랜딩 전체 구성·모바일·모션, 옛 구간 CSS 제거), `SPEC.md` 2절(공개 랜딩 계약·범위 한정 문장 제거), 이 기록.
+- 위에서 아래로: 탐색·히어로 검토 장면 → 독립 제품 영상(`#overview`) → 회로와 사용 조건(`#workflow`) → 데이터시트 근거(`#evidence`) → 사람의 승인·기록(`#approval`) → 큰 워드마크와 고지 링크 푸터. 기존 기준식·판정 5종 장문 구간은 제거했다. 탐색은 workflow/evidence/approval로 연결한다. 푸터는 기존 LegalModal과 고지 목록을 재사용하며 로그인·다른 화면의 Footer는 바꾸지 않는다.
+- 디자인: design-taste-frontend의 The product performs(seed 420126817) 방향을 유지. 첫 화면의 기록 v3-01 장면은 항상 보인다. 별도 영상, 회로 연결 구성도, 기존 실제 화면 PNG 두 장, 보고서 구성 예시를 서로 다른 크기로 배치했다. 새 npm 의존성·외부 사진 없음. 큰 제목 스타일은 랜딩 main 내부로 한정해 고지 문서 창에 적용되지 않게 했다.
+- 데이터 교체: `LANDING`에 전체 문구·탐색·링크·섹션 내용·푸터 내용을 모음. `LANDING.example`에 기록된 품번·수치·판정·쪽·표·행, `LANDING.media`에 미디어 경로·대체 글·캡션. 고지 제목·주소와 문의 메일은 공통 정본을 참조한다. 이미지/GIF와 mp4·webm·ogv를 경로 확장자로 구분하고 영상은 사용자가 재생한다. 경로가 없거나 로드에 실패하면 해당 구간의 기본 구성도/안내를 유지한다. media.hero를 채워도 ReviewScene은 사라지지 않는다.
+- 미디어 자리/권장 촬영: `media.hero` = 업로드→질문→판정→근거, 1920×1080, 12~18초; `media.circuit` = 넷리스트·대상 부품·연결 확인, 1200×1200, PNG 또는 6~10초; `media.conditions` = 조건 행→인용 근거, 1200×1100, PNG 또는 5~8초; `media.missing` = 추가 조건 입력→재개, 1600×900, PNG 또는 5~8초; `media.report` = 승인→견적·보고서, 1200×1400, PNG 또는 8~12초. 현재 conditions/missing은 기존 실제 제품 PNG이며 나머지는 코드 구성 예시다.
+- 실행한 명령과 결과 [실측]: `cd frontend && npm test && npm run format:check && npm run build` 최종 실행: 단위 시험 43 통과/0 실패, Prettier 통과, 타입 검사·Vite 빌드 통과. 500 kB 초과 청크 경고(index JS 약 547 kB)는 남아 있다. `git diff --check` 통과. 디자인 소스 lint(`Landing.tsx`) 0 FAIL/0 WARN.
+- 범위 문구 확인 [실측]: `grep -n "다이오드" frontend/src/Landing.tsx` 출력 없음(종료 코드 1). SPEC에 앞서 추가했던 지원 범위 한정 문장도 제거했다. 모든 부품이 지원된다는 주장은 추가하지 않았다.
+- 정적 구조 검사 [실측]: Node assert로 시작 링크 이름·`/login`, 탐색 앵커 3개, 미디어 5곳, 참조 PNG 2개의 파일 시그니처, 히어로 내 ReviewScene이 LandingMedia 밖에 있음, 로그인 뒤 앱의 `:root`가 HEAD와 같음을 확인. 처음 시도한 TypeScript AST 검사는 설치 버전에 ScriptTarget API가 없어 실패했고, 직접 작성한 설정 객체와 소스 구조를 읽는 정적 검사로 바꿔 통과했다. 임시 검사·로그는 /tmp에만 둔다.
+- 확인 못 한 것: 앞선 실행에서 inspect.mjs·Playwright의 Chrome이 시작 직후 종료됐고 CUA는 browser access host unavailable이었다. 이번 후속 작업은 사용자 허용대로 브라우저 검사를 건너뛰었다. 실제 스크린샷·390px 가로 스크롤·끝까지 스크롤·클릭/키보드·동작 줄이기·미디어 실패 대체 화면은 미확인이다. 화면 기반 디자인 점수는 매기지 않는다. Docker·백엔드가 필요한 demo.spec.ts 전체 E2E와 평가셋 재측정은 실행하지 않았다.
+- 다음 할 일: 팀 환경에서 1440/768/390px 화면과 페이지 끝까지 스크롤을 확인하고 기존 E2E를 실행한다. 실제 미디어 경로를 교체한다. 커밋·푸시 없음.
+- 문구 다듬기(같은 날, 커밋 없음): 어색한 문장 · 끊긴 문장을 고치고 겹치는 문장 3개(큰 글자 "쪽. 표. 행.", 연결 그림 설명, 승인 구간 끝 문장)를 뺐다. 첫 화면 회로 그림의 부품 기호를 이름표가 붙은 상자로 바꿨다. 문단에 `text-wrap: pretty`를 줬다. [실측] `npm test` 43 통과, `npm run format:check` · `npm run build` 통과, 1280px 전체 화면을 헤드리스 크롬으로 찍어 확인. Playwright E2E는 돌리지 않았다.
+
 ## 2026-11-17 RAGAS 채점기 근거 고침
 - 목적: 11-12 `d9-langfuse-capture`의 Faithfulness가 판정 · 찾기 문항에서 0.0~0.43(평균 0.14 · 0.13), 문서 답 4문항에서 0.6~0.83이었다. 원인은 `contexts_from_state`가 실제 판정 모양(`results[].checks[]`, `backend/judge/verdict.py` `Judgement`)에 없는 `conditions` 칸을 읽어, 답 표의 후보 값이 RAGAS 근거에 하나도 들어가지 않은 것이다. 거절 답(v3-41)도 근거가 비어 있지 않아 0점으로 채점됐다.
 - 바꾼 파일: `evals/runners/score_ragas.py`(답에 나간 후보(`score_answer.judgement_parts`)마다 위치 · 후보 값 · 단위 · 시험 조건 · 판정 기준을 근거 하나로 묶어 넣음, `score_answer.is_refusal_response`가 거절이면 건너뜀), `tests/evals/test_score_ragas.py`(실제 판정 모양으로 고침, 거절 건너뜀 시험 추가), `evals/runners/RUNNERS.md` 한 줄.
