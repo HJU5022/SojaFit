@@ -47,6 +47,8 @@ export type Result = {
     results?: Candidate[];
     shown?: Candidate[];
     unverified?: Candidate[];
+    /** 판정 종류: 후보 찾기 `find` · 후보 판정 `judge` · 규칙 없는 역할 `no_rule` */
+    kind?: string;
     roles?: string[];
     role_evidence?: string[];
     input_conditions?: { code: string; value: string }[];
@@ -57,6 +59,11 @@ export type Result = {
     missing?: string[];
     role_choices?: string[];
     question?: string;
+    /** 에이전트가 회로에서 읽은 역할 코드(유력한 순)와 그 근거 글. 조건 카드가 묻기 전에 먼저 보인다 */
+    roles?: string[];
+    role_evidence?: string[];
+    /** 역할 후보가 둘일 때 역할별로 묻는 값 이름. 고른 역할의 값만 보인다 */
+    role_missing?: Record<string, string[]>;
     /** 대상 부품을 물을 때만(SPEC 8.9). 고른 ref를 재개 본문의 target으로 보낸다 */
     target_choices?: { ref: string; value: string }[];
   };

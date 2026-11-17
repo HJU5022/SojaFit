@@ -337,6 +337,47 @@ def test_ac08_interrupt_once_and_reply_fills_values(monkeypatch):
     assert out['judgement']['results'][0]['verdict'] == 'NOT_SUFFICIENT'
 
 
+def test_interrupt_carries_what_the_agent_read_from_the_circuit(monkeypatch):
+    """되묻기 전에 읽은 역할 · 근거를 같이 보낸다(11-17). 역할 후보가 둘이면 역할마다 묻는 값을 나눠 보낸다."""
+    calls = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: calls.append(payload) or {'answers': {}, 'role': 'R01'})
+    read = J.JudgeRead(role='R01', role_alt='R02', role_evidence=['D1.K → RAW'], original_part='1N4001',
+                       candidates=['1N5817']).model_dump(mode='json')
+    J.judge_agent({**STATE, 'conditions': '', 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    asked = calls[0]
+    assert asked['roles'] == ['R01', 'R02'] == asked['role_choices'] and asked['role_evidence'] == ['D1.K → RAW']
+    assert 'v_in_max' in asked['role_missing']['R01'] and 'v_in_max' not in asked['role_missing']['R02']
+    assert 'v_reverse_max' in asked['role_missing']['R02'] and 'v_reverse_max' not in asked['role_missing']['R01']
+    assert set(asked['role_missing']['R01']) | set(asked['role_missing']['R02']) == set(asked['missing'])
+
+
+def test_text_reply_is_read_again_once_and_does_not_ask_twice(monkeypatch):
+    """폼 대신 글로 답하면(11-17) 그 글을 사용 조건에 더해 읽기를 한 번 더 부르고, 더 묻지 않고 판정한다."""
+    asks, rereads = [], []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asks.append(payload) or {'answers': {}, 'text': '최대 순방향 전류는 150mA야'})
+    first = dict(READ, values=[v for v in READ['values'] if v['name'] != 'i_max'])
+
+    def reread(state):
+        rereads.append(state['conditions'])
+        return {'judge_read': READ}  # 글에서 i_max를 읽은 새 읽기(인용은 더해진 사용 조건 안에 있다)
+    conditions = '입력 전압의 최댓값은 20V이다. 주변 온도는 25°C이다.'
+    out = J.judge_agent({**STATE, 'conditions': conditions, 'judge_read': first}, specs=specs_of(SPECS), find=None, retriever=None,
+                        reread=reread)
+    assert len(asks) == 1 and 'i_max' in asks[0]['missing']  # 인터럽트는 한 번(AC-08)
+    assert rereads == [conditions + '\n최대 순방향 전류는 150mA야']
+    j = out['judgement']
+    assert j['analysis_inputs']['values_si']['i_max'] == pytest.approx(0.15) and j['asked'] == []
+    assert 'i_max' not in j['results'][0]['missing']
+
+
+def test_text_reply_without_a_reader_is_ignored_like_an_empty_answer(monkeypatch):
+    """읽기 함수를 받지 않는 호출(단일 그래프)은 글 답을 쓰지 않는다: 빈 답과 같다."""
+    monkeypatch.setattr(J, 'interrupt', lambda payload: {'answers': {}, 'text': '최대 순방향 전류는 150mA야'})
+    read = dict(READ, values=[v for v in READ['values'] if v['name'] != 'i_max'])
+    j = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)['judgement']
+    assert 'i_max' in j['results'][0]['missing']
+
+
 def test_empty_reply_keeps_found_values_and_is_not_verified(monkeypatch):
     read = dict(READ, values=[v for v in READ['values'] if v['name'] != 'i_max'])
     monkeypatch.setattr(J, 'interrupt', unknown)
@@ -431,9 +472,39 @@ def test_find_without_circuit_values_searches_by_original_part_ratings(monkeypat
     j = out['judgement']
     assert seen[0] == [{'code': 'VRRM', 'gte': 50.0}, {'code': 'IF_AV', 'gte': 1.0}] and j['terms'] == seen[0]
     assert j['terms_from_original'] is True
-    assert [x['verdict'] for x in j['results']] == ['NOT_VERIFIED'] and j['shown'] == []  # 값이 없어 판정은 확인 안 됨, 견적 대상 아님
+    # 판정도 원래 부품 기준이다: SS14(40 V · 1 A)는 원래 1N4001(50 V · 1 A)보다 내압이 낮아 확인 안 됨 + 빠진 값으로 남는다
+    assert [x['verdict'] for x in j['results']] == ['NOT_VERIFIED'] and j['shown'] == []
     assert [x['part'] for x in j['unverified']] == ['SS14'] and 'v_in_max' in j['results'][0]['missing']
     assert out['reports'][-1]['status'] == 'ok'  # 후보가 있는 답이라 거절로 가지 않는다
+
+
+def test_find_without_circuit_values_gives_spec_equivalent_for_candidates_not_below_the_original(monkeypatch):
+    """회로 값을 몰라도 원래 부품 이상인 후보는 사양 동등으로 나와 승인 · 견적으로 갈 수 있다(11-17)."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    # R01의 주요 정격(VRRM · IF_AV · IFSM)이 두 문서에 모두 있어야 사양 동등을 낼 수 있다
+    table = {'1N5817': SPECS['1N5817'], 'SS14': SPECS['SS14'] + [r('SS14', 'IFSM', 40.0, 'A')],
+             '1N4001': [r('1N4001', 'VRRM', 40.0), r('1N4001', 'IF_AV', 1.0, 'A'), r('1N4001', 'IFSM', 30.0, 'A')]}
+    find = lambda conditions, category, package, limit, **near: [{'part': 'SS14', 'category': 'schottky-rectifier', 'packages': ['SMA']},
+                                                                   {'part': '1N5817', 'category': 'schottky-rectifier', 'packages': ['DO-41']}]
+    read = dict(READ, original_part='1N4001', candidates=[], values=[])
+    j = J.judge_agent({**STATE, 'question': 'D1 다른 걸로 바꿀 거 있어?', 'conditions': '', 'question_type': 'candidate_find',
+                       'judge_read': read}, specs=specs_of(table), find=find, retriever=None)['judgement']
+    verdicts = {x['part']: x['verdict'] for x in j['results']}
+    assert verdicts == {'SS14': 'SPEC_EQUIVALENT', '1N5817': 'NOT_VERIFIED'}  # SS14 40 V ≥ 40 V, 1N5817 20 V < 40 V
+    assert [x['part'] for x in j['shown']] == ['SS14'] and [x['part'] for x in j['unverified']] == ['1N5817']
+
+
+def test_find_with_some_circuit_values_fills_only_the_missing_conditions_from_the_original(monkeypatch):
+    """값이 일부만 있으면 그 조건은 회로 값으로, 빠진 조건은 원래 부품 정격으로 찾는다. 전에는 빠진 조건 없이 찾아 약한 부품이 섞였다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+    find = lambda conditions, *a, **k: seen.append(conditions) or []
+    table = {**SPECS, '1N4001': [r('1N4001', 'VRRM', 50.0), r('1N4001', 'IF_AV', 3.0, 'A')]}
+    values = [dict(v, number=12, quote='입력 전압의 최댓값은 12V') for v in READ['values'] if v['name'] == 'v_in_max']
+    read = dict(READ, original_part='1N4001', candidates=[], values=values)
+    j = J.judge_agent({**STATE, 'conditions': '입력 전압의 최댓값은 12V이다.', 'question_type': 'candidate_find', 'judge_read': read},
+                      specs=specs_of(table), find=find, retriever=None)['judgement']
+    assert seen[0] == [{'code': 'VRRM', 'gte': pytest.approx(15.0)}, {'code': 'IF_AV', 'gte': 3.0}] and j['terms_from_original'] is True
 
 
 def test_find_with_circuit_values_does_not_use_original_part_ratings(monkeypatch):
@@ -564,14 +635,16 @@ def test_order_code_rule_needs_same_base_order_code_shape_and_a_found_row(monkey
 
 
 def test_identical_by_order_code_survives_schottky_exemption(monkeypatch):
-    """쇼트키 후보는 면제 뒤 판정을 다시 정한다. 그때도 주문 코드 동일품은 빠진 값(확인 안 됨)이 있어도 동일품이다."""
+    """쇼트키 후보는 면제 뒤 판정을 다시 정한다. 그때도 주문 코드 동일품은 회로 값이 없어도 동일품이다.
+
+    [주의] 11-17부터 회로 값이 없는 필수 조건은 원래 부품 값을 기준으로 본다. 같은 품번이라 그 조건들은 통과하고 메모가 남는다."""
     monkeypatch.setattr(J, 'interrupt', unknown)
     rows = [dict(x, category='schottky-rectifier') for x in SPECS['1N5817']]
     docs = [dict(ordering_row('1N5817 R0G', 5), file='1N5817 SERIES_H2104.pdf')]
     read = dict(READ, original_part='1N5817 A0G', candidates=['1N5817 R0G'], values=READ['values'][2:])  # 입력 전압 · 전류 없음
     out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of({'1N5817': rows}), find=None, retriever=lambda q, parts=None: docs)
     res = out['judgement']['results'][0]
-    assert res['verdict'] == 'IDENTICAL' and 'unverified' in [c['result'] for c in res['checks']]
+    assert res['verdict'] == 'IDENTICAL' and any('원래 부품 값을 기준으로 판정' in note for note in res['uncertain'])
 
 
 def test_original_part_with_order_code_reads_base_part_rows(monkeypatch):

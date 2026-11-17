@@ -231,6 +231,8 @@ INSIDE = [  # 사양 표 항목인 성질 · TSC · 코퍼스에 있다고 확�
     ({'maker_wanted': 'Taiwan Semiconductor'}, {}),
     ({'revision_wanted': 'K2611판'}, {'revisions': {'K2611': True}}),
     ({'revision_wanted': 'L0'}, {}),  # 포장 코드는 판이 아니다(11-06 v3-03)
+    ({'revision_wanted': "'주문 품번 차이' 설명은 있지만 특정 개정판 요구는 없음"}, {}),  # 요구가 없다는 말은 요구가 아니다(11-17 v3-09)
+    ({'revision_wanted': 'no specific revision'}, {}),
 ]
 
 

@@ -31,7 +31,20 @@
      "v_drop_allowed"
     ],
     "role_choices": [],
-    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed"
+    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed",
+    "roles": [
+     "R01"
+    ],
+    "role_evidence": [
+     "D1.A_2 → VIN",
+     "D1.K_1 → Net-(D1-K)",
+     "D1 in series between input connector and power net, cathode toward load side"
+    ],
+    "role_missing": {
+     "R01": [
+      "v_drop_allowed"
+     ]
+    }
    },
    "resume": {
     "answers": {},
@@ -74,7 +87,22 @@
      "fast_signal"
     ],
     "role_choices": [],
-    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): orig_schottky, high_impedance, fast_signal"
+    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): orig_schottky, high_impedance, fast_signal",
+    "roles": [
+     "R08"
+    ],
+    "role_evidence": [
+     "D3.C → 5V",
+     "D3.A → Net-(D3-PadA) (X1.VBUS, USB 입력)",
+     "입력 넷 → VCC 방향 보호 다이오드, 애노드 측이 USB 입력 넷"
+    ],
+    "role_missing": {
+     "R08": [
+      "orig_schottky",
+      "high_impedance",
+      "fast_signal"
+     ]
+    }
    },
    "resume": {
     "answers": {},
@@ -279,7 +307,20 @@
      "v_drop_allowed"
     ],
     "role_choices": [],
-    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed"
+    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed",
+    "roles": [
+     "R01"
+    ],
+    "role_evidence": [
+     "D1.C → Net-(F1-1) (fuse side, connector side)",
+     "D1.A → Net-(S1-S) (switch side, load side)",
+     "D1 in series between J1 power input and switch S1"
+    ],
+    "role_missing": {
+     "R01": [
+      "v_drop_allowed"
+     ]
+    }
    },
    "resume": {
     "answers": {},
@@ -320,7 +361,19 @@
      "v_drop_allowed"
     ],
     "role_choices": [],
-    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed"
+    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed",
+    "roles": [
+     "R01"
+    ],
+    "role_evidence": [
+     "D1.K → Net-(D1-K) (부하 전원 넷 쪽 캐소드)",
+     "D1.A → VIN (커넥터·퓨즈 쪽 애노드)"
+    ],
+    "role_missing": {
+     "R01": [
+      "v_drop_allowed"
+     ]
+    }
    },
    "resume": {
     "answers": {

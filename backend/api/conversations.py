@@ -58,6 +58,16 @@ class ResumeRun(BaseModel):
     answers: dict[str, str] = Field(max_length=30)
     role: str | None = Field(default=None, pattern=r'R(?:0[1-9]|1[0-9]|2[0-3])')
     target: str | None = Field(default=None, max_length=100)
+    # 폼 대신 글로 적은 답("전원은 5V, 전류는 잘 몰라"). 읽기 LLM이 사용 조건처럼 읽는다(SPEC 4절 재개, 11-17)
+    text: str = Field(default='', max_length=1000)
+
+    @field_validator('text')
+    @classmethod
+    def safe_text(cls, value):
+        value = value.strip()
+        if '://' in value or any(ord(ch) < 32 and ch not in '\n\t' for ch in value):
+            raise ValueError('주소나 제어 문자는 넣을 수 없습니다.')
+        return value
 
     @field_validator('answers')
     @classmethod
@@ -392,6 +402,11 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
         return stream(repo, user_id, thread, run_id, request_id, analysis, lambda progress: {'state': needs})
     reply = await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
                                     question=body.question, conditions=body.conditions)
+    if not reply and connections.get('components', connections.get('parts')):
+        # [왜] 위 확인은 대화를 처음 만들 때만 돈다. 이어지는 질문의 없는 기호("D3 대체할 부품", 회로에는 D1 · D2뿐)는 품번으로 읽혀
+        #      "D3의 데이터시트를 찾을 수 없어요"로 거절됐다(11-17 운영 대화 실측). 같은 코드 글로 답한다
+        from backend.conversations.memory_service import absent_diode_reply
+        reply = absent_diode_reply(connections, body.question)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
     if reply:
         # [왜] 질문이 회로에 없는 다이오드 기호(D9)만 적었다. 코드가 그 사실과 회로의 다이오드를 답하고 그래프는 돌리지 않는다(LLM이 지어내지 않게, SPEC 8.9 · #62)
@@ -412,7 +427,7 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
     if not choices and body.role is not None:
         raise HTTPException(422, '이 run에는 역할 선택이 필요하지 않습니다.')
     targets = [c['ref'] for c in interrupt.get('target_choices') or []]
-    if targets and (body.target not in targets or body.answers):  # 부품을 물은 run은 부품 하나만 받는다
+    if targets and (body.target not in targets or body.answers or body.text):  # 부품을 물은 run은 부품 하나만 받는다
         raise HTTPException(422, '제시된 부품 중 하나를 골라 주세요.')
     if not targets and body.target is not None:
         raise HTTPException(422, '이 run에는 부품 선택이 필요하지 않습니다.')
@@ -439,5 +454,5 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
     await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
     # [왜] 분석 서비스는 현재 결과 버전의 조건 질문만 재개한다. React run은 버전을 모르므로 지금 버전을 읽어 넘긴다
     call = lambda progress: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'],
-                                            request_id=request_id, progress=progress)
+                                            request_id=request_id, progress=progress, **({'text': body.text} if body.text else {}))
     return stream(repo, user_id, thread, str(run_id), request_id, analysis, call, resuming=True)

@@ -794,8 +794,14 @@ def _schottky_exempt(j: V.Judgement, category: str) -> V.Judgement:
         verdict = 'NOT_SUFFICIENT'
     elif any(c.result == 'unverified' for c in checks):
         verdict = 'NOT_VERIFIED'
+    elif j.verdict in ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'):
+        verdict = j.verdict
+    elif j.assumed:
+        # [왜] 회로 값 없이 원래 부품 기준으로 통과한 후보는 '역할상 충분'을 내지 않는다(judge_part와 같은 규칙, 11-17).
+        #      면제로 남은 조건이 풀렸으면 주요 정격이 원래보다 못하지 않을 때만 사양 동등이다
+        verdict = 'SPEC_EQUIVALENT' if j.not_worse else 'NOT_VERIFIED'
     else:
-        verdict = j.verdict if j.verdict in ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT') else 'ROLE_SUFFICIENT'
+        verdict = 'ROLE_SUFFICIENT'
     return j.model_copy(update={'checks': checks, 'verdict': verdict})
 
 
@@ -911,6 +917,9 @@ def _original_from_text(read: JudgeRead, text: str) -> str:
     return read.original_part
 
 
+NO_REVISION_ASKED = re.compile(r'없음|없다|없습|없어|아님|무관|NONE|NOT\s+SPECIFIED|NO\s+(?:SPECIFIC\s+)?(?:REVISION|EDITION)', re.I)  # 개정판 요구가 없다는 말
+
+
 def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason, str] | None:
     """사용자가 꼭 요구한 것이 코퍼스 밖이면 (거절 사유, 요약). 이름 · 항목만 대조한다(숫자 판단 없음, SPEC 8.3)."""
     maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
@@ -928,7 +937,10 @@ def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason
     # [주의] 판으로 보이는 글(개정 코드 · 연도 · '판' · edition · rev)만 요구로 본다. 읽기가 포장 코드 'L0'을 넣어 개정판 거절로 끝났다(11-06 v3-03)
     # [주의] 사용자 글에 그 판이 실제로 있어야 한다. 읽기가 프롬프트 예시의 'K2611'을 지어내 개정판 거절로 끝났다(11-06 h3-15)
     grounded = not text or any(tok in text.upper() for tok in re.findall(r'[A-Z]\d{4}|(?:19|20)\d{2}', wanted)) or not re.search(r'\d', wanted)
-    if wanted and grounded and EDITION.search(wanted) and not any(ok and code in wanted for code, ok in (facts.get('revisions') or {}).items()):
+    # [주의] 읽기가 요구가 없다는 말을 이 칸에 적으면('특정 개정판 요구는 없음') 판 낱말이 들어 있어 개정판 거절로 끝났다(11-17 v3-09 과잉 거절).
+    #      요구 없음을 뜻하는 말이면 요구로 보지 않는다
+    if (wanted and grounded and EDITION.search(wanted) and not NO_REVISION_ASKED.search(wanted)
+            and not any(ok and code in wanted for code, ok in (facts.get('revisions') or {}).items())):
         return Reason.REVISION_MISSING, f'required revision {read.revision_wanted} is not confirmed in the corpus'
     # [왜] '쇼트키 정류형'처럼 다이오드 계열을 말한 것은 분류 조건이지 사양 표에 없는 성질이 아니다. 거절했다(11-06 h3-14)
     # [주의] '지금 SS14와 같은 수준'처럼 막연한 바람도 none으로 왔다(v3-08). 숫자 · 단위나 코퍼스 밖 성질 낱말(고장률 · 수명 · 잡음 · 실측 …)이 있을 때만 거절한다
@@ -961,7 +973,7 @@ def display_inputs(values: dict, conds: dict) -> list[dict]:
     return rows[:60]
 
 
-def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:
+def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None, reread=None) -> dict:
     """그래프 노드: 코퍼스 밖 요구면 거절 사유로 보고하고, 아니면 빠진 값을 한 번 묻고 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
     rules = C.load()
     # 재개 시 읽기 LLM은 다시 부르지 않지만 고정 회로의 연결 검증은 유지한다.
@@ -985,7 +997,7 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
     history_text = '\n'.join(recalled)
     text = '\n'.join(x for x in (current_text, history_text, render_read(state, {})) if x)
     direct_text = _direct_condition_text(current_text)
-    roles = [r for r in (read.role, read.role_alt) if r and r != 'other']
+    roles = list(dict.fromkeys(r for r in (read.role, read.role_alt) if r and r != 'other'))  # 같은 역할을 두 번 적으면 하나로
     base = {'roles': roles, 'role_evidence': read.role_evidence, 'results': [], 'shown': [], 'unverified': [], 'terms': [],
             'capped': False, 'dropped': [], 'asked': []}
     if not roles:
@@ -1039,10 +1051,31 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                  and all(_identical(None, read.original_part, c)[0] for c in read.candidates))
     if same_part:
         asked = []
+    elif state.get('reply_text'):
+        # 글로 답한 뒤 다시 읽은 회차: 묻지 않고, 같이 온 폼 답 · 역할만 더한다(위 [왜])
+        values, conds = merge_reply(state.get('reply_answers') or {}, values, conds, kinds)
+        if state.get('reply_role') in roles:
+            roles = [state['reply_role']]
+        asked = []
     elif asked or len(roles) > 1:
         # [주의] 인터럽트는 문항당 한 번이다(AC-08). 재개하면 이 노드가 처음부터 다시 돌지만, 읽기는 앞 노드에 남아 있어 LLM을 다시 부르지 않는다
         # [주의] 재개 값은 {'answers': {...}, 'role': ...} 모양이다. 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다(11-06 실측)
-        reply = interrupt({'missing': asked, 'role_choices': roles if len(roles) > 1 else [], 'question': _ask_text(asked, roles, rules)}) or {}
+        # [왜] 되묻기 전에 에이전트가 회로에서 읽은 것(역할 · 근거)을 같이 보낸다. 화면이 값만 묻는 폼으로 보여 사용자는 아무것도
+        #      조사하지 않고 묻는다고 느꼈다(11-17 조장 결정: 되묻기는 단서를 더 얻는 수단). `roles`는 읽은 순서라 첫 값이 가장 유력하다
+        reply = interrupt({'missing': asked, 'role_choices': roles if len(roles) > 1 else [], 'question': _ask_text(asked, roles, rules),
+                           'roles': roles, 'role_evidence': read.role_evidence,
+                           # 역할 후보가 둘이면 역할마다 묻는 값이 다르다. 화면이 고른 역할의 값만 보이게 나눠 보낸다
+                           'role_missing': {r: [n for n in asked if n in C.inputs(rules[r])] for r in roles}}) or {}
+        note = str(reply.get('text') or '').strip()
+        if note and reread and not state.get('reply_text'):
+            # [왜] 사용자가 폼 대신 글로 답했다("전원은 5V, 전류는 잘 몰라"). 그 글을 사용 조건에 더해 읽기 LLM을 한 번 더 부르고(숫자는 같은
+            #      글 인용 확인을 거친다, AC-02), 더 묻지 않고 판정한다. 폼 답 · 고른 역할이 같이 왔으면 그 값이 먼저다
+            # [주의] 다시 읽은 뒤에는 인터럽트를 부르지 않는다(문항당 한 번, AC-08). `reply_text`가 그 표시다
+            again = {**state, 'conditions': f"{state.get('conditions', '')}\n{note}".strip(), 'reply_text': note,
+                     'reply_answers': reply.get('answers') or {}, 'reply_role': reply.get('role')}
+            again['judge_read'] = reread(again)['judge_read']
+            return judge_agent(again, specs=specs, find=find, retriever=retriever, web_search=web_search,
+                               web_search_fallback=web_search_fallback, reread=reread)
         values, conds = merge_reply(reply.get('answers') or {}, values, conds, kinds)
         if reply.get('role') in roles:
             roles = [reply['role']]
@@ -1117,9 +1150,12 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
             terms = V.search_conditions(rules[roles[0]], values)
-            # [왜] 사용자가 회로 값을 몰라 찾기 조건이 비면 원래 부품의 같은 정격을 기준으로 후보를 모은다. 전에는 후보 0개 → 거절이었다
-            #      (11-17 조장 결정: 되묻기는 단서를 더 얻는 수단이지 답의 관문이 아니다). 판정은 그대로라 값이 없는 조건은 '확인 안 됨'이다
-            from_original = not terms and bool(terms := V.original_search_conditions(rules[roles[0]], values, original_rows))
+            # [왜] 회로 값이 없는 필수 조건은 원래 부품의 같은 정격을 기준으로 후보를 모은다. 전에는 조건이 다 비면 후보 0개 → 거절이었고,
+            #      일부만 비면 그 조건 없이 찾아 원래보다 약한 부품(SS34 자리에 1N5817)이 섞였다(11-17 조장 결정, 운영 대화 실측).
+            #      판정도 같은 기준이다(`verdict._stand_in`): 원래 부품 값 이상이면 그 조건은 통과로 본다
+            have = {t['code'] for t in terms}
+            stand_ins = [t for t in V.original_search_conditions(rules[roles[0]], values, original_rows) if t['code'] not in have]
+            from_original, terms = bool(stand_ins), (terms + stand_ins)[:10]
             # [왜] 원래 부품의 패키지 · 분류를 주면 도구가 그 순서로 모두 줄 세운 뒤 50개에서 자른다(SPEC 8.3 찾기 순위)
             near = {'original_packages': [x['text'] for x in original_rows if x['code'] == 'PACKAGE' and x.get('text')] or None,
                     'original_category': next((x['category'] for x in original_rows if x.get('category')), None)}
@@ -1261,11 +1297,11 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             'reports': (state.get('reports') or []) + [_report(status, summary, missing, reason=report_reason)]}
 
 
-def judge_task_node(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:
+def judge_task_node(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None, reread=None) -> dict:
     """멀티 하위 그래프 노드: 판정 노드(`judge_agent`)를 그대로 돌리고, 그 보고를 할 일 보고서(`TaskReport`)로 바꾼다."""
     # [왜] 판정 코드는 단일 그래프(D4 v2)와 같이 쓴다. 멀티만의 칸(할 일 번호 · 판정 결과)은 여기서 붙인다
     out = judge_agent(state, specs=specs, find=find, retriever=retriever, web_search=web_search,
-                      web_search_fallback=web_search_fallback)
+                      web_search_fallback=web_search_fallback, reread=reread)
     r, judgement = out['reports'][-1], out.get('judgement') or {}
     summary, reason = r['summary'], r.get('reason')
     if judgement.get('kind') == 'find':

@@ -94,6 +94,10 @@ class SafeInterrupt(SafeModel):
     role_choices: list[str] = Field(default_factory=list)
     question: str = ''
     target_choices: list[SafeTargetChoice] = Field(default_factory=list)  # 대상 부품을 물을 때만. 그때 missing · role_choices는 비었다
+    # 에이전트가 회로에서 읽은 역할(유력한 순) · 그 근거 글 · 역할별로 묻는 값 이름(11-17). 값은 dto.result_dto가 모양을 검사해 넣는다
+    roles: list[str] = Field(default_factory=list)
+    role_evidence: list[str] = Field(default_factory=list)
+    role_missing: dict[str, list[str]] = Field(default_factory=dict)
 
 
 class SafePendingStart(SafeModel):

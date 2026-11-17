@@ -54,6 +54,46 @@ def test_ac01_rating_below_threshold_is_not_sufficient():
     assert vrrm.citation['document'] == '1N5817.pdf' and j.cautions == ['발열']
 
 
+def test_missing_circuit_values_fall_back_to_the_original_part_ratings():
+    """회로 값을 모르면 필수 조건을 원래 부품의 같은 항목 값 기준으로 본다(11-17). 원래 이상이고 주요 정격이 못하지 않으면 사양 동등이다."""
+    orig = [row('1N4001', 'VRRM', 20.0), row('1N4001', 'IF_AV', 1.0, unit='A')]
+    j = V.judge_part(R01, 'R01', '1N5817', {}, TEMP, N5817, original_rows=orig)
+    assert j.verdict == 'SPEC_EQUIVALENT' and j.missing == []
+    assert [(c.code, c.result, c.basis) for c in j.checks if c.code in ('VRRM', 'IF_AV')] == [
+        ('VRRM', 'pass', 'orig.VRRM'), ('IF_AV', 'pass', 'orig.IF_AV')]
+    assert sum('원래 부품 값을 기준으로 판정' in note for note in j.uncertain) == 2  # 어느 조건을 대신 봤는지 답에 남는다
+
+
+def test_candidate_below_the_original_stays_not_verified_and_asks_for_the_circuit_value():
+    """원래 부품보다 못한 후보는 불충족이 아니다(회로가 그만큼을 요구하는지 모른다). 확인 안 됨에 빠진 회로 값을 남긴다."""
+    orig = [row('SS34', 'VRRM', 40.0), row('SS34', 'IF_AV', 3.0, unit='A')]
+    j = V.judge_part(R01, 'R01', '1N5817', {}, TEMP, N5817, original_rows=orig)  # 1N5817: VRRM 20 V · IF 1 A
+    assert j.verdict == 'NOT_VERIFIED' and set(j.missing) == {'v_in_max', 'i_max'}
+    assert all(c.result == 'unverified' for c in j.checks if c.code in ('VRRM', 'IF_AV'))
+
+
+def test_original_fallback_never_gives_role_sufficient():
+    """'역할상 충분'은 회로 값으로 본 판정이다. 원래 부품 기준으로만 통과했는데 주요 정격(IFSM)이 원래보다 못하면 확인 안 됨이다."""
+    orig = [row('1N4001', 'VRRM', 20.0), row('1N4001', 'IF_AV', 1.0, unit='A'), row('1N4001', 'IFSM', 50.0, unit='A')]
+    cand = N5817 + [row('1N5817', 'IFSM', 25.0, unit='A')]
+    j = V.judge_part(R01, 'R01', '1N5817', {}, TEMP, cand, original_rows=orig)
+    assert j.verdict == 'NOT_VERIFIED' and set(j.missing) == {'v_in_max', 'i_max'}
+
+
+def test_given_circuit_values_are_never_replaced_by_the_original_part():
+    """회로 값을 받은 조건은 그 값으로만 본다. 원래 부품 기준은 값이 없는 조건에만 쓴다."""
+    orig = [row('1N4001', 'VRRM', 10.0), row('1N4001', 'IF_AV', 1.0, unit='A')]
+    j = V.judge_part(R01, 'R01', '1N5817', {'v_in_max': 20.0}, TEMP, N5817, original_rows=orig)  # 20 V × 1.25 = 25 V > 후보 20 V
+    assert j.verdict == 'NOT_SUFFICIENT'
+    assert next(c for c in j.checks if c.code == 'VRRM').basis == 'v_in_max * kV'
+    assert next(c for c in j.checks if c.code == 'IF_AV').basis == 'orig.IF_AV'
+
+
+def test_missing_values_without_original_rows_stay_not_verified_as_before():
+    j = V.judge_part(R01, 'R01', '1N5817', {}, TEMP, N5817)
+    assert j.verdict == 'NOT_VERIFIED' and set(j.missing) >= {'v_in_max', 'i_max'}
+
+
 def test_passing_ratings_without_original_is_role_sufficient():
     j = V.judge_part(R01, 'R01', '1N5817', {'v_in_max': 12.0, 'i_max': 0.15}, TEMP, N5817)
     assert j.verdict == 'ROLE_SUFFICIENT'  # 원래 부품을 모르면 사양 동등을 내지 않는다(EC-05)

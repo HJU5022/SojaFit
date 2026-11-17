@@ -195,6 +195,58 @@ export function replyCandidates(judgement: Result['judgement']): Candidate[] {
   ].filter((c, i, all) => all.findIndex((x) => x.part === c.part && x.role === c.role) === i);
 }
 
+/** 판정이 좋은 순. backend/judge/verdict.py의 ORDER와 같다(화면은 순서만 쓰고 판정을 다시 계산하지 않는다). */
+const VERDICT_ORDER = [
+  'IDENTICAL',
+  'SPEC_EQUIVALENT',
+  'ROLE_SUFFICIENT',
+  'NOT_VERIFIED',
+  'NOT_SUFFICIENT',
+];
+/** 승인 · 견적에 넣을 수 있는 판정(Candidate.tsx의 승인 버튼 조건과 같다). */
+const APPROVABLE = ['IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'];
+/** 결론 줄에 쓰는 판정 이름(api.ts `verdicts`와 같은 글자). */
+const VERDICT_NAMES: Record<string, string> = {
+  IDENTICAL: '동일품',
+  SPEC_EQUIVALENT: '사양 동등',
+  ROLE_SUFFICIENT: '역할상 충분',
+};
+/**
+ * 후보 카드 순서: 판정이 좋은 순, 같은 판정 안에서는 기판 수정이 필요 없는 후보 먼저, 그다음은 서버가 준 순서 그대로.
+ * [왜] 카드를 위에서 3장만 먼저 보이므로(나머지는 접음) 가장 쓸 만한 후보가 맨 위에 와야 한다(11-17).
+ */
+export function rankCandidates(candidates: Candidate[]): Candidate[] {
+  const rank = (c: Candidate) => {
+    const v = VERDICT_ORDER.indexOf(c.verdict);
+    return (v < 0 ? VERDICT_ORDER.length : v) * 2 + (c.board_change === false ? 0 : 1);
+  };
+  return [...candidates].sort((a, b) => rank(a) - rank(b)); // sort는 순서를 지키는 정렬이라 같은 등수는 서버 순서다
+}
+/**
+ * 후보 찾기 답의 결론 한 줄(순서를 매긴 후보를 받는다). 서버가 준 verdict · missing만 읽는다.
+ * 승인할 수 있는 후보가 있으면 그 수와 맨 위 후보를, 없으면 무엇을 알려 주면 판정이 확정되는지 말한다.
+ */
+export function candidateSummary(ranked: Candidate[]): string {
+  const ready = ranked.filter((c) => APPROVABLE.includes(c.verdict));
+  if (ready.length) {
+    // [왜] 품번만 말하면 왜 그 후보인지 모른다. 맨 위 세 후보를 판정 이름과 함께 말하고, 나머지가 어떤 후보인지 알린다(11-17)
+    const names = ready
+      .slice(0, 3)
+      .map((c) => `${c.part}(${VERDICT_NAMES[c.verdict] ?? c.verdict})`);
+    const rest = ranked.length - ready.length;
+    return (
+      `승인할 수 있는 후보는 ${ready.length}개예요: ${names.join(', ')}${ready.length > 3 ? ' 등' : ''}.` +
+      (rest ? ` 나머지 ${rest}개는 문서로 확인 안 됨이거나 불충족이에요.` : '')
+    );
+  }
+  const missing = [...new Set(ranked.flatMap((c) => c.missing ?? []))].map((code) =>
+    inputLabel(code).replace(' (예/아니오)', ''),
+  );
+  return missing.length
+    ? `아직 확정된 후보가 없어요. 아래가 가장 가까운 후보이고, 빠진 값(${missing.join(', ')})을 알려 주시면 판정을 확정할 수 있어요.`
+    : '아직 확정된 후보가 없어요. 아래가 가장 가까운 후보예요.';
+}
+
 /** 견적 수량이 서버가 받는 범위(1~100000 정수)인지 본다. 수량을 안 정했으면(undefined) 괜찮다. */
 export function validQuantity(quantity?: number): boolean {
   return (

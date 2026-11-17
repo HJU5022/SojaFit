@@ -11,6 +11,8 @@
   "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
 - 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05, 내부 코드와 사용자 문구 분리), SPEC 2절 가격 안내 · 6절 Mouser(ADR 0009)
 """
+import re
+
 from backend.multi_agent.contracts import Reason
 
 # 회로 없이 시작한 대화에서 회로가 필요한 질문의 거절(SPEC 8.9). [왜] Reason에 넣지 않는다: Reason은 계획서 구조화 출력 형식에 들어가
@@ -21,7 +23,76 @@ NEED_NETLIST = '이 질문은 회로가 있어야 검토할 수 있어요. 넷�
 # [주의] 따옴표 안 이름은 화면 글자와 같아야 한다(frontend/src/Reply.tsx 후보 카드 · Candidate.tsx 승인 칸 · Workbench.tsx 머리 단추)
 QUOTE_GUIDE = ("견적은 판정받은 후보를 승인한 뒤 수량을 넣어 만들어요. 판정 답의 '조건과 근거 보기'에서 '이 후보 승인하기'를 누르고 "
                "'견적 수량'을 넣어 '견적서 저장'을 누르세요. 저장한 견적은 프로젝트 화면 위쪽 '견적 목록'에서 볼 수 있어요. "
+               "승인 단추는 판정이 동일품 · 사양 동등 · 역할상 충분인 후보에만 있어요. 후보가 모두 문서로 확인 안 됨이면 "
+               "회로 전압 · 전류를 알려 주시면 판정을 확정할 수 있어요. "
                "아직 판정받은 후보가 없다면 'D1을 SS14로 바꿔도 될까?'처럼 바꿀 후보를 먼저 물어보세요.")
+
+# 화면 사용법을 묻는 일상 대화의 고정 안내(11-17). [왜] 이 길의 답은 LLM이 쓰는데, 있는 기능을 없다고 답했다
+# ("회로도 원본은 보여드리지 않습니다" · "회로에서 버튼의 위치를 찾으시나요?", 운영 대화 실측). 프롬프트는 재생 기록의 키라 바꾸지 않고
+# 코드가 낱말로 갈라 고정 글을 낸다. [주의] 따옴표 안 이름은 화면 글자와 같아야 한다(Workbench.tsx 머리 단추 · Reply.tsx · Candidate.tsx)
+SCREEN_GUIDES = (
+    (re.compile(r'회로도|개념도|schematic', re.I),
+     "회로도는 화면 오른쪽 위 '회로 보기'를 누르면 볼 수 있어요. 회로도 파일(.kicad_sch)을 올린 회로는 그 그림을, 넷리스트만 올린 회로는 "
+     "고른 부품의 핀과 네트 연결 개념도를 보여 드려요. 넷리스트에는 부품 위치와 배선이 없어 회로도 그림은 그리지 못해요."),
+    (re.compile(r'버튼|단추'),
+     "승인 단추('이 후보 승인하기')는 판정 답의 후보 카드에서 '조건과 근거 보기'를 누르면 아래쪽에 있어요. "
+     "판정이 동일품 · 사양 동등 · 역할상 충분인 후보에만 보이고, 문서로 확인 안 됨 · 불충족 후보에는 없어요."),
+)
+
+
+# 직전 판정을 되묻는 말(11-17). [왜] 그래프는 앞 답을 다음 질문에 넘기지 않아 "그래서 어떤 부품 써야 돼?" · "조건이 뭐야?"가
+# 일상 대화로 끝났다(운영 대화 실측). 대화 서비스가 직전 판정의 요약만 상태에 싣고(`last_judgement`), 여기서 코드가 글로 옮긴다.
+# LLM에는 주지 않는다(이전 답을 근거로 쓰지 않는다는 규칙은 그대로다). 일상 대화로 끝나는 길에서만 쓴다
+ASKS_PICK = re.compile(r'추천|그래서|결론|(?:어떤|어느|무슨|뭘|뭐|머)[^.?!]{0,12}(?:써|쓰|사야|골라|고르|바꾸|바꿔|좋|나아|낫)')
+ASKS_CONDITIONS = re.compile(r'조건')
+APPROVABLE = ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT')
+
+
+def followup_reply(question: str, last: dict) -> str:
+    """직전 판정 요약(`last_judgement`)으로 답할 수 있는 되물음이면 그 답, 아니면 빈 글자."""
+    cands = (last or {}).get('candidates') or []
+    if not cands:
+        return ''
+    question = question or ''
+    named = lambda rows: ', '.join(f"{c['part']}({VERDICT_KO.get(c['verdict'], c['verdict'])})" for c in rows)
+    missing = ', '.join(last.get('missing') or [])
+    if ASKS_CONDITIONS.search(question):
+        from backend.judge import conditions as C
+        rules = C.load()
+        roles = ', '.join(rules[r]['name'] for r in last.get('roles') or [] if r in rules) or '규칙 없는 역할'
+        terms = _terms_line({'terms': last.get('terms') or [], 'terms_from_original': last.get('terms_from_original')})
+        tail = (f'아직 모르는 값: {missing}. 알려 주시면 그 값으로 다시 판정해요.' if missing
+                else '회로 전압 · 전류를 알려 주시면 원래 부품 기준 대신 그 값으로 다시 판정해요.' if last.get('terms_from_original')
+                else '더 알려 주실 값은 없어요.')
+        return f'앞 검토에서 본 조건이에요. 역할: {roles}. {terms}. {tail}'
+    if ASKS_PICK.search(question):
+        ready = [c for c in cands if c['verdict'] in APPROVABLE]
+        if ready:
+            easy = [c['part'] for c in ready if c.get('board_change') is False]
+            return (f'앞 검토 기준으로 승인할 수 있는 후보는 {named(ready[:3])}예요. '
+                    + (f"이 가운데 기판 수정이 필요 없는 후보는 {', '.join(easy[:3])}예요. " if easy else '')
+                    + "후보 카드의 '조건과 근거 보기'에서 근거를 확인하고 '이 후보 승인하기'를 누르면 견적을 만들 수 있어요. " + NO_GUARANTEE)
+        return (f"앞 검토에서는 확정된 후보가 없었어요. 가장 가까운 후보는 {', '.join(c['part'] for c in cands[:3])}예요. "
+                + (f'빠진 값({missing})을 알려 주시면 판정을 확정할 수 있어요.' if missing else '조건과 근거는 후보 카드에서 볼 수 있어요.'))
+    return ''
+
+
+def judgement_summary(judgement: dict) -> dict:
+    """판정 결과 → 다음 질문에 싣는 작은 요약(후보는 판정이 좋은 순 · 기판 수정이 필요 없는 순으로 8개까지). 판정이 없으면 빈 dict."""
+    results = (judgement or {}).get('results') or []
+    if not results:
+        return {}
+    order = {v: i for i, v in enumerate(('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT', 'NOT_VERIFIED', 'NOT_SUFFICIENT'))}
+    ranked = sorted(results, key=lambda c: (order.get(c.get('verdict'), 9), c.get('board_change') is not False))
+    return {'roles': list(judgement.get('roles') or []), 'terms': list(judgement.get('terms') or []),
+            'terms_from_original': bool(judgement.get('terms_from_original')),
+            'candidates': [{'part': c.get('part'), 'verdict': c.get('verdict'), 'board_change': c.get('board_change')} for c in ranked[:8]],
+            'missing': sorted({m for c in results for m in c.get('missing') or []})}
+
+
+def screen_guide(question: str) -> str:
+    """화면 사용법(회로도 보기 · 승인 단추 위치)을 묻는 말이면 그 고정 안내, 아니면 빈 글자. 일상 대화로 끝나는 길에서만 쓴다."""
+    return next((text for pattern, text in SCREEN_GUIDES if pattern.search(question or '')), '')
 
 # 앞 답 · 근거를 다시 보여 달라는 말의 답(#64). [왜] 그래프는 앞 답을 갖고 있지 않다(이력은 사용자 입력만). 화면에 남은 답의 근거 자리를 알려 준다.
 # [주의] 따옴표 안 이름은 화면 글자와 같아야 한다(frontend/src/Reply.tsx 후보 카드 · 문서 근거, Candidate.tsx 조건별 검토)
@@ -114,7 +185,7 @@ def _role_line(judgement: dict) -> str:
 def _terms_line(judgement: dict) -> str:
     """찾기에 건 조건 줄. 회로 값이 없어 원래 부품 정격으로 대신 찾았으면 그 사실을 붙인다(`terms_from_original`)."""
     terms = ', '.join(f"{t['code']} {'≥' if 'gte' in t else '≤'} {_num(t.get('gte', t.get('lte')))}" for t in judgement['terms'])
-    note = ' (회로 값을 몰라 원래 부품의 정격을 기준으로 찾았어요)' if terms and judgement.get('terms_from_original') else ''
+    note = ' (회로 값을 모르는 조건은 원래 부품의 정격을 기준으로 찾았어요)' if terms and judgement.get('terms_from_original') else ''
     return f'사양 표에서 건 조건: {terms or "없음(빠진 값이 있어 거르지 못함)"}{note}'
 
 

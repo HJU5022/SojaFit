@@ -23,7 +23,8 @@ from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
 from backend.multi_agent.contracts import Reason, TaskReport
-from backend.multi_agent.messages import CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, empty_find_message, refusal_for
+from backend.multi_agent.messages import (CIRCUIT_MISSING, EARLIER_ANSWER, GENERAL_NOTE, NEED_NETLIST, empty_find_message, refusal_for,
+                                          followup_reply, screen_guide)
 from backend.multi_agent.state import JudgeOut, JudgeState, MultiState
 from backend.rag.units import to_si
 from backend.services.llm import is_llm_failure
@@ -66,6 +67,10 @@ def finish_node(state: dict) -> dict:
     if not state.get('reports'):
         if (state.get('plan') or {}).get('reply_kind') == 'earlier_answer':
             return {'answer': EARLIER_ANSWER, 'path': ['끝']}  # 앞 답 · 근거 다시 보기는 LLM 글 대신 고정 안내(#64)
+        if state.get('question_type') == 'chat' and (guide := screen_guide(state.get('question') or '')):
+            return {'answer': guide, 'path': ['끝']}  # 화면 사용법은 LLM 글 대신 고정 안내(있는 기능을 없다고 답했다, 11-17)
+        if state.get('question_type') == 'chat' and (again := followup_reply(state.get('question') or '', state.get('last_judgement') or {})):
+            return {'answer': again, 'path': ['끝']}  # 직전 판정을 되묻는 말은 그 판정의 요약으로 답한다(11-17)
         reply = (state.get('plan') or {}).get('reply', '')
         if '승인사례:' in reply:
             reason = Reason.VERIFY_FAILED
@@ -137,8 +142,10 @@ def judge_subgraph(*, chat, specs, find, retriever, web_search=None, web_search_
     from backend.multi_agent.agents.judge import judge_read_agent, judge_task_node
     g = StateGraph(JudgeState, output_schema=JudgeOut)  # [왜] 바깥 메모장에는 보고와 지나간 노드만 돌려준다. 다른 칸은 동시 실행 중 덮어쓰기 충돌이 난다
     g.add_node('회로 읽기', guarded(partial(judge_read_agent, chat=chat), 'judge', '판정 읽기'))
+    # [왜] 되묻기에 글로 답하면 판정 노드가 그 글로 읽기를 한 번 더 부른다(`reread`, 11-17). 읽기 노드와 같은 함수 · 같은 LLM 설정이다
     g.add_node('대체 부품 판정', guarded(partial(judge_task_node, specs=specs, find=find, retriever=retriever,
-                                          web_search=web_search, web_search_fallback=web_search_fallback), 'judge', '판정', skip_after_failure=True))
+                                          web_search=web_search, web_search_fallback=web_search_fallback,
+                                          reread=partial(judge_read_agent, chat=chat)), 'judge', '판정', skip_after_failure=True))
     g.add_edge(START, '회로 읽기')
     g.add_edge('회로 읽기', '대체 부품 판정')
     g.add_edge('대체 부품 판정', END)

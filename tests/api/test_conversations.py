@@ -1035,3 +1035,24 @@ def test_every_response_has_security_headers():
         assert headers['x-content-type-options'] == 'nosniff' and headers['x-frame-options'] == 'DENY'
         assert headers['referrer-policy'] == 'strict-origin-when-cross-origin' and 'max-age' in headers['strict-transport-security']
 
+
+
+def test_resume_body_accepts_a_free_text_reply_and_rejects_addresses_and_control_characters():
+    """되묻기에 글로 답할 수 있다(11-17). 앞뒤 공백은 떼고, 주소 · 제어 문자 · 1,000자 초과는 받지 않는다."""
+    from pydantic import ValidationError
+    from backend.api.conversations import ResumeRun
+    assert ResumeRun(answers={}, text='  전원은 5V, 전류는 잘 몰라\n온도는 실온  ').text == '전원은 5V, 전류는 잘 몰라\n온도는 실온'
+    assert ResumeRun(answers={}).text == ''
+    for bad in ('http://x.example/a', '5V\x00', 'x' * 1001):
+        with pytest.raises(ValidationError):
+            ResumeRun(answers={}, text=bad)
+
+
+def test_absent_diode_reference_reply_names_the_diodes_the_circuit_has():
+    """이어지는 질문이 회로에 없는 기호("D3")만 적으면 품번으로 읽지 않고 회로의 다이오드를 알린다(11-17, 첫 질문과 같은 코드 글)."""
+    from backend.conversations.memory_service import absent_diode_reply
+    circuit = {'components': [{'ref': 'D1', 'value': 'SS34', 'footprint': '', 'pins': [{'number': '1', 'net': '+5V'}, {'number': '2', 'net': 'VBUS'}]},
+                              {'ref': 'D2', 'value': 'SS34', 'footprint': '', 'pins': [{'number': '1', 'net': '+5V'}, {'number': '2', 'net': 'NES_5V'}]}]}
+    reply = absent_diode_reply(circuit, 'D3 대체할 부품!!!')
+    assert 'D3' in reply and 'D1(SS34)' in reply and 'D2(SS34)' in reply
+    assert absent_diode_reply(circuit, 'D2 대체할 부품 있어?') == ''  # 회로에 있는 기호면 그래프가 답한다

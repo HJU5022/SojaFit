@@ -314,3 +314,20 @@ def test_web_references_survive_refusal_and_reload_without_becoming_rating_evide
     item = live.evidence[0]
     assert (item['evidence_grade'], item['citation_number'], item['source_url']) == (3, 'R1', url)
     assert not item['row'] and not item['page']
+
+
+def test_interrupt_exposes_read_roles_evidence_and_per_role_inputs_only_in_safe_shapes():
+    """조건 질문에 에이전트가 읽은 역할 · 근거 · 역할별 묻는 값을 싣는다(11-17). 모양이 다른 값 · 묻지 않은 이름은 버린다."""
+    from backend.conversations.dto import result_dto
+    dto = result_dto({}, request_id='r', status='requires_input', interrupt={
+        'missing': ['v_in_max', 'v_reverse_max'], 'role_choices': ['R01', 'R02'], 'roles': ['R01', 'R02', 'R99', 5],
+        'role_evidence': ['D1.K → RAW\n(커넥터 쪽)', '', 7, 'x' * 400],
+        'role_missing': {'R01': ['v_in_max', 'secret_path'], 'R02': ['v_reverse_max'], 'R99': ['v_in_max'], 'R03': 'v_in_max'}}).model_dump()
+    asked = dto['interrupt']
+    assert asked['roles'] == ['R01', 'R02']
+    assert asked['role_evidence'] == ['D1.K → RAW (커넥터 쪽)', 'x' * 300]
+    assert asked['role_missing'] == {'R01': ['v_in_max'], 'R02': ['v_reverse_max']}
+    assert asked['question'] == '판정에 필요한 값을 알려 주세요.'
+    # [주의] 실행을 끝낼 때 저장소가 같은 결과를 저장용 모델로 다시 검사한다. 새 칸이 그 모델에 없으면 저장에서 500이 난다(11-17 8010 실측)
+    from backend.conversations.models import SafeInterrupt
+    assert SafeInterrupt.model_validate(asked).model_dump()['role_missing'] == {'R01': ['v_in_max'], 'R02': ['v_reverse_max']}

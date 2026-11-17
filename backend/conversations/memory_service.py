@@ -56,8 +56,10 @@ RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
 
 # 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
 # [왜] 11-12: 사용자별 5M이 실사용 한도. 서비스 10M은 다계정 합산 안전선(이전 1M/2M은 스모크·점검에 서비스 전체부터 먼저 찼다)
-USER_DAILY_TOKENS = 5_000_000
-SERVICE_DAILY_TOKENS = 10_000_000
+# [왜] 11-17: 운영에서 팀 점검 · 시연 준비만으로 서비스 10M이 16시에 다 차 분석이 모두 429가 됐다. 값은 코드가 아니라 환경변수로 올릴 수 있게 한다
+#      (없으면 전과 같은 5M · 10M). 사용자별 하루 USD 상한(ANALYSIS_DAILY_USD)과 공급자 키 한도는 그대로 남는다
+USER_DAILY_TOKENS = int(os.getenv('ANALYSIS_USER_DAILY_TOKENS') or 5_000_000)
+SERVICE_DAILY_TOKENS = int(os.getenv('ANALYSIS_SERVICE_DAILY_TOKENS') or 10_000_000)
 TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
 USER_TOKENS_FULL = f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_TOKENS:,} 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 SERVICE_TOKENS_FULL = f'오늘 서비스 전체 분석 사용량(하루 {SERVICE_DAILY_TOKENS:,} 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
@@ -628,7 +630,12 @@ class Conversations:
             # 현재 질문 문자열에 붙이면 회로 역할·조건이 섞이므로, 모델의 현재
             # 입력은 항상 이번 요청만 보게 한다.
             conversation_history = _conversation_history([r['content'] for r in history])
-            inputs = {'input': content, 'conversation_history': conversation_history,
+            # [왜] 그래프는 턴마다 판정 칸을 비운다. 직전 판정의 요약만 따로 실어 "그래서 뭐 써?" · "조건이 뭐야?"에 코드가 답하게 한다(11-17).
+            #      판정 없는 턴(견적 안내 · 일상 대화)을 지나도 남도록 앞 요약을 이어 쓴다
+            from backend.multi_agent.messages import judgement_summary
+            before = getattr(self.graph.get_state(self.config(thread)), 'values', None) or {}  # 새 대화는 앞 상태가 없다
+            last_judgement = judgement_summary(before.get('judgement') or {}) or before.get('last_judgement') or {}
+            inputs = {'input': content, 'conversation_history': conversation_history, 'last_judgement': last_judgement,
                       'connections': row['connections'], 'circuit': row['filename'], 'target': row['target'],
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,
                       # [왜] 대상이 없으면 그래프의 '대상 확인'이 계획을 본 뒤 이 후보에서 묻는다(#62). 매 질문 덮어써 앞 질문의 후보가 남지 않게 한다
@@ -647,7 +654,7 @@ class Conversations:
             LOGGER.warning('profile_hints_unavailable')
             return []
 
-    def resume(self, user, thread, answers, role, version, request_id='', progress=None):
+    def resume(self, user, thread, answers, role, version, request_id='', progress=None, text=''):
         with self.locked(user, thread) as (conn, row):
             if version != row['version']:
                 raise HTTPException(409, '새 결과의 조건 질문을 다시 확인하세요.')
@@ -666,25 +673,25 @@ class Conversations:
                 recorded = demo.match(row['connections'], row['target'], record.get('question'), record.get('conditions'))
                 want = (recorded[0].get('resume') if recorded else None) or {}
                 # [왜] 재개 답도 프롬프트에 들어간다. 기록 때 보낸 답 · 역할과 같아야 재생된다
-                if not want or (answers, role) != (want['answers'], want['role']):
+                if not want or text or (answers, role) != (want['answers'], want['role']):  # 글 답은 기록에 없어 재생하지 못한다
                     shown = ', '.join(f'{k}={v}' for k, v in (want.get('answers') or {}).items()) or '모름'
                     raise HTTPException(422, f"키 없는 데모는 기록한 답(답: {shown}, 역할: {want.get('role') or '없음'})으로만 재개합니다. "
                                              "화면의 '기록한 답으로 계속하기'를 누르세요.")
             budget = self._budget(user)
-            content = '조건 답변:\n' + ('\n'.join(f'{key}: {value}' for key, value in answers.items()) or '모름')
+            content = '조건 답변:\n' + ('\n'.join([*(f'{key}: {value}' for key, value in answers.items()), *([text] if text else [])]) or '모름')
             if role:
                 content += f'\n선택한 역할: {role}'
             if 'target_choices' in pending[0]:  # 대상 부품을 물었다(호출자가 고른 부품을 분석 thread에 먼저 고정한다)
                 content = f"선택한 부품: {row['target']}"
             record = row.get('input_record') or {'version': version, 'question': None, 'conditions': None, 'resumes': []}
             record.pop('execution_limit_reached',None)
-            record['resumes'].append({'answers': answers, 'role': role})
+            record['resumes'].append({'answers': answers, 'role': role, **({'text': text} if text else {})})
             with conn.transaction():
                 conn.execute('UPDATE threads SET input_record=%s WHERE id=%s', (Jsonb(record), thread))
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
             hints = self._profile_hints(user, record.get('question'))
             with _reporting(progress):
-                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role, 'target': row['target']}), budget, request_id)
+                web_unavailable = self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role, 'target': row['target'], **({'text': text} if text else {})}), budget, request_id)
         return {**self.detail(user, thread, hints), 'web_search_unavailable': web_unavailable}
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):

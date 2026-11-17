@@ -2,7 +2,12 @@
 import { useId, useState } from 'react';
 import { ArrowRight, MessageSquare, PanelRight } from 'lucide-react';
 import { statuses } from './api';
-import { replyCandidates, withoutCorpusCitations } from './display';
+import {
+  candidateSummary,
+  rankCandidates,
+  replyCandidates,
+  withoutCorpusCitations,
+} from './display';
 import { inputLabel, inputPlaceholder, isBooleanInput } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, GradeHelp, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
@@ -22,19 +27,47 @@ export function MissingInput({
 }) {
   const fieldId = useId();
   const [answers, setAnswers] = useState<Record<string, string>>({}),
-    [role, setRole] = useState('');
+    // [왜] 역할은 에이전트가 읽은 가장 유력한 쪽을 미리 고른다. 사용자가 고르지 않아도 계속할 수 있다(11-17 조장 결정)
+    [role, setRole] = useState(result.interrupt.role_choices?.[0] ?? '');
+  const name = (code: string) => roles.find((r) => r.code === code)?.name ?? code,
+    readRoles = result.interrupt.roles ?? [],
+    evidence = result.interrupt.role_evidence ?? [],
+    // 역할 후보가 둘이면 고른 역할이 받는 값만 묻는다(서버가 역할별 이름을 준다). 모르면 전부 보인다
+    mine = role ? result.interrupt.role_missing?.[role] : undefined,
+    asked = (result.interrupt.missing ?? []).filter((code) => !mine || mine.includes(code));
   return (
     <div className="missing-input" data-testid="requires-input">
       <div className="inline-heading">
         <MessageSquare size={20} />
-        <h2>조건을 알려주시면 이어서 검토합니다.</h2>
+        <h2>회로를 읽었어요. 아는 조건만 알려 주세요.</h2>
       </div>
-      <p>{result.interrupt.question}</p>
+      {readRoles.length > 0 && (
+        <div className="read-summary">
+          <strong>회로에서 읽은 내용</strong>
+          <p>
+            역할: {readRoles.map(name).join(' 또는 ')}
+            {readRoles.length > 1 && ' (더 유력한 쪽을 아래에 골라 두었어요)'}
+          </p>
+          {evidence.length > 0 && (
+            <ul>
+              {evidence.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      <p>
+        아래 값은 회로만으로는 알 수 없어요. 아는 것만 적어 주세요. 몰라도 계속할 수 있고, 아래
+        대화창에 글로 적어 보내도 됩니다.
+      </p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           onResume({
-            answers: Object.fromEntries(Object.entries(answers).filter(([, v]) => v.trim())),
+            answers: Object.fromEntries(
+              Object.entries(answers).filter(([k, v]) => v.trim() && asked.includes(k)),
+            ),
             ...(result.interrupt.role_choices?.length ? { role } : {}),
           });
         }}
@@ -43,7 +76,6 @@ export function MissingInput({
           <label>
             회로에서 맡은 역할
             <select value={role} onChange={(e) => setRole(e.target.value)} required>
-              <option value="">역할을 선택하세요</option>
               {result.interrupt.role_choices.map((code) => (
                 <option key={code} value={code}>
                   {roles.find((r) => r.code === code)?.name ?? code}
@@ -52,7 +84,7 @@ export function MissingInput({
             </select>
           </label>
         )}
-        {result.interrupt.missing?.map((code) =>
+        {asked.map((code) =>
           isBooleanInput(code) ? (
             <fieldset key={code} className="boolean-input" disabled={busy}>
               <legend>{inputLabel(code).replace(' (예/아니오)', '')}</legend>
@@ -179,7 +211,11 @@ export function Reply({
   onCircuit?: () => void;
 }) {
   const r = run.result,
-    candidates = replyCandidates(r.judgement);
+    candidates = rankCandidates(replyCandidates(r.judgement)),
+    // [왜] 찾기 답은 후보가 수십 개다. 가장 가까운 3장만 먼저 보이고 나머지는 접는다(11-17)
+    [all, setAll] = useState(false),
+    FIRST = 3,
+    visible = all ? candidates : candidates.slice(0, FIRST);
   return (
     <div className="assistant-reply">
       <div className="reply-label">
@@ -200,9 +236,17 @@ export function Reply({
       {candidates.length ? (
         <>
           <h2>후보별 검토 결과입니다.</h2>
+          {/* 결론 한 줄은 후보 찾기 답에만 둔다. 품번을 정해 물은 판정은 카드의 판정이 곧 결론이다 */}
+          {r.judgement.kind === 'find' && (
+            <p className="candidate-summary">{candidateSummary(candidates)}</p>
+          )}
           <div className="candidate-list">
-            {candidates.map((c, i) => (
-              <button key={i} className="candidate-card" onClick={() => onCandidate(c, run)}>
+            {visible.map((c) => (
+              <button
+                key={c.part + '/' + c.role}
+                className="candidate-card"
+                onClick={() => onCandidate(c, run)}
+              >
                 <div>
                   <strong>{c.part}</strong>
                   <Badge verdict={c.verdict} />
@@ -220,6 +264,11 @@ export function Reply({
               </button>
             ))}
           </div>
+          {!all && candidates.length > FIRST && (
+            <button type="button" className="more-candidates" onClick={() => setAll(true)}>
+              나머지 {candidates.length - FIRST}개 후보 보기
+            </button>
+          )}
           <details className="full-answer">
             <summary>전체 답변 보기</summary>
             <div className="markdown">
