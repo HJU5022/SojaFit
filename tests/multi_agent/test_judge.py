@@ -752,3 +752,60 @@ def test_mixed_same_and_other_part_asks_once_and_keeps_identical(monkeypatch):
     out = J.judge_agent({**SAME, 'judge_read': dict(SAME_READ, candidates=['SS34', 'SS14'])}, specs=specs_of(SAME_SPECS), find=None, retriever=None)
     verdicts = {x['part']: x['verdict'] for x in out['judgement']['results']}
     assert len(asked) == 1 and verdicts['SS34'] == 'IDENTICAL' and verdicts['SS14'] != 'IDENTICAL'
+
+@pytest.mark.parametrize('text', [
+    '추가 조건으로 확인할 수 있는 내용은 없어',
+    '사용 조건을 모르겠어.',
+    '사용 조건 모름',
+    '모름',
+    '추가 사용 조건은 알려줄 수 없어.',
+])
+def test_declined_conditions_do_not_interrupt_or_invent_inputs(monkeypatch, text):
+    monkeypatch.setattr(J, 'interrupt', no_interrupt)
+    read = J.JudgeRead(role='R01', original_part='1N4001', candidates=['1N5817']).model_dump(mode='json')
+    out = J.judge_agent({**STATE, 'conditions': text, 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    j = out['judgement']
+    assert j['asked'] == []
+    assert j['analysis_inputs']['values_si'] == {}
+    assert j['results'][0]['verdict'] == 'NOT_VERIFIED'
+    assert j['results'][0]['missing']
+
+
+@pytest.mark.parametrize('text', [
+    '', '사용 조건을 알려줘.', '사용 조건을 모르면 어떻게 되나요?',
+    '제조사를 모르겠어.', '온도는 모르겠어.', '사용 조건 중 온도를 모르겠어.', '사용 조건을 모르겠다는 뜻은 아니야.',
+])
+def test_other_unknowns_do_not_skip_all_condition_questions(monkeypatch, text):
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
+    read = J.JudgeRead(role='R01', original_part='1N4001', candidates=['1N5817']).model_dump(mode='json')
+    J.judge_agent({**STATE, 'conditions': text, 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    assert len(asked) == 1 and 'v_in_max' in asked[0]['missing']
+
+
+def test_declining_more_conditions_preserves_known_inputs_and_failures(monkeypatch):
+    monkeypatch.setattr(J, 'interrupt', no_interrupt)
+    out = J.judge_agent({**STATE, 'conditions': STATE['conditions'] + '\n추가 조건으로 확인할 수 있는 내용은 없어', 'judge_read': READ}, specs=specs_of(SPECS), find=None, retriever=None)
+    assert out['judgement']['analysis_inputs']['values_si']['v_in_max'] == 20
+    assert out['judgement']['results'][0]['verdict'] == 'NOT_SUFFICIENT'
+
+
+def test_declining_conditions_does_not_skip_role_choice(monkeypatch):
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}, 'role': 'R01'})
+    read = J.JudgeRead(role='R01', role_alt='R02', original_part='1N4001', candidates=['1N5817']).model_dump(mode='json')
+    J.judge_agent({**STATE, 'conditions': '사용 조건을 모르겠어.', 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    assert len(asked) == 1 and asked[0]['missing'] == []
+    assert asked[0]['role_choices'] == ['R01', 'R02']
+@pytest.mark.parametrize('source', ['history', 'circuit'])
+def test_unknown_conditions_only_apply_to_current_user_words(monkeypatch, source):
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
+    read = J.JudgeRead(role='R01', original_part='1N4001', candidates=['1N5817']).model_dump(mode='json')
+    state = {**STATE, 'conditions': '', 'judge_read': read}
+    if source == 'history':
+        state['conversation_history'] = ['사용 조건을 모르겠어.']
+    else:
+        state['target_part'] = {**STATE['target_part'], 'nets': [{'name': '사용 조건을 모르겠어.', 'nodes': []}]}
+    J.judge_agent(state, specs=specs_of(SPECS), find=None, retriever=None)
+    assert len(asked) == 1 and asked[0]['missing']

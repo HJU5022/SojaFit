@@ -89,7 +89,7 @@ export type ThreadListItem = {
   created_at: string;
   last_activity_at: string;
 };
-type Message = {
+export type Message = {
   id: number;
   run_id: string;
   role: 'user' | 'assistant';
@@ -102,6 +102,8 @@ export type Detail = {
   title: string;
   target_ref: string | null;
   target_locked: boolean;
+  circuit_version: number;
+  previous_thread_id: string | null;
   messages: Message[];
   latest_run: { id: string; status: string; message_id: number | null } | null;
   next_before_message_id: number | null;

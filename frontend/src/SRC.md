@@ -1,17 +1,20 @@
 # src
 
 ## 역할
+
 - 넣는 것: 화면 소스(React·TypeScript·CSS).
 - 넣지 않는 것: 판정·검색·인증 로직(`backend/`), 빌드 산출물, 비밀값, 단위 시험(`../tests/`).
 - 담당: 서비스·운영.
 
 ## 경계
+
 - 화면은 서버가 보낸 DTO만 그립니다. 숫자 비교와 판정은 `backend/judge/`에서만 합니다.
 - 서버와의 통신은 `api.ts`의 `api()`와 `streamRun()` 둘뿐입니다. 쿠키 세션을 쓰고 자동 재전송을 하지 않습니다. 401은 `session-expired` 이벤트로 알리고 `App.tsx`가 화면 상태와 `sessionStorage`를 비웁니다.
 - 경로는 라우터 라이브러리 없이 `ui.tsx`의 `navigate()` · `useLocation()`으로 다룹니다. 경로 표는 `App.tsx` 한 곳입니다.
 - 스타일은 `styles.css` 한 파일의 일반 CSS입니다.
 
 ## 파일
+
 - `SRC.md` — 이 폴더 설명.
 - `main.tsx` — React 진입점·글꼴·스타일.
 - `App.tsx` — 경로 표와 세션 경계. 공개 경로(`/` · `/login` · `/signup` · `/password-reset`, 하단 고지 문서 `/terms` · `/privacy` · `/ai-notice` · `/licenses`, 메일 링크용 `/verify-email` · `/reset-password`)와 로그인 뒤 경로(`/app`: 인자 없으면 새 대화 화면, `?project=&thread=`는 작업대 · `/settings` · `/approved` · `/library` · `/admin` · `/admin/users`, 옛 `/projects`는 `/app`으로 바꿈). `/approved/{id}/report`(인쇄용 보고서)만 사이드바 없이 그린다(#44). 사이드바 맨 위는 "새 대화"이고 프로젝트·대화 나무는 `Conversations.tsx`가 그린다. 사이드바 오른쪽 경계선으로 너비를 바꾼다. 사이드바 맨 아래는 계정 줄 하나이고, 누르면 위로 여는 계정 메뉴(`RowMenu`: 내 설정 · 사용자 관리(관리자) · 고지 문서 4개(`LegalModal`) · 문의 · 로그아웃, #43)가 열린다.
@@ -42,3 +45,7 @@
 - `Candidate.tsx` — 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회.
 - `styles.css` — 전체 스타일.
 - `vite-env.d.ts` — Vite 환경 타입.
+- `Workbench.tsx`의 회로 버전 전환 — 새 대화에 질문을 한 번 보내고 `previous_thread_id`를 따라 최대 10개 이전 대화를 버전·원래 대화 링크와 함께 읽기 전용으로 보인다(각 GET은 최대 50개, 잘린 경우 안내).
+- `Workbench.tsx`의 대화 스크롤 — 새 질문·조건 재개·답 진행은 사용자가 하단 근처에 있을 때만 자동 하단 추적하고, 위로 읽는 중에는 점프하지 않는다. 이전 대화 불러오기는 기존 시야를 보존한다. terminal 없는 SSE는 저장된 run을 제한 조회해 복구한다.
+- 새 질문 실행을 시작할 때는 이전 완료 답을 `active` 진행 상태에서 분리해 기존 transcript를 계속 보인다. 조건 재개는 같은 실행의 상태를 유지한다.
+- 전송은 질문 스냅샷을 먼저 잡아 입력을 비우고 pending 말풍선을 보인다. 첨부·새 대화 생성 중에는 `preparing`으로 중복 전송을 막으며, 실패 때 사용자가 새 초안을 쓰지 않은 경우에만 원문을 복원한다. 새 대화 화면도 준비 중 제출 질문을 별도 표시한다.

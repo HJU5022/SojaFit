@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: DB SQL·문서·스키마 도구 시험. 일회용 PostgreSQL에 SQL을 적용한 결과로 확인한다.
-- 넣는 것: `scripts/db/gen_schema_docs.py` 시험, HTTP를 거치지 않는 `db/*.sql` 단독 시험(`test_public_grants.py`).
+- 넣는 것: `scripts/db/gen_schema_docs.py` 시험, HTTP를 거치지 않는 `db/*.sql` 단독 시험(`test_public_grants.py`). `db/036_thread_continuations.sql`은 회로 업로드로 새로 만든 대화와 이전 대화의 열람 연결만 저장한다(메시지·run·checkpoint 복사 없음).
 - 넣지 않는 것: 저장소·API의 DB 시험(`tests/projects/`, `tests/conversations/`, `tests/api/`), 코퍼스 검색 시험(`tests/rag/`).
 - 담당: 서비스·운영
 

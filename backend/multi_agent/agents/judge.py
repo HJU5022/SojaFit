@@ -243,6 +243,13 @@ RANGE_ONLY = {'vz_min', 'vz_max'}  # 사용자가 범위로 정한 값만 받는
 QTY = re.compile(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%Ω]*)')  # 인용 글의 숫자와 바로 뒤 단위
 REPLY = re.compile(r'^\s*(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%]*)\s*$')
 YES, NO = {'예', '네', '응', 'yes', 'true', 'y'}, {'아니오', '아니', 'no', 'false', 'n'}
+# 현재 사용자가 전체 조건을 줄 수 없다고 명시한 경우에만 추가 수치 질문을 생략한다.
+NO_MORE_CONDITIONS = re.compile(
+    r'(?:사용\s*조건|회로\s*조건|추가\s*(?:사용\s*)?조건)\s*(?:[은는을를이가]\s*)?(?:잘\s*)?'
+    r'(?:모르겠(?:어(?:요)?|습니다|다|음)|모릅니다|모른다|모름|몰라(?:요)?|'
+    r'(?:알|확인할|알려줄|알려드릴|제공할)\s*수\s*없(?:어(?:요)?|습니다|다|음))(?=[\s.!?。]|$)'
+    r'|추가\s*(?:사용\s*)?조건으로\s*확인할\s*수\s*있는\s*(?:내용|정보)(?:은|는|이|가)?\s*없(?:어(?:요)?|습니다|다|음)?(?=[\s.!?。]|$)'
+)
 
 
 def _norm(s: str) -> str:
@@ -1015,6 +1022,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         asked = list(dict.fromkeys(_required_missing(rules[roles[0]], set(values) | set(conds))))
     else:
         asked = list(dict.fromkeys(n for r in roles for n in C.needed(rules[r], set(values) | set(conds))))
+    if (NO_MORE_CONDITIONS.search(current_text)
+            or state.get('conditions', '').strip().rstrip('.!') in {'모름', '몰라', '몰라요', '모르겠어', '모르겠어요', '모르겠습니다'}):
+        asked = []
     read = read.model_copy(update={'original_part': _original_from_text(read, text)})
     # [왜] 후보가 모두 원래 부품과 같은 품번이면 회로 값 · 역할과 상관없이 동일품이다(SPEC 3절). 6개 값을 물은 뒤 동일품을 냈다(#65).
     #      주문 코드만 다른 품번은 문서 행을 찾아야 동일품이라 묻고, 원래 부품의 제조사가 다르거나 모르면 근거가 없어 묻는다(EC-05)

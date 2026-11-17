@@ -180,6 +180,23 @@ def test_ownership_and_atomic_active_run(storage):
         assert conn.execute('SELECT count(*) FROM messages').fetchone()[0] == 0
 
 
+def test_create_thread_can_pin_requested_circuit_version_and_defaults_to_latest(storage):
+    from backend.conversations.repository import ConversationNotFound
+    repo, (owner, other), project, connect = storage
+    with connect() as conn:
+        conn.execute("UPDATE circuits SET connections=%s, source_sha256=%s, version=2 WHERE project_id=%s",
+                     ('{"version":2}', 'b' * 64, project))
+
+    pinned = repo.create_thread(owner, project, circuit_version=1)
+    latest = repo.create_thread(owner, project)
+    assert repo.thread_detail(owner, pinned)['circuit_version'] == 1
+    assert repo.thread_detail(owner, latest)['circuit_version'] == 2
+    with pytest.raises(ConversationNotFound):
+        repo.create_thread(owner, project, circuit_version=99)
+    with pytest.raises(ConversationNotFound):
+        repo.create_thread(other, project, circuit_version=1)
+
+
 def test_saved_history_pages_are_owned_and_read_only(storage, monkeypatch):
     from backend.conversations.repository import ConversationNotFound
     repo, (owner, other), project, connect = storage

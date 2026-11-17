@@ -54,7 +54,8 @@ export function NewProject({
             let result: Project;
             if (mode === 'upload') {
               if (!file) throw new Error('넷리스트를 첨부해 주세요.');
-              if (file.size > 5 * 1024 * 1024) throw new Error('넷리스트는 5 MiB 이하여야 합니다.');
+              if (file.size > 5 * 1024 * 1024)
+                throw new Error('넷리스트·회로도는 5 MiB 이하여야 합니다.');
               const body = new FormData();
               body.set('name', name);
               body.set('file', file);
@@ -117,14 +118,14 @@ export function NewProject({
         {mode === 'upload' && (
           <label className="file-drop">
             <FileUp />
-            KiCad 넷리스트
+            KiCad 넷리스트·회로도
             <input
               type="file"
-              accept=".net"
+              accept=".net,.kicad_sch"
               required
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
-            <small>.net · UTF-8 · 최대 5 MiB</small>
+            <small>.net · .kicad_sch · UTF-8 · 최대 5 MiB</small>
           </label>
         )}
         {mode === 'empty' && (

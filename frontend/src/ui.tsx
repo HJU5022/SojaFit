@@ -532,6 +532,11 @@ export function Markdown({ children }: { children: string }) {
       urlTransform={markdownUrl}
       disallowedElements={['img']}
       components={{
+        table: ({ children }) => (
+          <div className="markdown-table-scroll" role="region" aria-label="답변 표" tabIndex={0}>
+            <table>{children}</table>
+          </div>
+        ),
         a: ({ href, children: label }) =>
           href ? (
             <a href={href} target="_blank" rel="noreferrer noopener">

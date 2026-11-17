@@ -24,7 +24,7 @@ import {
   type Step,
 } from '../src/display.ts';
 import type { Candidate } from '../src/types.ts';
-import { inputPlaceholder } from '../src/inputLabels.ts';
+import { INPUT_LABELS, isBooleanInput, inputPlaceholder } from '../src/inputLabels.ts';
 
 test('formatNumber는 긴 소수만 줄이고 정수·짧은 소수는 그대로 둔다', () => {
   assert.equal(formatNumber(0.17142857142857143), '0.171');
@@ -236,4 +236,16 @@ test('면책 문구는 판정 후보가 있는 답에만: 판정 없는 답(일�
     replyCandidates({ results: [ss14], shown: [ss14], unverified: [ss16] }).map((c) => c.part),
     ['SS14', 'SS16'],
   );
+});
+
+test('예/아니오 조건은 op_amp를 포함하고 수치·알 수 없는 코드는 제외한다', () => {
+  for (const [code, label] of Object.entries(INPUT_LABELS)) {
+    assert.equal(isBooleanInput(code), code === 'op_amp' || label.includes('(예/아니오)'), code);
+  }
+  for (const code of ['orig_schottky', 'high_impedance', 'fast_signal', 'op_amp']) {
+    assert.equal(isBooleanInput(code), true, code);
+  }
+  for (const code of ['v_in_max', 'VF', 'unknown_code', '__proto__']) {
+    assert.equal(isBooleanInput(code), false, code);
+  }
 });

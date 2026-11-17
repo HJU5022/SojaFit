@@ -1,9 +1,9 @@
 /** 검토 결과 답·조건 입력 카드. 서버가 보낸 상태를 그리고 판정은 계산하지 않는다. 출처: SPEC 3·4절. */
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { ArrowRight, MessageSquare, PanelRight } from 'lucide-react';
 import { statuses } from './api';
 import { replyCandidates, withoutCorpusCitations } from './display';
-import { inputLabel, inputPlaceholder } from './inputLabels';
+import { inputLabel, inputPlaceholder, isBooleanInput } from './inputLabels';
 import { Badge, Disclaimer, ErrorBox, Markdown, Source } from './ui';
 import { PriceLookup } from './Candidate';
 import type { Candidate, DemoQuestion, Result, Role, Run } from './types';
@@ -20,6 +20,7 @@ export function MissingInput({
   busy: boolean;
   onResume: (body: any) => void;
 }) {
+  const fieldId = useId();
   const [answers, setAnswers] = useState<Record<string, string>>({}),
     [role, setRole] = useState('');
   return (
@@ -51,17 +52,37 @@ export function MissingInput({
             </select>
           </label>
         )}
-        {result.interrupt.missing?.map((code) => (
-          <label key={code}>
-            {inputLabel(code)}
-            <input
-              value={answers[code] ?? ''}
-              onChange={(e) => setAnswers({ ...answers, [code]: e.target.value })}
-              maxLength={200}
-              placeholder={inputPlaceholder(code)}
-            />
-          </label>
-        ))}
+        {result.interrupt.missing?.map((code) =>
+          isBooleanInput(code) ? (
+            <fieldset key={code} className="boolean-input" disabled={busy}>
+              <legend>{inputLabel(code).replace(' (예/아니오)', '')}</legend>
+              <div className="boolean-options">
+                {['예', '아니오', ''].map((value) => (
+                  <label key={value} className="checkbox">
+                    <input
+                      type="radio"
+                      name={`${fieldId}-${code}`}
+                      value={value}
+                      checked={(answers[code] ?? '') === value}
+                      onChange={() => setAnswers({ ...answers, [code]: value })}
+                    />
+                    {value || '모름'}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : (
+            <label key={code}>
+              {inputLabel(code)}
+              <input
+                value={answers[code] ?? ''}
+                onChange={(e) => setAnswers({ ...answers, [code]: e.target.value })}
+                maxLength={200}
+                placeholder={inputPlaceholder(code)}
+              />
+            </label>
+          ),
+        )}
         <div className="actions">
           <button className="primary" disabled={busy}>
             이 값으로 계속 검토

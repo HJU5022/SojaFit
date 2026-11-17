@@ -213,8 +213,10 @@ export default function App() {
     pathname === '/' ||
     isLegalPath(pathname) || // 이용약관 · 개인정보처리방침 · AI 이용 안내 · 출처·라이선스(#27)
     pathname === '/login' ||
-    pathname.startsWith('/signup') ||
-    pathname.startsWith('/password-reset') ||
+    pathname === '/signup' ||
+    pathname === '/signup/confirm' ||
+    pathname === '/password-reset' ||
+    pathname === '/password-reset/confirm' ||
     // 백엔드가 보내는 메일 링크: {AUTH_ORIGIN}/verify-email#token=… · /reset-password#token=… (backend/services/mail.py)
     pathname === '/verify-email' ||
     pathname === '/reset-password';

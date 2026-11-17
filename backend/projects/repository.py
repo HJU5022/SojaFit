@@ -73,15 +73,23 @@ class ProjectRepository:
         """회로를 올리고 (프로젝트, 대화 id)를 돌려준다. 대화는 새로 만든다.
 
         회로가 없던 프로젝트에 그 프로젝트의 회로 없는 대화(버전 0) thread_id를 주면 새 대화를 만들지 않고 그 대화를 돌려준다.
-        그 대화는 이 회로를 읽는다(`pinned_version`). 조건이 맞지 않는 thread_id는 무시하고 지금처럼 새 대화를 만든다.
+        그 대화는 이 회로를 읽는다(`pinned_version`). 조건이 맞지 않으면 새 대화를 만든다. 이때 thread_id가 이 프로젝트의 대화이면
+        새 대화의 이전 대화로 잇고(`thread_continuations`, 메시지는 복사하지 않는다), 다른 프로젝트의 thread_id는 무시한다.
         """
         with auth.connection() as conn:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
                 raise ProjectNotFound
             # [주의] 회로를 올리기 전에 본다. 프로젝트 행을 잠가 같은 프로젝트의 동시 첨부와 겹치지 않는다
-            same = thread_id is not None and conn.execute(
-                'SELECT 1 FROM threads t WHERE t.id=%s AND t.project_id=%s AND t.circuit_version=0 '
-                'AND NOT EXISTS (SELECT 1 FROM circuits c WHERE c.project_id=t.project_id)', (thread_id, project_id)).fetchone() is not None
+            previous_thread_id = None
+            same = False
+            if thread_id is not None:
+                source = conn.execute(
+                    'SELECT t.id,t.circuit_version FROM threads t WHERE t.id=%s AND t.project_id=%s',
+                    (thread_id, project_id)).fetchone()
+                if source is not None:
+                    previous_thread_id = source[0]
+                    same = source[1] == 0 and conn.execute(
+                        'SELECT 1 FROM circuits c WHERE c.project_id=%s', (project_id,)).fetchone() is None
             conn.execute("UPDATE projects SET source_kind='upload',demo_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=%s AND user_id=%s", (project_id, user_id))
             version = conn.execute('INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,%s,%s,%s) '
                          'ON CONFLICT (project_id) DO UPDATE SET connections=EXCLUDED.connections,source_sha256=EXCLUDED.source_sha256,'
@@ -91,6 +99,9 @@ class ProjectRepository:
             if not same:
                 thread_id = uuid4()
                 conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread_id, project_id))
+                if previous_thread_id is not None:
+                    conn.execute('INSERT INTO thread_continuations(thread_id,previous_thread_id) VALUES (%s,%s)',
+                                 (thread_id, previous_thread_id))
             return self._get_owned(conn, user_id, project_id), str(thread_id)
 
     def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str, allow_duplicate=False, schematic=None) -> Project:

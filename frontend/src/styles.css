@@ -82,7 +82,8 @@ a:focus-visible,
 summary:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
-select:focus-visible {
+select:focus-visible,
+.markdown-table-scroll:focus-visible {
   outline: 3px solid #508a99;
   outline-offset: 3px;
 }
@@ -1491,17 +1492,33 @@ form {
   font-size: 16px;
   margin: 16px 0 8px;
 }
+.markdown-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 12px 0;
+}
 .markdown table {
   border-collapse: collapse;
-  display: block;
-  overflow: auto;
-  max-width: 100%;
+  width: 100%;
   font-size: 13px;
+}
+.markdown table:has(th:nth-child(6)) {
+  min-width: 54rem;
 }
 .markdown td,
 .markdown th {
   border: 1px solid var(--line);
   padding: 8px;
+  vertical-align: top;
+}
+.markdown th {
+  white-space: nowrap;
+}
+.markdown td {
+  min-width: 7rem;
+  max-width: 30rem;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .markdown ul,
 .markdown ol {
@@ -1614,24 +1631,52 @@ form {
   overflow: hidden;
 }
 .conditions-editor {
-  font-size: 13px;
   flex: 1;
-  position: relative;
+  min-width: 0;
 }
-.conditions-editor summary {
-  cursor: pointer;
+.conditions-toggle {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 13px;
 }
-.conditions-editor > label {
-  position: absolute;
-  bottom: 30px;
-  right: -20px;
-  width: 300px;
-  background: white;
+.conditions-panel {
+  position: fixed;
+  z-index: 100;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
   padding: 16px;
+  background: white;
   border: 1px solid var(--line);
-  z-index: 2;
+  border-radius: 7px;
+  box-shadow: 0 8px 24px #1f303826;
+  font-size: 13px;
 }
-.conditions-editor textarea {
+.conditions-titlebar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.conditions-drag {
+  flex: 1;
+  justify-content: flex-start;
+  border: 0;
+  padding: 4px 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.conditions-drag:active {
+  cursor: grabbing;
+}
+.conditions-panel label {
+  margin: 0;
+}
+.conditions-panel textarea {
   height: 110px;
   font-size: 13px;
 }
@@ -1766,6 +1811,30 @@ form {
 }
 .missing-input label {
   font-size: 13px;
+}
+.boolean-input {
+  min-width: 0;
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+.boolean-input legend {
+  margin-bottom: 7px;
+  font-weight: 500;
+}
+.boolean-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.boolean-options label {
+  min-height: 44px;
+  margin: 0;
+  cursor: pointer;
+}
+.boolean-options input {
+  padding: 0;
+  accent-color: var(--control);
 }
 .missing-input .actions {
   gap: 8px;
@@ -2667,10 +2736,7 @@ form {
   .composer-controls {
     gap: 12px;
   }
-  .conditions-editor > label {
-    right: -80px;
-    width: 270px;
-  }
+
   .composer > textarea {
     font-size: 13px;
   }

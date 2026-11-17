@@ -80,6 +80,14 @@ export function inputLabel(code: string): string {
   return Object.hasOwn(INPUT_LABELS, code) ? INPUT_LABELS[code] : code;
 }
 
+/** 예/아니오 입력 종류. 모르는 코드는 기존 텍스트 입력을 유지한다. */
+export function isBooleanInput(code: string): boolean {
+  return (
+    Object.hasOwn(INPUT_LABELS, code) &&
+    (code === 'op_amp' || INPUT_LABELS[code].includes('(예/아니오)'))
+  );
+}
+
 const INPUT_PLACEHOLDERS: Record<string, string> = {
   VF: '예: 0.4 V',
   v_drop_allowed: '예: 0.5 V',
@@ -96,7 +104,6 @@ const INPUT_PLACEHOLDERS: Record<string, string> = {
   droop_allowed: 'V/s 기준 숫자만 입력. 예: 0.1',
   ns_np: '권선비를 숫자로 입력. 예: 0.5',
   n_diodes: '개수를 숫자로 입력. 예: 2',
-  op_amp: '예 또는 아니오',
 };
 
 /** 입력칸 안내. 알 수 없는 코드는 단위를 추정하지 않는다. */
@@ -105,7 +112,7 @@ export function inputPlaceholder(code: string): string {
     if (INPUT_PLACEHOLDERS[code]) return INPUT_PLACEHOLDERS[code];
     if (code.startsWith('v_') || code.startsWith('vz_')) return '예: 12 V';
     if (code.startsWith('i_')) return '예: 1 A';
-    if (INPUT_LABELS[code].includes('(예/아니오)')) return '예 또는 아니오';
+    if (isBooleanInput(code)) return '예 또는 아니오';
   }
   return '아는 값을 입력해 주세요. 모르면 비워 두세요.';
 }

@@ -35,10 +35,15 @@ test('데모 로그인 → 검토 → 조건 재개 → 승인·견적 → 기�
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await page
     .getByTestId('circuit-request')
-    .getByRole('button', { name: 'ATtiny85 Time Switch' })
+    .getByRole('button', { name: 'ATtiny85 Time Switch', exact: true })
+    .last() // 같은 이름의 기존 프로젝트 뒤에 있는 데모 생성 버튼을 고른다.
     .click();
   await page.locator('[data-demo-id="v3-01"]').click();
   await expect(page.getByTestId('requires-input')).toBeVisible({ timeout: 45000 });
+  await expect(page.getByTestId('requires-input').getByRole('textbox')).toHaveAttribute(
+    'placeholder',
+    '예: 0.5 V',
+  );
   // [왜] 서버가 요구하는 분석 호출 간격(기본 2초)을 실제 사용자 흐름에서도 지킨다.
   await page.waitForTimeout(2100);
   await page.getByRole('button', { name: '기록한 답으로 계속하기' }).click();
@@ -105,4 +110,135 @@ test('데모 로그인 → 검토 → 조건 재개 → 승인·견적 → 기�
   await expect(page.getByLabel('소속', { exact: true })).toHaveValue('데모 회로설계팀');
   await expect(page.getByLabel('선호 실장 방식')).toHaveValue('smd');
   expect(errors).toEqual([]);
+});
+
+test('예/아니오 조건은 선택값을 보내고 모름으로 되돌려 실제 데모를 재개한다', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/login');
+  await page.getByRole('button', { name: '데모 사용자 A', exact: true }).click();
+  await expect(page).toHaveURL(/\/app/);
+  const circuits = await (await page.request.get('/api/demo-circuits')).json();
+  const circuit = circuits.find((c: { name: string }) => c.name === 'Franzininho DIY');
+  expect(circuit).toBeTruthy();
+  const created = await page.request.post('/api/projects?allow_duplicate=true', {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { demo_id: circuit.id, name: `예·아니오 입력 ${Date.now()}` },
+  });
+  expect(created.status()).toBe(201);
+  const project = await created.json();
+  await page.goto(`/app?project=${project.id}`);
+  await page.locator('[data-demo-id="demo-find"]').click();
+  const card = page.getByTestId('requires-input');
+  await expect(card).toBeVisible({ timeout: 45000 });
+  const groups = card.getByRole('group');
+  await expect(groups).toHaveCount(3);
+  await expect(card.getByRole('textbox')).toHaveCount(0);
+  for (const group of await groups.all()) {
+    await expect(group.getByRole('radio', { name: '모름', exact: true })).toBeChecked();
+  }
+  const original = card.getByRole('group', { name: '원래 다이오드가 쇼트키인가요?' });
+  const impedance = card.getByRole('group', { name: '보호하는 입력이 고임피던스인가요?' });
+  await original.getByRole('radio', { name: '예', exact: true }).check();
+  await original.getByRole('radio', { name: '예', exact: true }).press('ArrowRight');
+  await expect(original.getByRole('radio', { name: '아니오', exact: true })).toBeChecked();
+  await expect(original.getByRole('radio', { name: '예', exact: true })).not.toBeChecked();
+  await impedance.getByRole('radio', { name: '예', exact: true }).check();
+  await card.screenshot({ path: testInfo.outputPath('boolean-input-desktop.png') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole('button', { name: '회로 패널 닫기', exact: true }).click();
+  await card.screenshot({ path: testInfo.outputPath('boolean-input-mobile.png') });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  // 실제 전송 본문을 확인한다. 기록과 다른 답의 검증 오류는 HTTP 200 SSE의 조건 질문으로 복구된다.
+  const sent = page.waitForRequest(
+    (r) => r.method() === 'POST' && /\/api\/runs\/[^/]+\/resume$/.test(r.url()),
+  );
+  const rejected = page.waitForResponse((r) => /\/api\/runs\/[^/]+\/resume$/.test(r.url()));
+  await card.getByRole('button', { name: '이 값으로 계속 검토' }).click();
+  expect((await sent).postDataJSON()).toEqual({
+    answers: { orig_schottky: '아니오', high_impedance: '예' },
+  });
+  const rejectedResponse = await rejected;
+  expect(rejectedResponse.status()).toBe(200);
+  const rejectedEvents = await rejectedResponse.text();
+  expect(rejectedEvents).toContain('event: requires_input');
+  expect(rejectedEvents).toContain('키 없는 데모는 기록한 답');
+  await page.waitForTimeout(2100);
+  for (const group of await groups.all()) {
+    await group.getByRole('radio', { name: '모름', exact: true }).check();
+  }
+  const resumed = page.waitForRequest(
+    (r) => r.method() === 'POST' && /\/api\/runs\/[^/]+\/resume$/.test(r.url()),
+  );
+  await card.getByRole('button', { name: '이 값으로 계속 검토' }).click();
+  expect((await resumed).postDataJSON()).toEqual({ answers: {} });
+  await expect(card).toHaveCount(0, { timeout: 45000 });
+  await expect(page.locator('.assistant-reply').last()).toBeVisible();
+});
+
+test('답변 표는 열 제목과 짧은 값을 유지하고 표 영역만 가로 스크롤한다', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/login');
+  await page.getByRole('button', { name: '데모 사용자 A', exact: true }).click();
+  await expect(page).toHaveURL(/\/app/);
+  const circuits = await (await page.request.get('/api/demo-circuits')).json();
+  const circuit = circuits.find((c: { name: string }) => c.name === 'Franzininho DIY');
+  const created = await page.request.post('/api/projects?allow_duplicate=true', {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { demo_id: circuit.id, name: `답변 표 너비 ${Date.now()}` },
+  });
+  expect(created.status()).toBe(201);
+  const project = await created.json();
+  await page.goto(`/app?project=${project.id}`);
+  await page.waitForTimeout(2100);
+  await page.locator('[data-demo-id="demo-find"]').click();
+  await expect(page.getByTestId('requires-input')).toBeVisible({ timeout: 45000 });
+  await page.waitForTimeout(2100);
+  await page.getByRole('button', { name: '기록한 답으로 계속하기' }).click();
+  await expect(page.locator('.candidate-card').first()).toBeVisible({ timeout: 45000 });
+  await page.locator('.full-answer summary').click();
+  const table = page.locator('.markdown table').first();
+  await expect(table).toBeVisible();
+  await expect(table.locator('th')).toHaveText([
+    '조건',
+    '기준',
+    '후보 값',
+    '시험 조건',
+    '결과',
+    '근거',
+  ]);
+  // 실제 텍스트 줄 수로 글자가 쪼개지는 현상을 검사한다.
+  for (const cell of await table
+    .locator(
+      'th, tbody tr:first-child td:nth-child(1), tbody tr:first-child td:nth-child(3), tbody tr:first-child td:nth-child(4), tbody tr:first-child td:nth-child(5)',
+    )
+    .all()) {
+    const lines = await cell.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getClientRects().length;
+    });
+    expect(lines, await cell.innerText()).toBe(1);
+  }
+  const desktopWidth = await table.evaluate((element) => element.getBoundingClientRect().width);
+  const content = await table.innerText();
+  const scroll = table.locator('..');
+  await expect(scroll).toHaveClass('markdown-table-scroll');
+  await expect(scroll).toHaveAttribute('tabindex', '0');
+  await scroll.screenshot({ path: testInfo.outputPath('markdown-table-desktop.png') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: '회로 패널 닫기', exact: true }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  expect(await scroll.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+  expect(
+    await table.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeGreaterThanOrEqual(desktopWidth * 0.9);
+  await expect(table).toHaveText(content.replace(/\s+/g, ' ').trim(), { useInnerText: true });
+  await scroll.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+  await scroll.screenshot({ path: testInfo.outputPath('markdown-table-mobile.png') });
+  await scroll.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => scroll.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
 });

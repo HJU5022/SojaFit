@@ -418,11 +418,17 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
 
 
 def search_conditions(rule: dict, values: dict) -> list[dict]:
-    """찾기 조건(카드 찾기 card_find, SPEC 8.7). 시험 조건이 없는 필수 조건의 하한 · 상한만 쓰고 최대 10개(지운 MCP 찾기 도구의 한도를 그대로 둠)."""
+    """찾기 조건(카드 찾기 card_find, SPEC 8.7). 활성화된 필수·조건부 조건의 하한·상한만 쓰고 최대 10개(지운 MCP 찾기 도구의 한도를 그대로 둠)."""
     out = []
     for cond in rule['conditions']:
-        if cond['tier'] != 'required' or cond.get('at') or _off(cond, values):
+        if cond['tier'] not in ('required', 'conditional') or cond.get('at') or _off(cond, values):
             continue
+        if cond['tier'] == 'conditional' and cond.get('when'):
+            trigger = values.get(cond['when'])
+            if trigger is None or trigger is False:
+                # [왜] when이 켜진 conditional은 사용자 입력이 있을 때만 후보 검색 기준에 넣는다.
+                #      입력이 없으면 판정에서처럼 조건을 보류하고, orig.* 기준은 아래에서 제외한다.
+                continue
         if 'any' in cond or any(C.orig_codes(b) for b in C._bases(cond)):
             # [왜] "A 또는 B"는 한 코드로 거를 수 없고, 원래 부품 값(orig.*)은 시험 조건이 같은 행끼리 판정에서 본다
             continue

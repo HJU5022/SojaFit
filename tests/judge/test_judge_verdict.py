@@ -146,6 +146,24 @@ def test_ac06_search_conditions_skip_test_condition_dependent_values():
     assert terms == [{'code': 'VRRM', 'gte': pytest.approx(15.0)}, {'code': 'IF_AV', 'gte': pytest.approx(0.0142857, rel=1e-5)}]
 
 
+def test_r04_search_conditions_include_active_voltage_range():
+    """사용자가 준 R04 VZ 범위는 conditional이어도 후보 검색의 기준이 된다."""
+    from backend.judge import conditions as C
+    rule = C.load()['R04']
+    terms = V.search_conditions(rule, {'vz_min': 8.0, 'vz_max': 12.0, 'data_line': True})
+    assert {'code': 'VZ', 'gte': 8.0, 'slot': 'min'} in terms
+    assert {'code': 'VZ', 'lte': 12.0, 'slot': 'max'} in terms
+
+
+def test_search_conditions_skip_inactive_or_original_conditional_values():
+    rule = {'conditions': [
+        {'tier': 'conditional', 'code': 'VZ', 'op': '>=', 'basis': 'lo', 'when': 'enabled'},
+        {'tier': 'conditional', 'code': 'PD', 'op': '>=', 'basis': 'orig.PD', 'when': 'enabled'},
+    ]}
+    assert V.search_conditions(rule, {'lo': 8.0, 'enabled': False}) == []
+    assert V.search_conditions(rule, {'lo': 8.0, 'enabled': True}) == [{'code': 'VZ', 'gte': 8.0}]
+
+
 def test_rank_drops_not_sufficient_and_puts_no_board_change_first():
     def j(part, verdict, board):
         return V.Judgement(part=part, role='R01', verdict=verdict, board_change=board)
