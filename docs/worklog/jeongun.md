@@ -1,5 +1,19 @@
 # jeongun 작업 기록
 
+## 2026-11-17 웹 근거 파일명 `%20` 풀기(v3-16 `wrong_citation`)
+- 목적: 동결 v3-16이 정답과 같은 PDF · 같은 쪽을 인용하고도 `wrong_citation`으로 떨어졌다. 원인은 웹 근거 카드(`W1`…)의 `file` · `title`이 URL 파일명을 인코딩된 채(`UF4001%20SERIES_P2104.pdf`) 쓰는 것이다. 채점기(`evals/runners/score_answer.py`)는 인용한 카드의 `(file, page)`가 정답 위치 집합에 글자 그대로 있는지 보는데, 코퍼스 파일명은 공백(`UF4001 SERIES_P2104.pdf`)이다.
+- 바꾼 파일(`09cc4fe2`): `backend/services/exa.py`(`_search_evidence`가 카드 파일명에 `unquote`를 씀. `source_url`은 인코딩된 그대로), `tests/services/test_exa_parallel.py`(`%20` 파일명 시험 1개 추가). SPEC · 동결 평가셋 · 채점기는 바꾸지 않았다.
+- 실행한 명령 · 결과 [실측, 임시 작업 트리 · 키와 네트워크 없이 `DEMO_MODE=1`]:
+  - 새 시험 `uv run --frozen pytest tests/services/test_exa_parallel.py -k percent_encoded -q`: `unquote`를 뺀 코드에서 1 실패(`('UF4001%20SERIES_P2104.pdf', …) != ('UF4001 SERIES_P2104.pdf', …)`), 넣은 코드에서 1 통과.
+  - 관련 시험 `uv run --frozen pytest tests/services/test_exa_parallel.py tests/services/test_exa_prefetch.py tests/services/test_datasheet_rows.py tests/multi_agent -k "exa or web or official or docs or datasheet" -q`: 269 통과 · 405 제외(새 시험 1개 포함. 고치기 전에는 268 통과).
+  - `uv run --frozen pytest tests/repo -q` 5 통과, `uv run --frozen python evals/runners/freeze.py --check` "동결 이후 바뀐 파일: 없음".
+  - 전체 `uv run --frozen pytest -q -p no:cacheprovider`(macOS 호스트): 2,986 통과 · 15 실패 · 202 건너뜀(70.8초). 실패 15개는 시험 이름이 `evals/results/d12/checks/pytest_full_macos_after_hang_fix.txt`(`83960166`, 15 실패)와 같다. 13개는 `tests/projects/test_schematic_render.py`(그중 11개는 호스트에서 cairo 라이브러리를 찾지 못함), 2개(`test_external_schematic.py` · `test_official_schematic.py`)는 로그 레코드의 파일 경로에 작업 트리 위치 `/private/tmp/…`의 `private`이 들어가 떨어졌다.
+- v3-16 1문항 확인 [실측, 다른 임시 작업 트리에서 잰 값. 원시 결과 파일은 임시 폴더라 저장소에 없다]: 코드 main `7e1e2805`(`53742fb2`와 같은 트리), `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=0`, 로컬 코퍼스 DB, 3회씩.
+  - 고치기 전: 3/3 실패 `wrong_citation`, 20.7 · 15.7 · 12.4초, 인용 `W1` · `W4`, Exa 첫 파일 `UF4001%20SERIES_P2104.pdf` 2쪽.
+  - 고친 뒤: 3/3 통과 `cited_gold`, 16.6 · 10.1 · 11.8초, 답 글은 같음, Exa 첫 파일 `UF4001 SERIES_P2104.pdf` 2쪽.
+- 확인 못 한 것: v3 50문항 전체(웹 켠 조건)의 새 값과 다른 문항에 준 영향, Linux 전체 pytest, 배포 환경. 로컬 `jeongun`에만 있고 푸시 · PR은 하지 않았다.
+- 다음 할 일: 50문항을 다시 잴 때는 `evals/guides/preregister.md`에 먼저 등록한다.
+
 ## 2026-11-17 RAGAS 채점기 근거 고침
 - 목적: 11-12 `d9-langfuse-capture`의 Faithfulness가 판정 · 찾기 문항에서 0.0~0.43(평균 0.14 · 0.13), 문서 답 4문항에서 0.6~0.83이었다. 원인은 `contexts_from_state`가 실제 판정 모양(`results[].checks[]`, `backend/judge/verdict.py` `Judgement`)에 없는 `conditions` 칸을 읽어, 답 표의 후보 값이 RAGAS 근거에 하나도 들어가지 않은 것이다. 거절 답(v3-41)도 근거가 비어 있지 않아 0점으로 채점됐다.
 - 바꾼 파일: `evals/runners/score_ragas.py`(답에 나간 후보(`score_answer.judgement_parts`)마다 위치 · 후보 값 · 단위 · 시험 조건 · 판정 기준을 근거 하나로 묶어 넣음, `score_answer.is_refusal_response`가 거절이면 건너뜀), `tests/evals/test_score_ragas.py`(실제 판정 모양으로 고침, 거절 건너뜀 시험 추가), `evals/runners/RUNNERS.md` 한 줄.
