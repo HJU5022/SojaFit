@@ -1,32 +1,38 @@
 # 제출 체크리스트
 
-- 상태: 초안
-- 기준일: 2026-11-17 (Langfuse 스크린샷 · 시연 영상 · 포트폴리오 행 갱신)
-- 기준 커밋: 행마다 적는다(2026-11-13 초안에 11-16에 G1 · G5 · G7 · 실패 사례 분석 · 동결 직전 점검 행을 GATES와 맞췄고, 11-17에 G2 · G3 · G6 상태 칸을 GATES 링크로 바꿨다)
-- 정본 여부: 비정본(제출물 점검표). 게이트 상태의 정본은 [GATES.md](../GATES.md), 제출 문서별 남은 일의 정본은 [DELIVERABLES.md](DELIVERABLES.md)
+- 상태: 현행
+- 기준일: 2026-11-17
+- 기준 커밋: `main`(태그 `freeze-2026-11-17` 뒤 문서만 고침). 배포 리비전 `sojafit-api-main-28b14600-1117`
+- 정본 여부: 비정본(제출물 점검표). 게이트 상태의 정본은 [GATES.md](../GATES.md)
 - 관련 문서: [GATES.md](../GATES.md), [DELIVERABLES.md](DELIVERABLES.md), [README.md](../../README.md)
 
-과제 가이드 원문 사본은 저장소에 없다(`guide_v5`, "과제 가이드"를 grep해도 가이드 파일은 나오지 않는다). 항목은 `GATES.md`와 `DELIVERABLES.md`가 인용한 요구(게이트 G1~G7, 제출물 G7, 일정 D11·D12)만 옮겼다. 가이드에만 있고 이 두 문서에 없는 요구는 이 표에 없다.
+최종 제출 11-17(화) 24:00, 발표 11-18(수).
 
-상태 기준: 충족 = 증거 파일이 있고 요구를 채운다. 부분 = 파일은 있으나 요구의 일부만 채운다. 없음 = 파일 없음. 상태는 2026-11-13에 경로 존재를 확인하고 `GATES.md`·`DELIVERABLES.md`의 서술과 맞춰 적었다. 이 표를 위해 서비스나 평가를 새로 실행하지 않았다.
+## 1. 제출물
 
-| 항목 | 요구 | 증거 경로 | 상태 | 마감 |
-|---|---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소. 평가용 계정으로 핵심 시나리오 | [README.md](../../README.md), [GATES.md](../GATES.md) G1, [deploy_574de79](../../evals/results/d10/deploy_574de79/README.md) | 충족: 이전 리비전 `sojafit-api-574de79-rs`(`main` `574de79`)에서 평가용 계정 A · B 25단계 통과. 그 뒤 리비전(지금 `sojafit-api-main-a0abece5-1116`, 11-16 04:36 KST)의 로그인 뒤 점검 기록은 없다(리비전의 정본은 [README.md](../../README.md) 「배포 리비전」). 11-14 22:43 ~ 11-15 21:26 KST 운영 시작 실패가 있었다(GATES G1) | 발표 11/18 |
-| 배포 유지 | 발표일까지 배포 유지, 제출 링크·경로·발표 시각 | 없음 | 없음: 확인 기록 없음 | 발표 11/18 |
-| G2 한 줄 기동 | `docker compose up`으로 10분 안에 기동 | [docker-compose.yml](../../docker-compose.yml), [.env.example](../../.env.example), [startup_restart_isolation_2026-11-13.md](../../evals/results/d10/startup_restart_isolation_2026-11-13.md) | [GATES.md](../GATES.md) G2 행을 따른다(이 표에 따로 적던 상태가 GATES와 갈라져 2026-11-17에 지움) | D11 11/16 |
-| G3 코퍼스 | 서로 다른 청크 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | [data/manifest.jsonl](../../data/manifest.jsonl), [chunk_sha256.md](../../evals/results/chunking/v4h-2026-11-08/chunk_sha256.md), [GATES.md](../GATES.md) G3 | [GATES.md](../GATES.md) G3 행을 따른다(이 표에 따로 적던 상태가 GATES와 갈라져 2026-11-17에 지움) | D11 11/16 |
-| G4 에이전트 | 코드와 시연. 평가용 계정 2개로 대화·기억 분리 | [GATES.md](../GATES.md) G4, [deploy_574de79](../../evals/results/d10/deploy_574de79/README.md), [startup_restart_isolation_2026-11-13.md](../../evals/results/d10/startup_restart_isolation_2026-11-13.md), [mutation_2026-11-13.md](../../evals/results/d10/mutation_2026-11-13.md) | 충족: 배포 서버에서 재시작 뒤 재개 · 409 · 계정 B 404 확인(`574de79`, 25단계). 로컬 compose 52개 점검도 있음. 시연 영상은 G7 | D11 11/16 |
-| G5 평가 | 동결 평가셋 50건 이상(관련·비관련 절반), 개선 전후 2회 이상, 문항 목록 | [evals/FROZEN.json](../../evals/FROZEN.json), [EVAL_REPORT.md](../../EVAL_REPORT.md) 2·3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` | 충족: v3 50건 동결, 50/50(`d9-improve2`, `DEMO_MODE` 미기록). GATES 표 상태 칸도 같은 표현으로 맞췄다. p95 10초는 일부 조건에서만 충족([EVAL_REPORT.md](../../EVAL_REPORT.md) 8.2절) | D11 11/16 |
-| 평가 비교 | 대체재(Codex)와 비교 | [EVAL_REPORT.md](../../EVAL_REPORT.md) 10절, [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) | 충족: Codex 45/50, 우리 50/50. 규칙 확정 43건 + 사람 판정 5건 완료(2026-11-13, [human_judgments.jsonl](../../evals/results/graph/2026-11-12-codex-v3-50/human_judgments.jsonl)). 한계: 정답 초안과 같은 도구, 규칙 집계는 쪽 인용을 보지 않음 | D12 11/17 |
-| G6 트레이스 | Langfuse 트레이스와 평가 점수 연결, 대시보드 | [EVAL_REPORT.md](../../EVAL_REPORT.md) 7장, [langfuse_403_2026-11-13.md](../../evals/results/d10/langfuse_403_2026-11-13.md) | [GATES.md](../GATES.md) G6 행을 따른다(이 표에 따로 적던 상태가 GATES와 갈라져 2026-11-17에 지움) | D11 11/16 |
-| Langfuse 스크린샷 | 3장 이상, 트레이스 상세 1장 이상 | [langfuse/](langfuse/) `01` ~ `07` | 충족: 7장(트레이스 상세 포함). 11-13 배포본 3장, 11-17 점수 화면 · 홈 대시보드 4장(`04` ~ `07`은 다른 작업이 넣음) | D11 11/16 |
-| G7 비밀값(G7의 일부; G7 전체는 시연 영상이 없어 GATES에서 진행 중) | 비밀값 커밋 없음 | [secret_scan_2026-11-13.md](../../evals/results/d10/secret_scan_2026-11-13.md), [.env.example](../../.env.example) | 충족: gitleaks 이력 801 커밋 발견 0건(로컬 실행. GitHub Actions 결과는 확인 못 함) | D11 11/16 |
-| 시연 영상 | 3분 이내, 정상·실패 경로, 원본, 동결 커밋 SHA, 배포 리비전 번호 | [demo_script.md](demo_script.md), `video/sojafit-demo-2026-11-17.mp4` | 11-17 녹화: 1:35, 정상 경로 v3-01과 실패 사례 3건, 동결 커밋 `9c87ba36`, 첫 화면에 배포 리비전 `sojafit-api-main-799ae636-1117`. 파일은 다른 작업이 넣음(넣은 뒤 충족) | D11 11/16 |
-| 실패 사례 분석 | 코드로 되돌린 결정 1건과 이유, 미채택 실험, 판정자 한계 | [failure_analysis.md](failure_analysis.md) | 부분: 11-13에 3항목, 11-16에 9절(인젝션 사례 1건 · Luna 한계)을 채움. 남은 일은 정답 초안 작성자 서술 불일치([DELIVERABLES.md](DELIVERABLES.md)) | D12 11/17 |
-| AI 도구 사용 기록 | 팀의 AI 코딩 도구 사용 기록 | [ai_tools_log.md](ai_tools_log.md) | 부분: 하정운 기록만. 다른 조원 기록 없음 | D12 11/17 |
-| 포트폴리오 | 조원 수(3명)만큼 | [portfolio-jeongun.md](portfolio-jeongun.md), [portfolio-osc.md](portfolio-osc.md), [portfolio-sth.md](portfolio-sth.md) | 부분: 3/3 있음. 오세창 · 심태현 본은 11-17 조장 위임 AI 초안이라 본인 확인 전 | D12 11/17 |
-| 발표 자료 | 전원 파트 분담 | 없음 | 없음 | D12 11/17 |
-| 제출 체크리스트 | 최종 제출 때 확인 | 이 파일 | 부분: 초안 | D12 11/17 |
-| 동결 직전 배포 점검: 고정 비밀 버전 | 서비스 설정이 고정한 Secret Manager 버전(`이름:숫자`)이 모두 enabled인지 확인하거나 `:latest`로 바꾼다. 최소 인스턴스 0대라 버전이 파기되면 새 인스턴스가 모두 시작하지 못한다(11-14 22:43 ~ 11-15 21:26 KST, `EXA_API_KEY` 버전 1 파기) | [GATES.md](../GATES.md) G1, `docs/worklog/jeongun.md` 11-15 항목 | 없음: 동결 전 점검 기록 없음. 11-15 복구 때 다른 비밀값의 고정 버전은 모두 enabled였다 | D11 11/16 |
-| 개인정보·비밀값 점검 | 포트폴리오·스크린샷에 개인정보나 비밀값 없음 | [DELIVERABLES.md](DELIVERABLES.md) 남은 일 표의 점검 기록 | 부분: 2026-11-13 1차 점검 기록 있음. 포트폴리오 최종본 기준 재점검 필요 | D12 11/17 |
+| 항목 | 요구 | 상태 | 증거 |
+|---|---|---|---|
+| 조 저장소 | main에 최종본 | 됨: `freeze-2026-11-17` | GitHub `aihuman-7th/proj3-b` |
+| README | 한 줄 정의 · 지표 표 · compose 실행 · 데모 모드 실행 | 됨 | [README.md](../../README.md) |
+| SPEC.md · AGENTS.md | 지금 코드와 맞음 | 됨(11-17 맞춤) | [SPEC.md](../../SPEC.md), [AGENTS.md](../../AGENTS.md) |
+| 배포 주소 | `/health` 200, 발표일까지 유지 | 됨: 리비전 `main-28b14600-1117` 100% | README 「배포 리비전」 |
+| 평가용 계정 2개 | 비공개 제출 | **하정운이 제출 양식에 넣는다** | - |
+| 운영 리비전 25단계 | 평가용 계정으로 핵심 시나리오 | **하정운이 실행**(비밀번호 필요). 지난 통과는 11-13 `574de79-rs` | [d12 README](../../evals/results/d12/README.md) 명령 |
+| manifest | 원문 길이 · 보존 길이 · 잘림 여부 | 됨: 1,360행 | `evals/results/chunking/v4h-2026-11-08/manifest.jsonl` |
+| 평가셋 · 동결 해시 · 원시 결과 | `freeze.py --check` 통과 | 됨(11-17 바뀐 파일 없음) | `evals/results/d12/checks/freeze_check.txt` |
+| EVAL_REPORT | 전후 · 지표 · 단일 대 멀티 · 대체재 · 실패 유형 · 신뢰 경계 | 됨 | [EVAL_REPORT.md](../../EVAL_REPORT.md) |
+| Langfuse 스크린샷 | 3장 이상, 트레이스 상세 1장 | 됨: 7장 | [langfuse/](langfuse/) |
+| 시연 영상 | 3분 이내, 정상 1 + 실패 1, 화면마다 한 문장 | 됨: 1분 35초, 정상 1 + 실패 3 | [video/](video/) |
+| 비밀값 | 커밋 이력에 비밀값 없음 | 됨: gitleaks 1,250 커밋 0건(11-17) | `evals/results/d12/checks/` |
+
+## 2. D12 항목
+
+| 항목 | 상태 | 증거 |
+|---|---|---|
+| 실패 사례 분석(되돌린 결정 1건과 이유, 미채택 실험, 막지 못한 것, 판정자 한계) | 됨 | [failure_analysis.md](failure_analysis.md) 6 · 7 · 8 · 9절 |
+| 포트폴리오 1장 × 3명(LangGraph · 멀티 에이전트 · 평가 · 관측 수치, EVAL_REPORT 값만) | 3장 있음. **오세창 · 심태현 본인 확인** | [portfolio-jeongun.md](portfolio-jeongun.md) · [portfolio-osc.md](portfolio-osc.md) · [portfolio-sth.md](portfolio-sth.md) |
+| AI 코딩 도구 사용 기록 | 3명 행 있음. **오세창 · 심태현 본인 확인**(오세창 행은 도구 이름 비어 있음) | [ai_tools_log.md](ai_tools_log.md) |
+| 발표 자료(전원 파트) | 20장, 파트 배정, 장마다 노트에 "왜 이렇게 했나" | [presentation/](presentation/) |
+| 리허설 2회 | **전원**. 11-17 1회 · 11-18 발표 전 1회 | - |
+| 인젝션 막은 것 · 못 막은 것 | 됨 | [failure_analysis.md](failure_analysis.md) 9-0절 |
+| 포트폴리오 · 스크린샷 개인정보 · 비밀값 | 됨(11-17 점검, 0건) | [GATES.md](../GATES.md) G7 「개인정보 · 비밀값 점검」 |

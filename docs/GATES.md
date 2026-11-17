@@ -22,8 +22,8 @@
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 충족 (운영 DB 청크 본문 51,967개를 직접 열어 다시 계산한 sha256이 모두 서로 다르고 저장소 해시 목록과 같다(11-16, [db_content_hash_check](../evals/results/d10/db_content_hash_check_2026-11-16.md)), 문서 1,360, 파싱 Docling + pdfplumber. 한계는 G3 절) |
 | G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 충족 (v3 50건 동결 · 개선 전후 3-A ~ 3-D · 달라진 문항 목록, [EVAL_REPORT.md](../EVAL_REPORT.md) 2 · 3절, `evals/results/graph/2026-11-12-d9-improve2/set1.json` 50/50(`DEMO_MODE` 미기록). 11-17 지금 코드 `799ae636` 웹 켬 2세트 49/50 · 49/50([d12](../evals/results/d12/README.md)). 원시 미보관 항목은 12장, 확인 못 한 것은 아래 G5. 응답 시간 p95 10초는 일부 조건에서만 충족: 8.2절) |
-| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 증거 보강 필요 (스크린샷 3장 · 배포본 트레이스 수신 확인. 점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 대시보드에서 평가 점수가 트레이스에 붙은 화면은 아직 없음) |
-| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 진행 중 (비밀값 검사 충족, 시연 영상 파일 없음, 다른 조원 포트폴리오 · AI 도구 기록 없음. 아래 G7) |
+| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 충족 (점수 연결은 API로 확인(11-17: 트레이스 4,109개에 점수 57,198개, [d12](../evals/results/d12/README.md)). 화면은 7장: 11-13 배포본 트레이스 3장, 11-17 점수가 붙은 트레이스 상세 · 점수 탭 · 점수 목록 · 홈 대시보드 4장([langfuse/](deliverables/langfuse/) `04` ~ `07`)) |
+| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 충족 (비밀값: gitleaks 1,250 커밋 0건(11-17). 시연 영상 [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) 1분 35초, 정상 경로 1 + 실패 경로 3. 포트폴리오 3장 · AI 도구 기록은 오세창 · 심태현 본인 확인 전) |
 
 ## 게이트별 증거
 
@@ -179,7 +179,8 @@
 | 시연 스크립트 | 초안(정상 · 실패 컷) | [demo_script.md](deliverables/demo_script.md) |
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
-| 포트폴리오 | 하정운 1건 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) |
+| 포트폴리오 | 3건(수치는 EVAL_REPORT 값만, 11-17). 오세창 · 심태현은 본인 확인 전 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) · [portfolio-osc.md](deliverables/portfolio-osc.md) · [portfolio-sth.md](deliverables/portfolio-sth.md) |
+| 개인정보 · 비밀값 점검 | 2026-11-17: 제출 문서 · 덱에서 메일 · 키 형식 검색 0건, Langfuse 화면 7장과 영상 프레임에 개인 메일 · 키 없음(영상의 계정은 `@sojafit.test` 시연 계정, 화면 왼쪽 아래 `DNS`는 Langfuse 계정 표시 이름). 서비스 트레이스는 남길 칸만 두고 입력 · 출력을 `[redacted]`로 바꿔 보냄(`backend/services/service_trace.py` `mask_otel_spans`), `user_id`는 숫자 로그인 id | [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
 | 비밀값 검사(재검사) | 2026-11-17, `main` `799ae636`, gitleaks `v8.30.1`(같은 이미지 digest), 저장소 `.gitleaks.toml`(허용 5) · `.gitleaksignore`(지문 14줄), `--redact`, 이력 전체 1,250 커밋 검사(`git rev-list --count` 1,494, 병합 제외 1,252), **발견 0건 · 종료 코드 0** | [gitleaks_full_history.txt](../evals/results/d12/checks/gitleaks_full_history.txt) |
 | 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/), 현재 HEAD 재검사: [secrets/after_2026-11-13_556384b.md](../evals/results/d10/secrets/after_2026-11-13_556384b.md) |
 
