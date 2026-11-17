@@ -46,27 +46,32 @@ class Enabled(BaseModel):
 
 
 class Me(BaseModel):
+    """현재 세션 본인의 id · 역할 · 로그인 이메일."""
     user_id: int
     role: Literal["admin", "user"]
     email: str
 
 
 class Ok(BaseModel):
+    """요청을 받았다는 성공 표시({"ok": true})."""
     # [주의] 관리자 계정 상태 변경(backend/api/admin.py)도 이 클래스를 쓴다. 같은 이름을 따로 만들면 /docs 스키마 이름이 바뀐다
     ok: bool
 
 
 def google_enabled() -> bool:
+    """GOOGLE_AUTH_ENABLED=1이고 클라이언트 id · 비밀값이 모두 있을 때만 Google 경로를 연다."""
     return os.getenv("GOOGLE_AUTH_ENABLED") == "1" and bool(os.getenv("GOOGLE_CLIENT_ID")) and bool(os.getenv("GOOGLE_CLIENT_SECRET"))
 
 
 @router.get("/google/status", include_in_schema=False, response_model=Enabled)
 def google_status():
+    """Google 로그인이 켜져 있는지(로그인 화면이 'Google로 계속' 버튼을 누를 수 있게 할지 정한다)."""
     return {"enabled": google_enabled()}
 
 
 @router.get("/google/start", include_in_schema=False)
 def google_start():
+    """일회용 인증 상태 · PKCE 값을 만들고 브라우저 쿠키를 심은 뒤 Google 동의 화면으로 보낸다."""
     if not google_enabled():
         raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
     try:
@@ -85,6 +90,7 @@ def google_start():
 
 @router.get("/google/callback", include_in_schema=False)
 def google_callback(request: Request):
+    """Google에서 돌아온 상태를 한 번만 소비해 신원을 확인한다. 연결된 계정이면 세션을 심고, 아니면 가입 · 연결 대기로 보낸다."""
     if not google_enabled():
         raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
     state, code = request.query_params.get("state", ""), request.query_params.get("code", "")
@@ -117,6 +123,7 @@ def google_callback(request: Request):
 
 
 def google_failure():
+    """Google 쿠키 둘을 지우고 로그인 화면 오류(`/login?google=error`)로 돌려보낸다."""
     response = RedirectResponse("/login?google=error", status_code=303)
     response.delete_cookie(GOOGLE_COOKIE, path="/api/auth/google/callback")
     response.delete_cookie(GOOGLE_PENDING_COOKIE, path="/api/auth/google")
@@ -127,6 +134,7 @@ def google_failure():
 
 @router.get("/google/pending", include_in_schema=False)
 def google_pending(request: Request):
+    """연결 대기 요청의 확인된 이메일과 요청 번호를 운영자에게 전할 수 있게 HTML로 보인다."""
     if not google_enabled():
         raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
     request_id = request.cookies.get(GOOGLE_PENDING_COOKIE, "")
@@ -154,6 +162,7 @@ class Login(BaseModel):
     @field_validator("email")
     @classmethod
     def check_email(cls, email: str) -> str:
+        """앞뒤 공백을 빼고 소문자로 맞춘 뒤 이메일 모양을 확인한다."""
         email = email.strip().lower()
         if not auth.valid_email(email):
             raise ValueError("유효한 이메일 주소를 입력해 주세요.")
@@ -194,6 +203,7 @@ class Signup(BaseModel):
     @field_validator("email")
     @classmethod
     def check_email(cls, email: str) -> str:
+        """로그인과 같은 정규화 · 확인에 더해, 메일 주소로 읽었을 때 그대로인 값만 받는다."""
         email = Login.check_email(email)
         if parseaddr(email)[1] != email:
             raise ValueError("유효한 이메일 주소를 입력해 주세요.")
@@ -201,6 +211,7 @@ class Signup(BaseModel):
 
 
 class PasswordAction(BaseModel):
+    """메일로 받은 토큰과 새 비밀번호(가입 확인 · 비밀번호 재설정 공용)."""
     model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"token": "x" * 43, "password": "example-password-123"}]})
     token: str = Field(min_length=43, max_length=43, pattern=r"^[A-Za-z0-9_-]+$")
     password: str = Field(min_length=12, max_length=1024)
@@ -208,11 +219,13 @@ class PasswordAction(BaseModel):
     @field_validator("password")
     @classmethod
     def check_new_password(cls, password: str) -> str:
+        """새 비밀번호 규칙은 backend/auth.py의 validate_new_password가 정한다."""
         auth.validate_new_password(password)
         return password
 
 
 def email_request(body: Signup, request: Request, response: Response, purpose: str):
+    """Origin을 확인하고 purpose(signup · reset)의 인증 메일 발송을 요청한다(가입 · 재설정 경로 공용)."""
     from backend import auth_email
     auth.check_origin(request)
     response.headers["Cache-Control"] = "no-store"
@@ -224,6 +237,7 @@ def email_request(body: Signup, request: Request, response: Response, purpose: s
 
 
 def email_complete(body: PasswordAction, request: Request, response: Response, purpose: str):
+    """Origin을 확인하고 메일 토큰과 새 비밀번호로 purpose(signup · reset)를 마친다(가입 · 재설정 확인 경로 공용)."""
     from backend import auth_email
     auth.check_origin(request)
     response.headers["Cache-Control"] = "no-store"
@@ -236,40 +250,48 @@ def email_complete(body: PasswordAction, request: Request, response: Response, p
 
 @router.post("/signup", response_model=Ok)
 def signup(body: Signup, request: Request, response: Response):
+    """가입 인증 메일을 요청한다. 계정 · 세션은 메일 확인 뒤에 만든다."""
     return email_request(body, request, response, 'signup')
 
 
 @router.post("/signup/confirm", response_model=Ok)
 def signup_confirm(body: PasswordAction, request: Request, response: Response):
+    """가입 메일의 토큰과 새 비밀번호로 가입을 마친다."""
     return email_complete(body, request, response, 'signup')
 
 
 @router.post("/password-reset", response_model=Ok)
 def password_reset(body: Signup, request: Request, response: Response):
+    """비밀번호 재설정 메일을 요청한다."""
     return email_request(body, request, response, 'reset')
 
 
 @router.post("/password-reset/confirm", response_model=Ok)
 def password_reset_confirm(body: PasswordAction, request: Request, response: Response):
+    """재설정 메일의 토큰과 새 비밀번호로 비밀번호를 바꾼다."""
     return email_complete(body, request, response, 'reset')
 
 
 class GoogleSignup(BaseModel):
+    """Google 신원으로 새 계정을 만드는 요청 본문. consent는 구버전 요청 호환 칸이다."""
     model_config = ConfigDict(extra='forbid')
     consent: StrictBool | None = None  # 구버전 요청 호환, 동의 증거로 사용하지 않음
 
 
 class GoogleOnboarding(BaseModel):
+    """가입 · 연결을 기다리는 Google 신원의 가린 이메일."""
     email: str
 
 
 def require_google():
+    """Google 경로가 꺼져 있으면 404(의존성으로 쓴다)."""
     if not google_enabled():
         raise HTTPException(404, 'Google 로그인을 사용할 수 없습니다.')
 
 
 @router.get('/google/onboarding', include_in_schema=False, response_model=GoogleOnboarding, dependencies=[Depends(require_google)])
 def google_onboarding(request: Request, response: Response):
+    """대기 쿠키의 Google 신원 이메일을 가려서 돌려준다(가입 · 연결 화면 표시용). 만료됐으면 400."""
     email = auth.google_pending_email(request.cookies.get(GOOGLE_PENDING_COOKIE, ''))
     if not email:
         raise HTTPException(400, 'Google 인증이 만료되었습니다. 다시 시작해 주세요.')
@@ -278,6 +300,7 @@ def google_onboarding(request: Request, response: Response):
 
 
 def complete_google_response(request: Request, response: Response, *, user_id=None):
+    """대기 중인 Google 신원을 user_id 계정(없으면 새 일반 계정)에 연결하고 세션 쿠키를 심은 뒤 대기 쿠키를 지운다."""
     token, user_id = auth.complete_google_user(request.cookies.get(GOOGLE_PENDING_COOKIE, ''), auth.client_ip(request), user_id=user_id)
     set_session_cookie(response, token)
     response.delete_cookie(GOOGLE_PENDING_COOKIE, path='/api/auth/google')
@@ -287,11 +310,13 @@ def complete_google_response(request: Request, response: Response, *, user_id=No
 
 @router.post('/google/signup', include_in_schema=False, response_model=UserId, dependencies=[Depends(require_google), Depends(auth.check_origin)])
 def google_signup(body: GoogleSignup, request: Request, response: Response):
+    """대기 중인 Google 신원으로 새 일반 계정을 만들고 로그인한다."""
     return complete_google_response(request, response)
 
 
 @router.post('/google/link', include_in_schema=False, response_model=UserId, dependencies=[Depends(require_google), Depends(auth.check_origin)])
 def google_link(body: Login, request: Request, response: Response):
+    """기존 계정의 이메일 · 비밀번호를 다시 확인한 뒤 대기 중인 Google 신원을 그 계정에 연결하고 로그인한다."""
     # 비밀번호를 다시 확인하며, 연결이 완료되기 전에는 세션을 발급하지 않는다.
     proof = auth.authenticate(body.email, body.password, auth.client_ip(request), issue_session=False)
     if proof is None:

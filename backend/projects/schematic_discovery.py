@@ -30,6 +30,7 @@ MAX_DISCOVERY_BYTES = 25 * 1024**2
 _API = frozenset({"api.github.com"})
 _RAW = frozenset({"raw.githubusercontent.com"})
 _SHA = re.compile(r"[a-fA-F0-9]{40}")
+# [왜] 같은 저장소를 다시 볼 때 GitHub API 요청 한도를 아끼려고 응답을 15분(external_schematic.TTL과 같은 900초) 재사용한다. 크기 합 16 MiB 상한
 _GITHUB_API_CACHE = _Cache(128, 16 * 1024**2, lambda entry: entry[1], 900, time.monotonic)
 _EXCLUDED = re.compile(r"datasheet|application[-_ ]?note|block[-_ ]?diagram|(?:^|[/_. -])(?:pcb|layout|renders?|rendering|3d|photo|preview|partial|detail|pinout|old|deprecated|obsolete|draft|backup|archive|archived|stage|excerpt|subsystem|section|fragment)(?:$|[/_. -])", re.I)
 _CERN_SHORT_NOTICE = re.compile(
@@ -42,6 +43,7 @@ _CERN_SHORT_NOTICE = re.compile(
 
 def _public_addresses(host: str) -> tuple[str, ...]:
     addresses = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+    # [주의] 주소 하나라도 공개 주소가 아니면(사설 · loopback 등) 통째로 거절한다. 공개 호스트 이름으로 내부망에 닿는 것(SSRF)을 막는다
     if not addresses or not all(ipaddress.ip_address(a[4][0]).is_global for a in addresses):
         return ()
     return tuple(dict.fromkeys(a[4][0] for a in addresses))
@@ -71,6 +73,7 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
     original = urlsplit(url)
     deadline = None if deadline_seconds is None else time.monotonic() + deadline_seconds
     try:
+        # [주의] 요청은 최대 4번이라 리다이렉트는 3번까지만 따른다. 넷째 응답도 리다이렉트면 아래에서 거절한다
         for _ in range(4):
             if deadline is not None and time.monotonic() > deadline:
                 raise TimeoutError("deadline")
@@ -81,6 +84,7 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                 raise limited
             # Resolve once and connect to that inspected public address. Host and
             # TLS SNI retain the original hostname for certificate verification.
+            # [주의] 시험의 MockTransport에서는 DNS 확인 · 주소 고정 · Host 머리글을 건너뛴다
             mock = isinstance(client._transport, httpx.MockTransport)
             request_url = url
             extensions = None
@@ -91,6 +95,7 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                 address = next((ip for ip in addresses if ":" not in ip), addresses[0])
                 request_url = parsed._replace(netloc=f"[{address}]" if ":" in address else address).geturl()
                 extensions = {"sni_hostname": parsed.hostname}
+            # [왜] 리다이렉트는 허용 호스트 사이에서 같은 경로 · 쿼리로 옮길 때만 따른다. 다른 자원으로 바꿔치기한 응답을 원본으로 받지 않는다
             if (parsed.path, parsed.query) != (original.path, original.query) or parsed.fragment:
                 raise ExternalSchematicInvalidSource()
             headers = {"Accept-Encoding": "identity"}
@@ -110,6 +115,7 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                         raise ExternalSchematicInvalidSource()
                     url = urljoin(url, location)
                     continue
+                # [왜] GitHub는 한도 초과를 429뿐 아니라 403(x-ratelimit-remaining: 0 또는 retry-after)으로도 알린다
                 if response.status_code == 429 or (
                     response.status_code == 403 and (
                         response.headers.get("x-ratelimit-remaining") == "0" or "retry-after" in response.headers
@@ -121,8 +127,10 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                     )
                     remember_provider_limit(limited)
                     raise limited
+                # [왜] API의 401은 후보 탓이 아니라 GITHUB_TOKEN 설정 문제라 설정 오류로 올린다
                 if response.status_code == 401 and parsed.hostname in _API:
                     raise ExternalSchematicConfigurationError()
+                # [왜] 없음 · 삭제 · 법적 차단은 다시 해도 같아 재시도 대상(Upstream)이 아니라 이 후보의 거절로 본다
                 if response.status_code in {404, 410, 451}:
                     raise ExternalSchematicInvalidSource()
                 response.raise_for_status()
@@ -150,6 +158,7 @@ def _api(url, cap, client):
 
     if isinstance(client._transport, httpx.MockTransport):
         return produce()[0]
+    # [왜] 캐시 키에 토큰 원문 대신 해시를 넣는다. 토큰이 바뀌면(권한이 다를 수 있다) 앞 응답을 쓰지 않고, 키에 비밀값이 남지 않는다
     credential = sha256(os.getenv("GITHUB_TOKEN", "").strip().encode()).digest()
     return _GITHUB_API_CACHE.get((url, cap, credential), produce)[0]
 
@@ -162,6 +171,7 @@ def _valid_path(path):
 
 def _blobs(tree):
     rows = tree.get("tree")
+    # [왜] GitHub가 큰 트리를 잘라(truncated) 주면 파일 목록이 불완전해 회로 · 그림 짝을 판단하지 않고 거절한다
     if tree.get("truncated") is not False or not isinstance(rows, list) or len(rows) > 5000:
         raise ExternalSchematicInvalidSource()
     files, seen = set(), set()
@@ -439,6 +449,7 @@ def _root(graph):
             size = 1
             for child in graph[node]:
                 size += sheet_count(child, active | {node})
+                # [주의] 시트 20장 상한은 서명 토큰(external_schematic._read_token의 count 1~20)과 같다
                 if size > 20:
                     raise ExternalSchematicInvalidSource()
             sizes[node] = size
@@ -638,6 +649,7 @@ def _inspect(ref, query, client):
     license_data = metadata.get("license")
     license_id = normalize_license_id(license_data.get("spdx_id")
                                      if isinstance(license_data, dict) else None)
+    # [왜] GitHub가 라이선스를 못 알아본(NOASSERTION) 저장소는 바로 버리지 않고, 아래에서 LICENSE · README의 짧은 CERN-OHL 선언으로만 다시 인정한다
     metadata_license_unknown = license_id == "NOASSERTION"
     if (not isinstance(license_id, str)
             or (license_id not in ALLOWED_LICENSES and not metadata_license_unknown)

@@ -7,6 +7,7 @@ from backend.conversations.models import SafeResult, SafeRunError
 
 
 def thread_title(content):
+    """이름을 고치지 않은 대화의 표시 이름: 첫 질문의 공백을 줄여 60자까지(넘으면 …), 비었으면 '새 대화'."""
     text = ' '.join((content or '').split())
     return text[:60] + ('…' if len(text) > 60 else '') if text else '새 대화'
 
@@ -56,6 +57,7 @@ def _summaries(conn, user_id, thread_id=None):
 
 
 class ConversationRepository:
+    """대화 · run · 메시지 저장소. 모든 쿼리가 프로젝트 소유자(user_id)를 함께 확인한다."""
     def recover_stale_run(self, user_id, run_id):
         """멈춘 소유 실행만 정리한다. 분석 잠금이 있으면 시각과 관계없이 그대로 둔다."""
         stale_seconds = stale_run_seconds()
@@ -72,6 +74,7 @@ class ConversationRepository:
                          (run_id, stale_seconds))
 
     def delete_thread(self, user_id, thread_id, checkpoint_delete=None):
+        """소유한 대화와 그 분석 기록을 한 트랜잭션에서 지운다. 살아 있는 run이나 분석 잠금이 있으면 InvalidRunState."""
         if checkpoint_delete is None:
             from backend.conversations.memory_service import delete_analysis_threads
             checkpoint_delete = lambda conn, ids: delete_analysis_threads(conn, user_id, ids)
@@ -88,6 +91,7 @@ class ConversationRepository:
             conn.execute('DELETE FROM threads WHERE id=%s AND project_id=%s', (thread_id, project[0]))
 
     def create_thread(self, user_id, project_id, circuit_version=None):
+        """소유 프로젝트에 새 대화를 만들고 id를 돌려준다. circuit_version을 주면 그 버전이 있어야 한다."""
         thread_id = uuid4()
         with auth.connection() as conn:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
@@ -107,6 +111,7 @@ class ConversationRepository:
         return str(thread_id)
 
     def get_thread(self, user_id, thread_id):
+        """소유한 대화의 (id, project_id, 읽는 회로 버전의 연결, 프로젝트 이름)."""
         with auth.connection() as conn:
             row = conn.execute(f"SELECT t.id, t.project_id, c.connections, p.name FROM threads t JOIN projects p ON p.id=t.project_id JOIN project_circuit_versions c ON c.project_id=p.id AND c.version={pinned_version('t')} WHERE t.id=%s AND p.user_id=%s",
                                (thread_id, user_id)).fetchone()
@@ -115,6 +120,7 @@ class ConversationRepository:
             return row
 
     def start(self, user_id, thread_id, data):
+        """running run과 사용자 질문 메시지를 만들고 (run id, 대화가 읽는 회로 연결)을 돌려준다."""
         run_id = uuid4()
         with auth.connection() as conn:
             if conn.execute('SELECT p.id FROM projects p JOIN threads t ON t.project_id=p.id WHERE t.id=%s AND p.user_id=%s FOR UPDATE OF p', (thread_id, user_id)).fetchone() is None:
@@ -127,6 +133,7 @@ class ConversationRepository:
         return str(run_id), circuit
 
     def finish(self, user_id, thread_id, run_id, status, result=None):
+        """running run을 status로 끝내고 공개 결과를 저장한다. 완료 · 거절이면 답을 assistant 메시지로 남긴다."""
         safe = SafeResult.model_validate(result).model_dump() if result is not None else None
         with auth.connection() as conn:
             row = conn.execute("UPDATE runs r SET status=%s,safe_result=%s,updated_at=CURRENT_TIMESTAMP FROM threads t JOIN projects p ON p.id=t.project_id WHERE r.id=%s AND r.thread_id=t.id AND t.id=%s AND p.user_id=%s AND r.status='running' RETURNING r.id",
@@ -140,6 +147,7 @@ class ConversationRepository:
                 conn.execute("INSERT INTO messages(thread_id,run_id,role,content) VALUES (%s,%s,'assistant',%s)", (thread_id, run_id, safe['answer']))
 
     def record_resume_error(self, user_id, run_id, error):
+        """재개 입구에서 거절된 오류(예: 하루 한도 429)를 아직 입력 대기인 run의 결과에 덧붙인다."""
         safe = SafeRunError.model_validate(error).model_dump()
         with auth.connection() as conn:
             # 다른 요청이 이미 재개/완료한 실행에는 뒤늦은 입구 오류를 덮어쓰지 않는다.
@@ -153,6 +161,7 @@ class ConversationRepository:
                 raise ConversationNotFound
 
     def resume(self, user_id, thread_id, run_id):
+        """입력 대기(requires_input) run을 다시 running으로 바꾼다. 다른 상태면 InvalidRunState."""
         with auth.connection() as conn:
             if conn.execute('SELECT p.id FROM projects p JOIN threads t ON t.project_id=p.id WHERE t.id=%s AND p.user_id=%s FOR UPDATE OF p', (thread_id, user_id)).fetchone() is None:
                 raise ConversationNotFound
@@ -164,6 +173,7 @@ class ConversationRepository:
                 raise InvalidRunState
 
     def list_threads(self, user_id, project_id):
+        """소유 프로젝트 하나의 대화 목록(마지막 run 상태 · 읽는 회로 버전 포함), 마지막 활동이 최근인 순."""
         with auth.connection() as conn:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id)).fetchone() is None:
                 raise ConversationNotFound
@@ -192,6 +202,7 @@ class ConversationRepository:
             return _summaries(conn, user_id, thread_id)[0]
 
     def thread_detail(self, user_id, thread_id, limit=50, before_message_id=None):
+        """소유한 대화의 상세(이어 온 대화 · 분석 대상 · 마지막 run)와 메시지 한 쪽(limit개, 오래된 것부터)."""
         with auth.connection() as conn:
             row = conn.execute(f"SELECT t.id,t.project_id,{pinned_version('t')},t.title,"
                                "CASE WHEN pp.id IS NULL THEN NULL ELSE tc.previous_thread_id END "
@@ -224,6 +235,7 @@ class ConversationRepository:
                 'next_before_message_id': page[-1][0] if len(rows) > limit else None}
 
     def get_run(self, user_id, run_id):
+        """소유한 run의 상태 · 저장된 공개 결과 · 답 메시지 id."""
         with auth.connection() as conn:
             row = conn.execute("""SELECT r.id,r.thread_id,r.status,r.safe_result,
                 (SELECT m.id FROM messages m WHERE m.run_id=r.id AND m.role='assistant' ORDER BY m.id DESC LIMIT 1)

@@ -67,6 +67,7 @@ class ExternalSchematicResponse(BaseModel):
 
     @model_validator(mode="after")
     def validate_provenance(self):
+        # [왜] 등급과 출처 종류가 어긋나면 화면에 잘못된 신뢰 표시가 나간다. 2등급=제조사 공식+원본 SHA-256, 3등급=커뮤니티, 등급 없음=공개 웹만 응답으로 내보낸다
         if self.evidence_grade == 2:
             if self.source_type != "manufacturer_official" or not isinstance(self.source_sha256, str):
                 raise ValueError("2등급 공식 회로도는 제조사 출처와 원본 SHA-256이 필요합니다.")
@@ -159,8 +160,10 @@ def _schematic_call(function, *args, **kwargs):
         }
         raise ApiError(404, messages.get(error.reason, "검증된 완성 회로도를 찾지 못했습니다."),
                        code="SCHEMATIC_NOT_FOUND", headers={"X-Schematic-Failure": error.reason}) from None
+    # [주의] 위조 · 만료 토큰을 따로 알리지 않고 없는 회로도와 같은 404로 답한다
     except ExternalSchematicInvalidToken:
         raise ApiError(404, "검증된 완성 회로도를 찾지 못했습니다.", code="SCHEMATIC_NOT_FOUND") from None
+    # [주의] 외부 제공자의 한도 초과는 429가 아니라 503으로 보내고, 제공자가 준 대기 시간을 Retry-After에 싣는다
     except ExternalSchematicRateLimited as error:
         raise HTTPException(503, "외부 회로도를 사용할 수 없습니다.",
                             headers={"Retry-After": str(error.retry_after)}) from None
@@ -183,8 +186,10 @@ def _project_circuit(user_id, project_id, circuit_version, thread_id, reference_
         project = ProjectRepository().get_owned(user_id, project_id, thread_id)
     except ProjectNotFound:
         raise HTTPException(404, '프로젝트 회로를 찾을 수 없습니다.') from None
+    # [왜] 창을 연 뒤 회로가 새 버전으로 바뀌었으면 옛 버전 기준으로 대조한 회로도를 보이지 않고 다시 열게 한다
     if project.circuit_version != circuit_version:
         raise HTTPException(409, '회로 버전이 변경됐습니다. 회로도 창을 다시 열어 주세요.')
+    # [왜] 원본 찾기는 회로 연결 지문으로 후보를 대조하므로 연결 정보가 없는 회로는 검색 전에 404로 끝낸다
     if require_connections:
         try:
             circuit_fingerprint(project.connections)
@@ -213,15 +218,18 @@ def external_schematic_manifest(
     if auto_search:
         if project is None or component_type is not None:
             raise HTTPException(422, '자동 검색에는 프로젝트와 회로 버전만 지정해 주세요.')
+        # [왜] 자동 찾기의 검색어가 제조사 · 부품 · 보드 이름처럼 참고 자료로 보이면 업로드 회로와 대조하지 않고 참고 자료 검색으로 바꾼다
         if context != 'original':
             project = None
             component_type = 'diode' if context == 'diode' else None
+    # [왜] 194 = 200 - len(' diode'). find_external_schematic이 검색어 끝에 ' diode'를 붙여도 find의 200자 상한을 넘지 않게 한다
     if component_type is not None and (project is not None or len(q) > 194):
         raise HTTPException(422, '다이오드 검색은 194자 이하 참고 자료 조회로만 사용할 수 있습니다.')
     manifest = (_schematic_call(find_external_schematic, q, source_url, connections=project.connections) if project else
                 _schematic_call(find_external_schematic, q, source_url, component_type) if component_type else
                 _schematic_call(find_external_schematic, q, source_url) if source_url is not None
                 else _schematic_call(find_external_schematic, q))
+    # [왜] 시트 그림 요청도 같은 프로젝트 · 회로 버전으로 소유 확인과 회로 지문 대조를 다시 하도록 범위를 그림 주소에 싣는다
     scope = f'?project_id={project_id}&circuit_version={circuit_version}' if project else '?reference_only=true'
     if project and thread_id:
         scope += f'&thread_id={thread_id}'
@@ -244,6 +252,7 @@ def external_schematic_manifest(
 def _multiple_schematics_requested(question, queries):
     if len(queries) > 1:
         return True
+    # [왜] 하나를 고르라는 표현을 '여러 · 모두'보다 먼저 본다. '여러 회로 중 하나만'은 한 개를 달라는 말이다
     if re.search(r'하나만|어느\s*(?:하나|것|회로|제조사|판본|출처)|'
                  r'어떤\s*(?:것|회로|제조사|판본|출처).*(?:고르|선택|맞|인가)|'
                  r'which\s+(?:one|circuit|revision|manufacturer|source)|choose\s+one', question, re.I):
@@ -265,6 +274,7 @@ def external_schematic_dialogue(body: SchematicDialogueRequest, response: Respon
     if body.component_type is not None and (project is not None or any(len(q) > 194 for q in body.queries)):
         raise HTTPException(422, '다이오드 검색은 194자 이하 참고 자료 조회로만 사용할 수 있습니다.')
     queries = list(dict.fromkeys(body.queries))
+    # [왜] 외부 검색보다 먼저 LLM 예약 한도를 확인해, 한도가 찬 사용자의 요청은 검색 비용도 쓰지 않고 429로 끝낸다
     try:
         budget = analysis.schematic_dialogue_budget(user_id)
     except llm.EvaluationLimitError:
@@ -311,6 +321,7 @@ def external_schematic_dialogue(body: SchematicDialogueRequest, response: Respon
                 selection_url='/api/external-circuits/schematics?' + urlencode(params), **values)
             seen[key] = candidate
             candidates.append(candidate)
+    # [왜] 검색어 일부만 실패하면 찾은 후보와 실패 목록(failures)으로 답하고, 후보가 하나도 없을 때만 첫 오류로 답한다
     if not candidates and errors:
         raise errors[0]
     with llm.evaluation_limits(budget):

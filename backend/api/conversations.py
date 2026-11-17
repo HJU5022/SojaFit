@@ -39,11 +39,13 @@ LOGGER = logging.getLogger('backend.api.conversations')
 
 
 class RoleLabel(BaseModel):
+    """판정 역할 하나의 코드(R01 등)와 화면 이름."""
     code: str
     name: str
 
 
 class StartRun(BaseModel):
+    """대화에 새 질문을 보내는 요청 본문(질문 · 대상 부품 · 사용 조건)."""
     model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [
         {'question': 'D1을 1N5819로 바꿔도 되나요?', 'target_ref': 'D1', 'conditions': '입력 최대 12 V, 부하 전류 0.5 A'}]})
     question: str = Field(min_length=1, max_length=4000)
@@ -53,6 +55,7 @@ class StartRun(BaseModel):
 
 
 class ResumeRun(BaseModel):
+    """멈춘 run(requires_input)에 답을 보내 재개하는 요청 본문(조건 값 · 역할 · 대상 부품 · 글 답)."""
     # [왜] role은 interrupt가 역할을 물었을 때(role_choices)만, target은 대상 부품을 물었을 때(target_choices)만 보낸다. 예시는 회로 값만 답하는 흔한 경우다
     model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [{'answers': {'v_in_max': '12', 'i_max': '0.5'}}]})
     answers: dict[str, str] = Field(max_length=30)
@@ -64,6 +67,7 @@ class ResumeRun(BaseModel):
     @field_validator('text')
     @classmethod
     def safe_text(cls, value):
+        """글 답에서 주소(`://`)와 줄바꿈 · 탭 밖의 제어 문자를 거절한다."""
         value = value.strip()
         if '://' in value or any(ord(ch) < 32 and ch not in '\n\t' for ch in value):
             raise ValueError('주소나 제어 문자는 넣을 수 없습니다.')
@@ -72,6 +76,7 @@ class ResumeRun(BaseModel):
     @field_validator('answers')
     @classmethod
     def safe_answers(cls, value):
+        """조건 답의 키는 식별자 모양이고 가격 · 재고 칸이 아니어야 하며, 값은 200자 이하에 주소가 없어야 한다."""
         forbidden = {'price', 'stock', 'product_url', 'fetched_at'}
         if any(not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,63}', key) or key.lower() in forbidden
                or len(answer) > 200 or '://' in answer for key, answer in value.items()):
@@ -80,6 +85,7 @@ class ResumeRun(BaseModel):
 
 
 class DemoResume(BaseModel):
+    """기록 질문의 조건 질문에 보낼 기록한 답과 역할."""
     answers: dict[str, str]  # 비면 '모름'으로 재개한 것이다
     role: str  # 역할을 묻지 않았으면 빈 글자
 
@@ -97,11 +103,13 @@ class DemoQuestion(BaseModel):
 
 
 class Thread(BaseModel):
+    """대화 하나의 id와 속한 프로젝트."""
     id: str  # UUID 문자열(분석 thread와 같은 UUID)
     project_id: int
 
 
 class ThreadSummary(Thread):
+    """프로젝트별 대화 목록의 한 줄(읽는 회로 버전 · 이름 · 마지막 run 상태)."""
     circuit_version: int
     title: str
     created_at: datetime
@@ -119,12 +127,14 @@ class ThreadListItem(Thread):
 
 
 class RenameThread(BaseModel):
+    """대화 이름 바꾸기 요청 본문."""
     model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [{'title': 'D1 쇼트키 교체 검토'}]})
     title: str
 
     @field_validator('title')
     @classmethod
     def valid_title(cls, value: str) -> str:
+        """공백을 한 칸으로 줄인 이름이 1~200자인지 본다."""
         # [왜] 줄바꿈 · 겹친 공백을 한 칸으로 줄인 뒤 잰다. DB CHECK(ck_threads_title)는 앞뒤 공백을 막아 여기서 못 거르면 422가 아니라 503이 된다
         value = ' '.join(value.split())
         if not 1 <= len(value) <= 200:
@@ -133,6 +143,7 @@ class RenameThread(BaseModel):
 
 
 class SavedMessage(BaseModel):
+    """저장된 대화 메시지 하나(사용자 질문 또는 assistant 답)."""
     id: int
     run_id: str
     role: Literal['user', 'assistant']
@@ -141,12 +152,14 @@ class SavedMessage(BaseModel):
 
 
 class SavedRun(BaseModel):
+    """대화의 마지막 run 요약(상태와 답 메시지 id)."""
     id: str
     status: RunStatus
     message_id: int | None
 
 
 class ThreadDetail(Thread):
+    """대화 상세: 대상 부품 · 고정 여부 · 마지막 run과 메시지 한 쪽(next_before_message_id로 이전 쪽을 읽는다)."""
     circuit_version: int
     previous_thread_id: UUID | None = None
     title: str
@@ -158,6 +171,7 @@ class ThreadDetail(Thread):
 
 
 class Run(BaseModel):
+    """저장된 run 하나와 그 공개 결과."""
     id: str
     thread_id: str
     message_id: int | None  # 완료 · 거절 결과의 assistant 메시지. 승인(POST /api/messages/{id}/approvals)에 쓴다
@@ -181,6 +195,7 @@ SSE_RESPONSE = {200: {'description': (
 
 
 def repository():
+    """대화 저장소 의존성. 저장소 예외를 404(없는 대화) · 409(run_in_progress) · 503(DB 장애)으로 바꾼다."""
     try:
         yield ConversationRepository()
     except ConversationNotFound:
@@ -201,6 +216,7 @@ def analysis_service(request: Request):
 
 @router.get('/judge/roles', response_model=list[RoleLabel])
 def list_judge_roles(user_id: int = Depends(auth.current_user_id)):
+    """판정 역할 표(코드 · 이름)를 코드 순으로 돌려준다. 로그인 필요."""
     del user_id
     return [RoleLabel(code=code, name=rule['name']) for code, rule in sorted(judge_conditions.load().items())]
 
@@ -216,6 +232,7 @@ def list_demo_questions(user_id: int = Depends(auth.current_user_id), analysis=D
 
 @router.get('/projects/{project_id}/threads', response_model=list[ThreadSummary])
 def list_threads(project_id: int, response: Response, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """내 프로젝트 하나의 대화 목록, 마지막 활동이 최근인 순."""
     response.headers['Cache-Control'] = 'no-store'
     return repo.list_threads(user_id, project_id)
 
@@ -229,12 +246,14 @@ def list_all_threads(response: Response, user_id: int = Depends(auth.current_use
 
 @router.patch('/threads/{thread_id}', response_model=ThreadListItem, dependencies=[Depends(auth.check_origin)])
 def rename_thread(thread_id: UUID, body: RenameThread, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """내 대화의 이름만 바꾸고 바뀐 목록 한 줄을 돌려준다."""
     return repo.rename_thread(user_id, str(thread_id), body.title)
 
 
 @router.get('/threads/{thread_id}', response_model=ThreadDetail)
 def thread_detail(thread_id: UUID, response: Response, limit: int = Query(50, ge=1, le=100),
                   before_message_id: int | None = Query(None, gt=0, le=9223372036854775807), user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """내 대화 하나의 상세와 메시지를 limit개씩, before_message_id보다 앞쪽으로 돌려준다."""
     response.headers['Cache-Control'] = 'no-store'
     return repo.thread_detail(user_id, str(thread_id), limit=limit, before_message_id=before_message_id)
 
@@ -242,16 +261,19 @@ def thread_detail(thread_id: UUID, response: Response, limit: int = Query(50, ge
 @router.post('/projects/{project_id}/threads', status_code=201, response_model=Thread, dependencies=[Depends(auth.check_origin)])
 def create_thread(project_id: int, circuit_version: int | None = Query(None, ge=0, le=9223372036854775807),
                   user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """내 프로젝트에 새 대화를 만든다. circuit_version을 주면 그 회로 버전을 읽는 대화다."""
     return {'id': repo.create_thread(user_id, project_id, circuit_version), 'project_id': project_id}
 
 
 @router.delete('/threads/{thread_id}', status_code=204, dependencies=[Depends(auth.check_origin)])
 def delete_thread(thread_id: UUID, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """내 대화와 같은 UUID의 분석 기록을 지운다. 진행 중인 run이 있으면 409."""
     repo.delete_thread(user_id, str(thread_id))
 
 
 @router.get('/runs/{run_id}', response_model=Run)
 def get_run(run_id: UUID, request: Request, response: Response, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """내 run 하나의 상태와 저장된 공개 결과(SSE 전용 칸은 비어 있을 수 있다)."""
     response.headers['Cache-Control'] = 'no-store'
     run = repo.get_run(user_id, str(run_id))
     return {'id': run['id'], 'thread_id': run['thread_id'], 'message_id': run.get('message_id'),
@@ -275,6 +297,7 @@ NODE_STAGES = {'입력 읽기': STAGES['running'], '품번·판 확인': '품번
 
 
 def frame(kind, payload):
+    """SSE frame 한 개(`event: 이름` 줄 + `data: JSON` 줄)."""
     return f'event: {kind}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n'
 
 
@@ -390,6 +413,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resu
 
 @router.post('/threads/{thread_id}/runs', response_class=StreamingResponse, responses=SSE_RESPONSE, dependencies=[Depends(auth.check_origin)])
 async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), analysis=Depends(analysis_service)):
+    """대화에 새 질문을 보내 run을 만들고 진행 단계와 결과를 SSE로 보낸다."""
     thread, request_id = str(thread_id), request.state.request_id
     # [왜] 하루 토큰 상한(429) · 대상 부품 확인(422·409) · 데모 질문 확인(422 · 기록 없음 503)을 run 행보다 먼저 끝내야
     #      거절된 요청이 '실행 중' run을 남기지 않고 공통 오류로 끝난다
@@ -418,6 +442,7 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
 
 @router.post('/runs/{run_id}/resume', response_class=StreamingResponse, responses=SSE_RESPONSE, dependencies=[Depends(auth.check_origin)])
 async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), analysis=Depends(analysis_service)):
+    """멈춘 run에 물은 것(조건 · 역할 · 대상 부품)만 받아 재개하고 결과를 SSE로 보낸다."""
     run = await run_in_threadpool(repo.get_run, user_id, str(run_id))
     interrupt = (run.get('safe_result') or {}).get('interrupt', {})
     if 'missing' in interrupt and set(body.answers) - set(interrupt['missing']):

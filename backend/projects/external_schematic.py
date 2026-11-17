@@ -38,6 +38,7 @@ class _SearchFailure:
 
 @dataclass(frozen=True)
 class ExternalSchematicChoice:
+    """화면에 보일 검증된 회로도 선택지 하나(제목 · 원본 주소 · 출처 종류 · 판본과 출처 증거 칸)."""
     title: str
     source_url: str
     source_type: str
@@ -73,6 +74,7 @@ def _choice(source, title: str) -> ExternalSchematicChoice:
 
 @dataclass(frozen=True)
 class ExternalSchematicManifest:
+    """찾기 결과: 대표 원본의 출처 · 라이선스 · 서명 토큰 · 시트 수와 함께 고를 수 있는 다른 선택지."""
     project: str | None
     commit: str | None
     license: str
@@ -255,6 +257,7 @@ def _community_candidate_limit() -> int:
     return MAX_COMPONENT_REPOSITORIES
 
 class ExternalSchematicService:
+    """후보 검색 → 원본 검사 → 그림 검증을 묶고 결과 · 그림 · 재시도 대기를 메모리 캐시에 둔다. 검색 · 검사 · 렌더 함수는 인자로 받아 시험에서 바꾼다."""
     def __init__(self, search, inspect, render, *, clock=time.monotonic, wall=time.time,
                  fallback_search=None, public_pdf_inspect=None, match_render=None, official_search=None,
                  query_capacity=128, image_capacity=64, image_byte_capacity=128*1024*1024,
@@ -670,6 +673,7 @@ class ExternalSchematicService:
         return _SearchFailure(reason)
 
     def find(self, query, selected_url=None, *, connections=None):
+        """검색어(회로 연결이 있으면 그 회로와 대조)로 검증된 회로도를 찾아 서명 토큰이 든 manifest를 돌려준다. selected_url이면 그 원본을 고른다."""
         from backend.projects.external_circuit_search import canonical_tsc_query
         normalized = canonical_tsc_query(" ".join(query.split()).casefold())
         if not 2 <= len(query.strip()) <= 200:
@@ -748,6 +752,7 @@ class ExternalSchematicService:
                                          choices)
 
     def load(self, token, sheet_index, *, connections=None):
+        """서명 토큰을 확인하고 그 회로도의 시트 하나를 돌려준다. 회로 연결을 주면 토큰의 회로 지문과 같아야 한다."""
         source, count = _read_token(token, self.wall())
         from backend.projects.netlist import circuit_fingerprint
         expected_hash = circuit_fingerprint(connections) if connections is not None else None
@@ -928,6 +933,7 @@ def _enabled():
 
 
 def find_external_schematic(query: str, selected_url: str | None = None, component_type: str | None = None, *, connections=None) -> ExternalSchematicManifest:
+    """외부 검색 설정 · 서명 키가 있을 때만 회로도를 찾는다. component_type='diode'면 검색어에 diode를 붙인다."""
     _enabled()
     if component_type == 'diode' and 'diode' not in query.casefold() and '다이오드' not in query:
         query = f'{query.strip()} diode'
@@ -935,6 +941,7 @@ def find_external_schematic(query: str, selected_url: str | None = None, compone
 
 
 def load_external_schematic_sheet(token: str, sheet_index: int, *, connections=None) -> bytes:
+    """외부 검색 설정 · 서명 키가 있을 때만 서명 토큰이 가리키는 시트 하나의 그림 바이트를 돌려준다."""
     _enabled()
     return _SERVICE.load(token, sheet_index, connections=connections)
 

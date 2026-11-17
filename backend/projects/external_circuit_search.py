@@ -78,6 +78,7 @@ def _require_external_search_configuration() -> str:
 
 @dataclass(frozen=True)
 class GitHubRepositoryRef:
+    """검색이 고른 GitHub 저장소 후보(소유자 · 이름 · 정규 주소). 회로 원본인지는 schematic_discovery가 따로 확인한다."""
     owner: str
     repo: str
     repository_url: str
@@ -103,6 +104,7 @@ class WebSchematicRef:
 
 
 def safe_public_https_url(value: object, *, allowed_hosts: frozenset[str]) -> str | None:
+    """공개 주소이면서 https이고 호스트가 allowed_hosts 안에 있을 때만 그 주소를, 아니면 None을 돌려준다."""
     url = _safe_url(value)
     if url is None:
         return None
@@ -111,6 +113,7 @@ def safe_public_https_url(value: object, *, allowed_hosts: frozenset[str]) -> st
 
 
 def github_repository_ref(value: object) -> GitHubRepositoryRef | None:
+    """`https://github.com/소유자/저장소` 꼴의 저장소 첫 화면 주소만 저장소 후보로 바꾼다(파일 주소 · 예약 경로는 None)."""
     url = safe_public_https_url(value, allowed_hosts=frozenset({"github.com"}))
     if not url:
         return None
@@ -244,6 +247,7 @@ def _tsc_model(query: str) -> str | None:
 
 
 def is_tsc_query(query: str) -> bool:
+    """TSC(Taiwan Semiconductor) 공식 데이터시트 경로로 보낼 검색어인가: TSC 품번만 적었거나, 품번과 TSC 표지 낱말이 함께 있을 때."""
     text = query.casefold()
     return bool(_TSC_BARE_PART.fullmatch(query.strip()) or (
         # [왜] 'deutsch board v2'의 deutsch 안 'tsc'가 TSC 경로로 보냈다(#146 회귀). 표지는 낱말 전체로만 맞춘다
@@ -257,6 +261,7 @@ def canonical_tsc_query(query: str) -> str:
 
 
 def is_board_query(query: str) -> bool:
+    """검색어가 등록된 보드 제조사 별칭(SparkFun · Raspberry Pi · Pico 등)으로 시작하는 보드 이름인가."""
     board = re.sub(r'^(?:(?:original|schematics?|원본|회로도)\s+)+', '', canonical_product_query(query).casefold())
     return any(board.startswith(alias) for aliases in _MANUFACTURER_ALIASES.values() for alias in aliases) or bool(re.match(r'pico\b', board))
 
@@ -502,6 +507,7 @@ class _SchematicPageParser(HTMLParser):
 
 
 def is_non_circuit_asset(url: str, label: str = "") -> bool:
+    """경로나 이름표가 회로도가 아닌 자료(기호 라이브러리 · 핀 배치도 · 풋프린트 · 블록도)를 가리키는가."""
     return bool(_NON_CIRCUIT_PATH.search(unquote(urlsplit(url).path))
                 or _NON_CIRCUIT_LABEL.search(label))
 
@@ -1063,6 +1069,7 @@ def _component_repository_ref(value):
 
 def search_github_repositories(query: str, limit: int = 5, *, client: httpx.Client | None = None,
                                include_files: bool = False, search_text: str | None = None) -> tuple[GitHubRepositoryRef, ...]:
+    """Exa로 github.com만 검색해 중복 없는 저장소 후보를 limit개까지 돌려준다. include_files면 파일 주소도 그 저장소로 바꿔 받는다."""
     if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= MAX_COMPONENT_REPOSITORIES:
         raise ValueError("검색어 또는 결과 수가 유효하지 않습니다.")
     key = _require_external_search_configuration()
