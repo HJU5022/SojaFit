@@ -1,7 +1,7 @@
 # 평가 리포트
 
 - 상태: 현행
-- 기준일: 2026-11-16, 11-17 재측정 행 추가(1 · 1-4 · 7 · 8.2 · 11-2절의 `d12` 행, 대상 `main` `799ae636`, 원시 [evals/results/d12/](evals/results/d12/README.md)). 11-17 저녁 배포 리비전 코드(`2030f846`) v3 2세트를 8.2절 표 마지막 행과 11-2절 7 · 8 · 10행에 더했다(원시 `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/`) (4절 단일 대 멀티 표의 `d9-improve2` 행, 8 · 8.1 · 8.2절, 10장 마지막 문단, 11-2절을 11-16에 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
+- 기준일: 2026-11-16, 11-17 재측정 행 추가(1 · 1-4 · 7 · 8.2 · 11-2절의 `d12` 행, 대상 `main` `799ae636`, 원시 [evals/results/d12/](evals/results/d12/README.md)). 11-17 저녁 배포 리비전 코드(`2030f846`) v3 2세트를 8.2절 표 마지막 행과 11-2절 7 · 8 · 14행에 더했다(15행은 강사 코멘트 ① 못 한 것)(원시 `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/`) (4절 단일 대 멀티 표의 `d9-improve2` 행, 8 · 8.1 · 8.2절, 10장 마지막 문단, 11-2절을 11-16에 고쳤다. 나머지 절의 본문은 11-12 이후 줄마다 대조하지 않았다)
 - 기준 커밋: 문서 전체의 단일 기준 커밋은 없다. 수치마다 측정한 커밋과 원시 파일은 해당 행에 적는다(옛 머리 `6707002`는 11-12 시점)
 - 정본 여부: 정본(평가 수치). 배포 리비전은 비정본(정본: [README.md](README.md) 맨 위 표)
 - 관련 문서: [README.md](README.md), [SPEC.md](SPEC.md), [docs/GATES.md](docs/GATES.md), [docs/research/injection-results.md](docs/research/injection-results.md), [evals/guides/preregister.md](evals/guides/preregister.md)
@@ -138,7 +138,7 @@
 
 ## 2. 평가셋 (G5)
 
-**기준 평가셋 v3 ([ADR 0015](docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md))**: 2026-11-10 동결한 `evals/dataset_v3.jsonl` 50건(판정 분야인 후보 판정 · 후보 찾기를 늘림). 이후 개선 전후 비교는 v3로 잰다. v1 · v2와 그 측정(#31 ~ #42)은 v3 이전 기록이다. 목표는 질문 1건 p95 10초 이내, 문서 · 페이지 단위 Recall@5 · MRR 0.95 이상이다(SPEC 1절). v3 문항의 검색 Recall@5 · MRR은 측정하지 않았다(12절).
+**기준 평가셋 v3 ([ADR 0015](docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md))**: 2026-11-10 동결한 `evals/dataset_v3.jsonl` 50건(판정 분야인 후보 판정 · 후보 찾기를 늘림). 이후 개선 전후 비교는 v3로 잰다. v1 · v2와 그 측정(#31 ~ #42)은 v3 이전 기록이다. 목표는 질문 1건 p95 10초 이내, 문서 · 페이지 단위 Recall@5 · MRR 0.95 이상이다(SPEC 1절). v3 문항의 검색 Recall@5 · MRR은 검색만 돌리는 실행기로 21문항을 쟀다(12절).
 
 v1은 `evals/drafts/sets/draft_50.jsonl` 50건(관련 25 · 비관련 25)의 고정 키를 `evals/dataset_v1.jsonl`로 옮겨 동결했다. 52건 초안에서 n22(관련) · n13(비관련)은 예비로 옮겼다([ADR 0008](docs/adr/0008-평가-정보부족-구분과-52건-초안.md)). 검수 이력은 `draft_50.jsonl`에 있다.
 
@@ -595,7 +595,7 @@ GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 \
 | R1 set1 · set2 | 0 | 1 | 11-14 · `b790004` | 50/50 · 48/50 | 6.8 · 5.9 | 10.5 · 12.1 | `2026-11-14-no-replan/R1/set1.json` · `set2.json` | 마지막 채택 구성. set2 실패 v3-15 · v3-41([v3-15 경로 기록](evals/results/graph/2026-11-14-no-replan/v3-15_cap_path_2026-11-14.md)) |
 | web-parallel B1 set1 · set2 | 0 | 1 | 11-15 · `62610e8e` | 49/50 · 50/50 | 8.3 · 6.3 | 34.4 · 25.3 | `2026-11-15-web-parallel/B1/set1.json` · `set2.json` | 기각, 되돌림(2등급 단계가 R1의 1 ~ 2.5초에서 14 ~ 25초로 늘어남) |
 | d12 지금 코드 A · B | 0 | 1 | 11-17 · `799ae636` | 49/50 · 49/50 | 5.5 · 4.8 | 16.7 · 9.1 | `evals/results/d12/gate/set1.json` · `set_b/set1.json`(이 행만 `graph/` 밖) | `WEB_PREFETCH=1`(운영 리비전 `main-799ae636-1117`에는 없음 = 미리 출발 꺼짐), OpenRouter 경유(`claude_direct` false, 운영도 `ANTHROPIC_API_KEY` 없음). A는 같은 호스트의 docker 빌드와 겹쳐 1분 부하 12 ~ 16. 두 세트 모두 실패 v3-16 `wrong_citation`(11-2절 8행과 같은 문항). 가장 느린 문항 A v3-15 29.5초, B v3-16 12.8초. LLM $0.036 · $0.036 |
-| 배포 리비전 코드 set1 · set2 | 0 | 1 | 11-17 · `2030f846`(로컬 트리의 `backend/` · `data/` · 평가셋이 같음) | 50/50 · 49/50 | 5.2 · 4.4 | 15.5 · 7.5 | `2026-11-17-deploy-ef0138b2-v3/set1.json` · `set2.json` | 운영 리비전 `sojafit-api-pre-ef0138b2-rs`와 같은 설정(`WEB_PREFETCH=1`), OpenRouter 경유, RAGAS 채점 끔. v3-16은 두 세트 모두 통과(11-2절 8행 수정 뒤). set2 실패 v3-41 `hallucination_risk`(11-2절 10행). 가장 느린 문항 set1 v3-35 22.4초, set2 v3-16 10.2초. LLM $0.037 · $0.032 |
+| 배포 리비전 코드 set1 · set2 | 0 | 1 | 11-17 · `2030f846`(로컬 트리의 `backend/` · `data/` · 평가셋이 같음) | 50/50 · 49/50 | 5.2 · 4.4 | 15.5 · 7.5 | `2026-11-17-deploy-ef0138b2-v3/set1.json` · `set2.json` | 운영 리비전 `sojafit-api-pre-ef0138b2-rs`와 같은 설정(`WEB_PREFETCH=1`), OpenRouter 경유, RAGAS 채점 끔. v3-16은 두 세트 모두 통과(11-2절 8행 수정 뒤). set2 실패 v3-41 `hallucination_risk`(11-2절 14행). 가장 느린 문항 set1 v3-35 22.4초, set2 v3-16 10.2초. LLM $0.037 · $0.032 |
 
 이 저장소 브랜치에 결과 파일이 없는 측정(숫자는 저장소 밖 보고서에서 옮김, 이 절에서 링크하지 않는다):
 
@@ -644,7 +644,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 ## 11. 지금 이 서비스의 가장 큰 약점
 
 
-가장 큰 약점은 품번이 없는 조건형 검색과 표 주석이 행에 안 붙는 표(약 216)다. 전자는 후보 50 밖 실패가 남고, 후자는 값은 맞아도 행 단위 조건이 빠진다. 제출 쪽에서는 시연 영상 파일이 없고 Langfuse 화면에서 평가 점수가 트레이스에 붙어 보이는 캡처가 없어 게이트 G6 · G7을 막는다.
+가장 큰 약점은 품번이 없는 조건형 검색과 표 주석이 행에 안 붙는 표(약 216)다. 전자는 후보 50 밖 실패가 남고, 후자는 값은 맞아도 행 단위 조건이 빠진다. 제출 쪽의 시연 영상과 점수가 붙은 트레이스 캡처는 11-17에 채웠다(아래 표 5행).
 
 | 순위 | 약점 | 근거(이미 있는 재료) | 왜 아직 안 고쳤나 / 한계 |
 |---|---|---|---|
@@ -652,7 +652,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 2 | 표 주석이 행에 안 붙는 표 ≈216 | 5장 유형 6 · 위키 원장(원시는 미이관) | THERMAL·두 쪽 표 등. `table_suspects` 89건과 집합이 다르다. 동결셋 검색 지표로 재측정하지 않음. 11-16 표본 123개 각주 대조: 해당 청크 46개 중 14개 누락(thermal 13) |
 | 3 | 배포 인젝션 T4가 흔들림 | 인젝션 HTTP 스모크 · 한도·극성·거절·429 | 11-12에 토큰 한도 상향 배포([SPEC.md](SPEC.md) 8.6절). 한도 올린 뒤 T4 재측정은 아직 |
 | 4 | 승인 대기(사람 기다린 시간) 값 없음 | 8장 · `scripts/eval/approval_wait_report.py` | 실사용 3회 뒤 채우기로 미룸 |
-| 5 | G7 시연 영상 파일 없음 · G6 점수 연결 화면(캡처) 없음 | [`docs/deliverables/langfuse/`](docs/deliverables/langfuse/)(스크린샷 3장, 점수 화면 없음) · [`demo_script.md`](docs/deliverables/demo_script.md) · [langfuse_scores_2026-11-16.md](evals/results/d10/langfuse_scores_2026-11-16.md) | 영상은 스크립트 초안만 있음. 점수가 트레이스에 붙은 것은 API로 확인했고(11-16, 점수 15개), 화면 캡처는 아직 없음 |
+| 5 | (11-16 점검 때) G7 시연 영상 파일 없음 · G6 점수 연결 화면(캡처) 없음 | [`docs/deliverables/langfuse/`](docs/deliverables/langfuse/) · [`demo_script.md`](docs/deliverables/demo_script.md) · [langfuse_scores_2026-11-16.md](evals/results/d10/langfuse_scores_2026-11-16.md) | 11-17에 채웠다: 시연 영상 [`sojafit-demo-2026-11-17.mp4`](docs/deliverables/video/sojafit-demo-2026-11-17.mp4)(1분 35초, 정상 1 + 실패 3, 코드 `28b14600`), 점수가 붙은 트레이스 화면 캡처 4장(`langfuse/04` ~ `07`, `799ae636` 로컬 실행 트레이스). 영상과 캡처는 배포 리비전 `sojafit-api-pre-ef0138b2-rs` 전 코드로 만들었다 |
 | 6 | 대체재 거절 문구가 범용보다 덜 구체 | §10 v3-26 행 | Codex는 범위 밖·부족 스펙을 말하고, 우리는 품번 부족형 일반 거절에 가깝다 |
 
 고친 뒤에도 남은 약점: 판정표와 설명 글이 충돌하던 위험 실패(6절 C2)는 코드 판정표만 내게 막았고 D9 재확인(`evals/results/threads/claim_consistency_d9_recheck_2026-11-12.json`) 3건 모두 최종 답이 코드 판정표(`NOT_SUFFICIENT`)이고 `synth_text`가 비어 있다. 의미 검토 `semantic_summary`는 `pending_manual_review`라 검토 기록이 없다. 남은 약점은 위 표다.
@@ -666,12 +666,13 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 |---|---|---|---|
 | 7 | 웹 근거를 켠 p95가 목표 10초를 넘는다 | 8.2절 표: `DEMO_MODE=0` 웹 켬 유효 측정은 11-16까지 10.5 ~ 34.4초(R1 set1 10.5 · set2 12.1, G2 13.0 · 13.3). 11-17 새벽 `799ae636` 두 세트는 9.1 · 16.7초(d12), 저녁 배포 리비전 코드 두 세트는 15.5 · 7.5초(첫 세트는 웹 데이터시트를 처음 받는 문항 3개가 15 ~ 22초). 저장소 밖 속도 실험의 같은 코드 4회는 13.0 · 14.6 · 16.8 · 15.1초(`speed-exp.md` §3). 웹 문항 17개 평균 11.9초, 나머지 33개 평균 5.1초(같은 보고 §4) | 안 고침. 시도한 레버는 아래 표 |
 | 8 | v3-16(UF4007 trr)이 웹 켬 Docker 9회 모두 `wrong_citation` | 11-15 밤 속도 실험 9회(기준 4 · L4 2 · L3 3, `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`)에서 모두 실패(`speed-exp.md` §3). 11-17 지금 코드 `799ae636` 두 세트(같은 설정, 원시 `evals/results/d12/gate/`)에서도 둘 다 이 문항만 `wrong_citation`이다. 기준 A1 행: 경로 `...계획>문서>모으기>답 정리>답 검사>끝`, `passed`가 `[W1, W4]`(웹 공식 PDF)뿐이고 답이 `[W1]` · `[W4]`만 인용해 코퍼스 정답 근거(`UF4001 SERIES_P2104.pdf` 2쪽 · 4쪽)를 인용하지 않았다. 이 브랜치의 11-14 웹 켬 결과 파일(8.2절 표의 B1 · A1 · P1 · G2 · P1b · R1)과 11-15 낮 `2026-11-15-web-parallel/B1`에서는 같은 문항이 `cited_gold`(R1 set1 행은 코퍼스 청크 `[50672]` 인용)이고, 11-15 밤 웹 끔 5회(`speed-exp.md` 후속 §4)도 통과했다 | **11-17에 원인을 찾아 고쳤다(`6b83e55d`).** 웹 근거 카드(`W1`…)의 `file` · `title`이 URL 파일명을 인코딩된 채(`UF4001%20SERIES_P2104.pdf`) 써서, 같은 PDF · 같은 쪽을 인용해도 코퍼스 파일명(`UF4001 SERIES_P2104.pdf`)과 글자가 달라 채점기가 `wrong_citation`으로 봤다. `backend/services/exa.py`가 카드 파일명에 `unquote`를 쓰게 고쳤다(`source_url`은 그대로, 시험 `tests/services/test_exa_parallel.py`). 위 d12 두 세트(`799ae636`)는 이 수정 전 코드다. 수정 전후 v3-16 한 문항 3회씩(main `7e1e2805`, `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=0`, 로컬 코퍼스 DB, 다른 임시 작업 트리. 원시 파일은 저장소에 없음, `docs/worklog/jeongun.md` 같은 날 항목): 고치기 전 3/3 `wrong_citation`, 고친 뒤 3/3 `cited_gold`. 이 수정 뒤 배포 리비전 코드(`2030f846`)로 웹 켬 v3 50문항 2세트를 다시 쟀고(11-17 저녁, 8.2절 표 마지막 행) v3-16은 두 세트 모두 통과했다 |
-| 10 | v3-41(수명 질문)이 실행마다 거절 · 판정으로 갈린다 | 배포 리비전 코드 2세트(11-17 19:58 ~ 20:07, `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/`): 두 세트 모두 경로가 `…계획>판정 읽기>판정>문서>모으기`까지 같고 `routed_type`은 `candidate_judge`다. set1은 모으기에서 `not_found`로 거절해 통과, set2는 LL4148 `ROLE_SUFFICIENT` 판정 표를 쓰고 끝에 수명 질문은 답하지 않았다고 적어 채점기가 `hallucination_risk`로 봤다. 같은 날 낮 로컬 실행에서도 한 번 같은 문항이 실패했다(사전 등록 「v3-41 첫 형태」). 11-14 R1 set2에서도 실패 문항이었다(8.2절 표) | 안 고침(동결). 답할 수 없는 부분이 섞인 판정 질문을 거절할지 일부만 답할지 정하는 규칙이 모으기 단계 LLM 판단에 맡겨져 있다 |
 | 9 | 표 각주가 행에 안 붙은 표 약 216개(위 순위 2)를 동결 전에 고치지 않는다 | 코퍼스 재처리가 필요하다. `table_suspects` 89건과 다른 집합이고 원시 점검 파일이 저장소에 없다(12절) | 안 고침 |
 | 10 | 인용 검사기가 숫자 값만 본다. 단위 · 속성은 보지 않는다 | `unsupported_numbers`(`backend/graph/nodes.py`)는 문장의 `숫자+단위(V · A · W · s · F · °C)`에서 숫자를 뽑아 `mA ↔ A` 같은 접두어 환산만 하고, 인용한 청크 글에 같은 값의 숫자가 아무 곳에나 있으면 통과시킨다. `[실측]` 청크가 `VRRM 100 V, IF(AV) 1 A, trr 75 ns`일 때 문장 "정격은 100 A입니다 [7]"은 빈 목록(통과)이고 "내압은 1200 V입니다 [7]"만 걸린다. 인용 번호에 `W` · 넷리스트가 섞이면(`[7, W1]`) 같은 함수가 검사를 건너뛴다(같은 입력의 결과가 빈 목록). 단위 목록 밖(Ω · nC · % · Hz)은 대상이 아니다. 점검 C #4(저장소 밖 보고)도 같은 허점을 적었다 | 동결 전에 고치지 않았다. 조이면 `VERIFY_FAILED` 과거절이 늘 수 있어 v3 재측정이 필요하다(점검 C) |
 | 11 | Codex 원본 로그가 없다 | 비교(10장)의 Codex 답은 사용자가 옮긴 문장이다. 원본 대화 · 출력 로그는 저장소에 없고 모델명 · 추론 설정도 미기록이다. 역할 문항 3개(v3-22 · 23 · 25)는 Codex가 넷리스트를 못 본 채 비교됐다(`TALLY.md` 3 · 5 · 6절) | 11-12 Codex 45/50의 원본 로그는 여전히 없다. 11-16 Codex CLI 격리 재실행은 25문항에서 사용량 한도로 멈췄다(이벤트 로그 있음). 같은 입력 조건과 원본 로그가 있는 50문항 기준선은 Codex가 아닌 GPT-6.1 Terra로 남겼다(10장, 41/50) |
 | 12 | v3 문항별 판정 이력이 없다 | 판정 당시 기록(노션 · 시트 · 메시지)이 없다. [`v3_judging_record.md`](evals/drafts/reviews/v3_judging_record.md)는 2026-11-13에 조장이 적은 것이고 문항별 수정 이력과 초안 대비 차이는 되살릴 수 없다. 판정자는 두 사람(1차 심태현 · 최종 하정운)이고 외부 검토 1명은 미실시다([failure_analysis.md](docs/deliverables/failure_analysis.md) 8절) | 지난 일이라 고칠 수 없음 |
 | 13 | URL · 숫자가 없는 사용 권고는 Supervisor 답 가드를 통과한다 | 2026-11-16 가드 전후 측정(6절)에서 질문에 넣은 지시문이 역할 질문을 일상 대화로 바꿨고, "D1은 역전압 보호용이고 SS34로 바꿔도 안전합니다"가 가드 켬에서도 2/2 나갔다. 가드는 URL과 근거 없는 숫자+단위만 본다 | 안 고침(발견) |
+| 14 | v3-41(수명 질문)이 실행마다 거절 · 판정으로 갈린다 | 배포 리비전 코드 2세트(11-17 19:58 ~ 20:07, `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/`): 두 세트 모두 경로가 `…계획>판정 읽기>판정>문서>모으기`까지 같고 `routed_type`은 `candidate_judge`다. set1은 모으기에서 `not_found`로 거절해 통과, set2는 LL4148 `ROLE_SUFFICIENT` 판정 표를 쓰고 끝에 수명 질문은 답하지 않았다고 적어 채점기가 `hallucination_risk`로 봤다. 같은 날 낮 로컬 실행에서도 한 번 같은 문항이 실패했다(사전 등록 「v3-41 첫 형태」). 11-14 R1 set2에서도 실패 문항이었다(8.2절 표) | 안 고침(동결). 답할 수 없는 부분이 섞인 판정 질문을 거절할지 일부만 답할지 정하는 규칙이 모으기 단계 LLM 판단에 맡겨져 있다 |
+| 15 | 강사 11/16 코멘트 ①의 실무자 가격 답변 · 국내 도구 견적 비교가 없다 | 구매 · 부품관리 담당자 답변이나 국내 도구 견적을 받지 못했다. 공개 페이지(K20 · K21)만 있고, 견적 요청 · 인터뷰로만 메울 수 있다고 적었다(`docs/research/evidence/payer-research-2026-11-13.md`) | 못 함(11-17 마감). 가격 · 재고는 Mouser 실시간 조회만 보인다 |
 
 **속도 레버: 11-14 ~ 15에 시험했고 채택한 것은 없다.** 웹을 켠 p95를 줄이려는 시험이다. 결과 파일은 이 브랜치에 있는 것(`2026-11-14-*`, `2026-11-15-web-parallel`)과 없는 것(11-15 밤 속도 실험)이 섞여 있어, 없는 것은 저장소 밖 보고 `speed-exp.md`의 숫자를 옮겼다(그 보고의 결과 폴더 `2026-11-16-speed-*`는 이 브랜치에 없다).
 
@@ -715,4 +716,4 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 배포 HTTP · 계정 격리 · 실제 검색 DB를 거친 공격, 인코딩을 바꾼 유출 | 6절 |
 | D9 재확인 3건의 의미 검토 | 11절. 원시 `semantic_summary`가 `pending_manual_review` |
 | 4절 체크포인트 재개 · 계정 분리의 현재 코드 재기록 | 기록(`local_g4_isolation_2026-11-09.json`, 11-09 `jeongun-8`) 뒤 `backend/conversations/memory_service.py`가 바뀜 |
-| Langfuse 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 7장. 스크린샷 3장에는 점수 화면이 없다. 점수가 트레이스에 붙은 것은 11-16에 API로 확인했다([langfuse_scores_2026-11-16.md](evals/results/d10/langfuse_scores_2026-11-16.md)) |
+| Langfuse 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 7장. 11-17에 캡처했다: 점수가 붙은 트레이스 상세 · 점수 탭 · 점수 목록 · 홈 대시보드 4장(`docs/deliverables/langfuse/04` ~ `07`, `799ae636` 로컬 실행 트레이스). 그 전 11-16에는 API로만 확인했다([langfuse_scores_2026-11-16.md](evals/results/d10/langfuse_scores_2026-11-16.md)). 운영 리비전 트레이스의 점수 화면은 캡처하지 않았다 |

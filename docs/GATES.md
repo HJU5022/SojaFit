@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-17(배포 리비전 측정: v3 50문항 2세트 · 25단계, 대상 `main` `2030f846` = 운영 리비전 `sojafit-api-pre-ef0138b2-rs`. 그 전 11-17 새벽 재측정은 [evals/results/d12/](../evals/results/d12/README.md), 대상 `799ae636`)
-- 동결: 채점 기준 `9c87ba36`(11-16 24:00). 최종 동결 태그 `final-2026-11-17`(11-17 레포 정리 커밋 `a468c0ba`, 배포 소스 `2030f846`과 문서 · 주석만 다름). 그 뒤 발표 폴더(PR #162)와 랜딩 그림 4장(`b4a02113`)만 바꿨고 태그는 옮기지 않았다. 그 전 태그 `freeze-2026-11-17`(PR #150)도 옮기지 않았다.
+- 동결: 채점 기준 `9c87ba36`(11-16 24:00). 최종 동결 태그 `final-2026-11-17`(11-17 레포 정리 커밋 `a468c0ba`, 배포 소스 `2030f846`과 문서 · 주석만 다름). 그 뒤 발표 폴더(PR #162), 랜딩 그림 4장(`b4a02113`, PR #163), 제출물 검수에서 찾은 문서 · 주석 정리(백엔드는 주석 2곳, 배포하지 않음)만 바꿨고 태그는 옮기지 않았다. 그 전 태그 `freeze-2026-11-17`(PR #150)도 옮기지 않았다.
 - 기준 커밋: `2030f846`(`main`, PR #160 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-17 20:45 KST `sojafit-api-pre-b4a02113-1117`, 랜딩 그림 4장만 다름. 측정은 그 전 19:52 `sojafit-api-pre-ef0138b2-rs` · 19:27 `sojafit-api-pre-ef0138b2-1117`(같은 이미지)에서 했다).
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
@@ -162,14 +162,14 @@
 | 반복 평가 | v3 50문항 4세트(#50)가 세트마다 Langfuse 세션 하나에 트레이스 50개와 문항 점수를 남김 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7장 |
 | 서비스 분석 트레이스 | `user_id`(사용자) · `session_id`(대화)를 붙이고 질문 · 답 글은 보내지 않음(시험으로 확인) | `tests/services/test_langfuse_prompts.py` |
 | Skill 대표 흐름 | 대표 4건 · 직접 생성 13건의 generation 23개를 API로 확인, 상황별 기준 12/13 충족 | `evals/results/skill/skill_tool_summary_2026-11-03.json` |
-| 대시보드 스크린샷 3장 | `01-trace-list.jpg`(트레이스 목록) · `02-model-call-detail.jpg`(트레이스 타임라인과 모델 호출 상세: 모델 · 시간 · 토큰 · 비용) · `03-cost-dashboard.jpg`(비용 대시보드). 2026-11-13 10:13~10:15 KST 캡처, 프로젝트 `SojaFit_v2` | [docs/deliverables/langfuse/](deliverables/langfuse/), [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
+| 대시보드 스크린샷 7장 | `01-trace-list.jpg`(트레이스 목록) · `02-model-call-detail.jpg`(트레이스 타임라인과 모델 호출 상세: 모델 · 시간 · 토큰 · 비용) · `03-cost-dashboard.jpg`(비용 대시보드)는 2026-11-13 10:13~10:15 KST 캡처, 프로젝트 `SojaFit_v2`. `04` ~ `07`(점수가 붙은 트레이스 상세 · 점수 탭 · 점수 목록 · 홈 대시보드)은 2026-11-17 캡처 | [docs/deliverables/langfuse/](deliverables/langfuse/), [DELIVERABLES.md](deliverables/DELIVERABLES.md) |
 | 느림 원인 사례 | 2건과 LLM 단계별 시간 · 비용 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7 · 8장 |
 
 확인 못 한 것:
 
 | 항목 | 이유 |
 |---|---|
-| 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 캡처는 없다(스크린샷 3장에는 점수 열 · 점수 화면이 없다). 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md). 2026-11-17 재조회: 운영 프로젝트 점수 57,198개(숫자 · 참거짓 40,826 + 범주 16,372)가 트레이스 4,109개에 붙어 있고, 11-17 `799ae636` 게이트 세트의 트레이스 50개에 700개가 붙었다. 캡처할 트레이스: `5fa5c6c56187c8a38326de96fd57dfa5`(v3-01, 점수 15개), [d12 README](../evals/results/d12/README.md) |
+| 운영 리비전 트레이스의 점수 화면 | 점수가 붙은 화면은 11-17 `799ae636` 로컬 실행 트레이스로 캡처했다(`04` ~ `07`). 운영 리비전 트레이스로는 캡처하지 않았다. 점수가 트레이스에 붙어 있는 것은 2026-11-16에 Langfuse v3 점수 API로 확인했다: 11-15 v3 웹 끔 측정의 v3-01 트레이스에 점수 15개(`pass`=True 등, 결과 파일 값과 같음), [langfuse_scores_2026-11-16.md](../evals/results/d10/langfuse_scores_2026-11-16.md). 2026-11-17 재조회: 운영 프로젝트 점수 57,198개(숫자 · 참거짓 40,826 + 범주 16,372)가 트레이스 4,109개에 붙어 있고, 11-17 `799ae636` 게이트 세트의 트레이스 50개에 700개가 붙었다. 캡처할 트레이스: `5fa5c6c56187c8a38326de96fd57dfa5`(v3-01, 점수 15개), [d12 README](../evals/results/d12/README.md) |
 | 배포본 서비스 분석 트레이스의 Langfuse 수신 | 수신을 확인했다: 11-13 09:38~10:10 배포본 요청이 트레이스로 보인다(스크린샷 `01`, 최근 1일 루트 관측 약 101건). 403 원인은 [langfuse_403_2026-11-13.md](../evals/results/d10/langfuse_403_2026-11-13.md). 확인 시점의 리비전은 `fadde2a`이고 그 뒤의 100% 리비전(`574de79-rs`, 지금 리비전은 README 표 「배포 리비전」)에서 새로 캡처하지는 않았다 |
 | 현재 Skill 실행 UI | 확인하지 않았다 |
 
@@ -177,7 +177,7 @@
 
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
-| 시연 스크립트 | 초안(정상 · 실패 컷) | [demo_script.md](deliverables/demo_script.md) |
+| 시연 영상 · 스크립트 | 영상 1분 35초(정상 1 + 실패 3, 11-17 06:16 녹화, 코드 `28b14600`). 스크립트는 녹화 전 계획 | [sojafit-demo-2026-11-17.mp4](deliverables/video/sojafit-demo-2026-11-17.mp4) · [demo_script.md](deliverables/demo_script.md) |
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
 | 포트폴리오 | 3건(수치는 EVAL_REPORT 값만, 11-17). 오세창 · 심태현은 본인 확인 전 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) · [portfolio-osc.md](deliverables/portfolio-osc.md) · [portfolio-sth.md](deliverables/portfolio-sth.md) |
@@ -190,7 +190,7 @@
 | 항목 | 상태 |
 |---|---|
 | 시연 영상 파일 | 11-17 녹화: `docs/deliverables/video/sojafit-demo-2026-11-17.mp4`(1:35, 채점 기준 동결 `9c87ba36`, 시연 · 배포 코드 `28b14600`). 상세는 [DELIVERABLES.md](deliverables/DELIVERABLES.md) 남은 일 |
-| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다. 동결 직전에 로컬 `gitleaks`를 다시 돌려야 한다 |
+| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. Actions는 조직 결제 한도로 2026-11-09(PR #73)부터 시작되지 않았다(`docs/worklog/jeongun.md`). 로컬 gitleaks 결과만 있다(11-17 `799ae636`에서 다시 돌려 0건, 위 G7 행) |
 | 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
 | 다른 조원 포트폴리오(오세창 · 심태현) | 11-17 초안 있음(조장이 작업 기록에서 옮겨 작성): [portfolio-osc.md](deliverables/portfolio-osc.md), [portfolio-sth.md](deliverables/portfolio-sth.md). 본인 확인 전 |
 
@@ -222,5 +222,5 @@
 
 | 항목 | 상태 | 증거 |
 |---|---|---|
-| 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원 · 재개. 승인 전 부작용 없음, 같은 승인 요청 반복 시 실행 중복 없음 | 로컬 compose에서 확인(2026-11-13, `jeongun-2` `ad8612e` = `main` `ea5797c`과 같은 트리; 2026-11-09, `jeongun-8` `f6b6d7e`). 배포 주소에서는 2026-11-13 리비전 `sojafit-api-574de79-rs`에서 재시작 뒤 재개 · 승인 · 같은 승인 409를 확인했다(위 G4 표 "배포 서버 재시작 뒤 재개 · 계정 분리" 행). 그 뒤 리비전에서는 다시 확인하지 않음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json) |
+| 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원 · 재개. 승인 전 부작용 없음, 같은 승인 요청 반복 시 실행 중복 없음 | 로컬 compose에서 확인(2026-11-13, `jeongun-2` `ad8612e` = `main` `ea5797c`과 같은 트리; 2026-11-09, `jeongun-8` `f6b6d7e`). 배포 주소에서는 2026-11-13 리비전 `sojafit-api-574de79-rs`에서 재시작 뒤 재개 · 승인 · 같은 승인 409를 확인했다(위 G4 표 "배포 서버 재시작 뒤 재개 · 계정 분리" 행). 2026-11-17 운영 리비전에서도 재시작 뒤 재개 · 판정 완료를 다시 확인했다(G4 행, `sojafit-api-pre-ef0138b2-rs`) | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json) |
 | 사용자별 DB Store에 기억 저장, 의미 검색 · 활용 · 잘못된 기억 수정. thread 체크포인트나 코퍼스 벡터만으로 사용자 장기 기억을 대신하지 않음 | 일부 확인. 저장 · 격리 · 수정 · 삭제는 가짜 임베딩 DB 시험과 로컬 compose에서 확인. 실제 Voyage 임베딩과 배포 DB에서의 의미 검색은 확인하지 않음 | [test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py) |
