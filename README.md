@@ -157,7 +157,7 @@ graph TD;
 | 구분 | 노드 | 모델 | 하는 일 |
 |---|---|---|---|
 | LLM | `Supervisor` | `anthropic/claude-haiku-5.5` | 질문 종류 10가지, 거절 여부, 할 일 최대 3개와 지시서 계획 |
-| LLM | `RAG 에이전트` | 답 쓰기 Haiku · 근거 채점 `openai/gpt-6-luna` | 검색 → 근거 채점 → 답 쓰기 → 인용 검사(코드) |
+| LLM | `RAG 에이전트` | Haiku | 검색 → 근거 채점과 답 쓰기를 LLM 한 번(`docs_answer`) → 인용 검사(코드) |
 | LLM | `회로 읽기`(Spec 에이전트) | Haiku | 넷리스트에서 부품의 역할과 조건을 읽는다 |
 | LLM | `종합` | `anthropic/claude-sonnet-5.5` | 할 일이 2개 이상이고 코드로 이을 수 없을 때만 |
 | 코드, 드물게 LLM | `대체 부품 판정`(Spec 에이전트) | 코드가 못 읽은 카드만 Haiku | 카드 값 비교와 판정 5종 |
@@ -181,7 +181,7 @@ graph TD;
 | 구성 | 지금 |
 |---|---|
 | 그래프 | 서비스는 멀티 그래프. 단일 그래프(`backend/graph/`)는 비교 기준선 |
-| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`, 근거 채점 `openai/gpt-6-luna`(OpenRouter) |
+| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`(OpenRouter). `openai/gpt-6-luna`는 비교용 단일 그래프의 채점 노드만 쓴다 |
 | 임베딩 · 리랭크 | `voyage-4-large` 1024차원 + Voyage `rerank-3` |
 | 관측 | Langfuse: 평가 실행마다 단계별 입력 · 출력, 토큰 · 비용, 점수. 서비스는 단계별 시간만 보낸다 |
 | 로그인 | 이메일 · 비밀번호, 이메일 인증 가입, Google 로그인, DB 세션, 실패 시 15분 잠금 |

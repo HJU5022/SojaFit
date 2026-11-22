@@ -143,7 +143,7 @@ d12 행은 #26과 같은 실행기 · 설정이다([service_r1_2026-11-17.json](
 | 올바른 거절 (`correct_refusal`) | 답이 없어서 거절 | 비관련 |
 | 환각 위험 (`hallucination_risk`) | 답이 없는데 답함 | 비관련 |
 
-**판정 방식과 한계**: 답변 5지표는 규칙 기반 채점기가 문항과 그래프 최종 상태를 대조해 분류한다(`evals/runners/score_answer.py`, LLM 서술 채점은 하지 않음). 서술의 의미가 맞는지는 이 채점으로 보지 못한다. 그래프 안 문서 채점 모델 `openai/gpt-6-luna`는 생성 모델(`anthropic/claude-haiku-5.5`)과 다른 회사 모델이다(SPEC 2절). 사용자 동작 조건 부족을 정확히 밝힌 NOT_VERIFIED가 정답인 문항은 그 코드만으로 과잉 거절로 세지 않는다([dataset-guide.md](evals/guides/dataset-guide.md#관련비관련과-not_verified의-구분)).
+**판정 방식과 한계**: 답변 5지표는 규칙 기반 채점기가 문항과 그래프 최종 상태를 대조해 분류한다(`evals/runners/score_answer.py`, LLM 서술 채점은 하지 않음). 서술의 의미가 맞는지는 이 채점으로 보지 못한다. 서비스(멀티 그래프)의 RAG 에이전트는 근거 채점과 답 쓰기를 Haiku 한 번으로 하고, 비교용 단일 그래프만 채점 노드에 생성 모델과 다른 회사의 `openai/gpt-6-luna`를 쓴다(SPEC 2절). 사용자 동작 조건 부족을 정확히 밝힌 NOT_VERIFIED가 정답인 문항은 그 코드만으로 과잉 거절로 세지 않는다([dataset-guide.md](evals/guides/dataset-guide.md#관련비관련과-not_verified의-구분)).
 
 ## 3. 검색 개선 전후 (사전 등록, 한 번에 하나만)
 
@@ -431,6 +431,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 3-C 14행 비교 회차(C, `e5ec10b`)의 문항별 통과 | 3-C 14행 | 없음 |
 | 표 주석이 빠진 표 216건의 점검 파일 | 5절 6행 | 없음(`table_suspects.jsonl` 89건과 집합이 다름) |
 | 11-04 서비스 설정 대비 #25 1위의 사람 판정 v2 19문항 문항 목록 | 3-1절 | 없음 |
+| 추론(thinking) 끔: p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초(저장소 밖 lab v3 초안 50문항, G5 공식 점수 아님) | SPEC 2절 LLM 설정 | 작업 기록(lab, 저장소 밖) |
 | 이전 구성 측정(B · C · H · S 계열) 원시 | 3-C 14 · 15행의 비교 회차 | `evals/results/graph/2026-11-10-v3-haiku-sets/sources_2026-11-11.json`의 `not_copied` |
 
 **v3 검색 Recall@5 · MRR (해석 주의)**: 검색만 돌리는 실행기 21문항은 v1 · v4h 청킹 모두 0.8095로 같다(후보 찾기 4문항을 품번 필터가 비워 상한 17/21, [원시](evals/results/chunking/v1-vs-v4h-2026-11-13/README.md)). 전체 그래프 실행 [`2026-11-13-citecheck-v3`](evals/results/graph/2026-11-13-citecheck-v3/report.json)의 검색 21문항 Recall@5 1.0 · 쪽 MRR 0.9762는 `DEMO_MODE=1`(BM25만) 회차라 근거로 쓰지 않는다. 서비스 설정에서 v3 검색 Recall@5 · MRR 0.95 목표(2절)를 충족했는지는 확인하지 못했다.
