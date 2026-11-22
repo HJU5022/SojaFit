@@ -2,7 +2,15 @@
 
 - 상태: 현행
 - 기준일: 2026-11-17(배포 리비전 측정: v3 50문항 2세트 · 25단계, 대상 `main` `2030f846` = 운영 리비전 `sojafit-api-pre-ef0138b2-rs`. 그 전 11-17 새벽 재측정은 [evals/results/d12/](../evals/results/d12/README.md), 대상 `799ae636`)
-- 동결: 채점 기준 `9c87ba36`(11-16 24:00). 최종 동결 태그 `final-2026-11-17`(11-17 레포 정리 커밋 `a468c0ba`. 배포 소스 `2030f846`과 비교해 서비스 코드는 주석만 다르고, 측정 스크립트 2개(`scripts/smoke/http_smoke.py` `allow_duplicate`, `evals/runners/run_skill_pair.py` `--max-seconds`)가 바뀌었다). 그 뒤 발표 폴더(PR #162), 랜딩 그림 4장(`b4a02113`, PR #163), 제출물 검수에서 찾은 문서 · 주석 정리, 큰 파일 주석 보강, 쓰지 않는 prop · 중복 함수 2곳 삭제(동작 같음, 배포하지 않음)만 바꿨고 태그는 옮기지 않았다. 그 전 태그 `freeze-2026-11-17`(PR #150)도 옮기지 않았다.
+- 동결: 아래 표. 태그 뒤 커밋은 문서 · 주석 · 랜딩 그림만 바꿨고 배포하지 않았다(`git log final-2026-11-17..main`)
+
+| 구분 | 커밋 | 서비스 코드와의 차이 |
+|---|---|---|
+| 채점 기준(11-16 24:00) | `9c87ba36` | — |
+| 배포 소스(측정 기준) | `2030f846` | 기준 |
+| 최종 동결 태그 `final-2026-11-17` | `a468c0ba` | 서비스 코드는 주석만 다름. 측정 스크립트 2개(`scripts/smoke/http_smoke.py` `allow_duplicate`, `evals/runners/run_skill_pair.py` `--max-seconds`) 바뀜 |
+| 운영 리비전 소스 | `b4a02113` | 랜딩 그림 4장(PR #163) |
+
 - 기준 커밋: `2030f846`(`main`, PR #160 병합). 운영 리비전과 그 소스는 [README.md](../README.md) 표 「배포 리비전」이 정본이다(11-17 20:45 KST `sojafit-api-pre-b4a02113-1117`, 서비스 동작에서는 랜딩 그림 4장만 다름(그 밖은 주석 · 측정 스크립트, 위 「동결」 줄). 측정은 그 전 19:52 `sojafit-api-pre-ef0138b2-rs` · 19:27 `sojafit-api-pre-ef0138b2-1117`(같은 이미지)에서 했다).
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
@@ -31,7 +39,14 @@
 
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
-| 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
+| 현행 점검(2026-11-17 19:56, 운영 리비전 `sojafit-api-pre-ef0138b2-rs`) | 평가용 계정 A · B 25단계(재시작 단계 제외 24개) 24/24, 재시작 뒤 재개 통과(19:50, G4) | [smoke_…_2026-11-17_195638.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-17_195638.json) |
+| 배포 리비전 | [README.md](../README.md) 맨 위 표 | `docs/worklog/jeongun.md` 11-17 항목 |
+| 배포 Mouser 키 | 11-17부터 연결. 18:58 운영 견적서에 Mouser 가격과 조회 시각이 나왔다. 11-10 · 11-13 리비전에는 없어 가격 조회가 `available:false`였다 | `docs/worklog/jeongun.md` 11-17 「운영 확인 18:58」 |
+
+<details><summary>이전 리비전 점검 기록(2026-11-10 ~ 11-17 새벽, 19행)</summary>
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
 | 이전 리비전 `sojafit-api-main76fadcb4-1116`(소스 `76fadcb4`, 2026-11-16 04:07 ~ 04:36 KST)과 `sojafit-api-main7ba86325-1115`(소스 `7ba86325`, 11-15 22:29 ~ 11-16 04:07 KST, KiCad 렌더러 분리: `KICAD_RENDERER_URL` 설정). 지금 리비전은 README 「배포 리비전」 칸 | 리비전 이름은 `gcloud run revisions list`로 확인했다(11-16 04:37 KST). 두 리비전 모두 로그인 뒤 25단계 점검 기록은 없다(확인 못 함) | [README.md](../README.md) 표 |
 | 운영 시작 실패와 복구(2026-11-14 22:43 ~ 11-15 21:26 KST) | Secret Manager `EXA_API_KEY` 버전 1이 파기(DESTROYED)됐는데 서비스 설정이 그 버전을 고정해, 최소 인스턴스 0대인 운영 리비전 `574de79-rs`의 새 인스턴스가 시작하지 못했다(21:22 KST `/health` · `/login` · `/` 500). 같은 이미지에 `EXA_API_KEY:2`만 바꾼 리비전 `sojafit-api-574de79-exa2`를 21:26 KST에 100%로 돌려 복구했고, 22:29 KST에 위 현재 리비전으로 바꿨다. 누가 · 왜 버전 1을 파기했는지는 확인하지 못했다 | `docs/worklog/jeongun.md` 11-15 항목 「운영 다운 복구」 |
 | 리비전 `sojafit-api-main-799ae636-1117`(소스 `main` `799ae636`, 11-17 04:52 ~ 06:07 KST 운영) 로그인 없는 점검(2026-11-17 05:03 KST). 그 뒤 운영 `sojafit-api-main-28b14600-1117`(PR #148)도 06:06 ~ 06:07 KST 같은 GET 점검 200 · 401, 오류 로그 0 | `gcloud run services describe`(읽기만)로 트래픽 100% 확인. `/health` 200(0.09초), `/login` · `/` · `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 53 · 경로 42(코드 전체 동작 60 · 경로 49 중 문서에 보이는 것, [routes.txt](../evals/results/d12/checks/routes.txt)). 로그인 뒤 25단계는 하지 않았다 | [unauth_checks.txt](../evals/results/d12/prod_unauth/unauth_checks.txt) |
@@ -51,14 +66,15 @@
 | 되돌리기 리비전 | `sojafit-api-c9d2c36`(소스 `main` `c9d2c36`, 2026-11-13 07:39 KST 전환부터 08:07 KST 전환 전까지 100%). 명령: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 이 리비전을 100% 지정한다(이름은 `sojafit-api-` 뒤에 `c9d2c36`) | `docs/worklog/jeongun.md` 11-13 항목 |
 | 그 앞의 되돌리기 리비전 | `sojafit-api-ea5797c`(2026-11-13 05:38~07:39 KST 100%) | `docs/worklog/jeongun.md` 11-13 항목 |
 | 11-11 시점의 되돌리기 리비전 | `sojafit-api-716c6d6`(옛 DB 비밀 사용) | `docs/worklog/jeongun.md` 11-11 항목 |
-| 배포 Mouser 키 | 없음. 가격 조회는 `available:false` | 11-10 점검 기록. 11-13 리비전 설정에도 `MOUSER` 변수가 없다 |
+
+</details>
 
 확인 못 한 것:
 
 | 항목 | 이유 |
 |---|---|
-| 리비전 `ea5797c` · `c9d2c36` · `ae3de0b` · `fadde2a`의 로그인 뒤 시나리오 | 그 리비전들에서는 하지 않았다. `574de79`에서 25단계로 했다(위 표). 25단계 스모크는 `--upload`로 실제 업로드 경로를 쓴다. 11-11 28단계 스모크의 데모 회로(v3-01) 시작은 `DEMO_MODE=0` 배포에서 404라 같은 방식으로는 재현되지 않는다. 평가용 계정은 레포에 두지 않는다 |
-| 배포 서버 재시작 뒤 재개 | `574de79`에서 했다(위 표 · G4). 한계: 체크포인트 행을 직접 대조하지 않았고 근거는 이벤트 순서와 시간(재개 3초 대 처음 19초)이다. 이전 리비전들에서는 하지 않았다 |
+| 리비전 `ea5797c` · `c9d2c36` · `ae3de0b` · `fadde2a`의 로그인 뒤 시나리오 | 그 리비전들에서는 하지 않았다. `574de79`와 11-17 운영 리비전에서 25단계로 했다(위 표). 25단계 스모크는 `--upload`로 실제 업로드 경로를 쓴다. 11-11 28단계 스모크의 데모 회로(v3-01) 시작은 `DEMO_MODE=0` 배포에서 404라 같은 방식으로는 재현되지 않는다. 평가용 계정은 레포에 두지 않는다 |
+| 배포 서버 재시작 뒤 재개 | 11-17 19:50 운영 리비전에서 통과(위 현행 점검 · G4). 그 전에는 `574de79`에서 했다. 한계: 체크포인트 행을 직접 대조하지 않았고 근거는 이벤트 순서와 시간이다 |
 | Google 로그인 왕복 · 이메일 가입 왕복 | `574de79`를 포함해 11-13 리비전들에서 하지 않았다. Google 왕복은 11-11 리비전 `27a410d-live`에서만 확인했다 |
 | 서버 로그의 Langfuse `Failed to export spans 403 Forbidden` | 원인을 찾았다: 옛 Langfuse 프로젝트의 키가 거부당했고, 11-12 12:29 KST에 새 프로젝트 키로 바꾼 뒤 실패 로그가 없다([langfuse_403_2026-11-13.md](../evals/results/d10/langfuse_403_2026-11-13.md)). 옛 프로젝트가 거부한 이유(사용량 한도인지 정지인지)는 그 계정 화면을 못 봐 확인하지 못했다 |
 
@@ -66,18 +82,25 @@
 
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
-| 키 없는 첫 기동 사전 점검(2026-11-13, `main` `574de79`의 `git archive` 사본, `.env` 없음, Apple M2 Docker Desktop) | `docker compose build --no-cache` 89.6초, `up --build -d` 반환 7.8초 · `/health` 200까지 11.0초(빌드 층 캐시 적중), 합계 약 100초. db healthy, thread-setup · corpus-load 정상 종료, 적재 문서 42 · 청크 1,556. 호스트 8000 포트 충돌로 사본에서만 18000으로 바꿨다 | [keyless_boot_574de79.md](../evals/results/d10/keyless_boot_574de79.md) |
 | 배포본의 평가용 계정 로그인(`574de79`, 2026-11-13) | 평가용 계정 A · B 로그인 200(0.96초 · 0.85초). 로컬 기동과 별개로 배포 주소에서의 로그인이다 | [deploy_574de79/README.md](../evals/results/d10/deploy_574de79/README.md) |
 | 현행 측정(2026-11-17, GitHub `main` clone → `799ae636` checkout, 6회) | 회차마다 새 빈 `docker:dind`(29.9.3), `.env` 없음 · 키 없음, `docker compose up --build`. clone 시작 → `/health` 200: 266.3 · 296.0 · 244.5 · 234.3 · 148.9 · 207.6초(중앙값 **239.4초**), `up` → `/health` 중앙값 231.4초, 스모크 `--demo --refusal` 6회 모두 28 통과 · 0 실패 · 0 건너뜀, 내려받은 양 591 ~ 594 MB. 같은 호스트에서 다른 작업이 함께 돌아 1분 부하 4.95 ~ 14.70(시간 차이는 부하 탓, 코드 차이 아님). 1회차 dind에서 CI 재생 검사(기록 질문 10개)도 "기록과 같음" | [d12 README](../evals/results/d12/README.md) 「새 clone 기동」, 회차별 [run1](../evals/results/d12/boot/run1/) ~ run6 · [summary.json](../evals/results/d12/boot/summary.json), [replay_check.txt](../evals/results/d12/checks/replay_check.txt) |
+| 시간이 늘어난 이유 | 시간은 이미지 빌드가 정한다(빌드 202.2초: `apt-get install kicad libcairo2` 70.0초, 이미지 내보내기 65.9초, `uv sync` 48.6초, `npm ci` 45.4초, 일부 겹침). `kicad libcairo2` 설치는 커밋 `e928d59`(11-11)가 `Dockerfile`에 넣었고 아래 11-10 측정은 그 전이다. 11-10과의 차이를 단계별로 나누어 재지는 않았다. 이미지 2.51 GB | [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json) `build_steps_seconds`, [Dockerfile](../Dockerfile) |
+| 기동되는 서비스 | db · thread-setup · corpus-load(42문서 · 청크 1,556개) · api가 정상(11-10: 맥 · WSL, 11-13: 맥) | 위와 같음 |
+| 임베딩 · 리랭커 | API 호출(Voyage)이라 로컬 모델 내려받기가 없다. 데모 모드의 검색은 BM25만 쓴다 | [SPEC.md](../SPEC.md) 6 · 7절 |
+
+<details><summary>이전 기동 측정(2026-11-10 ~ 11-16, 7행)</summary>
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 키 없는 첫 기동 사전 점검(2026-11-13, `main` `574de79`의 `git archive` 사본, `.env` 없음, Apple M2 Docker Desktop) | `docker compose build --no-cache` 89.6초, `up --build -d` 반환 7.8초 · `/health` 200까지 11.0초(빌드 층 캐시 적중), 합계 약 100초. db healthy, thread-setup · corpus-load 정상 종료, 적재 문서 42 · 청크 1,556. 호스트 8000 포트 충돌로 사본에서만 18000으로 바꿨다 | [keyless_boot_574de79.md](../evals/results/d10/keyless_boot_574de79.md) |
 | 빈 엔진 6회 표(11-13 ~ 14, `docs/research/docker-cold-start-measurements.md` 1 · 4절)의 원시 | 회차별 값 · 단계 시각은 저장소에 있다: [scripts/results/docker_performance/](../scripts/results/docker_performance/)(`profile_lazyload_six_run_*` · `kicad_in_api_vs_renderer_split_*`). compose · 빌드 원시 로그는 실험 PC에만 있다(그 문서 7절). 그 표는 Engine 27.5.1의 `up` → `/health`라 위 dind 측정(clone 시작 기준)과 다른 계열이다 | [d12 README](../evals/results/d12/README.md) 「빈 엔진 기동 6회 측정의 원시 로그」 |
 | 현행 측정(2026-11-16, GitHub `main` `3ce5abdc`) | 빈 `docker:dind`(29.9.3)에서 새 clone, `.env` 없음 · 키 없음, `docker compose up --build`. clone 시작 → `/health` 200 **242.8초**, → 스모크 끝 251.4초, 스모크 `--demo --refusal` 28 통과 · 0 실패 · 0 건너뜀. 내려받은 양 585 MB. 호스트 부하가 높은 때(1분 평균 10)였다 | [boot_2026-11-16/README.md](../evals/results/d10/boot_2026-11-16/README.md) |
 | 현행 측정(2026-11-13, `jeongun-2` @ `ad8612e` = `main` `ea5797c`과 같은 트리 `6452cdfc…`) | 빈 `docker:dind`(29.9.3)에서 새 clone, `.env` 없음 · 키 없음, `docker compose up --build`. 냉: clone 시작 → `/health` 200 243.9초, `up` → `/health` 200 235.5초, `up` → 스모크 종료 243.1초, clone 시작 → 스모크 종료 251.6초(clone 8.4초). 온(`down -v` 뒤): `up` → `/health` 200 11.7초, → 스모크 종료 19.0초. 스모크 `--demo --refusal` 28 통과 · 0 실패 · 0 건너뜀(냉 · 온). 내려받은 양 852 MB(냉) | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json), [timeline_warm.json](../evals/results/d10/boot/timeline_warm.json), [smoke_cold.json](../evals/results/d10/boot/smoke_cold.json), [smoke_warm.json](../evals/results/d10/boot/smoke_warm.json) |
-| 시간이 늘어난 이유 | 시간은 이미지 빌드가 정한다(빌드 202.2초: `apt-get install kicad libcairo2` 70.0초, 이미지 내보내기 65.9초, `uv sync` 48.6초, `npm ci` 45.4초, 일부 겹침). `kicad libcairo2` 설치는 커밋 `e928d59`(11-11)가 `Dockerfile`에 넣었고 아래 11-10 측정은 그 전이다. 11-10과의 차이를 단계별로 나누어 재지는 않았다. 이미지 2.51 GB | [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json) `build_steps_seconds`, [Dockerfile](../Dockerfile) |
 | 이전 측정(2026-11-10, 커밋 `5631309`, kicad 설치 전) | 이미지 0개 · 볼륨 0개인 빈 Docker 엔진(`docker:dind` 29.9.3), 번들에서 clone, `.env` 없이 `docker compose up -d` 한 줄 | `scripts/results/smoke/smoke_localhost-18000_2026-11-10_055128.json`(맥), `_055423.json`(WSL) |
 | 이전 측정: 맥(Apple M2, arm64) | `/health` 200 55.6초, 데모 A 로그인 200 55.7초, `scripts/smoke/http_smoke.py --demo --refusal` 23단계 통과 62.9초 | 위와 같음 |
 | 이전 측정: WSL2(i9-12900KF, x86_64, WSL 안 Docker 29.1.3 위의 dind) | `/health` 59.8초, 로그인 59.9초, 스모크 23단계 통과 67.5초 | 위와 같음 |
-| 기동되는 서비스 | db · thread-setup · corpus-load(42문서 · 청크 1,556개) · api가 정상(11-10: 맥 · WSL, 11-13: 맥) | 위와 같음 |
-| 임베딩 · 리랭커 | API 호출(Voyage)이라 로컬 모델 내려받기가 없다. 데모 모드의 검색은 BM25만 쓴다 | [SPEC.md](../SPEC.md) 6 · 7절 |
+
+</details>
 
 확인 못 한 것:
 
@@ -150,7 +173,7 @@
 
 | 항목 | 이유 |
 |---|---|
-| v3 검색 Recall@5 · MRR의 해석 | 측정했다. 검색만 돌리는 실행기(`run_retrieval_v3.py`) 21문항에서 v1 · v4h 모두 문서 · 쪽 Recall@5 · MRR 0.8095(상한 17/21: 후보 찾기 4문항은 품번 필터가 빈 결과를 만듦)이고 청커를 구별하지 못한다([chunking/v1-vs-v4h-2026-11-13](../evals/results/chunking/v1-vs-v4h-2026-11-13/README.md)). 전체 그래프 실행 `2026-11-13-citecheck-v3`의 검색 21문항은 문서 · 쪽 Recall@5 1.0, 쪽 MRR 0.9762다([report.json](../evals/results/graph/2026-11-13-citecheck-v3/report.json)). 목표 0.95는 후자 기준으로 넘었고, 전자의 0.8095는 실행기 한계다 |
+| v3 검색 Recall@5 · MRR의 해석 | 측정했다. 검색만 돌리는 실행기(`run_retrieval_v3.py`) 21문항에서 v1 · v4h 모두 문서 · 쪽 Recall@5 · MRR 0.8095(상한 17/21: 후보 찾기 4문항은 품번 필터가 빈 결과를 만듦)이고 청커를 구별하지 못한다([chunking/v1-vs-v4h-2026-11-13](../evals/results/chunking/v1-vs-v4h-2026-11-13/README.md)). 전체 그래프 실행 `2026-11-13-citecheck-v3`의 Recall@5 1.0은 `DEMO_MODE=1`(BM25만) 회차라 근거로 쓰지 않는다. 서비스 설정에서 목표 0.95를 넘었는지는 확인하지 못했다 |
 | 3-C 14행의 원시 결과 | 원시 미보관(EVAL_REPORT 12장) |
 | 3-A 5행(비트 후보)에서 기대 중 두 항목 | 합계 ±0.02와 시간 3배 이상은 기대와 달랐다. 유지를 정한 기록이 없다(EVAL_REPORT 3절 5행) |
 
