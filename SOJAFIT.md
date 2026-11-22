@@ -365,7 +365,7 @@ SojaFit (proj3-b)
 │   ├── dataset_v2.jsonl    <- 동결 평가셋 v2: 70건(v1 50 + 후보 찾기 20, 관련 35·비관련 35), question_type 칸, 2026-11-03 (고정)
 │   ├── dataset_v3.jsonl    <- 동결 기준 평가셋 v3: 50건(관련 25·비관련 25, 판정 분야를 늘림), 2026-11-10(ADR 0015)
 │   ├── FROZEN.json         <- 동결 파일별 sha256·건수. 테스트가 이 이름을 읽음 (고정)
-│   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드) (예정)
+│   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드). 지금은 0건
 │   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
 │   │   ├── INPUTS.md       <- 폴더 설명
 │   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 페이지 36개(회수 불가 2쪽 표시, 사전 등록 #24)
@@ -792,7 +792,6 @@ SojaFit (proj3-b)
     │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
     │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
-    │   ├── frontend-screen-redesign.md <- (이력) 11-16 교체 전 프런트엔드 화면 구성
     │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
     │   └── external-complete-schematics.md <- 공개 프로젝트 완성 회로도
@@ -834,8 +833,6 @@ SojaFit (proj3-b)
     │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 x 검색 방식 격자 본평가
     │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
-    │   ├── eval-report-detail-2026-11-17.md  <- 요약 재작성 전 EVAL_REPORT 전체 기록(11-17)
-    │   ├── readme-detail-2026-11-17.md  <- 요약 재작성 전 README 전체 기록(11-17)
     │   ├── market/         <- 문제와 시장 근거: 고객 여정 · 채용 공고 · 수요 근거와 유사 서비스 가격
     │   │   ├── market-user-journey.md  <- 문제와 시장 근거
     │   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
@@ -907,6 +904,11 @@ SojaFit (proj3-b)
     │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 자료 25장(데모 영상 포함)
     │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "파일" 절
     │       └── sojafit-demo-2026-11-17.mp4  <- 2분 49초, 운영 리비전에서 녹화한 정상 · 경계 · 방어 경로, 화면마다 자막
+    ├── archive/            <- 보관: 지금 기준이 아닌 옛 기록(요약 전 전체본 · 교체 전 설계). 정본이 아님
+    │   ├── ARCHIVE.md      <- 폴더 설명
+    │   ├── eval-report-detail-2026-11-17.md <- 요약 재작성 전 EVAL_REPORT 전체 기록(11-17)
+    │   ├── frontend-screen-redesign.md <- 11-16 새 화면 교체 전 프런트엔드 화면 구성
+    │   └── readme-detail-2026-11-17.md <- 요약 재작성 전 README 전체 기록(11-17)
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
         ├── WORKLOG.md      <- 폴더 설명과 기록 형식
         ├── jeongun.md      <- 하정운(조장·오케스트레이터)
@@ -985,6 +987,7 @@ SojaFit (proj3-b)
 | `docs/research/` | [RESEARCH.md](docs/research/RESEARCH.md) | 쓴 사람 |
 | `docs/deliverables/` | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) | 평가·문서 |
 | `docs/worklog/` | [WORKLOG.md](docs/worklog/WORKLOG.md) | 각자 자기 파일 |
+| `docs/archive/` | [ARCHIVE.md](docs/archive/ARCHIVE.md) | 평가·문서 |
 
 담당은 가이드의 역할 4개(검색·데이터, 에이전트, 서비스·운영, 평가·문서)입니다. 사람 배정은 [README.md](README.md) 조원 표에 있습니다.
 

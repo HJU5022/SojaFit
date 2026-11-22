@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12(본문), 2026-11-13~14(맨 아래 변경 메모)
 - 기준 커밋: 6707002
 - 정본 여부: 비정본 · 이력. 현재 화면의 경로 · 파일 구조는 [frontend/FRONTEND.md](../../frontend/FRONTEND.md)와 [frontend/src/SRC.md](../../frontend/src/SRC.md), 흐름 · API 계약은 [SPEC.md](../../SPEC.md) 2 · 4절이 정본이다. 11-16 교체로 `react-router` · React Query · `pages/` · `components/` · `hooks/` · 더미 모드와 이 문서의 화면별 시험은 없어졌다
-- 관련 문서: [d5-frontend-service.md](d5-frontend-service.md)(기능 계약), [project-conversation-navigation.md](project-conversation-navigation.md)(프로젝트·대화 탐색), [circuit-context-diagram.md](circuit-context-diagram.md), [login-auth.md](login-auth.md), [google-user-login.md](google-user-login.md), [frontend/src/SRC.md](../../frontend/src/SRC.md)
+- 관련 문서: [d5-frontend-service.md](../specs/d5-frontend-service.md)(기능 계약), [project-conversation-navigation.md](../specs/project-conversation-navigation.md)(프로젝트·대화 탐색), [circuit-context-diagram.md](../specs/circuit-context-diagram.md), [login-auth.md](../specs/login-auth.md), [google-user-login.md](../specs/google-user-login.md), [frontend/src/SRC.md](../../frontend/src/SRC.md)
 
 ## Why
 
@@ -15,7 +15,7 @@
 ## Goal
 
 - 랜딩에서 서비스 이해, 로그인에서 인증, 작업대에서 회로와 후보 검토를 수행한다.
-- API 요청·응답, 인증·세션·권한, 실행 연결 복구, 판정·근거, 사람 승인·견적의 기능 계약은 화면이 바꾸지 않는다([d5-frontend-service.md](d5-frontend-service.md)).
+- API 요청·응답, 인증·세션·권한, 실행 연결 복구, 판정·근거, 사람 승인·견적의 기능 계약은 화면이 바꾸지 않는다([d5-frontend-service.md](../specs/d5-frontend-service.md)).
 - 범위 밖: 판정 규칙 변경, 주문·결제, 프로젝트 공유, 모바일 전용 앱.
 
 ## What
@@ -33,7 +33,7 @@
 | `/settings` | 내 설정 | 로그인 필요 |
 | `/admin/users` | 사용자 관리 | 관리자 필요 |
 
-근거: `frontend/src/App.tsx`, `frontend/src/auth/RequireAuth.tsx`. 인증 흐름은 [login-auth.md](login-auth.md), [google-user-login.md](google-user-login.md)가 정한다. 로그아웃·탈퇴·세션 만료 때 React Query 캐시와 `sessionStorage`를 비우고 보호 화면은 주소의 `projectId`를 남기지 않고 `/login`으로 바꾼다(`frontend/src/auth/AuthProvider.tsx`).
+근거: `frontend/src/App.tsx`, `frontend/src/auth/RequireAuth.tsx`. 인증 흐름은 [login-auth.md](../specs/login-auth.md), [google-user-login.md](../specs/google-user-login.md)가 정한다. 로그아웃·탈퇴·세션 만료 때 React Query 캐시와 `sessionStorage`를 비우고 보호 화면은 주소의 `projectId`를 남기지 않고 `/login`으로 바꾼다(`frontend/src/auth/AuthProvider.tsx`).
 
 ### 랜딩
 
@@ -51,7 +51,7 @@
 
 ### 로그인과 회원가입 화면
 
-로그인은 `Google 로그인`(설정이 켜진 경우) 버튼, 이메일·비밀번호 폼, `비밀번호를 잊으셨나요?`, `회원가입` 링크, `개인정보처리방침` 링크로 이루어진다. 회원가입 링크는 운영 빌드에서도 보인다(`frontend/src/pages/LoginPage.tsx`). 동의 체크 상자는 없다. 오류 문구·Google 가입/연결 단계는 [login-auth.md](login-auth.md), [google-user-login.md](google-user-login.md)를 따른다.
+로그인은 `Google 로그인`(설정이 켜진 경우) 버튼, 이메일·비밀번호 폼, `비밀번호를 잊으셨나요?`, `회원가입` 링크, `개인정보처리방침` 링크로 이루어진다. 회원가입 링크는 운영 빌드에서도 보인다(`frontend/src/pages/LoginPage.tsx`). 동의 체크 상자는 없다. 오류 문구·Google 가입/연결 단계는 [login-auth.md](../specs/login-auth.md), [google-user-login.md](../specs/google-user-login.md)를 따른다.
 
 ### 작업대(`/app`)
 
@@ -65,10 +65,10 @@
 
 작업대 동작:
 
-- 프로젝트 생성: 파일 업로드(`.net`, 5 MiB 이하는 [d5-frontend-service.md](d5-frontend-service.md))가 기본이다. 데모 회로 생성은 서버 `GET /api/demo-circuits`가 목록을 줄 때(`DEMO_MODE=1`)만 보인다. 운영(`DEMO_MODE=0`)에서는 404이고 화면은 알림 없이 업로드 칸만 둔다. 생성 성공 시 새 프로젝트를 선택하고 생성 창을 닫으며 관리 창을 자동으로 열지 않는다.
-- 부품 선택: `현재 프로젝트` 관리 창의 `분석할 부품` 선택창. 선택 값은 주소 `targetRef`, 프로젝트는 `projectId`, 저장 대화는 `threadId`로 유지한다. 저장 대화를 열면 대상은 고정되고 분석을 다시 실행하지 않는다([project-conversation-navigation.md](project-conversation-navigation.md)).
+- 프로젝트 생성: 파일 업로드(`.net`, 5 MiB 이하는 [d5-frontend-service.md](../specs/d5-frontend-service.md))가 기본이다. 데모 회로 생성은 서버 `GET /api/demo-circuits`가 목록을 줄 때(`DEMO_MODE=1`)만 보인다. 운영(`DEMO_MODE=0`)에서는 404이고 화면은 알림 없이 업로드 칸만 둔다. 생성 성공 시 새 프로젝트를 선택하고 생성 창을 닫으며 관리 창을 자동으로 열지 않는다.
+- 부품 선택: `현재 프로젝트` 관리 창의 `분석할 부품` 선택창. 선택 값은 주소 `targetRef`, 프로젝트는 `projectId`, 저장 대화는 `threadId`로 유지한다. 저장 대화를 열면 대상은 고정되고 분석을 다시 실행하지 않는다([project-conversation-navigation.md](../specs/project-conversation-navigation.md)).
 - 자료 열기: 가운데 `자료 열기` 선택창이나 답변 아래 결과 링크, 답변의 `[숫자]` 인용(현재 응답 근거의 `citation_number`와 일치하는 것만)으로 연다. 같은 자료를 다시 열면 기존 탭을 활성화하고, 탭을 닫으면 가까운 탭으로 이동하며 마지막 탭을 닫으면 영역이 사라진다. 탭은 좌우·Home·End·Delete 키로 조작한다. 프로젝트·대화를 바꾸면 탭을 모두 닫는다. 프로젝트 생성 직후 넷리스트 연결 개념도는 자동으로 연다.
-- 연결 개념도: 배율 50~300%, 휠·`+`/`-` 키 25% 단위, 포인터 기준 확대, 왼쪽 드래그 이동(4px 미만 이동은 노드 클릭), 우상단 맞춤 아이콘(100%·스크롤 원점). 표시 영역·격자 크기는 고정이고 그래프만 확대된다. 대상·회로·페이지가 바뀌면 100%로 돌아간다([circuit-context-diagram.md](circuit-context-diagram.md)).
+- 연결 개념도: 배율 50~300%, 휠·`+`/`-` 키 25% 단위, 포인터 기준 확대, 왼쪽 드래그 이동(4px 미만 이동은 노드 클릭), 우상단 맞춤 아이콘(100%·스크롤 원점). 표시 영역·격자 크기는 고정이고 그래프만 확대된다. 대상·회로·페이지가 바뀌면 100%로 돌아간다([circuit-context-diagram.md](../specs/circuit-context-diagram.md)).
 - 질문 접수: 새 실행 상태가 도착하고 현재 입력 초안이 전송 당시 초안과 같을 때만 입력을 비운다. 실행 ID 없이 실패한 접수는 원문을 남긴다. 자동 재전송은 없다.
 - 반응형: 1200px 미만에서 오른쪽 정보 콘솔은 대화상자로 열리고, 768px 미만에서 왼쪽 메뉴는 메뉴 버튼의 대화상자로 열린다(`window.matchMedia`, `WorkbenchPage.tsx`).
 - 도움말: `기본 사용방법` 대화상자(읽기 전용, 쓰기 요청 없음). 질문창 파일 첨부 버튼은 개발 빌드(`import.meta.env.DEV`)에만 있다.
@@ -195,4 +195,4 @@
 
 - 2026-11-13 사용자 후속 결정: 선택 부품·회로와 활동(대화)을 하나의 채팅 스크롤에 함께 표시한다. 상단 회로의34% 높이 제한·독립 세로 스크롤을 없앤다. 입력창 하단 고정·채팅 끝 이동·오른쪽 상세의 독립 스크롤은 유지한다. 거절/답변 본문은 대화에 한 번만 표시한다. AC: 같은 대화 기록 article에 제목·회로·답변이 포함되고, 끝 이동 시 입력창/사이드바/초안/첨부가 유지되며 거절 문구 중복0.
 
-- 2026-11-13 후속: 새 프로젝트·첨부 전송 차단 계약은 [netlist-conversation-versions.md](netlist-conversation-versions.md)의 빈 생성·버전별 대화 계약으로 대체한다. 대화 시작 전 예시 질문의 콘텐츠 폭은 제목·입력창과640px로 맞춘다. 검토 기록 목록은 제목 한 줄 말줄임을 유지하고 별도 버전 배지는 표시하지 않는다.
+- 2026-11-13 후속: 새 프로젝트·첨부 전송 차단 계약은 [netlist-conversation-versions.md](../specs/netlist-conversation-versions.md)의 빈 생성·버전별 대화 계약으로 대체한다. 대화 시작 전 예시 질문의 콘텐츠 폭은 제목·입력창과640px로 맞춘다. 검토 기록 목록은 제목 한 줄 말줄임을 유지하고 별도 버전 배지는 표시하지 않는다.

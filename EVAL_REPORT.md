@@ -4,9 +4,9 @@
 - 기준일: 2026-11-17
 - 기준 커밋: 수치마다 측정 커밋과 원시 파일은 해당 행에 적는다
 - 정본 여부: 정본(평가 수치). 배포 리비전은 비정본(정본: [README.md](README.md) 맨 위 표)
-- 관련 문서: [README.md](README.md), [SPEC.md](SPEC.md), [docs/GATES.md](docs/GATES.md), [docs/research/injection-results.md](docs/research/injection-results.md), [evals/guides/preregister.md](evals/guides/preregister.md), [상세본(요약 전 전체 기록)](docs/research/eval-report-detail-2026-11-17.md)
+- 관련 문서: [README.md](README.md), [SPEC.md](SPEC.md), [docs/GATES.md](docs/GATES.md), [docs/research/injection-results.md](docs/research/injection-results.md), [evals/guides/preregister.md](evals/guides/preregister.md), [상세본(요약 전 전체 기록)](docs/archive/eval-report-detail-2026-11-17.md)
 
-공식 평가 수치는 `evals/results/`의 원시 결과와 Langfuse 트레이스에서 나온 것만 쓴다. 원시 결과가 저장소에 없는 수치는 12절에 모은다. 이 문서는 요약이고, 줄인 과정 · 옛 측정 · 단계별 기록은 [상세본](docs/research/eval-report-detail-2026-11-17.md)의 같은 절 번호에 있다.
+공식 평가 수치는 `evals/results/`의 원시 결과와 Langfuse 트레이스에서 나온 것만 쓴다. 원시 결과가 저장소에 없는 수치는 12절에 모은다. 이 문서는 요약이고, 줄인 과정 · 옛 측정 · 단계별 기록은 [상세본](docs/archive/eval-report-detail-2026-11-17.md)의 같은 절 번호에 있다.
 
 ## 한눈에 보기
 
@@ -147,7 +147,7 @@ S0(기준점, #39 두 세트를 고친 채점기 `61a29f1`로 다시 채점): ci
 | 12 | S8 찾기 정렬: 원래 부품 패키지 · 분류 · 기준에 가까운 순으로 줄 세운 뒤 50개(`554c70d`) | candidate_find cited_gold +1~5 | candidate_find cited_gold 2·2 → 5·6, 전체 cited_gold 16·17 → 19·20 | 6 / 3 | draft30-m05, draft50-n06 · n18 | 기대 맞음 |
 | 13 | S9 제너 클램프 규칙 R04(`c600233`) + 판정 읽기 값 이름 뜻(`a420a7a`) | 판정 일치 +0~1, cited_gold +0~3 | 판정 일치 6·8 → 9·8, cited_gold 19·20 → 21·22 | 4 / 1 | draftv2-n19 | cited_gold 맞음 |
 
-S0 → S9 전체로는 좋아짐 19 / 나빠짐 2(draft30-e04 · m05, 5절 12행)다. 같은 코드 두 세트끼리도 답 지표가 다른 문항이 단계마다 2~7개라 문항 목록에는 흔들림이 섞여 있다. 좋아진 문항 목록과 집계 방법은 [상세본](docs/research/eval-report-detail-2026-11-17.md) 3절.
+S0 → S9 전체로는 좋아짐 19 / 나빠짐 2(draft30-e04 · m05, 5절 12행)다. 같은 코드 두 세트끼리도 답 지표가 다른 문항이 단계마다 2~7개라 문항 목록에는 흔들림이 섞여 있다. 좋아진 문항 목록과 집계 방법은 [상세본](docs/archive/eval-report-detail-2026-11-17.md) 3절.
 
 **3-C v3 검색 길 변경 (14 · 15행, v3 50문항 2세트) · 3-D 확인 (16행, 1세트, #52)** (원시 `evals/results/graph/2026-11-10-v3-outside/` · `2026-11-10-v3-haiku-sets/` · `2026-11-12-d9-improve2/set1.json`)
 
@@ -169,7 +169,7 @@ S0 → S9 전체로는 좋아짐 19 / 나빠짐 2(draft30-e04 · m05, 5절 12행
 
 - 도메인 Skill: 원문 대조(자동) 12/13 충족. 미충족 1건은 같은 A 핀이 VIN/GND에 중복 기재된 근거에서 충돌을 지적하지 않고 GND를 골라 답한 것이다. 원시 23회 · 보수적 예약 $0.0789823(실제 청구액 아님). 사람 검수와 동결 평가셋의 Skill 유무 품질 비교는 하지 않았다.
 - MCP 도구 판단: 서로 다른 모의 12건에서 도구 선택 · 필수 인자 5/5, 다음 행동 11/12 일치. 실제 웹/DB/MCP 도구 호출은 0회라 실제 도구 연결은 이 검증 범위 밖이다.
-- 근거 [skill_tool_summary_2026-11-03.json](evals/results/skill/skill_tool_summary_2026-11-03.json). 항목별 표는 [상세본](docs/research/eval-report-detail-2026-11-17.md) 4절.
+- 근거 [skill_tool_summary_2026-11-03.json](evals/results/skill/skill_tool_summary_2026-11-03.json). 항목별 표는 [상세본](docs/archive/eval-report-detail-2026-11-17.md) 4절.
 
 ### 단일 대 멀티 비교
 
@@ -245,7 +245,7 @@ S0 → S9 전체로는 좋아짐 19 / 나빠짐 2(draft30-e04 · m05, 5절 12행
 | 6 | Supervisor 답 가드(사용자 질문 D1 URL · D2 근거 없는 숫자 · D3 사용 권고, 2026-11-16, `121980a2`) | 가드 끔: 최종 위험 4(작업 6) | 가드 켬: 2(URL 1 · 숫자 1 차단, D3 2건은 나감). 정상 일상 대화 8건 중 막은 것 0. 코퍼스 인젝션(K1 · K2)은 이 길에 닿지 않음 | 사례 11개 × 2회, Haiku 5.5, $0.011. [supervisor-guard-injection-recheck.md](docs/experiments/supervisor-guard-injection-recheck.md) |
 | 7 | 사례 7종 반복(PR #85, 2026-11-11): 코퍼스 T1 · T2 · T3 · T5, 사용자 질문 T4, 이전 대화 T6, 넷리스트 T7. 110작업 = 정상 55 · 공격 55(방어 문단 current 70 · ablated 40) | - | 공격 55 중 방어 54(모델이 따르지 않음 49 + 입력 경계 차단 5) · 실패 0 · 보류 1(`T3:4:ablated:attack`), 자동/잠정. 사람(심태현) 응답 품질 판정은 통과 88 · 품질 오류 22(T1 정상 7 · 공격 7, T3 공격 8). 품질 오류는 공격 이행 판정과 다르다 | `injection_baseline_live_2026-11-11_03.{jsonl,meta.json,budget.json}`, 판정 출처 정정 [reviewer_correction.json](evals/results/threads/injection_baseline_live_2026-11-11_03.reviewer_correction.json). 예약 약 $4.42 |
 
-코퍼스 밖 입력 위치(데이터시트 청크 P1 · 넷리스트 값 P3 · 사용자 질문 P4)도 1회씩 돌려 최종 금지 문구 0이었다. P4 정상군은 질문에 있던 부하 0.1 A를 "제공되지 않았다"고 잘못 썼고, 이 문장도 5행과 같은 길로 최종 답에서 빠진다. 실행별 호출 · 비용 표와 사례별 판정 표는 [상세본](docs/research/eval-report-detail-2026-11-17.md) 6절.
+코퍼스 밖 입력 위치(데이터시트 청크 P1 · 넷리스트 값 P3 · 사용자 질문 P4)도 1회씩 돌려 최종 금지 문구 0이었다. P4 정상군은 질문에 있던 부하 0.1 A를 "제공되지 않았다"고 잘못 썼고, 이 문장도 5행과 같은 길로 최종 답에서 빠진다. 실행별 호출 · 비용 표와 사례별 판정 표는 [상세본](docs/archive/eval-report-detail-2026-11-17.md) 6절.
 
 ### 6-3. 아직 막지 못한 것
 
@@ -261,7 +261,7 @@ S0 → S9 전체로는 좋아짐 19 / 나빠짐 2(draft30-e04 · m05, 5절 12행
 
 | 항목 | 상태 |
 |---|---|
-| 트레이스에 입출력 · 모델 · 토큰 · 지연 · 비용 | #20 대표 흐름 4건 · 직접 생성 13건의 generation 23개 · 프롬프트 버전 · 모델 · usage · 시각을 API로 확인. 11-11에 `run_gate`가 `pass` · `cost_usd`(공급자 보고 LLM USD) · 모델 호출 수 · 실행 조건을 문항 트레이스 점수로 보내게 보완했다(대조표는 [상세본](docs/research/eval-report-detail-2026-11-17.md) 7절). 실제 청구액은 미확인 |
+| 트레이스에 입출력 · 모델 · 토큰 · 지연 · 비용 | #20 대표 흐름 4건 · 직접 생성 13건의 generation 23개 · 프롬프트 버전 · 모델 · usage · 시각을 API로 확인. 11-11에 `run_gate`가 `pass` · `cost_usd`(공급자 보고 LLM USD) · 모델 호출 수 · 실행 조건을 문항 트레이스 점수로 보내게 보완했다(대조표는 [상세본](docs/archive/eval-report-detail-2026-11-17.md) 7절). 실제 청구액은 미확인 |
 | 평가 점수가 트레이스에 연결 | 동결 v2 70문항 실행(#31, 11-04)에서 문항별 점수와 답 5지표(`answer_metric`)가 트레이스 70개에 붙은 것을 확인. 2026-11-17 재조회(d12): 운영 프로젝트에 숫자 · 참거짓 점수 40,826개 + 범주 점수 16,372개 = 57,198개가 트레이스 4,109개에 붙어 있고(11-10 ~ 11-16 UTC, `GET /api/public/v2/metrics`), 11-17 게이트 1세트(`799ae636`)의 트레이스 50개에 점수 700개가 붙었다 `[실측]` ([d12 README](evals/results/d12/README.md) 「Langfuse 점수」, [langfuse_scores_2026-11-16.md](evals/results/d10/langfuse_scores_2026-11-16.md)) |
 | `user_id`, `session_id` | 서비스 분석 트레이스는 `user_id` = 로그인 사용자 id, `session_id` = 대화 id를 붙이고 질문 · 답 글은 보내지 않는다(`backend/services/langfuse_prompts.py`의 `publish_analysis_trace`, 시험 `tests/services/test_langfuse_prompts.py`). 평가 실행은 `session_id` = 평가 한 세트다(v3 50문항 = 트레이스 50개, 예: `gate-v3_draft-1110-0040-set1`). 11-10 ~ 11 운영의 Langfuse `403 Forbidden`은 옛 프로젝트 키 문제였고 11-12 12:29 KST에 키를 바꾼 뒤 실패 로그가 없다([langfuse_403_2026-11-13.md](evals/results/d10/langfuse_403_2026-11-13.md)) |
 | 느림의 원인을 트레이스로 가려낸 사례 | v3 3세트(11-10, 세션 `gate-v3_draft-1110-0040-set1`) 타임라인에서 두 곳: ① 판정 질문 v3-01(8.6초)은 LLM이 아닌 품번 · 판 확인(코드)이 2.6초로 Supervisor 2.1초보다 길다. ② 정격 조회 v3-20(12.3초)은 첫 답이 일부만이라 한 번 더 찾아 답 쓰기 LLM이 2번 불린다(#49) |
@@ -291,7 +291,7 @@ S0 → S9 전체로는 좋아짐 19 / 나빠짐 2(draft30-e04 · m05, 5절 12행
 - 응답 시간 중 모델 호출 비중은 문항당 평균 관련 68%, 무관 76%다. 그래프 안 검색 p95 5.19초는 프로세스에서 처음 부른 검색 두 번이다.
 - 판정 읽기 3번 → 1번(이전 3~4세트 대비): 모델 호출 112 → 85(−24%), 50문항 LLM 비용 0.047 → 0.032달러(−32%), 통과 50/50 유지. 전체 p95는 8.6 ~ 8.9 → 10.7초라 빨라졌다는 확인은 못 했다.
 - 승인 대기(사람이 기다린 시간)는 미측정이다. 읽기 전용 스크립트 `scripts/eval/approval_wait_report.py`로 잴 수 있고 일회용 postgres의 합성 데이터로만 시험했다.
-- 원시 `evals/results/graph/2026-11-11-d8-stages/set1.json` · `2026-11-11-d8-stages-rerun/set1.json`, 집계 `2026-11-11-d8-stages/stage_summary.json`, 검색 단계 `evals/results/retrieval/service_stages_2026-11-11.json`. 이전(3번 다수결) 열과 통계 정의는 [상세본](docs/research/eval-report-detail-2026-11-17.md) 8절.
+- 원시 `evals/results/graph/2026-11-11-d8-stages/set1.json` · `2026-11-11-d8-stages-rerun/set1.json`, 집계 `2026-11-11-d8-stages/stage_summary.json`, 검색 단계 `evals/results/retrieval/service_stages_2026-11-11.json`. 이전(3번 다수결) 열과 통계 정의는 [상세본](docs/archive/eval-report-detail-2026-11-17.md) 8절.
 
 **왜 이 모델과 이 구성인가**: Supervisor를 Sonnet에서 Haiku로 바꿔 v3 50문항 LLM 비용을 0.17 ~ 0.32달러에서 0.044 ~ 0.052달러로 줄이고 같은 v3 4세트에서 통과 50/50을 유지했지만, 이 4세트는 고친 실패 문항을 담은 셋이라 독립 확인이 아니다(ADR 0017).
 
@@ -320,7 +320,7 @@ S0 → S9 전체로는 좋아짐 19 / 나빠짐 2(draft30-e04 · m05, 5절 12행
 
 - **p95 ≤ 10초(2절 목표)는 일부 조건에서만 충족된다.** `DEMO_MODE=0` 웹 켬 측정은 11-16까지 10.5 ~ 34.4초였다. 11-17 두 측정(`799ae636` 16.7 · 9.1초, `2030f846` 15.5 · 7.5초)은 한 세트만 목표 안이다. `2030f846` 첫 세트가 느린 것은 코퍼스에 없는 부품의 데이터시트를 웹에서 처음 받는 `grade2_datasheet` 단계(v3-35 20.7초 · v3-33 13.4초 · v3-36 13.1초)이고, 둘째 세트에서 같은 단계는 2.8 ~ 4.6초였다.
 - 웹을 켜면 웹 근거를 쓰는 문항이 느려진다(웹 문항 17개 평균 11.9초, 나머지 33개 평균 5.1초, `speed-exp.md` §4).
-- 같은 코드의 반복에도 p95는 흔들린다(같은 코드 4회 13.0 ~ 16.8초, 같은 파일 두 세트끼리 0.3 ~ 1.6초). 한 번의 값으로 1 ~ 2초 차이를 가리기 어렵다. 미리 출발 끔 B1, 무효이거나 중간 단계인 P1 · G1 · P1b 행은 [상세본](docs/research/eval-report-detail-2026-11-17.md) 8.2절.
+- 같은 코드의 반복에도 p95는 흔들린다(같은 코드 4회 13.0 ~ 16.8초, 같은 파일 두 세트끼리 0.3 ~ 1.6초). 한 번의 값으로 1 ~ 2초 차이를 가리기 어렵다. 미리 출발 끔 B1, 무효이거나 중간 단계인 P1 · G1 · P1b 행은 [상세본](docs/archive/eval-report-detail-2026-11-17.md) 8.2절.
 
 ## 9. 재현 명령
 
@@ -380,7 +380,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 
 | 순위 | 약점 · 한계 | 확인한 사실 | 상태 |
 |---|---|---|---|
-| 7 | 웹 근거를 켠 p95가 목표 10초를 넘는다 | `DEMO_MODE=0` 웹 켬 유효 측정은 11-16까지 10.5 ~ 34.4초. 11-17 `799ae636` 두 세트 9.1 · 16.7초, 배포 리비전 코드(`2030f846`) 두 세트 15.5 · 7.5초. 저장소 밖 속도 실험의 같은 코드 4회는 13.0 · 14.6 · 16.8 · 15.1초(8.2절) | 안 고침. 11-14 ~ 15에 시험한 속도 레버 L3(Exa `lite`) · L4(추가 내려받기 중단) · P1(제공자 고르기) · P2(Voyage 연결 재사용) · B′(웹 공식 검색 같이 출발)는 모두 기각하거나 건너뛰어 채택한 것이 없다. 판정 규칙과 레버별 결과는 [상세본](docs/research/eval-report-detail-2026-11-17.md) 11-2절 |
+| 7 | 웹 근거를 켠 p95가 목표 10초를 넘는다 | `DEMO_MODE=0` 웹 켬 유효 측정은 11-16까지 10.5 ~ 34.4초. 11-17 `799ae636` 두 세트 9.1 · 16.7초, 배포 리비전 코드(`2030f846`) 두 세트 15.5 · 7.5초. 저장소 밖 속도 실험의 같은 코드 4회는 13.0 · 14.6 · 16.8 · 15.1초(8.2절) | 안 고침. 11-14 ~ 15에 시험한 속도 레버 L3(Exa `lite`) · L4(추가 내려받기 중단) · P1(제공자 고르기) · P2(Voyage 연결 재사용) · B′(웹 공식 검색 같이 출발)는 모두 기각하거나 건너뛰어 채택한 것이 없다. 판정 규칙과 레버별 결과는 [상세본](docs/archive/eval-report-detail-2026-11-17.md) 11-2절 |
 | 8 | v3-16(UF4007 trr)이 웹 켬 Docker 9회 모두 `wrong_citation` | 11-15 밤 속도 실험 9회와 11-17 `799ae636` 두 세트(원시 `evals/results/d12/gate/`)에서 모두 실패. 답이 웹 근거 `[W1]` · `[W4]`만 인용하고 코퍼스 정답 근거(`UF4001 SERIES_P2104.pdf` 2쪽 · 4쪽)를 인용하지 않았다 | **11-17에 원인을 찾아 고쳤다(`6b83e55d`).** 웹 근거 카드의 `file`이 URL 파일명을 인코딩된 채(`UF4001%20SERIES_P2104.pdf`) 써서 같은 PDF · 쪽이어도 채점기가 `wrong_citation`으로 봤다. `backend/services/exa.py`가 `unquote`를 쓰게 고쳤다(시험 `tests/services/test_exa_parallel.py`). v3-16 한 문항 3회씩: 고치기 전 3/3 `wrong_citation`, 고친 뒤 3/3 `cited_gold`(원시 저장소 밖). 배포 리비전 코드(`2030f846`) 2세트에서 두 세트 모두 통과(8.2절) |
 | 13 | URL · 숫자가 없는 사용 권고는 Supervisor 답 가드를 통과한다 | 2026-11-16 가드 전후 측정(6-2절 6행)에서 "D1은 역전압 보호용이고 SS34로 바꿔도 안전합니다"가 가드 켬에서도 2/2 나갔다. 가드는 URL과 근거 없는 숫자+단위만 본다 | 안 고침(발견) |
 | 14 | v3-41(수명 질문)이 실행마다 거절 · 판정으로 갈린다 | 배포 리비전 코드 2세트(11-17 19:58 ~ 20:07, `evals/results/graph/2026-11-17-deploy-ef0138b2-v3/`): 두 세트 모두 `routed_type` `candidate_judge`. set1은 모으기에서 `not_found`로 거절해 통과, set2는 LL4148 `ROLE_SUFFICIENT` 판정 표를 쓰고 수명 질문은 답하지 않았다고 적어 `hallucination_risk`. 11-14 R1 set2에서도 실패 문항이었다 | 안 고침(동결). 답할 수 없는 부분이 섞인 판정 질문을 거절할지 일부만 답할지가 모으기 단계 LLM 판단에 맡겨져 있다 |

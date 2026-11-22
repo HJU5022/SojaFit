@@ -4,7 +4,7 @@
 - 기준일: 2026-11-16 ("로그인 실패 안내" 절만 새 화면 `frontend/src/Auth.tsx`와 대조해 고쳤다. 나머지는 2026-11-12)
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 4절 "인증 · 가입"과 8.6절). 이 문서는 구현 방식과 화면 동작의 상세
-- 관련 문서: [google-admin-login.md](google-admin-login.md), [google-user-login.md](google-user-login.md), [api-error-contract.md](api-error-contract.md), [frontend-screen-redesign.md](frontend-screen-redesign.md), [user-thread-memory.md](user-thread-memory.md)
+- 관련 문서: [google-admin-login.md](google-admin-login.md), [google-user-login.md](google-user-login.md), [api-error-contract.md](api-error-contract.md), [frontend-screen-redesign.md](../archive/frontend-screen-redesign.md), [user-thread-memory.md](user-thread-memory.md)
 - 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why

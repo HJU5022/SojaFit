@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12(기능 계약), 화면 부분 2026-11-16
 - 기준 커밋: 6707002(기능 계약), `76fadcb4`(화면 부분)
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 2절 흐름, 4절 API 표, 8.4절 견적 승인). 화면이 쓰는 기능 계약의 상세
-- 관련 문서: [frontend/FRONTEND.md](../../frontend/FRONTEND.md) · [frontend/src/SRC.md](../../frontend/src/SRC.md)(현재 화면 구조), [frontend-screen-redesign.md](frontend-screen-redesign.md)(11-16 교체 전 화면, 이력), [project-conversation-navigation.md](project-conversation-navigation.md), [api-error-contract.md](api-error-contract.md), [circuit-context-diagram.md](circuit-context-diagram.md), [login-auth.md](login-auth.md)
+- 관련 문서: [frontend/FRONTEND.md](../../frontend/FRONTEND.md) · [frontend/src/SRC.md](../../frontend/src/SRC.md)(현재 화면 구조), [frontend-screen-redesign.md](../archive/frontend-screen-redesign.md)(11-16 교체 전 화면, 이력), [project-conversation-navigation.md](project-conversation-navigation.md), [api-error-contract.md](api-error-contract.md), [circuit-context-diagram.md](circuit-context-diagram.md), [login-auth.md](login-auth.md)
 
 ## Why
 

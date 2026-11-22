@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 4절 "Google 가입 · 로그인"과 8.6절). 이 문서는 일반 사용자 가입·기존 계정 연결의 상세
-- 관련 문서: [google-admin-login.md](google-admin-login.md)(OIDC 검증, 관리자 연결 승인), [login-auth.md](login-auth.md), [frontend-screen-redesign.md](frontend-screen-redesign.md)
+- 관련 문서: [google-admin-login.md](google-admin-login.md)(OIDC 검증, 관리자 연결 승인), [login-auth.md](login-auth.md), [frontend-screen-redesign.md](../archive/frontend-screen-redesign.md)
 - 화면 열 주의: 2026-11-16 새 화면 교체로 이 문서가 가리키던 옛 화면 파일(`pages/` · `components/` · `hooks/` · `api/`)과 그 시험은 없다. 새 화면의 대응 파일은 [frontend/src/SRC.md](../../frontend/src/SRC.md), 새 화면 시험은 [frontend/tests/TESTS.md](../../frontend/tests/TESTS.md). 서버 쪽 계약의 정본은 [SPEC.md](../../SPEC.md)다
 
 ## Why

@@ -3,7 +3,7 @@
 - 상태: 현행
 - 기준일: 2026-11-17
 - 정본 여부: 정본(배포 주소 · 배포 리비전 · 실행 방법). 기능은 [SPEC.md](SPEC.md), 평가 수치는 [EVAL_REPORT.md](EVAL_REPORT.md), 게이트 증거는 [docs/GATES.md](docs/GATES.md)가 정본
-- 상세본: 이 문서는 결과 요약이다. 요약 전 전체 기록(배포 리비전 이력 · 조건별 측정 표 · 오분류 표)은 [docs/research/readme-detail-2026-11-17.md](docs/research/readme-detail-2026-11-17.md)
+- 상세본: 이 문서는 결과 요약이다. 요약 전 전체 기록(배포 리비전 이력 · 조건별 측정 표 · 오분류 표)은 [docs/archive/readme-detail-2026-11-17.md](docs/archive/readme-detail-2026-11-17.md)
 
 **회로를 읽고 대체 조건을 정해, 후보 부품마다 데이터시트의 쪽·표·행을 근거로 판정하는 RAG 에이전트.** 입력은 KiCad 넷리스트이고, 첫 지원 범위는 소형 MCU 회로의 다이오드다.
 
@@ -220,7 +220,7 @@ graph TD;
 - 같은 코드의 두 세트끼리도 p95가 0.3 ~ 1.6초 다르다. 한 번의 값으로 1 ~ 2초 차이를 가리기 어렵다.
 - 승인 대기(사람이 기다린 시간)는 재지 않았다.
 
-조건별 전체 표는 [상세본](docs/research/readme-detail-2026-11-17.md) 4절, 개선 전후 비교와 실패 분석은 [EVAL_REPORT.md](EVAL_REPORT.md).
+조건별 전체 표는 [상세본](docs/archive/readme-detail-2026-11-17.md) 4절, 개선 전후 비교와 실패 분석은 [EVAL_REPORT.md](EVAL_REPORT.md).
 
 ---
 
@@ -388,4 +388,4 @@ SojaFit/
 | 평가셋을 어떻게 만들고 동결했나 | [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md) |
 | 왜 그렇게 정했나 | [`docs/adr/ADR.md`](docs/adr/ADR.md) |
 | 에이전트 · 협업 규칙 | [`AGENTS.md`](AGENTS.md) |
-| 요약 전 README 전체 기록 | [`docs/research/readme-detail-2026-11-17.md`](docs/research/readme-detail-2026-11-17.md) |
+| 요약 전 README 전체 기록 | [`docs/archive/readme-detail-2026-11-17.md`](docs/archive/readme-detail-2026-11-17.md) |

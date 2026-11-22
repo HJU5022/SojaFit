@@ -3,7 +3,7 @@
 ## 역할
 
 - 이 폴더: 동결 평가셋과 동결 기록을 루트에 두고, 실행 코드·문서·표본·초안·결과를 하위 폴더로 나눈다. 루트 파일의 위치와 이름은 과정 안내와 동결 시험이 가정하므로 옮기지 않는다.
-- 넣는 것: 동결 평가셋(`dataset_v1.jsonl`, `dataset_v2.jsonl`, `dataset_v3.jsonl`)과 동결 기록(`FROZEN.json`). 코퍼스가 바뀔 때 만드는 `exclusions.json`도 루트에 둔다(지금은 없음, 규칙은 [dataset-guide.md](guides/dataset-guide.md)).
+- 넣는 것: 동결 평가셋(`dataset_v1.jsonl`, `dataset_v2.jsonl`, `dataset_v3.jsonl`)과 동결 기록(`FROZEN.json`). 동결 뒤 지표에서만 뺄 문항을 적는 `exclusions.json`도 루트에 둔다(지금 0건, 규칙은 [dataset-guide.md](guides/dataset-guide.md)).
 - 넣지 않는 것: 실행기·동결 스크립트(`evals/runners/`), 명세·사전 등록(`evals/guides/`), 측정 입력(`evals/inputs/`), 프록시 표본(`evals/samples/`), 동결 전 초안·검수 기록(`evals/drafts/`), 지표 해석과 개선 전후 비교(루트 `EVAL_REPORT.md`), 단위 테스트(`tests/`), 평가가 아닌 측정 스크립트와 그 원시 결과(`scripts/`, `scripts/results/`).
 - 기준 평가셋: v3([ADR 0015](../docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md)). v1·v2는 이전 측정의 기록으로 둔다.
 - 평가셋 필드·정답 기준·동결·채점 방식의 정본: [dataset-guide.md](guides/dataset-guide.md). 평가 수치의 정본: 루트 `EVAL_REPORT.md`. 인젝션 실측 결과의 정본: [injection-results.md](../docs/research/injection-results.md).
@@ -18,6 +18,7 @@
 | `dataset_v2.jsonl` | 동결 평가셋 | v2. v1 줄에 `question_type`을 더하고 후보 찾기 20건(`drafts/sets/draft_v2add_20.jsonl`의 고정 키)을 더함 |
 | `dataset_v3.jsonl` | 동결 평가셋 | v3(기준 평가셋). 문항에 판정자 필드 `judges`가 있음(역할은 [v3_judging_record.md](drafts/reviews/v3_judging_record.md)). 키 목록은 [dataset-guide.md](guides/dataset-guide.md) |
 | `FROZEN.json` | 동결 기록 | 파일별 sha256·건수·관련/비관련 건수·동결일. 동결 여부는 이 파일이 정함 |
+| `exclusions.json` | 제외 목록 | 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유. 지금 `{"excluded": []}`(0건). `evals/runners/score_answer.py`가 읽고, 동결 해시 대상이 아님 |
 | `runners/` | 실행 코드 | 평가 실행기·동결 스크립트. [RUNNERS.md](runners/RUNNERS.md) |
 | `docker/` | 컨테이너 정의 | 임베딩 실험용 이미지. [DOCKER.md](docker/DOCKER.md) |
 | `inputs/` | 측정 입력 | 페이지 단위 qrels, 고정 재작성 질의, 채점기 입력. [INPUTS.md](inputs/INPUTS.md) |
