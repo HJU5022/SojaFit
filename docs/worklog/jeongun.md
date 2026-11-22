@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-22 개인 사본 저장소 문서 정리
+- 조장 지시: 11-18 읽기 전용 점검 목록(128개)을 한 번에 고치고 개인 사본(HJU5022/SojaFit)에만 올린다. 조 저장소(aihuman-7th/proj3-b)에는 올리지 않는다 [결정 11-22].
+- 바꾼 것 [실측]: 옛 문서 3개를 `docs/archive/`로 옮김(요약 전 README · EVAL_REPORT 전체본, 교체 전 화면 설계), 빈 `evals/exclusions.json`(`{"excluded": []}`) 추가. README · EVAL_REPORT의 측정값 표현(로컬 실행기 · 채점 기준 커밋 뒤 · 독립 확인 아님 · 채점 기준 차이), `DEMO_MODE=1` 회차(`2026-11-13-citecheck-v3`)를 근거에서 뺌, v3 출제 · 정답 초안과 재동결 서술, 비교 표 3개 · 화면 3장. GATES의 리비전 일지를 `<details>`로 접음. SPEC 이력 서술 정리 · 멀티 그래프 노드 표 · 거절 사유 표 · 한다체. AGENTS 한 장(번호 유지, 지킬 것 8 ↔ 팀 규칙 3 충돌 해소). SOJAFIT 트리 설명의 날짜 · 이슈 번호와 중복 문단. ADR 상태 줄 · 현재 위치. 제출물(ai_tools_log 한 장 요약, demo_script 최종 영상 기준, DELIVERABLES 닫힌 항목). TOPIC 변경 이력 표. 작업 기록 속 로컬 사용자 경로를 `<home>`으로 가림.
+- 고치지 않은 것: 동결 평가셋 · `FROZEN.json` · `evals/results/**` 원시(경로가 틀린 재현 문서 `HOW.md` · `TALLY.md` 포함), pptx · pdf · mp4와 그것을 옮긴 `PRESENTATION.md`, 조원 포트폴리오 · 작업 기록 본문, ADR 결정 이유 본문, 실패 분석 본문.
+- 확인 [실측]: `tests/repo` · README 그래프 · 동결 해시 시험 통과, `freeze.py --check` "바뀐 파일 없음", 저장소 안 마크다운 링크 · 앵커 깨짐 0(외부 원본 README 2개 제외). 전체 pytest(macOS) 3,059 통과 · 13 실패 · 203 건너뜀이고, 실패 13개(`tests/projects/test_schematic_render.py` SVG 변환)는 정리 전 `main`에서 돈 결과와 목록이 같다.
+- 확인 못 한 것: GitHub에서의 렌더(`<details>` · 표 · 그림), 외부 http 링크.
+- 다음 할 일(사람만): 변이 2 ~ 3건 직접 재현 기록, `ai_tools_log`의 직접 고친 곳(커밋), ADR 임베딩 · 청킹 이유와 실패 분석 1인칭 문장, 탈퇴 조원 계정 링크 동의, Langfuse 캡처 가림 판단.
+
 ## 2026-11-17 밤 README를 결과 요약으로 다시 씀
 - 조장 지적(23:35): 대표 README가 긴 서술문이라 읽기 어렵고, 3절 그래프가 GitHub 다크 모드에서 노드 글자가 보이지 않는다. 요약해서 결과만 적는다.
 - 고친 것 [실측]: `README.md`를 절 번호(1 ~ 8)와 앵커는 그대로 두고 표와 짧은 줄로 다시 썼다(약 38,400자 → 16,500자). 첫 문장은 AGENTS.md 프로젝트 개요의 표현(회로를 읽고 대체 조건을 정해 후보 부품을 판정, 첫 지원 범위는 소형 MCU 회로의 다이오드)에 맞췄다. 요약 전 원문은 `docs/research/readme-detail-2026-11-17.md`로 옮겼다(상대 링크만 고침, EVAL_REPORT 상세본과 같은 방식). `SOJAFIT.md` 트리와 `docs/research/RESEARCH.md`에 한 줄씩 넣었다.
