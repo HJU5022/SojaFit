@@ -29,11 +29,11 @@ curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.ru
 
 | 지표 | 값 | 조건 |
 |---|---|---|
-| 평가셋 통과 | 동결 v3 50문항(관련 25 · 무관 25) **50/50 · 49/50** | 배포 리비전 코드 · 운영 설정 2세트(11-17) |
+| 평가셋 통과 | 동결 v3 50문항(관련 25 · 무관 25) **50/50 · 49/50** | `2030f846`(배포 리비전과 백엔드 같음)을 운영 설정으로 로컬 실행기 2세트(11-17, 채점 기준 커밋 뒤). `DEMO_MODE=0` 기록이 있는 v3 측정 전체는 47 ~ 50/50 |
 | 지어낸 답 | 0건 · 1건(v3-41) | 위와 같음 |
 | 검색 개선 전후 | Page Recall@5 **0.579 → 0.908**(확인용 38문항, 14승 1패, 부호 검정 p 0.001) | 같은 문항 · 같은 실행기 |
-| 응답 시간 | p50 5.2 · 4.4초, p95 15.5 · 7.5초 | 위 v3 2세트 |
-| 단계별 응답 시간(p50) | Supervisor 1.52 · 회로 읽기 2.73 · 검색 1.22 · RAG 답 쓰기 2.27 · 부품 판정 1.60초 | 11-11 웹 끔 측정 |
+| 응답 시간 | p50 5.2 · 4.4초, p95 15.5 · 7.5초(목표 10초는 둘째 세트만 충족) | 위 v3 2세트 |
+| 단계별 응답 시간(p50) | Supervisor 1.52 · 회로 읽기 2.73 · 검색 1.22 · RAG 답 쓰기 2.27 · 부품 판정 1.60초 | 11-11 단계 측정([EVAL_REPORT 8장](EVAL_REPORT.md#8-비용과-응답-시간-2026-11-11-코드로-단계별-실측)) |
 | 요청당 비용 | 문항당 LLM $0.00064 + 리랭크 $0.00013. 50문항 한 세트 LLM $0.037 · $0.032 | 11-11 단계 측정 · 11-17 v3 2세트 |
 
 근거와 원시 결과는 [4절](#4-지표)과 [EVAL_REPORT.md](EVAL_REPORT.md).
@@ -55,9 +55,9 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 | 근거 | 값 |
 |---|---|
 | 공개 ATtiny85 계열 KiCad 회로의 다이오드 554개 | 1N4148(100V) 53개 · 1N4007(1000V) 11개. 5V 회로에 과한 정격이 그대로 이어진다 |
-| 같은 v3 50문항, SojaFit 배포 리비전 코드 | 50/50 · 49/50 |
-| 같은 v3 50문항, 범용 코딩 에이전트(Codex) | 45/50. 한계: 정답 초안을 같은 도구가 썼고 답의 원본 로그가 없다 — [TALLY](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) |
-| 같은 v3 50문항, GPT-6.1 Terra + 웹 검색(11-16) | 41/50. 범위 밖 6문항에서 대상이 아닌 부품을 추천했다 — [TALLY](evals/results/graph/2026-11-16-terra-v3-50-isolated-web/TALLY.md) |
+| 같은 v3 50문항, SojaFit(위 핵심 지표와 같은 실행) | 50/50 · 49/50. 쪽 인용이 정답 근거와 맞는지까지 채점 |
+| 같은 v3 50문항, 범용 코딩 에이전트(Codex) | 45/50. 결론 방향과 핵심 값만 채점(쪽 인용 없음). 한계: 정답 초안을 같은 도구가 썼고 답의 원본 로그가 없다 — [TALLY](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) |
+| 같은 v3 50문항, GPT-6.1 Terra + 웹 검색(11-16) | 41/50. 1회 실행, 입력 · 웹 조건이 Codex와 다르다. 범위 밖 6문항에서 대상이 아닌 부품을 추천했다 — [TALLY](evals/results/graph/2026-11-16-terra-v3-50-isolated-web/TALLY.md) |
 
 조사 출처는 [`docs/TOPIC.md`](docs/TOPIC.md).
 
@@ -83,6 +83,8 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 | 문서로 확인 안 됨 | 필요한 값이 문서에 없거나 시험 조건이 다름 |
 
 같은 동작은 보장하지 않으며, 판정 답마다 그 사실을 밝힌다. 기준의 정본은 [`SPEC.md`](SPEC.md) 3절.
+
+![운영 화면: 1N4007G 후보를 역할상 충분으로 판정하고 조건별 필요 값 · 후보 값 · 결과를 보이는 판정 근거 패널](frontend/public/assets/product/condition-evidence.png)
 
 ---
 
@@ -155,7 +157,7 @@ graph TD;
 | 구분 | 노드 | 모델 | 하는 일 |
 |---|---|---|---|
 | LLM | `Supervisor` | `anthropic/claude-haiku-5.5` | 질문 종류 10가지, 거절 여부, 할 일 최대 3개와 지시서 계획 |
-| LLM | `RAG 에이전트` | Haiku | 검색 → 근거 채점 + 답 쓰기 → 인용 검사(코드) |
+| LLM | `RAG 에이전트` | 답 쓰기 Haiku · 근거 채점 `openai/gpt-6-luna` | 검색 → 근거 채점 → 답 쓰기 → 인용 검사(코드) |
 | LLM | `회로 읽기`(Spec 에이전트) | Haiku | 넷리스트에서 부품의 역할과 조건을 읽는다 |
 | LLM | `종합` | `anthropic/claude-sonnet-5.5` | 할 일이 2개 이상이고 코드로 이을 수 없을 때만 |
 | 코드, 드물게 LLM | `대체 부품 판정`(Spec 에이전트) | 코드가 못 읽은 카드만 Haiku | 카드 값 비교와 판정 5종 |
@@ -174,12 +176,12 @@ graph TD;
 | 사람에게 묻기 | 판정에 필요한 회로 값이 없으면 interrupt로 한 번 묻고, PostgreSQL 체크포인트에서 같은 대화로 이어 간다 | SPEC 2절 |
 | 상한 | 재계획 1번 · 할 일 3개 · Supervisor LLM 4번 · 서브에이전트 실행 6번 · 문서 할 일마다 검색 2번 | `backend/multi_agent/contracts.py` `MAX_*` |
 | 거절 | 코퍼스에 없는 품번(`part_missing`) · 지원하지 않는 제조사(`maker_missing`) · 범위 밖 질문은 판정하지 않고 사유별 고정 문구로 거절한다 | SPEC 2절 · 8.3 |
-| Supervisor 모델 | Sonnet이 세트 LLM 비용의 80%여서 Haiku로 바꿨다. Haiku 구성 v3 4세트 50/50, p95 8.6 ~ 8.9초, 50문항 $0.044 ~ 0.052 | [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md) · [ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), EVAL_REPORT 3-C |
+| Supervisor 모델 | 비용을 줄이려고 Sonnet에서 Haiku로 바꿨다(Sonnet 구성 세트당 $0.17 ~ 0.32는 원시 미보관). Haiku 구성 v3 4세트 50/50, p95 8.6 ~ 8.9초, 50문항 $0.044 ~ 0.052. 이 4세트는 고친 실패 문항을 담은 셋이라 독립 확인이 아니다 | [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md) · [ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), EVAL_REPORT 3-C |
 
 | 구성 | 지금 |
 |---|---|
 | 그래프 | 서비스는 멀티 그래프. 단일 그래프(`backend/graph/`)는 비교 기준선 |
-| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`(OpenRouter) |
+| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`, 근거 채점 `openai/gpt-6-luna`(OpenRouter) |
 | 임베딩 · 리랭크 | `voyage-4-large` 1024차원 + Voyage `rerank-3` |
 | 관측 | Langfuse: 평가 실행마다 단계별 입력 · 출력, 토큰 · 비용, 점수. 서비스는 단계별 시간만 보낸다 |
 | 로그인 | 이메일 · 비밀번호, 이메일 인증 가입, Google 로그인, DB 세션, 실패 시 15분 잠금 |
@@ -198,14 +200,14 @@ graph TD;
 
 | 측정 | 통과 | p50 · p95(초) | 세트당 LLM 비용 | 조건 | 원시 결과 |
 |---|---|---|---|---|---|
-| 배포 리비전 코드 2세트 | **50/50 · 49/50** | 5.2 · 15.5 / 4.4 · 7.5 | $0.037 · $0.032 | 11-17 저녁, `2030f846`, 운영 설정(`DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`) | [set1](evals/results/graph/2026-11-17-deploy-ef0138b2-v3/set1.json) · [set2](evals/results/graph/2026-11-17-deploy-ef0138b2-v3/set2.json) · [report](evals/results/graph/2026-11-17-deploy-ef0138b2-v3/report.txt) |
+| `2030f846` 로컬 실행기 2세트(배포 리비전과 백엔드 같음) | **50/50 · 49/50** | 5.2 · 15.5 / 4.4 · 7.5 | $0.037 · $0.032 | 11-17 저녁, `2030f846`, 운영 설정(`DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1`) | [set1](evals/results/graph/2026-11-17-deploy-ef0138b2-v3/set1.json) · [set2](evals/results/graph/2026-11-17-deploy-ef0138b2-v3/set2.json) · [report](evals/results/graph/2026-11-17-deploy-ef0138b2-v3/report.txt) |
 | 새벽 재측정 2세트 | 49/50 · 49/50 | 5.5 · 16.7 / 4.8 · 9.1 | $0.036 | 11-17 새벽, `799ae636`, 같은 설정 | [d12 README](evals/results/d12/README.md) |
-| Haiku 구성 4세트 | 4세트 모두 50/50(무관 거절 25/25, 지어낸 답 0) | p95 8.6 ~ 8.9 | $0.044 ~ 0.052 | 11-10, `93a497c`, `DEMO_MODE` 미기록 | `evals/results/graph/2026-11-10-v3-haiku-sets/` |
-| 단일 그래프(비교) | 48/50 | — | — | 11-12, 1세트 | `evals/results/graph/2026-11-12-d9-v3-single/set1.json` |
+| Haiku 구성 4세트 | 4세트 모두 50/50(무관 거절 25/25, 지어낸 답 0) | p95 8.6 ~ 8.9 | $0.044 ~ 0.052 | 11-10, `93a497c`, `DEMO_MODE` 미기록. 고친 실패 문항을 담은 셋이라 독립 확인 아님 | `evals/results/graph/2026-11-10-v3-haiku-sets/` |
+| 단일 그래프(비교) | 48/50 | — | — | 11-12, 1세트. 멀티와 2문항 차이 · 한 세트씩이라 우열로 쓰지 않음 | `evals/results/graph/2026-11-12-d9-v3-single/set1.json` |
 
 | 실패 문항 | 측정 | 내용 |
 |---|---|---|
-| v3-41 `hallucination_risk` | 배포 리비전 코드 2세트째 | 답할 수 없는 수명 질문에 거절하지 않고 역할 판정을 붙였다. 1세트에서는 거절해 통과 |
+| v3-41 `hallucination_risk` | `2030f846` 2세트째 | 답할 수 없는 수명 질문에 거절하지 않고 역할 판정을 붙였다. 1세트에서는 거절해 통과 |
 | v3-16 `wrong_citation` | 새벽 재측정 두 세트 | 지어낸 답은 0 |
 
 | 검색 | 값 | 조건 |
@@ -215,7 +217,8 @@ graph TD;
 
 한계:
 
-- p95 ≤ 10초(SPEC 3절 목표)는 일부만 충족한다. 11-17 두 측정 모두 둘째 세트(9.1 · 7.5초)만 10초 안이고 첫 세트는 16.7 · 15.5초다. 첫 세트가 느린 원인은 웹에서 데이터시트를 처음 받는 문항(13 ~ 21초, 다시 쓰면 3 ~ 5초)이다.
+- p95 ≤ 10초(SPEC 1절 목표)는 일부만 충족한다. 11-17 두 측정 모두 둘째 세트(9.1 · 7.5초)만 10초 안이고 첫 세트는 16.7 · 15.5초다. 첫 세트에서 느린 문항은 웹에서 데이터시트를 처음 받는 문항(13 ~ 21초, 둘째 세트에서는 3 ~ 5초)이었다. 두 번만 재서 원인으로 단정하지는 않는다.
+- v3는 실패 문항을 보고 코드를 고친 뒤 다시 잰 평가셋이라, 위 통과 수는 독립 확인이 아니다. 동결하지 않은 판정 연습 44문항은 단일 40/44 · 멀티 41/44다([EVAL_REPORT 4절](EVAL_REPORT.md#4-에이전트-단일-대-멀티-승인과-재개-g4)).
 - 11-14 이전 값은 결과 파일에 `DEMO_MODE`가 없어 같은 조건이라고 말할 수 없다. `DEMO_MODE=0`이 기록된 v3 측정의 통과 수는 47 ~ 50/50이다.
 - 같은 코드의 두 세트끼리도 p95가 0.3 ~ 1.6초 다르다. 한 번의 값으로 1 ~ 2초 차이를 가리기 어렵다.
 - 승인 대기(사람이 기다린 시간)는 재지 않았다.
@@ -282,7 +285,7 @@ uv run python evals/runners/freeze.py --check      # 동결 평가셋 해시 검
 |---|---|---|
 | 전체 pytest, Linux 컨테이너(`83960166`) | 2,997 통과 · 0 실패 · 205 건너뜀, 74.4초 | [기록](evals/results/d12/checks/pytest_full_linux_after_hang_fix.txt) |
 | 전체 pytest, macOS 호스트 | 2,982 통과 · 15 실패 · 205 건너뜀 | [기록](evals/results/d12/checks/pytest_full_macos_after_hang_fix.txt) |
-| `freeze.py --check` | 동결 이후 바뀐 파일 없음 | [기록](evals/results/d12/checks/freeze_check.txt) |
+| `freeze.py --check` | 동결 이후 바뀐 파일 없음(현재 해시 기준. v3는 11-12에 판정자 칸만 더해 한 번 재동결했다, [evals/EVALS.md](evals/EVALS.md)) | [기록](evals/results/d12/checks/freeze_check.txt) |
 | gitleaks | 이력 1,250 커밋, 발견 0 | [d12 README](evals/results/d12/README.md) |
 | GitHub Actions | 조직 결제 한도로 11-09(PR #73)부터 시작되지 않아 로컬에서 대신 돌렸다. Actions에서의 실행 결과는 확인하지 못했다 | [GATES G7](docs/GATES.md) |
 
@@ -363,7 +366,7 @@ SojaFit/
 | 외부 공개 회로도 | 저장소에 넣지 않고, 화면이 출처 · 라이선스 · 원본 링크를 그림 옆에 보인다 | 저장소마다 다르다 | [`PROJECTS.md`](backend/projects/PROJECTS.md) |
 | KiCad 10(`kicad-cli`) | 별도 `renderer` 이미지에서 고치지 않고 실행 파일로 부른다 | GPL-3.0-or-later. 이미지를 공개 배포할 때의 의무는 검토하지 않았다 | [`Dockerfile`](Dockerfile) |
 
-- 이 저장소 자체의 라이선스는 정하지 않았다(`LICENSE` 없음). 팀 비공개 저장소이고 과제 제출용이다.
+- 이 저장소 자체의 라이선스는 정하지 않았다(`LICENSE` 없음). 과제 제출용 조 저장소(비공개)의 개인 사본이다.
 - Python · npm 의존성의 라이선스는 `uv.lock` · `frontend/package-lock.json`에 있고 하나씩 대조하지 않았다.
 
 ### 안전
