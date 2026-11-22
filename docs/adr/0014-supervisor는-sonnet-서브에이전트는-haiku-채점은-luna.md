@@ -1,7 +1,8 @@
 # 0014 Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna로 노드별 모델을 나눈다
 
 - 날짜: 2026-11-05
-- 상태: 채택
+- 상태: 채택, 일부 대체됨 → [0017](0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md)
+- 현재: Supervisor도 `anthropic/claude-haiku-5.5`이고, 종합 `synth`만 `anthropic/claude-sonnet-5.5`, 채점 `grade`는 `openai/gpt-6-luna`다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`).
 - 근거: 조장 결정(11-05), 사전 등록 #33(Supervisor 후보 6종 3회 비교, 오세창), #37 · #38 측정
 - 일부 바뀜(11-10): "Supervisor는 Sonnet"은 Haiku로 바뀌었다(종합 `synth`는 Sonnet 그대로) → [ADR 0017](0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md).
 - 바꾸는 것: [ADR 0010](0010-그래프-llm은-haiku로-시작한다.md)의 "LLM 노드는 Haiku 하나로 시작"을 노드별 모델로 바꾼다. 0010의 "채점기는 생성과 다른 회사 모델" 원칙은 그대로 둔다.

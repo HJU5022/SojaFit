@@ -1,16 +1,13 @@
 # SojaFit
 
 - 상태: 현행
-- 기준일: 2026-11-16 (트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사한다. 이름 규칙 · 안내 글은 11-12 이후 줄마다 대조하지 않았다. 11-17에 `docs/` 트리와 이름 규칙의 조사 기록 줄을 고쳤다)
-- 기준 커밋: `76fadcb4`
+- 검사: 트리와 실제 파일의 일치는 `tests/repo/test_repo_layout.py`가 검사합니다
 - 정본 여부: 정본(폴더와 파일 위치)
 - 관련 문서: [README.md](README.md), [AGENTS.md](AGENTS.md), [SPEC.md](SPEC.md)
 
-회로를 읽고 대체 조건을 정해 후보 부품을 판정하는 RAG 에이전트입니다. 첫 범위는 소형 MCU 회로의 다이오드입니다.
+SojaFit은 회로를 읽고 후보 부품을 데이터시트 근거로 판정하는 RAG 에이전트입니다. 소개와 실행 방법은 [README.md](README.md)에 있습니다.
 
-사용자가 KiCad 넷리스트와 바꿀 부품을 주면, 부품이 회로에서 맡은 역할을 설명하고, 역할에서 대체 조건을 정하고, 후보 부품마다 데이터시트 근거로 판정한 뒤, 사람이 승인하면 견적서를 저장합니다. 같은 동작은 보장하지 않습니다.
-
-**이 문서는 폴더와 파일 위치의 정본입니다.** 파일을 만들거나 옮기기 전에 아래 트리에서 `<-` 설명이 맞는 자리를 찾습니다. 처음 보는 사람은 [README.md](README.md), 기능의 정본은 루트 `SPEC.md`, 폴더의 넣는 것·넣지 않는 것은 각 폴더의 `<대문자 폴더명>.md`, 바뀐 결정은 [docs/adr/](docs/adr/ADR.md)를 봅니다.
+**이 문서는 폴더와 파일 위치의 정본입니다.** 파일을 만들거나 옮기기 전에 아래 트리에서 `<-` 설명이 맞는 자리를 찾습니다. 기능의 정본은 루트 `SPEC.md`, 폴더의 넣는 것·넣지 않는 것은 각 폴더의 `<대문자 폴더명>.md`, 바뀐 결정은 [docs/adr/](docs/adr/ADR.md)를 봅니다.
 
 ## 디렉토리 구조
 
@@ -74,24 +71,24 @@ SojaFit (proj3-b)
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
-│   │       ├── product/    <- 랜딩 "판정 근거" 4단계가 쓰는 운영 화면 캡처(11-17)
+│   │       ├── product/    <- 랜딩 "판정 근거" 4단계가 쓰는 운영 화면 캡처
 │   │       │   ├── question.png <- 회로에서 부품 교체를 묻고 사용 조건을 적는 화면
 │   │       │   ├── missing-condition.png <- 빠진 조건(허용 전압 강하)을 물어보는 화면
 │   │       │   ├── condition-evidence.png <- 입력 조건과 조건별 필요 값 · 후보 값 비교 화면
 │   │       │   └── evidence-source.png <- 조건 행을 펼쳐 데이터시트 근거(파일·쪽·표)를 보인 화면
-│   │       ├── samples/    <- 공개 라이선스 넷리스트(화면 입구는 #58에서 뺐고 파일만 둠)
+│   │       ├── samples/    <- 공개 라이선스 넷리스트(화면 입구는 뺐고 파일만 둠)
 │   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
 │   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
 │   │       └── sojafit-icon.svg <- 자리·후보 기호 아이콘(파비콘, 앱 로고와 같은 기호)
 │   ├── tests/              <- 화면 순수 함수 단위 시험(node --test)과 브라우저 시험(Playwright)
 │   │   ├── TESTS.md        <- 폴더 설명
-│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄·보내기 키(#38)·진행 단계 시간(#42)·판정 후보 모으기(#55) 시험
+│   │   ├── display.test.ts <- 긴 소수 반올림·기준식 한국어 풀이·인용 번호 숨김·http(s) 링크만 허용·수량별 가격 조회 경로와 예상 금액 줄·보내기 키·진행 단계 시간·판정 후보 모으기 시험
 │   │   ├── stream.test.ts  <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트) 시험
-│   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기, LED·표시기·비다이오드 판정 대상 제외, 409 중복 처리(#48)·패널 한 줄(#50)·첨부 파일 종류(#52)·부품 점검표 거르기(#68) 시험
+│   │   ├── circuit.test.ts <- 프로젝트 연결에서 부품·핀·넷 뽑기, LED·표시기·비다이오드 판정 대상 제외, 409 중복 처리·패널 한 줄·첨부 파일 종류·부품 점검표 거르기 시험
 │   │   ├── schematicSearch.test.ts <- 원본 회로도 검색 재사용(14분·실패는 다시 시도할 때만·직접 찾기 실패에도 찾은 결과 유지) 시험
 │   │   ├── approval.test.ts <- 승인 목록에서 후보의 승인 상태(own·other)와 사례 삭제 뒤 재승인 시험
-│   │   ├── report.test.ts  <- 대체 검토 보고서 ECO 칸 값(변경 내용 문장·변경 영향 통과 수·영향받는 품목 줄·값 없으면 빈칸) 시험(#56)
-│   │   ├── libraryQuery.test.ts <- 데이터시트 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번 시험(#67)
+│   │   ├── report.test.ts  <- 대체 검토 보고서 ECO 칸 값(변경 내용 문장·변경 영향 통과 수·영향받는 품목 줄·값 없으면 빈칸) 시험
+│   │   ├── libraryQuery.test.ts <- 데이터시트 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번 시험
 │   │   ├── demo.spec.ts    <- Playwright: 데모 로그인부터 승인·견적·설정까지의 브라우저 흐름(키 없는 데모 서버 필요)
 │   │   └── account.spec.ts <- Playwright: 설정 저장·A/B 격리·관리자 차단·첨부 넷리스트의 회로 버전
 │   └── src/                <- 화면 소스(경로마다 파일 하나가 아니라 기능별 파일)
@@ -101,26 +98,26 @@ SojaFit (proj3-b)
 │       ├── api.ts          <- 쿠키 API fetch 경계·오류·SSE 연결·판정 5종과 실행 상태의 화면 표기
 │       ├── types.ts        <- 공개 API 자료형
 │       ├── stream.ts       <- SSE 프레임 복원(UTF-8 청크 경계·종료 이벤트)
-│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유, 질문으로 지은 프로젝트 이름, 업로드 409 중복 처리(#48), 첨부 파일 종류(#52), 부품 점검표 거르기·검토 질문, 넷리스트 연결 그림 배치(dagre)
+│       ├── circuit.ts      <- 프로젝트 연결에서 부품 목록과 핀·넷 뽑기, 판정 대상에서 빠지는 부품(LED·표시기·비다이오드)의 이유, 질문으로 지은 프로젝트 이름, 업로드 409 중복 처리, 첨부 파일 종류, 부품 점검표 거르기·검토 질문, 넷리스트 연결 그림 배치(dagre)
 │       ├── approval.ts     <- 승인 목록에서 후보의 승인 상태(이 후보 승인·다른 후보 승인) 가르기
-│       ├── report.ts       <- 대체 검토 보고서 ECO 칸 값과 견적서 문서 값을 저장한 사례에서만 만든다(#56)
-│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄), 보내기 키(#38)·진행 단계 시간(#42)·판정 후보 모으기(#55)
+│       ├── report.ts       <- 대체 검토 보고서 ECO 칸 값과 견적서 문서 값을 저장한 사례에서만 만든다
+│       ├── display.ts      <- 서버 숫자·기준식·링크를 화면 표기로 바꾸는 순수 함수(반올림·한국어 풀이·http(s) 검사·수량별 가격 조회 경로·예상 금액 줄), 보내기 키·진행 단계 시간·판정 후보 모으기
 │       ├── inputLabels.ts  <- 판정 입력 코드(회로 값 이름)의 화면 이름과 입력칸 안내
 │       ├── ui.tsx          <- 경로 이동·자원 훅·공통 조각(로고·상태·판정 배지·창·⋯ 메뉴·근거 출처)·입력창 첨부와 첨부 카드·경계선 너비 조절·회로 도식(dagre로 배치한 연결 그림)·마크다운
 │       ├── Landing.tsx     <- 공개 랜딩
 │       ├── Auth.tsx        <- 로그인·가입·비밀번호 재설정·Google 계정 연결
 │       ├── Account.tsx     <- 내 설정·개인정보처리방침 본문
-│       ├── Approved.tsx    <- 승인 사례 목록과 사례 하나의 기록(원래 대화·질문·조건별 판정·근거·견적, 다시 판정하지 않음)·인쇄용 부품 대체 검토 보고서(#44 #56)·견적서 문서(A4 한 장, PDF 다운로드)·견적서 목록(/quotes)
-│       ├── Library.tsx     <- 데이터시트 서재(/library): 품번·시리즈·제조사 검색·분류·원문 PDF 링크 표와 쪽 이동, 읽기만(#67)
-│       ├── libraryQuery.ts <- 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번(#67)
+│       ├── Approved.tsx    <- 승인 사례 목록과 사례 하나의 기록(원래 대화·질문·조건별 판정·근거·견적, 다시 판정하지 않음)·인쇄용 부품 대체 검토 보고서·견적서 문서(A4 한 장, PDF 다운로드)·견적서 목록(/quotes)
+│       ├── Library.tsx     <- 데이터시트 서재(/library): 품번·시리즈·제조사 검색·분류·원문 PDF 링크 표와 쪽 이동, 읽기만
+│       ├── libraryQuery.ts <- 서재 주소의 검색 조건 읽기·쓰기와 검색어가 든 표지 품번
 │       ├── Admin.tsx       <- 관리자 영역: 계정 목록(이메일 가림)·사유를 적은 가림 해제·정지·재활성화·탈퇴 처리·작업 이력
 │       ├── Legal.tsx       <- 화면 맨 아래 고지 한 줄(이용약관·개인정보처리방침·AI 이용 안내·출처·라이선스·문의·©)과 문서 창·페이지
 │       ├── Conversations.tsx <- 사이드바 프로젝트·대화 나무(이름 변경·삭제)와 새 대화 화면(질문 입력창·넷리스트·회로도 첨부)
 │       ├── Projects.tsx    <- 새 프로젝트 창(데모 회로·넷리스트 업로드·나중에 첨부)
 │       ├── Workbench.tsx   <- 검토 대화·실시간 진행·조건 재개·첨부 버전·회로 없는 대화의 회로 요청 카드(첨부·기존 회로로 계속)·오른쪽 회로 패널(검토 부품은 읽기 전용)
 │       ├── Reply.tsx       <- 검토 결과 답(후보 3장 먼저, 나머지는 펼치기)과 조건 입력 카드(회로에서 읽은 역할·근거, 입력창 글 답 안내)·대상 부품 고르기 카드
-│       ├── Parts.tsx       <- 부품 점검표 창: 종류별 개수 칩·판정 지원·데이터시트 유무 표(#68)
-│       ├── Schematic.tsx   <- 원본 회로도 구역: 올린 회로도(.kicad_sch) 그림을 먼저(#52), 예제 프로젝트의 저장된 도면, 그 밖의 프로젝트는 열 때 한 번 하는 공개 웹 검색(external-circuits), 눌러 큰 창
+│       ├── Parts.tsx       <- 부품 점검표 창: 종류별 개수 칩·판정 지원·데이터시트 유무 표
+│       ├── Schematic.tsx   <- 원본 회로도 구역: 올린 회로도(.kicad_sch) 그림을 먼저, 예제 프로젝트의 저장된 도면, 그 밖의 프로젝트는 열 때 한 번 하는 공개 웹 검색(external-circuits), 눌러 큰 창
 │       ├── schematicSearch.ts <- 원본 회로도 검색을 (프로젝트, 회로 버전)마다 한 번만 보내는 탭 메모리
 │       ├── Candidate.tsx   <- 후보 상세: 조건·인용·회로 정보·승인·견적·요청 시 가격 조회
 │       ├── styles.css      <- 전체 스타일
@@ -141,7 +138,7 @@ SojaFit (proj3-b)
 │   │   ├── auth.py         <- 로그인·이메일 가입·비밀번호 재설정·데모 버튼 로그인·me·로그아웃 API(/api/auth/*)와 숨긴 Google 가입·로그인 경로
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(GET /api/demo-questions). run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── health.py       <- 서비스 생존 확인 GET /health
-│   │   ├── datasheets.py   <- 데이터시트 서재 API(GET /api/datasheets, 품번·제목·제조사 검색·분류·쪽 나눔, 읽기만, #67)
+│   │   ├── datasheets.py   <- 데이터시트 서재 API(GET /api/datasheets, 품번·제목·제조사 검색·분류·쪽 나눔, 읽기만)
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory, 탈퇴 DELETE /api/me
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
@@ -176,7 +173,7 @@ SojaFit (proj3-b)
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
 │   │   ├── supervisor.py   <- Supervisor Prompt V0 네 필드 출력·입력 envelope·상태별 의미 검증 계약(현재 그래프에는 미연결)
 │   │   ├── nodes.py        <- 노드 11개: 입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀). 멀티 전용 노드(부품 목록 · 견적 안내 · 대상 확인)와 공용 도우미
-│   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
+│   │   ├── mcp_retriever.py  <- MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 단일 그래프 앱을 만듦(평가 비교용, 서비스는 멀티 그래프)
 │   │   ├── netlist.py      <- 평가 · 시험용 KiCad 넷리스트 파서(parse_netlist)와 projects/가 쓰는 S-expression 파서(_sexpr). 서비스 업로드는 projects/netlist.py
 │   │   └── memory.py       <- 옛 승인 사례 Store namespace(탈퇴 때 지우기용), 승인 사례를 크기 제한된 모델 입력으로 만들기, 멀티 그래프의 `기억 읽기` 노드(`read_profile`: Store의 선호 실장 방식만 `mount_preference`로). graph/nodes.py · multi_agent/build.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
@@ -218,13 +215,13 @@ SojaFit (proj3-b)
 │   │   ├── docs_answer.md  <- 멀티 RAG 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
 │   │   ├── schematic_dialogue.md <- 회로도 후보의 차이 설명·선택 질문·전체 소개 프롬프트
 │   │   ├── synth.md        <- 멀티 종합: 할 일 2개 이상의 부분 답을 한 답으로(영어, 답은 한국어)
-│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor(계획): 질문 종류 · 할 일 최대 3개 · 지시서 · 거절 사유. Langfuse `supervisor` v4까지 등록(11-06 계획형 본문은 등록 전)
+│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor(계획): 질문 종류 · 할 일 최대 3개 · 지시서 · 거절 사유. Langfuse `supervisor` v4까지 등록(계획형 본문은 등록 전)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── db_pool.py      <- 검색용 DB 연결 풀(DSN별, pgvector 등록)
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
-│   │   ├── spec_lookup.py  <- 사양 코드 목록 · 찾기 순서 규칙(카드 도구 · 판정 import). 사양 표와 SQL 조회는 11-10에 지움(ADR 0016)
+│   │   ├── spec_lookup.py  <- 사양 코드 목록 · 찾기 순서 규칙(카드 도구 · 판정 import). 사양 표와 SQL 조회는 지움(ADR 0016)
 │   │   ├── card_read.py    <- 카드(표 행 청크)에서 값 · 원문 인용 읽기(코드 먼저, 못 읽은 카드만 LLM)와 코드 확인
 │   │   ├── card_find.py    <- 서비스 기본 후보 찾기(ADR 0016): 개요 줄로 문서 고르기(코드 먼저, 못 하면 LLM) → 카드 읽기 → 조건 거르기 · 찾기 순위
 │   │   ├── card_specs.py   <- 서비스 기본 판정 값을 카드에서 읽기, 사실 확인용 문서 행(ADR 0016)
@@ -238,7 +235,7 @@ SojaFit (proj3-b)
 │   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
 │   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
 │   │       ├── package_outlines.py <- Docling 표제·그림에서 패키지 외형 페이지 색인 생성
-│   │       ├── specs.py    <- 표 행 청크 공용 규칙(코드 · SI 단위 · 기호 · 낱말 표, 패키지 · 분류 이름, 양방향 · AEC-Q101 문장)과 해석기: 카드 한 장 읽기(read_card, card_read가 씀). 사양 표 만들기 · 적재 명령은 11-10에 지움(ADR 0016)
+│   │       ├── specs.py    <- 표 행 청크 공용 규칙(코드 · SI 단위 · 기호 · 낱말 표, 패키지 · 분류 이름, 양방향 · AEC-Q101 문장)과 해석기: 카드 한 장 읽기(read_card, card_read가 씀). 사양 표 만들기 · 적재 명령은 지움(ADR 0016)
 │   │       ├── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   │       └── demo_snapshot.py  <- 키 없는 compose가 적재할 데모 코퍼스 스냅샷(data/demo/snapshot/)을 전체 청크에서 규칙대로 뽑음
 │   ├── services/           <- 외부 호출과 서비스 보조 기능: LLM·임베딩, Langfuse, Mouser, Exa, 메일, 공식 PDF 행 확인, 견적 저장, 키 없는 데모 재생
@@ -302,7 +299,7 @@ SojaFit (proj3-b)
 │   ├── 008_multi_dim_embeddings.sql  <- 임베딩 열을 차원 없는 halfvec으로(모델별 차원 공존)
 │   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
-│   ├── 020_service_baseline.sql  <- 서비스 표 기준선(11-11 M 단계): 인증·프로젝트·대화·승인·견적·분석 서비스 표 21개, 삭제 트리거, 청소 함수, RLS 명시를 한 파일로. 옛 증분 003~029를 대체
+│   ├── 020_service_baseline.sql  <- 서비스 표 기준선(M 단계): 인증·프로젝트·대화·승인·견적·분석 서비스 표 21개, 삭제 트리거, 청소 함수, RLS 명시를 한 파일로. 옛 증분 003~029를 대체
 │   ├── 026_revoke_public_grants_and_rls.sql <- 공개 역할(anon · authenticated)의 표 · 시퀀스 · 함수 권한을 회수하고 앱 표 RLS를 켬(여러 번 돌려도 같음, 역할이 없는 DB는 RLS만)
 │   ├── 026_projects_catalog_demo.sql <- 기존 DB의 6개 데모 ID 고정 CHECK를 데이터 catalog 확장형 제약으로 바꿈(main 회로 catalog; 새 DB에서는 기준선 뒤에 실행되어 `ck_projects_demo`를 같은 이름으로 다시 만든다. 실행 순서는 DB.md)
 │   ├── legacy/             <- 기준선 이전의 옛 증분 서비스 SQL(이력용, 실행하지 않음)
@@ -323,8 +320,8 @@ SojaFit (proj3-b)
 │   │   ├── 021_auth_ip_limits.sql  <- IP 해시별 가입·로그인 실패 한도
 │   │   ├── 022_token_limits.sql  <- 하루 LLM 예약 토큰 카운터
 │   │   ├── 023_retention.sql  <- 보관 기간 청소 함수
-│   │   ├── 024_projects_demo_c01.sql  <- 데모 프로젝트 허용 목록에 c01 추가(11-10 긴급 수정)
-│   │   ├── 025_runs_safe_result_preferred_mount.sql  <- 분석 결과 형식에 preferred_mount 추가(11-10 긴급 수정)
+│   │   ├── 024_projects_demo_c01.sql  <- 데모 프로젝트 허용 목록에 c01 추가(긴급 수정)
+│   │   ├── 025_runs_safe_result_preferred_mount.sql  <- 분석 결과 형식에 preferred_mount 추가(긴급 수정)
 │   │   ├── 027_service_redesign_p1.sql  <- 재설계 1/3
 │   │   ├── 028_service_redesign_agent.sql  <- 재설계 2/3
 │   │   └── 029_drop_google_pending.sql  <- 재설계 3/3
@@ -347,7 +344,7 @@ SojaFit (proj3-b)
 │   ├── 032_approval_reselection.sql <- 승인·견적 이력을 보존한 사례 삭제 후 재승인용 제약 변경
 │   ├── 033_thread_titles.sql <- 사용자가 고친 대화 이름 칸(threads.title, NULL이면 첫 질문 이름)
 │   ├── 034_admin_audit.sql <- 관리자 작업 이력 표 admin_audit(가림 해제 사유 · 정지 · 재활성화 · 탈퇴 처리, 앱은 INSERT만)
-│   ├── 035_circuit_schematics.sql <- 회로 버전에 붙은 업로드 KiCad 회로도 원문 표 circuit_schematics(그림은 저장 안 함, #52)
+│   ├── 035_circuit_schematics.sql <- 회로 버전에 붙은 업로드 KiCad 회로도 원문 표 circuit_schematics(그림은 저장 안 함)
 │   ├── 036_thread_continuations.sql <- 새 회로 버전의 대화와 이전 대화를 잇는 표(메시지·판정 복사 없음)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
@@ -361,9 +358,9 @@ SojaFit (proj3-b)
 │
 ├── evals/                  <- 평가셋과 평가 실행. 루트에는 동결 평가셋만 둠 (고정: 루트의 평가셋·FROZEN.json)
 │   ├── EVALS.md            <- 폴더 설명
-│   ├── dataset_v1.jsonl    <- 동결 평가셋 v1: 50건(관련 25·비관련 25), 2026-11-02 (고정)
-│   ├── dataset_v2.jsonl    <- 동결 평가셋 v2: 70건(v1 50 + 후보 찾기 20, 관련 35·비관련 35), question_type 칸, 2026-11-03 (고정)
-│   ├── dataset_v3.jsonl    <- 동결 기준 평가셋 v3: 50건(관련 25·비관련 25, 판정 분야를 늘림), 2026-11-10(ADR 0015)
+│   ├── dataset_v1.jsonl    <- 동결 평가셋 v1: 50건(관련 25·비관련 25) (고정)
+│   ├── dataset_v2.jsonl    <- 동결 평가셋 v2: 70건(v1 50 + 후보 찾기 20, 관련 35·비관련 35), question_type 칸 (고정)
+│   ├── dataset_v3.jsonl    <- 동결 기준 평가셋 v3: 50건(관련 25·비관련 25, 판정 분야를 늘림, ADR 0015)
 │   ├── FROZEN.json         <- 동결 파일별 sha256·건수. 테스트가 이 이름을 읽음 (고정)
 │   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드). 지금은 0건
 │   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
@@ -373,7 +370,7 @@ SojaFit (proj3-b)
 │   │   ├── grader_cases_r1_dev.json  <- 채점기 기준선(#34)의 입력: R1 dev 46문항에 서비스 검색 + 지금 채점을 1번씩 돌린 검색·통과 청크(번호·파일·쪽만)
 │   │   ├── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   │   ├── rewrite_q3_v3.json  <- v3 관련 문항 중 쪽 정답이 있는 21건의 고정 재작성 질의 Q3(청킹 v1·v4h 비교가 같은 질의를 쓰게 한 번만 생성)
-│   │   └── layers/         <- 검색 조합 층별 재측정(11-03)의 고정 입력. 깊은 폴더라 설명은 INPUTS.md에
+│   │   └── layers/         <- 검색 조합 층별 재측정의 고정 입력. 깊은 폴더라 설명은 INPUTS.md에
 │   │       ├── parts.json  <- 0층에서 고정한 질문 줄·품번·비교 여부
 │   │       ├── queries.jsonl  <- LLM이 한 번 만들어 고정한 질의 Q3~Q5
 │   │       ├── queries_check.json  <- 고정 질의의 자동 확인(품번 남음·없던 숫자) 걸린 건
@@ -425,7 +422,7 @@ SojaFit (proj3-b)
 │   │   ├── embed_cards.py  <- 임베딩 격자 본평가(#16)의 카드 적재와 모델별 카드 임베딩(실험 DB, 컨테이너)
 │   │   ├── run_embedding_grid.py  <- 임베딩 6종 × 검색 방식 × 리랭커 78칸 측정(#16, 컨테이너)
 │   │   ├── check_retrieval_db.py  <- 층별 재측정 0층: Supabase 카드·벡터·검색 결과를 로컬과 대조(읽기만)
-│   │   ├── run_retrieval_layers.py  <- 검색 조합 층별 재측정 1~4층(질의 글·토큰화·임베딩·리랭커, 11-03)
+│   │   ├── run_retrieval_layers.py  <- 검색 조합 층별 재측정 1~4층(질의 글·토큰화·임베딩·리랭커)
 │   │   └── report_retrieval_layers.py  <- 층별 재측정의 사전 등록 비교값을 결과 파일에서 뽑아 정리
 │   ├── docker/             <- 평가 실험용 컨테이너 이미지 정의
 │   │   ├── DOCKER.md       <- 폴더 설명
@@ -448,13 +445,13 @@ SojaFit (proj3-b)
 │   │       ├── draft_30_review.md  <- 30건 초안의 질문·가정·예상 답 검수 목록
 │   │       ├── draft_50_review.md  <- 50건 검토표와 합의 기록
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
-│   │       ├── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
+│   │       ├── second_pass_50_review.md  <- v1 동결 전 보조 검증 기록
 │   │       └── v3_judging_record.md  <- v3 50건 판정 역할(초안 Codex·하정운, 1차 심태현, 최종 하정운) 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
 │       ├── d10/            <- Checkpoint D10 점검 증거: 인젝션 기준 검사 출력, 변이 28건 결과와 재현 스크립트, 비밀값 검사(원시 파일은 폴더 README.md가 설명)
-│       ├── d12/            <- 11-17 지금 코드(`799ae636`) 재측정 증거: v3 게이트 · 서비스 검색 · 새 clone 기동 · pytest · gitleaks · Langfuse 점수 · 경보 조회(폴더 README.md가 설명)
-│       ├── retrieval/      <- 검색 지표: v1 기준선(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
-│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
+│       ├── d12/            <- 코드 `799ae636` 재측정 증거: v3 게이트 · 서비스 검색 · 새 clone 기동 · pytest · gitleaks · Langfuse 점수 · 경보 조회(폴더 README.md가 설명)
+│       ├── retrieval/      <- 검색 지표: v1 기준선(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정
+│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── chunking/       <- 청킹 산출물의 요약·manifest·해시 목록
 │       │   ├── v4h-2026-11-08/  <- 현재 코퍼스(청커 tsc-v4h-2026-11-08)의 요약·manifest·파서 불일치와 청크별 sha256 목록
@@ -688,7 +685,7 @@ SojaFit (proj3-b)
 │   └── fixtures/           <- 단위 테스트용 가공 데이터
 │       └── netlists/        <- 외부 원본을 쓰지 않은 합성 KiCad 업로드 표본
 │           ├── minimal.net <- 연결 정보와 버릴 원본 marker가 있는 최소 정상 표본
-│           ├── minimal.kicad_sch <- D1 · R1을 선 하나로 이은 합성 KiCad 회로도 한 장(KiCad 10 kicad-cli 변환 확인, #52)
+│           ├── minimal.kicad_sch <- D1 · R1을 선 하나로 이은 합성 KiCad 회로도 한 장(KiCad 10 kicad-cli 변환 확인)
 │           └── invalid.net <- 괄호가 닫히지 않은 잘못된 표본
 │
 ├── scripts/                <- 서비스 코드 밖에서 손으로 돌리는 일회성 측정·점검 스크립트, 주제별 하위 폴더
@@ -714,7 +711,7 @@ SojaFit (proj3-b)
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
 │   │   ├── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
-│   │   ├── injection_http.py <- 배포 HTTP로 인젝션 T4 · T6 · T7을 정상/공격 짝으로 한 번씩 보내 PR #85 자동 기준으로 판정(답 글 미저장)
+│   │   ├── injection_http.py <- 배포 HTTP로 인젝션 T4 · T6 · T7을 정상/공격 짝으로 한 번씩 보내 자동 기준으로 판정(답 글 미저장)
 │   │   └── verify_external_schematics.py <- 외부 완성 회로도 manifest·PNG smoke
 │   ├── bit_search/         <- 비트 후보 + 정확 재정렬 검색 속도·recall 실측
 │   │   ├── BIT_SEARCH.md   <- 폴더 설명
@@ -753,8 +750,8 @@ SojaFit (proj3-b)
 │       ├── hnsw/           <- HNSW 대 정확 검색
 │       ├── smoke/          <- HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py), 인젝션 HTTP 시험 판정(injection_http.py)
 │       │   └── schematic_search_observations_2026-11-15.json <- 로컬 8011 회로도 후보·출처·이미지 로드 관찰 기록 복사본
-│       ├── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
-│       └── docker_performance/ <- 로컬 Docker 빌드·기동·첫 회로도 렌더링 실측 CSV·JSON(11-13~14)
+│       ├── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall
+│       └── docker_performance/ <- 로컬 Docker 빌드·기동·첫 회로도 렌더링 실측 CSV·JSON
 │
 └── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
     ├── DOCS.md             <- 폴더 설명
@@ -802,7 +799,7 @@ SojaFit (proj3-b)
     │   ├── c2-defense-recheck.md <- C2 방어 수정 후 정상군·C1·C2 재검증
     │   ├── supervisor-guard-injection-recheck.md <- Supervisor 답 가드(끝내기) 켬/끔을 코퍼스 · 질문 인젝션과 정상 대화로 짝 재측정
     │   ├── injection-baseline-preflight.md <- 인젝션 기준선 준비 관문과 무료 검증
-    │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 11-11 실측 결과 연결
+    │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 실측 결과 연결
     │   ├── injection-baseline-plan.md <- 인젝션 기준선: T1~T7 짝 측정 계약과 실행 현황
     │   ├── embedding-model-baseline.md  <- 임베딩 모델 4종 예비 기준선
     │   ├── corpus-storage-budget.md  <- 원본 코퍼스 유지와 halfvec 저장 검증
@@ -847,15 +844,15 @@ SojaFit (proj3-b)
     │   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
     │   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
     │   │   └── skill-feasibility.md  <- 도메인 Skill 후보 조사
-    │   ├── schematic/      <- 원본 회로도 검색 · 공식 근거 등급 실검증(11-12~11-16)
+    │   ├── schematic/      <- 원본 회로도 검색 · 공식 근거 등급 실검증
     │   │   ├── official-schematic-search-verification-2026-11-16.md  <- 공식 회로도 검색 확대·자료 검증·PDF 중복 제거·병렬 처리 실측 보고서
     │   │   ├── schematic-search-verification-2026-11-15.md  <- CDFER·다이오드 검색 실검증과 한도 소진 시점의 미검증 항목
     │   │   ├── frontend-schematic-work-summary-2026-11-15.md  <- 프런트 오류·회로도 검색 개선 17개 작업과 검증 범위 공유 보고서
     │   │   └── grade-evidence-validation.md  <- 1등급 2등급 3등급 근거 흐름과 검증 범위
-    │   ├── db-redesign/    <- 서비스 DB 재설계(11-11) 설계 문서(현재·목표 구조, 영향 지도). 검증 스크립트는 scripts/db/verify_redesign/
+    │   ├── db-redesign/    <- 서비스 DB 재설계 설계 문서(현재·목표 구조, 영향 지도). 검증 스크립트는 scripts/db/verify_redesign/
     │   │   ├── summary.md      <- 검토용 요약 · 결정 항목(옛 REdesign.md)
     │   │   ├── as-is-erd.md    <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
-    │   │   ├── as-is-tables.md <- 재설계 전(11-10 밤 옛 운영 DB) 서비스 표 25개의 정의서
+    │   │   ├── as-is-tables.md <- 재설계 전(옛 운영 DB) 서비스 표 25개의 정의서
     │   │   ├── to-be-design.md <- 설계 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과
     │   │   ├── to-be-erd.md    <- 목표 ERD(추천안과 보류안)
     │   │   ├── to-be-tables.md <- 목표 표 정의서 + 현재와의 차이
@@ -864,7 +861,7 @@ SojaFit (proj3-b)
     │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
     │       ├── job-postings-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
     │       ├── candidate-g-market-saturation.md  <- 후보 G 시장 포화 비교(원본 이름 후보 G 시장 포화 비교.md)
-    │       ├── payer-research-2026-11-13.md  <- 지불 주체 근거 조사(도구 가격 · 결재 부서 · 국내 공공 예산, 2026-11-13)
+    │       ├── payer-research-2026-11-13.md  <- 지불 주체 근거 조사(도구 가격 · 결재 부서 · 국내 공공 예산)
     │       ├── candidate-circuit-role-substitution.md  <- 1차 관문 회로 역할 대체 조사(원본 이름 1차관문-회로역할대체.md)
     │       ├── corpus/     <- 공개 문서·다이오드 데이터시트 조각 수 실측
     │       │   ├── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
@@ -887,32 +884,32 @@ SojaFit (proj3-b)
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
     │   ├── portfolio-osc.md  <- 오세창 포트폴리오(작업 기록 · PR 기준)
     │   ├── portfolio-sth.md  <- 심태현 포트폴리오(작업 기록 · PR 기준)
-    │   ├── portfolio/      <- 세 포트폴리오를 A4 1장으로 뽑은 제출본 PDF(11-17, 마크다운과 같은 내용)
+    │   ├── portfolio/      <- 세 포트폴리오를 A4 1장으로 뽑은 제출본 PDF(마크다운과 같은 내용)
     │   │   ├── portfolio-jeongun.pdf  <- 하정운
     │   │   ├── portfolio-osc.pdf  <- 오세창
     │   │   └── portfolio-sth.pdf  <- 심태현
-    │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 11-13 배포본, 04~07 11-17 밤 배포 리비전 코드 v3 실행). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
+    │   ├── langfuse/       <- Langfuse 스크린샷 7장(01~03 이전 배포본, 04~07 배포 리비전 코드 v3 실행). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
     │   │   ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
     │   │   ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
     │   │   ├── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
-    │   │   ├── 04-trace-ragas-scores-header.jpg  <- RAGAS 점수 칩이 붙은 평가 trace 상세(gate v3-11, Faithfulness 0.89, 11-17)
+    │   │   ├── 04-trace-ragas-scores-header.jpg  <- RAGAS 점수 칩이 붙은 평가 trace 상세(gate v3-11, Faithfulness 0.89)
     │   │   ├── 05-trace-ragas-scores-tab.jpg  <- 같은 trace의 점수 탭(점수 17개)
     │   │   ├── 06-trace-spec-rag-timeline.jpg  <- Spec · RAG 에이전트가 함께 도는 trace Timeline(gate v3-41, 올바른 거절)
     │   │   └── 07-home-dashboard-2026-11-17.jpg  <- 홈 대시보드(trace 2.14K · 점수 23.27K · 비용 $1.46, 최근 1일)
-    │   ├── presentation/   <- 최종 발표 덱(11-18)
+    │   ├── presentation/   <- 최종 발표 덱
     │   │   ├── PRESENTATION.md  <- 폴더 설명 · 슬라이드와 발표자 · 수치별 근거
     │   │   └── sojafit-final-2026-11-18.pptx  <- 최종 발표 자료 25장(데모 영상 포함)
     │   └── video/          <- 시연 영상. 설명은 DELIVERABLES.md "파일" 절
     │       └── sojafit-demo-2026-11-17.mp4  <- 2분 49초, 운영 리비전에서 녹화한 정상 · 경계 · 방어 경로, 화면마다 자막
     ├── archive/            <- 보관: 지금 기준이 아닌 옛 기록(요약 전 전체본 · 교체 전 설계). 정본이 아님
     │   ├── ARCHIVE.md      <- 폴더 설명
-    │   ├── eval-report-detail-2026-11-17.md <- 요약 재작성 전 EVAL_REPORT 전체 기록(11-17)
-    │   ├── frontend-screen-redesign.md <- 11-16 새 화면 교체 전 프런트엔드 화면 구성
-    │   └── readme-detail-2026-11-17.md <- 요약 재작성 전 README 전체 기록(11-17)
+    │   ├── eval-report-detail-2026-11-17.md <- 요약 재작성 전 EVAL_REPORT 전체 기록
+    │   ├── frontend-screen-redesign.md <- 새 화면 교체 전 프런트엔드 화면 구성
+    │   └── readme-detail-2026-11-17.md <- 요약 재작성 전 README 전체 기록
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
         ├── WORKLOG.md      <- 폴더 설명과 기록 형식
         ├── jeongun.md      <- 하정운(조장·오케스트레이터)
-        ├── jaehun.md       <- 김재훈(2026-11-06 팀 탈퇴, 기록 보존)
+        ├── jaehun.md       <- 김재훈(팀 탈퇴, 기록 보존)
         ├── osc.md          <- 오세창
         └── sth.md          <- 심태현
 ```
@@ -993,15 +990,12 @@ SojaFit (proj3-b)
 
 ## 이름 규칙
 
-[ADR 0012](docs/adr/0012-폴더-설명-파일은-대문자-폴더명으로-되돌린다.md)를 따릅니다. `tests/repo/test_repo_layout.py`가 PR마다 검사합니다.
+이유는 [ADR 0012](docs/adr/0012-폴더-설명-파일은-대문자-폴더명으로-되돌린다.md)에 있고, `tests/repo/test_repo_layout.py`가 PR마다 검사합니다.
 
 - **폴더 설명 파일**은 폴더마다 `<대문자 폴더명>.md` 하나입니다(`backend/BACKEND.md`, `backend/mcp_skill/MCP_SKILL.md`). 역할, 넣는 것, 넣지 않는 것, 담당, 파일을 적습니다. `README.md`는 루트 대표 문서 하나뿐입니다.
-- **대문자 마크다운**은 루트 대표 문서 6개(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 폴더 설명 파일만 씁니다. 그 밖의 문서는 소문자입니다. 예외는 다른 곳이 이름을 정한 네 개입니다: `docs/TOPIC.md`·`docs/GATES.md`(과제 가이드), `backend/mcp_skill/skills/SKILL.md`(Skill 관례, 코드가 읽음), `.github/PULL_REQUEST_TEMPLATE.md`(GitHub 관례). 데이터 파일(`FROZEN.json`, 데이터시트 PDF, 회로 원본)은 받은 이름이나 코드가 읽는 이름을 그대로 씁니다.
-- **대문자의 효과와 한계**
-  - GitHub 파일 목록, 터미널 `ls`, `git ls-files`는 대문자 이름을 소문자보다 먼저 정렬해 폴더 설명 파일이 파일 목록 맨 위에 옵니다(2026-11-03 확인). 같은 폴더에 다른 대문자 문서가 없어야 이 효과가 살아 있어서, 대문자를 아래 예외 밖에서 쓰지 않습니다.
-  - VS Code 탐색기와 macOS Finder는 기본 설정에서 대소문자를 섞어 정렬해 이 효과가 없습니다. GitHub은 `README.md`만 폴더 아래에 펼쳐 보여 주고 `<대문자 폴더명>.md`는 눌러야 열립니다. 그래서 설명 파일은 이 문서의 트리와 표에서 링크로 찾습니다.
-  - macOS 기본 파일시스템은 대소문자를 구분하지 않고, 이 저장소의 git 설정도 `core.ignorecase=true`입니다. 대소문자만 바꾸는 이름 변경은 `git mv a.md tmp.md && git mv tmp.md A.md` 두 단계로 해야 git에 남습니다. 대소문자만 다른 두 파일(`readme.md`·`README.md`)은 한 폴더에 둘 수 없습니다.
 - 폴더 설명은 두 단계 폴더까지만 둡니다. 더 깊은 폴더(`backend/mcp_skill/skills/` 등)는 위 폴더 설명 파일에 적습니다. 원시 결과·시험 데이터만 담는 폴더(`evals/results/`, `scripts/results/`, `tests/fixtures/`), `.github/`, `data/circuits/collected/`에는 설명 파일을 두지 않습니다.
+- **대문자 마크다운**은 루트 대표 문서 6개(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 폴더 설명 파일만 씁니다. 그 밖의 문서는 소문자입니다. 예외는 다른 곳이 이름을 정한 네 개입니다: `docs/TOPIC.md`·`docs/GATES.md`(과제 가이드), `backend/mcp_skill/skills/SKILL.md`(Skill 관례, 코드가 읽음), `.github/PULL_REQUEST_TEMPLATE.md`(GitHub 관례). 데이터 파일(`FROZEN.json`, 데이터시트 PDF, 회로 원본)은 받은 이름이나 코드가 읽는 이름을 그대로 씁니다.
+- 대소문자만 바꾸는 이름 변경은 `git mv a.md tmp.md && git mv tmp.md A.md` 두 단계로 합니다(macOS 파일시스템과 `core.ignorecase=true`). 대소문자만 다른 두 파일은 한 폴더에 둘 수 없습니다.
 - **한 폴더 바로 아래에는 한 종류 파일만** 둡니다(코드·데이터·문서·SQL·설정 중 하나, 설명 파일과 `.gitkeep`은 빼고 셈). 종류가 섞이면 성격별 하위 폴더로 나눕니다(예: `evals/runners/`, `evals/guides/`). 저장소 루트는 도구가 루트에서 찾는 파일이라 예외입니다.
 - 아직 없는 파일은 트리에 `(예정)`을 붙여 적고, 비어 있는 폴더는 `.gitkeep`으로 자리를 둡니다. 실제로 만들면 같은 PR에서 `(예정)`을 지웁니다.
 - 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`, 실험 작업서는 `docs/experiments/<english-kebab>.md`, 조사 기록은 `docs/research/<english-kebab>.md`(같은 주제가 셋 이상이면 `docs/research/<주제>/<english-kebab>.md`, 설명 파일 없이 `RESEARCH.md`가 대신)입니다. 원시 결과 파일은 `<무엇>_<YYYY-MM-DD>.json`입니다.
@@ -1013,8 +1007,3 @@ SojaFit (proj3-b)
 2. 같은 PR에서 이 트리에 그 파일 한 줄(`<-` 설명 포함)과 그 폴더 설명 파일의 "파일" 목록 한 줄을 고칩니다. 원시 결과 폴더는 트리의 묶음 설명만 맞으면 됩니다.
 3. 넣으려는 폴더에 다른 종류 파일이 이미 있으면 그 폴더에 섞지 않고 성격별 하위 폴더를 만들거나 기존 하위 폴더에 넣습니다. 트리에 `(예정)`으로 적힌 자리가 있으면 그 이름을 쓰고 `(예정)`을 지웁니다.
 4. 폴더 설명 파일의 "넣는 것"을 새 파일에 맞춰 넓히지 않습니다. 넓혀야 한다면 폴더 역할이 바뀌는 것이므로 이 트리의 `<-` 설명부터 고칩니다.
-
-## 처음 할 일
-
-1. 키 없이 `docker compose up`(`.env`가 없으면 데모 모드)으로 `/health`가 뜨는지 확인합니다. 실제 모드는 `cp .env.example .env`(`DEMO_MODE=0`) 뒤 키와 `AUTH_SECRET`을 채웁니다.
-2. 위 트리에서 손댈 폴더를 고르고 그 폴더의 `<대문자 폴더명>.md`부터 읽습니다.
