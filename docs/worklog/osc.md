@@ -927,7 +927,7 @@
 - 사용자 중단 조건 변경: 다음 04:12경 초기화되는 익명 한도를 사용하다 다시 소진되면 추가 초기화를 기다리지 않고 작업을 멈춘다. 그 시점까지의 직접 확인 결과·미검증 항목·남은 원인을 구분해 보고서를 작성한다. 남은 한도는 1N4148 전체 후보 검증에 우선 사용한다.
 - 최종 1N4148: 한도 복구 후 후보 24개 검사 완료, sources=5, rate_limited=False/upstream_error=False. LMN-3-ECAD/hiralsinghal Keyboard/sol KBDevBoard/opott OPBoard의 화면 후보 4개를 모두 직접 선택해 각각 1장 로드 완료 확인. 검색 대기 중 세션 만료 401 한 건은 기존 계정 재로그인 후 재실행해 해결했고 원문 오류와 구분했다. 실제 선택 화면 sojafit-recall-4148.jpg 보관.
 - 중단 결과: 04:17:11 잔여 0 확인 후 추가 검색·선택 검증·다음 초기화 대기 중단. 이미 실행 중이던 1N4007 조회는 ajkumar-1907/POWER-ELECTRONICS-LIB의 dc-motor-speed-controller 원문을 기본 표시(3508×2481)했고 transformerless/Srushti 후보도 목록에 포함됐지만 rate_limited=True로 뒤쪽 검증 미완료다. 다른 후보는 중단 이후 선택하지 않았다. Nozzle/matosic 등은 최종 목록에 미노출로 남았으며, 로컬/fixture 통과를 실제 API 발견·표시로 과장하지 않는다.
-- 최종 집계·보고서: 최종 코드 구간 manifest 11회/이미지 26장, HTTP 200 37건, 세션 만료 401 1건, 검색 404·502·503 0건. renderer HTTP 200 8건, 4xx/5xx 0건. 기록한 26장 모두 complete 및 원본 크기 확인. Python 293 passed/frontend 194 passed/build 통과, 범위 밖 45개 파일 및 기존 worklog prefix 보존, OSC HEAD 45740ce 유지. 커밋·푸시 없음. 보고서는 버전 관리 checkout 밖의 C:\Users\user\Documents\ChatGPT\3차 프로젝트 2\verification-reports\20261115-0417\report.md에 작성했고 화면 2개와 공개 원본 링크·후보·이미지 관찰 JSON을 함께 보관했다.
+- 최종 집계·보고서: 최종 코드 구간 manifest 11회/이미지 26장, HTTP 200 37건, 세션 만료 401 1건, 검색 404·502·503 0건. renderer HTTP 200 8건, 4xx/5xx 0건. 기록한 26장 모두 complete 및 원본 크기 확인. Python 293 passed/frontend 194 passed/build 통과, 범위 밖 45개 파일 및 기존 worklog prefix 보존, OSC HEAD 45740ce 유지. 커밋·푸시 없음. 보고서는 버전 관리 checkout 밖의 <home>\Documents\ChatGPT\3차 프로젝트 2\verification-reports\20261115-0417\report.md에 작성했고 화면 2개와 공개 원본 링크·후보·이미지 관찰 JSON을 함께 보관했다.
 
 
 ## 2026-11-15 · 공유 보고서의 OSC docs 사본 저장
@@ -1117,7 +1117,7 @@
 
 ## 2026-11-16 제조사 이름 없는 품번의 공식 영어 회로도 검색
 
-- 기준: OSC `8d385697`, 기존 TSC·6제조사·영어 자료 작업과 staged13파일 보존. 기존 버튼1개·입력칸·UI 소스/정적자산을 유지했다. 사전등록은 `evals/guides/preregister.md`의 제조사 없는 품번 항목이며 새 원자료는 `C:\Users\user\AppData\Local\Temp\osc-bare-part-20261116-30ahequz`에 저장했다.
+- 기준: OSC `8d385697`, 기존 TSC·6제조사·영어 자료 작업과 staged13파일 보존. 기존 버튼1개·입력칸·UI 소스/정적자산을 유지했다. 사전등록은 `evals/guides/preregister.md`의 제조사 없는 품번 항목이며 새 원자료는 `<home>\AppData\Local\Temp\osc-bare-part-20261116-30ahequz`에 저장했다.
 - 검색: 품번 형태를 인식하되 제조사 접두어 대응표는 만들지 않았다. 6개 등록 공식 호스트를 한 요청에 지정하고 실제 문서의 호스트·영어 본문·정확 품번·회로/PNG·원본 해시를 검사한다. 기존 다이오드 분류·TSC 경로·프로젝트 소유권·원본 연결 검사를 유지했다. 공식 후보가 전혀 없는 품번의 기존 공개/커뮤니티 보완은 남기고, 발견한 공식 후보의 검증 실패를 GitHub 자료로 대체하지 않는다.
 - 모호성: 다른 제조사 자료가 둘 이상 검사·PNG 변환까지 통과하면 첫 제조사나 source URL을 선택하지 않는다. 기존404/SCHEMATIC_NOT_FOUND와 `ambiguous_manufacturer` 이유를 기존 오류 영역에 표시한다. 제조사별 첫 후보를 우선하며 모호성 확인에만 최대6후보를 검사해 여섯 번째 제조사가 빠지지 않게 했다. 정상 응답의 choices 최대5개와 서명/캐시 계약은 유지한다. 다른 제조사 조회 오류를 단일 제조사 확인으로 처리하지 않는다.
 - RED/GREEN: 최초18실패로 bare 자동 경로·공식 검색·정확 품번·모호성/선택 URL/실패 캐시 문제를 재현했다. 제조사 문서 중복이 다른 제조사를 밀어내는 실패1건, 여섯 번째 제조사의 정상 자료 누락2건, 공식 데이터시트 보완1건, 공급자 검색어의 소문자 품번1건을 별도 실패로 확인했다. API/프로젝트 관련6파일 시험 최종529 passed(31.36초). `git diff --check`와 staged diff 검사 통과. 전체 평가셋·LLM 품질 실측은 수행하지 않았다.
@@ -1138,14 +1138,14 @@
 - 실제 외부 호출: 별도 진단 프로세스의 Exa 검색1회200, TI 영어 PDF GET2회 모두200. 실제 검색 후보에서 영어 `https://www.ti.com/lit/ds/symlink/lm2596.pdf`를 선택했다. 최초 검사 함수는 source tuple을 반환했으나 진단 출력에서 tuple에 `asdict()`를 적용한 TypeError가 발생했다. 최초 기록을 보존하고 Exa 재요청 없이 같은 후보·기존 영어 원문 해시로 변환을 진행했다. 새로 받은 바이트의 SHA-256 `2eec90879908cf711b84d4f0c5d534c3cd12c576d25254b7019247435af4ab0f` 일치, PNG1장2550×3301 디코딩·영어 본문·실제 회로 내용을 확인했다. 이는 실제 외부 검색·검사·변환 함수 검증이며 로그인 브라우저를 재조작한 결과로 집계하지 않는다.
 - 로컬 반영: 테스트 통과 후 8011 API 컨테이너의 백엔드2파일만 교체·재시작했다. UI 빌드·DB 재생성·키/한도설정·운영 배포는 하지 않았다. 로컬 `/health`200을 확인했다. KiCad 제외 구성과 원격 renderer 빈 URL은 유지한다.
 - 계약·문서: `docs/specs/external-complete-schematics.md`, `backend/projects/PROJECTS.md`, `tests/projects/PROJECTS.md`에 영어 자료 등록·선택 기준을 기록했다. 보수적 언어 휴리스틱이며 모든 혼합 언어를 완전 판별한다고 주장하지 않는다. 기존 보드 본문/PNG/SVG와 RAG 데이터시트 행 검색의 2등급 계약·UI는 변경하지 않았다.
-- 증거: `C:\Users\user\AppData\Local\Temp\osc-official-english-20261116-4qnljicc`에 시작 manifest·index·patch·컨테이너/UI 상태, 중간 실패, 최종 PDF 회귀와 실제 검색/PNG 원자료를 구분해 보관했다. 기존 작업·스테이징을 보존하며 커밋·푸시·PR·배포는 하지 않았다.
+- 증거: `<home>\AppData\Local\Temp\osc-official-english-20261116-4qnljicc`에 시작 manifest·index·patch·컨테이너/UI 상태, 중간 실패, 최종 PDF 회귀와 실제 검색/PNG 원자료를 구분해 보관했다. 기존 작업·스테이징을 보존하며 커밋·푸시·PR·배포는 하지 않았다.
 - 최종 보존 대조: 이번9파일 외 tracked 파일 변경0, 기존 git index byte 동일, UI 소스 변경0·실행UI149자산 hash 동일, API ID·환경 hash·DB ID/마운트 동일, 호스트/컨테이너 백엔드 hash 일치, `kicad-cli` 없음. `git diff --check`와 staged diff 검사 통과. 전체 DB 내용의 재집계는 하지 않았으며 DB 변경 명령을 실행하지 않았다.
 
 ## 2026-11-16 공식 제조사 6곳 검색 확장과 제한 실측
 
 - 사전등록: `evals/guides/preregister.md`의 공식 제조사 6곳·긴 PDF·RF 회귀 항목을 코드 수정 전에 추가했다. TI TIDA-010197, ST NUCLEO MB1136, Analog Devices DC368B, onsemi AND9482, Infineon AN1807, Vishay SiC PFC와 긴 PDF LM2596/L78을 고정했다. 외부 검색 최대24회·로컬 manifest 최대16회·각180초·실측30분, 공급자 한도/결제 오류 중단 조건이다.
 - 선행 확인: 기존 로컬 API/DB 컨테이너와 로그인 세션, Exa 실제 검색200·후보3건을 확인했다. 기술 진행 조건 PASS. 공식 자료와 이용 조건 확인은 구분하며 신규 운영 배포·코퍼스 편입·LLM/임베딩/가격 호출은 범위 밖이다.
-- 보존: 저장소 밖 `C:\Users\user\AppData\Local\Temp\osc-official-six-20261116-neq__191`에 기존 index13파일의 blob hash·patch, dirty/untracked 원본, 프런트60파일 hash와 로컬 API/DB ID·설정hash를 보관했다. 이번 변경은 unstaged로 유지한다. UI 파일은 수정하지 않는다.
+- 보존: 저장소 밖 `<home>\AppData\Local\Temp\osc-official-six-20261116-neq__191`에 기존 index13파일의 blob hash·patch, dirty/untracked 원본, 프런트60파일 hash와 로컬 API/DB ID·설정hash를 보관했다. 이번 변경은 unstaged로 유지한다. UI 파일은 수정하지 않는다.
 - 진행: 공식 검색 경로 실패6건과 잘못된 GitHub fallback1건을 새 회귀로 재현했다. 검색/검증·PDF 처리는 파일 소유권을 나눠 수정하며, 완료 후 실제 API·PNG·화면 성공과 외부 오류를 분리해 기록한다.
 
 ### 수정과 검증 결과
@@ -1199,7 +1199,7 @@
 
 - 실제 음성 대조: TSC SS33 radio와 TSC TS999999999는 각각404 SCHEMATIC_NOT_FOUND, 무전기나 다른 자료로 대체하지 않았다. 위조 호스트·비표준 포트·비PDF·다른 품번·블록도·배선 없는 페이지·원본 hash 변조·일반 PDF 경계는 단위/통합 회귀로 확인했다. 이 검사는 회로의 전기적 설계 정확성이나 재배포 권한을 보증하지 않으며 화면의 라이선스 미확인 표시는 유지한다.
 - 자료 범위: 제품·보드 참고 회로이며 업로드 넷리스트의 동일 원본이나 분석 가능한 새 회로 프로젝트로 등록한 것이 아니다. 신규 임베딩·LLM·Mouser 호출은 없었다.
-- 검증 증거: C:\Users\user\AppData\Local\Temp\osc-tsc-application-707f5ba79ac94b8390a155b39addc11a (ui-api-proof.json, ui-01.jpg~ui-12.jpg, final-local-tsc.jpg, runtime-before/after.json).
+- 검증 증거: <home>\AppData\Local\Temp\osc-tsc-application-707f5ba79ac94b8390a155b39addc11a (ui-api-proof.json, ui-01.jpg~ui-12.jpg, final-local-tsc.jpg, runtime-before/after.json).
 
 ## 2026-11-16 TSC 접두어 없는 품번 검색 경로 보완
 
@@ -1223,14 +1223,14 @@
 | TSL9A12V | TSL9A12V18CX | 1 | 공식 제품군 후보 선택 |
 | TQL821CSV50 | TQL821CSV50 | 1 | API·화면 정상 |
 
-- 검증 증거: C:\Users\user\AppData\Local\Temp\osc-tsc-bare-0d20e0f17b4a4b4e846299c67e0caf8a (ui-api-proof.json, route-proof.json, ui-01.jpg~ui-10.jpg, runtime-before/after.json).
+- 검증 증거: <home>\AppData\Local\Temp\osc-tsc-bare-0d20e0f17b4a4b4e846299c67e0caf8a (ui-api-proof.json, route-proof.json, ui-01.jpg~ui-10.jpg, runtime-before/after.json).
 - 기존 dirty 문서·코드·평가 사전등록·미추적 파일은 보존했으며 이번 변경은 위 검색분기·캐시정규화·관련테스트·기존 설명문서와 이 append기록에 한정한다. 프런트 수정·신규 임베딩·LLM/가격 호출·커밋·푸시·운영 배포 없음. 전체 TSC 제품군을 자동 판별한다고 주장하지 않으며, 이번 품번 계열에만 적용한다.
 
 ## 2026-11-16 TSC 10품번 동일 조건 재검증
 
 - 현재8011 reference-ui-20261116의 제품·보드 참고 모드에서 앞선10품번을 TSC접두어 없이 실제 검색했다. 사용자 기존 탭의 진행중SS33조회는 건드리지 않고 별도탭을 사용했다. 캐시정책을 유지했으며 외부 공급자 재검색·PDF재다운로드는 강제하지 않았다.
 - manifest10건 HTTP200, PNG17건 HTTP200. 17장이 모두 complete=true·양수원본크기로 표시됐고, 출처·원본링크가 각API의 source_url과 일치했다. 이전검증과10개모두 모델/원본URL/출처종류/시트수가 동일하다. H변형과제품군실제모델 표기는 그대로 유지했다.
-- 코드·DB·환경값변경, 서버재시작, 모델/임베딩/가격호출, 커밋·푸시·배포 없음. 실측 전후 저장소파일hash변경0을 확인한 뒤 이 작업기록만 추가했다. 증거 C:\Users\user\AppData\Local\Temp\osc-tsc-ten-recheck-hflkb_yx (verification.md, final-proof.json, ui-api-proof.json, image-network-proof.json, 품번별화면).
+- 코드·DB·환경값변경, 서버재시작, 모델/임베딩/가격호출, 커밋·푸시·배포 없음. 실측 전후 저장소파일hash변경0을 확인한 뒤 이 작업기록만 추가했다. 증거 <home>\AppData\Local\Temp\osc-tsc-ten-recheck-hflkb_yx (verification.md, final-proof.json, ui-api-proof.json, image-network-proof.json, 품번별화면).
 
 ## 2026-11-16 첫 검색 요청의 공식 PDF 중복 다운로드·검사 제거
 
@@ -1255,13 +1255,13 @@
 - 잔여 동작: L7805의 탈락 URL1개는 다운로드2회·검사2회·재사용0이었다. 기존 보완 검색에서 같은 URL의 후보가 다시 등장하거나 외부 오류를 재시도하는 경로는 합치지 않았다. 현재 단계 로그만으로 두 원인을 구분하지 못하며, 이번 수용 기준인 통과 원문의 검사→변환 재사용 성공과 별도로 기록한다. 실패 후보 정책 변경을 다른 속도 개선으로 추가하지 않았다.
 - 호출/중단: 17:39:55 KST에 시작한 고정 검색7건을 각1회 실행했고 마지막 PDF 작업 로그는17:52:11.333 KST다. 공식 후보 검색 완료 로그는9건이며 해당 코드 경로에서 Exa 성공 응답 뒤 기록되는 이벤트다. HTTP 공급자 로그는 활성화하지 않았다. manifest7회/Exa14회/요청180초/실측30분 상한 안에서 종료했고 실패 요청 재전송·성공 표본 선별은 하지 않았다. 모델·임베딩·가격 API와 GitHub 검색은 실행하지 않았다.
 - 보존: raw index hash·HEAD·기존 git status 동일, 허용9파일 외 새 변경0, 프런트 런타임149파일 manifest hash 동일. API 컨테이너ID·환경값hash 동일, DB 컨테이너ID와 기존 `osc-schematic-local_pgdata` 볼륨 유지. 로컬 `DEMO_MODE=0`, `DEMO_REPLAY=0`, `KICAD_RENDERER_URL` 빈 값과 KiCad 제외 상태를 유지했다. DB·한도 설정·배포·커밋·푸시·PR 변경 없음. `git diff --check`와 `git diff --cached --check` 통과.
-- 원자료: `C:/Users/user/AppData/Local/Temp/osc-pdf-request-reuse-20261116-v9s2edw1/`의 `summary.json`, `*-result.json`, `pdf-work.json`, `search-events.json`, `cold-starts.json`, `*-sheet-*.png`, `*-screen.jpg`. 이전 비교 기록은 같은 폴더의 `archived-baseline.json`에 복사해 보존했다. 별도 보존 점검은 `osc-pdf-reuse-preservation-20261116-172515/post-implementation-preservation.json`이다. 쿠키·서명 이미지 토큰·비밀값·전체 환경변수는 저장하지 않았다.
+- 원자료: `<home>/AppData/Local/Temp/osc-pdf-request-reuse-20261116-v9s2edw1/`의 `summary.json`, `*-result.json`, `pdf-work.json`, `search-events.json`, `cold-starts.json`, `*-sheet-*.png`, `*-screen.jpg`. 이전 비교 기록은 같은 폴더의 `archived-baseline.json`에 복사해 보존했다. 별도 보존 점검은 `osc-pdf-reuse-preservation-20261116-172515/post-implementation-preservation.json`이다. 쿠키·서명 이미지 토큰·비밀값·전체 환경변수는 저장하지 않았다.
 
 ## 2026-11-16 공식 후보 PDF 다운로드·검사 최대2개 병렬 처리
 
 - 시작 기준: OSC / HEAD `8d385697dc777b1e2375d99a3ebb9ed4a57d43b4`, 기존 dirty/index 보존. 준비 원문 전달 로직을 유지하면서 반도체6공식제조사 PDF의 검사만 최대2개로 병렬화한다. 기존 순차 구현은 실제 API/화면에서 재실행하지 않는다. 후보 순서·검증·제조사 모호성·검색 보완·PNG 순차 변환·UI·DB를 유지한다.
 - 사전점검PASS: 현재 공식 PDF 검사는 독립 subprocess와 기존 시간/메모리 제한을 사용한다. 검사 캐시는 thread-safe single-flight이며 요청별 준비 원문은 잠금/식별 대조가 필요하다. 기존 API 컨테이너와 로그인한8011 화면·저장된 직전7결과가 있어 추가 키·의존성·배포·DB 변경 없이 진행한다.
-- 변경/로컬 기준: 연속 공식 PDF 후보를2개씩 검사하고 프로세스 공통 semaphore도2개로 제한한다. copy_context로 요청 문맥을 전파하고 준비 원문 최대2개·각20MiB와 지표는 RLock으로 보호한다. 결과는 원래 순서로 소비하며 retry_budget·오류 집계·렌더는 주 스레드에 둔다. 작업 전9파일과 raw index는 `C:/Users/user/AppData/Local/Temp/osc-pdf-parallel-20261116-d9bw5k01/before` 및 `index-before.bin`에 보존했다.
+- 변경/로컬 기준: 연속 공식 PDF 후보를2개씩 검사하고 프로세스 공통 semaphore도2개로 제한한다. copy_context로 요청 문맥을 전파하고 준비 원문 최대2개·각20MiB와 지표는 RLock으로 보호한다. 결과는 원래 순서로 소비하며 retry_budget·오류 집계·렌더는 주 스레드에 둔다. 작업 전9파일과 raw index는 `<home>/AppData/Local/Temp/osc-pdf-parallel-20261116-d9bw5k01/before` 및 `index-before.bin`에 보존했다.
 - 실행 전 조건: 외부 호출 없는 동시성/순서/원문/오류 회귀와 기존6개 테스트 파일을 먼저 통과한다. 백엔드2파일만 기존 `osc-schematic-local-api-1`의 `/app/backend/projects/`에 복사하고 고정7입력 전마다 같은 API만 restart한다. health200 후 기존 UI 찾기 버튼으로 실제 검색하고 브라우저 HTTP 캐시를 비활성화한다. DB 컨테이너·볼륨·환경과 로컬 KiCad 제외 상태는 유지한다. 입력·비교 기준은 사전등록의 LM2596/L7805/LT1763/NSVR351SDSA3/BAT62-02V/VEML7700/TI LM2596 datasheet다.
 - 예산/중단: manifest7회·Exa 최대14회·요청180초·실측30분. 공급자402/403/429/503·한도에 해당 공급자 추가 요청을 중단하며 같은 실패를 반복하지 않는다. LLM·임베딩·가격 호출, 다른 속도 개선, DB/한도 설정 변경, 커밋·푸시·PR·배포0. 실제 request_id·응답 시간·PDF 중첩 구간/최대 동시 수·PNG·DOM·출처/원본링크를 저장소 밖 같은 임시 폴더에 기록한다. 이전 관측과 새 각1회의 차이를 인과적 성능 개선율로 일반화하지 않는다.
 - 회귀: 새 동시성 테스트가 순차 구현에서 peak1로 실패한 것을 확인했다. 실제 서비스 진입점의 동시 검사2·완료/선택 순서·각 PDF 바이트 재사용·4후보 상한·요청 전체 retry1·서로 다른 요청의 프로세스 공통 상한·worker 오류 시 형제 종료/ContextVar 정리를 추가했다. 기존6개 파일을 `uv run --no-sync pytest -q tests/projects/test_official_schematic.py tests/projects/test_schematic_render.py tests/projects/test_external_circuit_search.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py tests/api/test_openapi.py --tb=short -p no:cacheprovider`로 실행해544passed(30.10초). 기존 영어·품번·회로·여섯 번째 제조사 모호성·API/서명 경계가 함께 통과했다.
@@ -1287,7 +1287,7 @@
 - PR 범위는 TSC와 6개 제조사의 영어 공식 회로 검색, 품번·회로 검증, 제조사 모호성 처리, 요청 안의 PDF 재사용과 최대2개 병렬 검사다. 프런트·배포 설정·연구 자료·평가 결과 파일·DB 변경은 제외한다.
 - `external_circuit_search.py`에서 사용하지 않는 `dataclasses.replace` import를 제거했다. PDF 검사·원문 전달·정리 함수는 동적 import와 서비스 호출 경로에서 사용하므로 유지했다. 문서 목록과 API 설명에 검색 범위와 기본값을 적었다. 기존 UI와 연결하는 작업은 별도로 남긴다.
 - 시작 기준은 OSC / HEAD `8d385697dc777b1e2375d99a3ebb9ed4a57d43b4`다. 원격 main `9c87ba36e3f7e16537f3fce285f6c185604e64fb`을 가져와 저장소 밖 복사본에만 선별 변경을 적용했다. 코드 충돌은 없었고 API 설명과 화면 사양의 문서 충돌2곳은 최신 main 내용을 보존해 정리했다. 실제 OSC 브랜치는 병합하지 않았으며 기존 index를 유지한다.
-- 선별 패치는17파일이다. 작업 기록과 사전등록은 공식 검색에 해당하는 절만 포함하고 다른 작업 기록은 원본에 보존한다. 산출물은 `C:/Users/user/AppData/Local/Temp/osc-pr-prep-20261116-plt98y9o/`에 저장한다.
+- 선별 패치는17파일이다. 작업 기록과 사전등록은 공식 검색에 해당하는 절만 포함하고 다른 작업 기록은 원본에 보존한다. 산출물은 `<home>/AppData/Local/Temp/osc-pr-prep-20261116-plt98y9o/`에 저장한다.
 - 실제 검색·PNG·화면 결과는 앞선 TSC10품번과 6개 제조사 검증 기록을 사용한다. 이번 정리에서는 서비스·외부 공급자 API를 호출하거나 컨테이너를 재시작하지 않는다. 커밋·푸시·PR 생성·배포는 하지 않는다.
 - 선별 복사본에서 관련6개 테스트 파일과 `tests/repo/test_repo_layout.py`를 실행해552passed(33.75초)를 확인했다. 외부 연결과 기존 로컬 서비스 연결을 차단하고 테스트용 로컬 통신만 허용했다. 최신 main의 OpenAPI·프로젝트 소유권·서명·모호성·PDF 상한·영어/RF/긴 PDF 회귀와 문서 목록 검사가 포함된다. 이후 변경은 문서뿐이며 Python9파일 구문 검사·Markdown 상대 링크·선별 패치의 `diff --check`도 통과했다.
 - 독립 검토에서 검색 코드의 의존성과 기존 API 계약을 확인했다. 기준 main 화면이 새 참고 검색 옵션을 보내지 않는 점은 화면 반영 범위에 명시했다. 백엔드 배포만으로 기존 화면 연결까지 완료됐다고 기록하지 않는다. 자원표는 코드에 맞춰 참고 PDF 원문200쪽·반환20시트·선택 없는 전체 변환20쪽으로 구분했다. 주요 `SPEC.md`의 응용 회로 참고 예외는 조장 검토 사항으로 PR 설명 초안에 남겼다.
@@ -1298,7 +1298,7 @@
 - 같은 폴더 `RESEARCH.md`에 문서 목록1행, `SOJAFIT.md`에 새 파일 트리1행만 추가했다. 주요 문서 변경은 AGENTS.md의 새 파일 등록 예외를 적용했으며 다른 루트 문서·ADR은 수정하지 않았다.
 - 저장소 문서는 근거를 상대 링크로 연결한다. 작성자 로컬 임시 폴더의 JSON·PNG·PDF·실행 로그·검토용 복사본은 포함하지 않았으며 원자료 별도 보관 범위를 명시했다.
 - 기존 고정 main `9c87ba36` 기준 PR 준비 패치에 보고서·문서 목록·트리 등록을 추가했다. 총20파일(백엔드5·테스트4·문서와 목록11)이며 실제 OSC 병합·기존 index 변경 없이 별도 index와 복사본에서 정리한다. 다른 연구 자료·UI·배포·DB 변경은 선별하지 않는다.
-- 추가 서비스 실측·기능 테스트·앱 코드 수정·API/DB 요청·재시작·커밋·푸시·PR 생성·배포는 없다. 기존552건 시험을 재실행하지 않으며 문서 내용·링크·목록·패치 적용 여부만 확인한다. 작업 전 tracked1307개·untracked16개 개별 해시는 `C:/Users/user/AppData/Local/Temp/osc-official-search-doc-preservation-20261116-212926/`에 보관했다.
+- 추가 서비스 실측·기능 테스트·앱 코드 수정·API/DB 요청·재시작·커밋·푸시·PR 생성·배포는 없다. 기존552건 시험을 재실행하지 않으며 문서 내용·링크·목록·패치 적용 여부만 확인한다. 작업 전 tracked1307개·untracked16개 개별 해시는 `<home>/AppData/Local/Temp/osc-official-search-doc-preservation-20261116-212926/`에 보관했다.
 - 확인: 공유 보고서와 준비 복사본 일치, 비교표14행·기존552passed 기록 보존, 상대 링크 유효, 저장소 구조 정적 검사5항목·패치 적용·`diff --check` 통과. Python9파일 해시가 추가 전과 같고 기존 raw index를 유지했다. 선별한 작업 기록에는 보고서의 근거가 되는 제조사 확장·영어 원문·품번 검색의 기존 절도 포함했다. JSON·PNG·로컬 전용 링크는 PR에 넣지 않았다.
 
 ## 2026-11-17 · 단일 회로도 검색의 공식 참고 API 연결

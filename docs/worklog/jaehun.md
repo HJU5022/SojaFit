@@ -99,7 +99,7 @@
 - 실행과 결과: 전용 임시 PostgreSQL에 000_init.sql을 적용한 뒤 `TEST_DATABASE_URL=<전용 localhost DB> uv run python -m pytest -q` → **59 passed, 1 skipped**. skip은 실제 코퍼스 DB가 필요한 BM25 시험이다. 첫 새 컨테이너 실행은 초기 확장 미설치로 ingest 시험 1건이 실패했고 초기화 후 통과했다. 코드 결함으로 포장하지 않는다.
 - 재검토: 새 독립 AI 검토에서 중요한 결함 없음. 최신 main 통합 후 subset·DOC_DEFAULTS·COPY·문서도 재확인했다. 52건·26/26·검수 40/7/5, 기존 질문·입력·NET 보존, v1/FROZEN 미변경, 로컬 링크 및 git diff --check 통과.
 - 비밀값 확인: Gitleaks v8.30.1로 승인 범위 32개 파일(약 552KB)을 별도 사본에서 redacted 검사, no leaks found. `.env`, ZIP, 전체 코퍼스, PR/Discord 전달문은 PR에서 제외한다. 기존 pyproject.toml·uv.lock은 변경하지 않았다.
-- 정리: 평가 검수/분류와 저장 용량 검증 도구를 논리 단위 커밋으로 나눈다. PR 본문·Discord 복사용 전달문·검사 보고서는 저장소 밖 `/home/honorbear/proj3-b-handoff/review-20261102/`에 둔다. 실제 250MB/검색 품질·대상 Supabase 버전·검수 보류 5건은 미완료로 표시한다.
+- 정리: 평가 검수/분류와 저장 용량 검증 도구를 논리 단위 커밋으로 나눈다. PR 본문·Discord 복사용 전달문·검사 보고서는 저장소 밖 `<home>/proj3-b-handoff/review-20261102/`에 둔다. 실제 250MB/검색 품질·대상 Supabase 버전·검수 보류 5건은 미완료로 표시한다.
 - 원격 권한: AGENTS.md 팀 규칙 1의 이번 대화 조장 허락이 확인되기 전에는 push·PR 생성·리뷰어 지정을 하지 않는다. 로컬 커밋과 검토 가능한 PR 본문까지 준비한다. Discord는 직접 게시하지 않고 사용자 복사문만 만든다.
 
 ## 2026-11-02 코퍼스 250MB·halfvec 도구와 로컬 검증
