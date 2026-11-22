@@ -1,12 +1,6 @@
 # 주제서
 
-강사에게 제출해 2026-10-29에 통과한 주제서를 그대로 옮겨 둔 것입니다. 고치지 않습니다.
-
-※ 2026-11-06: 김재훈은 개인 사정으로 팀을 탈퇴했습니다. 아래 본문의 구성원은 제출 당시 그대로입니다. 기능의 기준은 루트 `SPEC.md`입니다. 각주 [1]·[2]·[4]의 파일 사본은 2026-11-12부터 `docs/research/evidence/`에 있습니다(목록과 해시는 그 폴더의 EVIDENCE.md). 각주 [3]의 파일 사본은 2026-11-13부터 같은 폴더에 있습니다.
-
-※ 2026-11-16: 아래 "지금은 어떻게 하는가" 칸에서 "범용 챗봇이 존재하지 않는 품번을 대체품으로 제시한 사례도 보고됐다[3]"를 지웠습니다(조장 승인). 각주 [3]의 저장소 사본([candidate-g-market-saturation.md](research/evidence/candidate-g-market-saturation.md), [candidate-circuit-role-substitution.md](research/evidence/candidate-circuit-role-substitution.md))에서 `grep`으로 찾은 "부품번호 환각"은 후보 주제 비교표의 한 칸(candidate-g-market-saturation.md 96행)뿐이고, 범용 챗봇이 없는 품번을 대체품으로 제시한 사례의 출처는 없었습니다. 팀이 같은 v3 50문항을 범용 코딩 에이전트(Codex)에 넣은 측정에서는 없는 품번 제시가 0건이었습니다([TALLY.md](../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md); 정답 초안을 같은 도구가 썼다는 한계가 있음). 아래 "범용 챗봇과 무엇이 다른가" 칸의 "없는 품번 제시 수"는 비교 지표의 이름이며 사례의 주장이 아닙니다.
-
-※ 2026-11-12: 아래 237건 채용 공고 집계는 당시 제출 이력으로 보존하며(원자료 사본은 [research/evidence/](research/evidence/EVIDENCE.md)에 있음), 현재 평가·발표의 채용 근거로는 사용하지 않습니다. 검증한 [관련 채용 역할 50건의 분석과 공고 링크](research/market/market-user-journey.md#1-2-50개-채용-역할-분석-반복-업무와-요구-역량-2026-11-12-자료)를 사용합니다.
+강사에게 제출해 2026-10-29에 통과한 주제서다. 본문은 제출 당시 그대로이고, 제출 뒤 바꾼 것은 맨 아래 「변경 이력」에 모았다.
 
 **회로를 읽고 대체 조건을 정해 후보 부품을 판정하는 RAG 에이전트 (첫 범위: 소형 MCU 회로의 다이오드)**
 
@@ -28,3 +22,14 @@
 [2] 제조 산업 AI 공고 집계: [`research/evidence/job-postings-summary.md`](research/evidence/job-postings-summary.md)(원티드·점핏·사람인·잡코리아·회사 채용 페이지, 2026-10-29).
 [3] 대체재·시장 조사: [후보 G 시장 포화 비교](research/evidence/candidate-g-market-saturation.md)(원본 이름 `reports/후보 G 시장 포화 비교.md`), [1차 관문 회로 역할 대체](research/evidence/candidate-circuit-role-substitution.md)(원본 이름 `1차관문-회로역할대체.md`). 2026-10-29 작성, 2026-11-13 저장소로 옮김. 목록과 해시는 [research/evidence/EVIDENCE.md](research/evidence/EVIDENCE.md).
 [4] 넷리스트 실측: [`research/evidence/netlist/manifest_diodes.json`](research/evidence/netlist/manifest_diodes.json)(공개 저장소 151개, 다이오드 554개, 2026-10-29).
+
+## 변경 이력
+
+제출 뒤 바꾼 것은 아래 표가 전부다. 본문의 수치(코퍼스 예상 조각 수 · 채용 공고 집계 등)는 제출 당시 값이고, 지금 값은 [EVAL_REPORT.md](../EVAL_REPORT.md)에 있다.
+
+| 날짜 | 바꾼 것 |
+|---|---|
+| 2026-11-06 | 김재훈은 개인 사정으로 팀을 탈퇴했습니다. 본문의 구성원은 제출 당시 그대로입니다. 기능의 기준은 루트 `SPEC.md`입니다. 각주 [1]·[2]·[4]의 파일 사본은 2026-11-12부터 `docs/research/evidence/`에 있습니다(목록과 해시는 그 폴더의 EVIDENCE.md). 각주 [3]의 파일 사본은 2026-11-13부터 같은 폴더에 있습니다. |
+| 2026-11-12 | 본문의 237건 채용 공고 집계는 당시 제출 이력으로 보존하며(원자료 사본은 [research/evidence/](research/evidence/EVIDENCE.md)에 있음), 현재 평가·발표의 채용 근거로는 사용하지 않습니다. 검증한 [관련 채용 역할 50건의 분석과 공고 링크](research/market/market-user-journey.md#1-2-50개-채용-역할-분석-반복-업무와-요구-역량-2026-11-12-자료)를 사용합니다. |
+| 2026-11-16 | 본문 "지금은 어떻게 하는가" 칸에서 "범용 챗봇이 존재하지 않는 품번을 대체품으로 제시한 사례도 보고됐다[3]"를 지웠습니다(조장 승인). 각주 [3]의 저장소 사본([candidate-g-market-saturation.md](research/evidence/candidate-g-market-saturation.md), [candidate-circuit-role-substitution.md](research/evidence/candidate-circuit-role-substitution.md))에서 `grep`으로 찾은 "부품번호 환각"은 후보 주제 비교표의 한 칸(candidate-g-market-saturation.md 96행)뿐이고, 범용 챗봇이 없는 품번을 대체품으로 제시한 사례의 출처는 없었습니다. 팀이 같은 v3 50문항을 범용 코딩 에이전트(Codex)에 넣은 측정에서는 없는 품번 제시가 0건이었습니다([TALLY.md](../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md); 정답 초안을 같은 도구가 썼다는 한계가 있음). 아래 "범용 챗봇과 무엇이 다른가" 칸의 "없는 품번 제시 수"는 비교 지표의 이름이며 사례의 주장이 아닙니다. |
+| 2026-11-22 | 본문 "조, 구성원" 칸의 정답 판정(하정운 · 김재훈)은 평가셋 v1 · v2 기준이다. 기준 평가셋 v3의 정답 근거 판정은 1차 심태현 · 최종 하정운이다([EVAL_REPORT.md](../EVAL_REPORT.md) 2절) |
