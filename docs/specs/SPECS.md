@@ -15,6 +15,7 @@
 
 ## 파일
 - `_example.md` — 강사 스캐폴드의 작업서 형식 예시(AGENTS.md가 가리킴)
+- `agent-upgrade.md` — 에이전트 보강의 큰 흐름: LLM이 스스로 도구를 고르게 바꾸는 조각 순서, 성공 기준, 원칙
 - `api-error-contract.md` — FastAPI 공통 JSON 오류 응답과 서버 생성 요청 식별자
 - `circuit-context-diagram.md` — 대상 부품의 1·2단계 연결 개념도 계약
 - `d5-frontend-service.md` — React·Vite 화면과 서비스 API 연결 계약(기능 계약 현행, 화면 구현 행은 새 화면 기준)

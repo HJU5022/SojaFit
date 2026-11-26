@@ -791,6 +791,7 @@ SojaFit (proj3-b)
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
     │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
+    │   ├── agent-upgrade.md <- 에이전트 보강의 큰 흐름: 조각 순서, 성공 기준, 원칙
     │   └── external-complete-schematics.md <- 공개 프로젝트 완성 회로도
     ├── experiments/        <- 사전 등록한 실험의 계약(무엇을 어떤 조건으로 잴지)과 그 문서에 함께 적은 결과
     │   ├── EXPERIMENTS.md  <- 폴더 설명

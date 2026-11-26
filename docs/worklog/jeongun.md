@@ -1,5 +1,17 @@
 # jeongun 작업 기록
 
+## 2026-11-26 에이전트 보강 시작: 큰 흐름 문서와 동결점
+- 결정(정운): 개인 사본에서 에이전트 보강을 한다. LLM이 스스로 도구를 고르게 바꾸는 것이 목표이고, 우선순위는 속도 · 정확도 → 도구 쓰는 에이전트 → 디자인이다. 버전을 나누지 않고 같은 코드를 조각 단위로 계속 고친다. 로컬에서 증명하고, 운영에서만 할 수 있는 일이 있을 때만 배포한다. 큰 흐름과 원칙은 `docs/specs/agent-upgrade.md`.
+- 바꾼 것 [실측]: 로컬 태그 `freeze-2026-11-22`(`3195d9bd`, 원격에 올리지 않음), 그 태그에서 딴 브랜치 `agent-upgrade`, `docs/specs/agent-upgrade.md` 새로 씀, `SOJAFIT.md` 트리 · `docs/specs/SPECS.md` 파일 목록에 한 줄씩.
+- 확인 [실측]: `uv run pytest tests/repo -q` 5 통과. 새 문서의 상대 링크 7개가 모두 실제 파일을 가리킨다.
+- 확인 못 한 것: 문서 「아직 확인하지 않은 가정」 5개(메모리 통로, Haiku 5.5 도구 호출, 구조화 답의 호출 수, 보통 질문 LLM 1번의 속도 유지, 키 · 로컬 `.env`). 커밋하지 않았다.
+- 다음 할 일: 조각 0 정리 후보표(정운이 짚은 영역 + 서비스가 실제로 쓰는지 코드로 확인한 영역). 지우는 것은 하나씩, 시험과 함께.
+- 조각 0 후보 [실측]: 서비스 진입점 4개(`backend.main`, `backend.projects.schematic`, `memory_service --setup`, `rag.pipeline.ingest`)에서 import로 닿지 않는 `backend` 모듈은 7개다. 그중 지울 후보는 사슬 셋이다.
+  - D4 단일 그래프: `graph/build.py`, `graph/nodes.py`에서 단일 그래프만 쓰는 146줄, 프롬프트 `route` · `rewrite` · `generate`가 묶여 있다. `run_gate`는 멀티 그래프만 만든다(`make_app(True)`).
+  - Supervisor V0 실험: `graph/supervisor.py`, `prompts/supervisor_v0.md`, 실행기, 시험이 묶여 있다.
+  - MCP 데모 도구 4개: `verify_tsc_pdf`, `get_circuit_info`, `get_corpus_document`, `search_tsc_web`. 시험과 문서 말고는 부르는 곳이 없다.
+- 조각 0 유지 [실측]: `evals/results` 14개 폴더는 모두 문서가 링크하는 근거다. `rag/pipeline`의 `collect` · `parse` · `subset` 등은 코퍼스를 만드는 오프라인 도구라 둔다. 지우는 것은 정운이 고른 사슬만 하나씩 한다.
+
 ## 2026-11-22 개인 사본 저장소 문서 정리
 - 조장 지시: 11-18 읽기 전용 점검 목록(128개)을 한 번에 고치고 개인 사본(HJU5022/SojaFit)에만 올린다. 조 저장소(aihuman-7th/proj3-b)에는 올리지 않는다 [결정 11-22].
 - 바꾼 것 [실측]: 옛 문서 3개를 `docs/archive/`로 옮김(요약 전 README · EVAL_REPORT 전체본, 교체 전 화면 설계), 빈 `evals/exclusions.json`(`{"excluded": []}`) 추가. README · EVAL_REPORT의 측정값 표현(로컬 실행기 · 채점 기준 커밋 뒤 · 독립 확인 아님 · 채점 기준 차이), `DEMO_MODE=1` 회차(`2026-11-13-citecheck-v3`)를 근거에서 뺌, v3 출제 · 정답 초안과 재동결 서술, 비교 표 3개 · 화면 3장. GATES의 리비전 일지를 `<details>`로 접음. SPEC 이력 서술 정리 · 멀티 그래프 노드 표 · 거절 사유 표 · 한다체. AGENTS 한 장(번호 유지, 지킬 것 8 ↔ 팀 규칙 3 충돌 해소). SOJAFIT 트리 설명의 날짜 · 이슈 번호와 중복 문단. ADR 상태 줄 · 현재 위치. 제출물(ai_tools_log 한 장 요약, demo_script 최종 영상 기준, DELIVERABLES 닫힌 항목). TOPIC 변경 이력 표. 작업 기록 속 로컬 사용자 경로를 `<home>`으로 가림.
