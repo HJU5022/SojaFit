@@ -298,7 +298,9 @@ def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
         for index, client in enumerate(clients, 1):
             start = client.get("/api/auth/google/start", follow_redirects=False)
             state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
-            assert client.get(f"/api/auth/google/callback?code=google-{index}&state={state}").status_code == 200
+            # [왜] /login은 화면 빌드가 있어야 200이다. CI 시험 단계에는 빌드가 없어 따라가면 404라, 세션을 심고 보내는 것까지만 본다(위 시험들과 같음)
+            callback = client.get(f"/api/auth/google/callback?code=google-{index}&state={state}", follow_redirects=False)
+            assert callback.status_code == 303 and callback.headers["location"] == "/login"
             assert client.get("/api/auth/me").json() == {"user_id": ids[index - 1], "role": "admin", "email": f"google-{index}@example.test"}
         assert clients[0].post("/api/auth/logout", headers={"origin": "http://testserver"}).status_code == 200
         assert clients[0].get("/api/auth/me").status_code == 401
