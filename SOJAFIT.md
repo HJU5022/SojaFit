@@ -171,7 +171,6 @@ SojaFit (proj3-b)
 │   │   ├── GRAPH.md        <- 폴더 설명. D4 v2 흐름, 구현 상태(DB 체크포인트는 서비스가 연결해 그래프 폴더 안에는 없음, 견적 승인 interrupt는 아직 없음)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
-│   │   ├── supervisor.py   <- Supervisor Prompt V0 네 필드 출력·입력 envelope·상태별 의미 검증 계약(현재 그래프에는 미연결)
 │   │   ├── nodes.py        <- 멀티 그래프가 쓰는 노드 · 도우미(입력 읽기, 가격 안내, 품번 찾기, 인용 검사 등)와 평가 실행기만 부르는 옛 단일 그래프 노드(라우팅 · 채점 · 재작성 · 생성 · 거절)
 │   │   ├── mcp_retriever.py  <- MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── netlist.py      <- 평가 · 시험용 KiCad 넷리스트 파서(parse_netlist)와 projects/가 쓰는 S-expression 파서(_sexpr). 서비스 업로드는 projects/netlist.py
@@ -203,7 +202,6 @@ SojaFit (proj3-b)
 │   │       └── roles.yaml  <- 역할 23개 규칙(조건 세 층, 기준식, 출처)
 │   ├── prompts/            <- 노드가 LLM에 보내는 프롬프트 원문과 버전 기록
 │   │   ├── PROMPTS.md      <- 폴더 설명과 프롬프트 버전 기록 표
-│   │   ├── supervisor_v0.md  <- Supervisor V0 질문 분류·근거 선택·상태 기반 다음 경로 계약
 │   │   ├── route.md        <- 질문 종류 분류(라우팅 노드). 단일 그래프 전용(평가 비교용)
 │   │   ├── grade.md        <- 검색 청크 채점(채점 노드). 단일 그래프 전용(평가 비교용)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드). 단일 그래프 전용(평가 비교용)
@@ -378,8 +376,7 @@ SojaFit (proj3-b)
 │   │   ├── GUIDES.md       <- 폴더 설명
 │   │   ├── dataset-guide.md  <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
 │   │   ├── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
-│   │   ├── v3_50_codex_paste.md <- v3 50문항의 붙여넣기용 평가 입력 원문(Codex 비교용)
-│   │   └── supervisor-prompt-v0.md  <- Supervisor Prompt V0의 API 없는 plan·smoke·본 실행·집계 절차
+│   │   └── v3_50_codex_paste.md <- v3 50문항의 붙여넣기용 평가 입력 원문(Codex 비교용)
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
 │   │   ├── score_ragas.py <- 저장 응답의 Ragas 채점 모듈. run_gate가 불러 같은 trace에 점수로 붙인다(단독 실행 없음)
@@ -407,11 +404,6 @@ SojaFit (proj3-b)
 │   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
 │   │   ├── run_supervisor_jev.py  <- Jev Decisions API 평가 계획·호출·집계
 │   │   ├── report_supervisor_stage3.py  <- 1~3차 원시 행의 API 없는 비교·3차 재집계
-│   │   ├── supervisor_prompt_v0_common.py  <- V0 13건 입력·hash·공통 네 필드와 의미 일치 채점
-│   │   ├── run_supervisor_prompt_v0.py  <- Luna·Haiku V0 Chat plan·smoke·본 실행
-│   │   ├── run_supervisor_prompt_v0_jev.py  <- Jev Decisions V0 plan·smoke·본 실행
-│   │   ├── compare_supervisor_prompt_v0.py  <- 세 후보 V0 결과의 API 없는 공통 집계
-│   │   ├── import_supervisor_prompt_v0_langfuse.py  <- 완료된 V0 결과를 모델 재호출 없이 Langfuse Dataset·Experiment로 가져옴
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── score_compound.py  <- 여러 개를 묻는 질문의 부분별 채점(답할 부분은 기존 기준, 답하면 안 되는 부분은 거절했는지)
 │   │   ├── eval_grader.py  <- 채점기 기준선(#36): 검색·통과 청크가 정답 쪽을 충분·부분·부족으로 가졌는지 계산해 results/grader/에 저장
@@ -575,7 +567,6 @@ SojaFit (proj3-b)
 │   │   └── test_repository.py  <- 소유권·원자성·접근 권한·삭제 잠금 시험
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
-│   │   ├── test_graph_supervisor.py  <- Supervisor V0 입력·출력·상태별 의미 계약
 │   │   ├── test_graph_state.py  <- 상태 칸의 덮어쓰기·쌓기
 │   │   ├── test_agent_netlist.py  <- 에이전트용 KiCad 업로드의 형식·참조·자원 제한 시험
 │   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기(주변 핀 기능 · 부스트 · 플라이백 기구), 저장소 밖 경로 차단
@@ -643,11 +634,6 @@ SojaFit (proj3-b)
 │   │   ├── test_supervisor_models.py  <- 수퍼바이저 평가 실행·중단·집계·provider 증거 검증
 │   │   ├── test_supervisor_jev.py  <- Jev typed answer·안전 gate·manifest 검증
 │   │   ├── test_supervisor_stage3_report.py  <- 3차 집계 분모·라우팅·3회 비교 검증
-│   │   ├── test_supervisor_prompt_v0_common.py  <- V0 표본 hash·입력 분리·공통 채점
-│   │   ├── test_supervisor_prompt_v0.py  <- Chat plan·상한·provider·smoke 계약
-│   │   ├── test_supervisor_prompt_v0_jev.py  <- Jev plan·typed answer 변환·상한 계약
-│   │   ├── test_compare_supervisor_prompt_v0.py  <- 세 후보 집계의 hash·case 집합·지표 검증
-│   │   ├── test_import_supervisor_prompt_v0_langfuse.py  <- V0 Langfuse plan·가져오기·재조회 계약
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
 │   │   ├── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치
@@ -780,7 +766,6 @@ SojaFit (proj3-b)
     │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
     │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
     │   ├── judge-agent.md  <- Spec 에이전트와 대체품 찾기
-    │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
     │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
     │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거

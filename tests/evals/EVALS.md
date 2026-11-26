@@ -35,17 +35,12 @@
 | `test_import_human_review.py` | 사람 채점 시트 변환: O/X/보류 파싱, 미채점 건너뜀, `human_review` 채움, 일치율, 원본 덮어쓰기 거부. 합성 시트만 사용 |
 | `test_chunk_source_check.py` | 청크-원본 대조의 행 검사(`row_check`) · 부품 행 검사(`part_check`) · 각주 검사(`note_check`) 변이 시험: 값을 같은 쪽 다른 행 값(72)·같은 행 다른 열 값(8)·다른 행 단위(48)로 바꾼 청크를 쪽 검사는 0건, 행 검사는 전부 잡고 깨끗한 12건은 통과, 조건 숫자를 쪽의 다른 숫자로 바꿔 그런 조건의 행이 없는 청크(254)도 전부 잡고, 못 찾은 행은 일치가 아닌 미확인. 부품 행 표(첫 열 = 품번)의 같은 변이는 부품 행 검사가 잡고, 각주 글을 지운 청크는 각주 검사가 `missing`으로 잡음. 합성 표 격자만 사용(PDF·DB·네트워크 없음) |
 
-### 수퍼바이저 후보 비교 (Supervisor Prompt V0 포함)
+### 수퍼바이저 후보 비교
 | 파일 | 확인하는 것 |
 |---|---|
 | `test_supervisor_models.py` | 후보 비교 실행기: 동결 입력, schema 재시도, provider 중단, 예산, 집계, 증거 hash |
 | `test_supervisor_jev.py` | Jev 평가기: typed answer, gold 격리, provider 정책, 예산, 작업 manifest |
 | `test_supervisor_stage3_report.py` | 3차 집계의 gold·형식·라우팅 분모와 3회 비교, 과거 Jev 수치 재계산 |
-| `test_supervisor_prompt_v0_common.py` | V0 평가셋의 hash·건수 동결, 정답·id 입력 격리, 오류 행을 포함한 공통 분모와 상태 전이 표본 |
-| `test_supervisor_prompt_v0.py` | Luna·Haiku V0 실행기의 모델 고정, 입력 격리, 형식 재시도 상한, 오프라인 plan과 live gate |
-| `test_supervisor_prompt_v0_jev.py` | Jev V0의 공통 질문 계약·입력 경계·typed answer 확률 검증·오프라인 plan·live gate |
-| `test_compare_supervisor_prompt_v0.py` | 세 후보 고정, dataset·의미 계약 hash, case 집합·실행 수 일치, API별 형식 지표와 Jev metadata 분리 |
-| `test_import_supervisor_prompt_v0_langfuse.py` | V0 Dataset payload·고정 ID·결정적 점수·hash 차단·중복 영수증 차단·Experiment 쓰기 계약(네트워크 없음) |
 
 ### 인젝션·신뢰 경계·방어 재생
 | 파일 | 확인하는 것 |

@@ -32,6 +32,5 @@
 - `official-datasheet-evidence.md` — 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약
 - `project-conversation-navigation.md` — 프로젝트·이전 대화 탐색 API 계약
 - `rag-pipeline.md` — 데이터시트 수집·파싱·청킹·적재와 하이브리드 검색
-- `supervisor-v0-langfuse-import.md` — Supervisor V0 결과를 Langfuse Dataset·Experiment로 가져오는 계약
 - `user-thread-memory.md` — 사용자별 분석 thread 소유권, 체크포인트, 사용자 사실 기억, 보관 기간
 - `verified-circuit-and-datasheet-visuals.md` — 검증된 데모 회로도와 데이터시트·패키지 외형 근거 표시 계약

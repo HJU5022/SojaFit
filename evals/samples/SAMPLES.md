@@ -14,8 +14,8 @@
 | `embedding_sample_v0.jsonl` | 비동결 표본 | 임베딩 후보를 거르는 프록시. 30청크·18질의(48행). v1·v2·G5 건수에 포함하지 않음 | `benchmark_embeddings.py` |
 | `retrieval_r1.jsonl` | 비동결 표본 | 검색 표본 84문항(preregister #25). 무리 G1 단서 많음·G2 단서 적음·G3 근거 두 쪽·G4 품번 없음, `split`은 PDF 단위 dev(46)·test(38) | `run_retrieval_r1.py` |
 | `retrieval_r1_rewrite_q3.json` | 고정 질의 | 같은 84문항의 고정 재작성 질의 Q3(서비스 `rewrite()` 출력 그대로) | `run_retrieval_r1.py rewrite`가 만듦 |
-| `supervisor_prompt_v0.jsonl` | 비동결 표본 | 수퍼바이저 V0 세 후보를 같은 조건에서 비교하는 13건. 같은 사용자 요청의 회로·데이터시트·승인 사례 확보 전후와 재시도 소진 상태를 포함 | `run_supervisor_prompt_v0*.py` |
-| `supervisor_prompt_v0_frozen.json` | 무결성 기록 | 위 13건의 sha256·건수. 루트 `FROZEN.json`의 v1·v2 동결을 바꾸지 않음 | `supervisor_prompt_v0_common.py` |
+| `supervisor_prompt_v0.jsonl` | 비동결 표본 | 수퍼바이저 V0 세 후보를 같은 조건에서 비교하는 13건. 같은 사용자 요청의 회로·데이터시트·승인 사례 확보 전후와 재시도 소진 상태를 포함 | 없음(V0 실행기는 2026-11-26에 지움. `results/supervisor/2026-11-06-prompt-v0-v1/`의 입력 근거로 둠) |
+| `supervisor_prompt_v0_frozen.json` | 무결성 기록 | 위 13건의 sha256·건수. 루트 `FROZEN.json`의 v1·v2 동결을 바꾸지 않음 | 없음(위와 같음) |
 
 `retrieval_r1_rewrite_q3.json`은 표본이 아니라 고정 질의(같은 종류인 `rewrite_q3_v2.json`·`rewrite_q3_v3.json`은 `evals/inputs/`)라 위 "넣는 것"과 어긋난다. `run_retrieval_r1.py`·`run_retrieval_service.py`·`eval_grader.py`의 경로 상수, 사전 등록, `evals/results/retrieval/2026-11-16-cand-pool/README.md`가 이 경로를 기록해 옮기지 않았다.
 

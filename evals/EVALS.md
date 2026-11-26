@@ -73,7 +73,7 @@
 | `results/chunking/v1-vs-v4h-2026-11-13/` | 청킹 v1 대 v4h 검색 비교: 같은 동결 v3(쪽 정답 21건)·고정 질의·같은 임베딩과 검색 코드로 잰 `retrieval_v1_*`·`retrieval_v4h_*` json, 설정·지표·한계(`README.md`), `SHA256.txt` | `run_retrieval_v3.py` | `results/chunking/v1-vs-v4h-2026-11-13/README.md` |
 | `results/grader/` | 채점기 기준선(`grader_baseline_*`) | `eval_grader.py` | 사전 등록 #34·#36 |
 | `results/skill/` | Skill·도구 판단 검증 요약 | `run_skill_pair.py` | 사전 등록 #17 |
-| `results/supervisor/` | Supervisor 후보 비교 단계별 `<날짜>-<이름>/`(manifest, 문항별 행, summary, 호출 증거). V0 프롬프트 비교와 Langfuse 가져오기 영수증 포함 | `run_supervisor_*.py`, `report_supervisor_stage3.py`, `import_supervisor_prompt_v0_langfuse.py` | 각 하위 폴더 `*summary*.json`, [supervisor-prompt-v0.md](guides/supervisor-prompt-v0.md) |
+| `results/supervisor/` | Supervisor 후보 비교 단계별 `<날짜>-<이름>/`(manifest, 문항별 행, summary, 호출 증거). V0 프롬프트 비교와 Langfuse 가져오기 영수증 포함 | `run_supervisor_*.py`, `report_supervisor_stage3.py`(V0 실행기는 2026-11-26에 지움, 로컬 태그 `freeze-2026-11-22`에 있음) | 각 하위 폴더 `*summary*.json` |
 | `results/threads/` | thread 기억·입력 경로·신뢰 경계·판정 묶음 확인과 인젝션 실측 원시(`injection_*`) | `run_thread_validation.py`, `run_trust_boundary.py`, `run_claim_consistency.py`, `run_input_surfaces.py`, `run_judgement_bundle.py`, `run_injection_baseline.py`, `run_supervisor_guard_injection.py` | 아래 "인젝션 파일" |
 
 ### 그래프 하위 폴더 (`results/graph/`)

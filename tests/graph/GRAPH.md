@@ -21,5 +21,4 @@
 | `test_graph_generate.py` | 생성 노드: 통과 청크·넷리스트 전달, 인용 검사(중첩 명시 번호 인식, 비인용 숫자·쪽수 제외, 바깥 과거 사례 검출), 근거 없을 때 LLM 미호출, Skill 유무에 따른 지침·적용 해시 |
 | `test_graph_refuse.py` | 거절 노드: 라우팅 거절의 멀티와 같은 문구, 검색 고리 거절의 안내문, 이유 코드 `refusal`, Skill 적용 정보 초기화 |
 | `test_graph_state.py` | 그래프 상태의 `tries`·`path`는 쌓이고 나머지 칸은 덮어써짐 |
-| `test_graph_supervisor.py` | Supervisor V0(`backend/graph/supervisor.py`)의 네 필드 스키마, 입력 경계, 의미 일관성, Jev 공통 계약 |
 | `test_graph_mcp_retriever.py` | MCP 검색 응답 검증, stdio 세션 재사용, timeout, 코퍼스 확인(`check_corpus`) 응답 검증 |

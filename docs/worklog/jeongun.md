@@ -1,5 +1,17 @@
 # jeongun 작업 기록
 
+## 2026-11-26 조각 0-2: Supervisor V0 실험을 지움
+- 결정(정운): 끝난 실험 Supervisor V0(13문항으로 Supervisor 후보 모델 셋 비교)의 코드를 지운다.
+- 바꾼 것 [실측]
+  - 지운 파일 15개: `backend/graph/supervisor.py`, `backend/prompts/supervisor_v0.md`, 실행기 5개(`evals/runners/*supervisor_prompt_v0*`), 시험 6개(`tests/evals/test_*supervisor_prompt_v0*` 5개, `tests/graph/test_graph_supervisor.py`), `evals/guides/supervisor-prompt-v0.md`, `docs/specs/supervisor-v0-langfuse-import.md`.
+  - 문서: `SOJAFIT.md` 트리, `backend/graph/GRAPH.md`, `PROMPTS.md`, `SPECS.md`, `GUIDES.md`, `RUNNERS.md`, `tests` 폴더 설명 2개, `evals/EVALS.md`, `evals/samples/SAMPLES.md`.
+- 남긴 것: 결과 `evals/results/supervisor/2026-11-06-prompt-v0-v1/`와 입력 표본 `evals/samples/supervisor_prompt_v0*`. 보고서가 가리키는 근거다. `PROMPTS.md`의 버전 기록 줄도 이력이라 둔다.
+- 영향: `run_graph`가 `backend/prompts/*.md`를 모두 읽어 만드는 프롬프트 해시가 바뀐다. 이번 뒤의 평가 결과 메타데이터는 동결 태그와 해시가 다르다.
+- 확인 [실측]
+  - `uv run pytest -q`: 2973 통과, 13 실패, 202 건너뜀. 지운 V0 시험만큼 통과 수가 줄었다. 실패 13개는 0-1과 같은 `test_schematic_render.py`다.
+  - `tests/repo`: 5 통과. `freeze.py --check`: "동결 이후 바뀐 파일: 없음".
+- 다음 할 일: 정리 후보의 다음 묶음(MCP 데모 도구 4개는 조각 1로 미뤘다. 일회성 스크립트 · `db/legacy` · 제출물은 정운이 정한다).
+
 ## 2026-11-26 조각 0-1: 옛 D4 단일 그래프를 지움
 - 결정(정운): 평가 비교용으로 남긴 D4 단일 그래프는 서비스가 쓰지 않으므로 지운다. 개인 저장소(`public`)에는 PR 없이 `main`에 바로 올린다.
 - 바꾼 것 [실측]
