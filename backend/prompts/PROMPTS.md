@@ -7,7 +7,7 @@
 - 담당: 에이전트
 
 ## 프롬프트 해시
-`evals/runners/run_graph.py:133`과 `evals/runners/run_skill_pair.py:179`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`만 뺀다. 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라진다. 프롬프트가 아닌 문서는 이 폴더에 두지 않는다.
+`evals/runners/run_graph.py`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`만 뺀다. 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라진다. 프롬프트가 아닌 문서는 이 폴더에 두지 않는다.
 
 ## 노드별 모델
 `backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드별 모델의 정본이다. 선정 이유는 ADR 0014(노드별 분리)와 ADR 0017(Supervisor 모델)이다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 쓴다. `NODES`에 든 열 개 프롬프트(`supervisor_v0.md`, `schematic_dialogue.md` 제외. `schematic_dialogue.md`는 `llm.schematic_dialogue_chat`으로 부른다)는 `publish_nodes`가 `backend/prompts/<노드>.md`에서 읽어 Langfuse에 등록하고, 실행 전 고정 버전 대조(`load_development`)가 같은 파일과 원격 본문을 비교한다.
@@ -31,7 +31,7 @@
 | `generate.md` | 단일 그래프 생성 프롬프트: 근거만으로 인용을 붙여 답하기 | `backend/graph/nodes.py`(`generate`) | 평가 전용 |
 | `supervisor_v0.md` | Supervisor V0의 질문 분류·근거 선택·다음 경로 계약. `backend/` 코드는 읽지 않음 | `evals/runners/run_supervisor_prompt_v0.py`(`PROMPT_PATH`) | 사용 안 함 |
 
-단일 그래프 전용 프롬프트는 [GRAPH.md](../graph/GRAPH.md)의 분담 표대로 `evals/runners/run_graph.py`(단일 대 멀티 비교, EVAL_REPORT.md 4장)와 `run_skill_pair.py`가 쓴다.
+옛 단일 그래프 노드의 프롬프트(`route` · `rewrite` · `generate`)는 [GRAPH.md](../graph/GRAPH.md)의 분담 표대로 평가 실행기만 쓴다. 단일 그래프 조립은 2026-11-26에 지웠다.
 
 ## 버전 기록
 프롬프트를 바꾸면 같은 PR에서 한 줄을 더한다. 평가를 다시 쟀으면 결과 위치도 적는다. 최근 줄을 위에 둔다.

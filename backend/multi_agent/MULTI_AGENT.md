@@ -7,7 +7,7 @@
 - 담당: 에이전트
 
 ## graph/와의 관계
-두 폴더는 서로 import한다. 이 폴더는 `backend/graph/`에서 `nodes.py`의 도우미(`read_input`, `price_answer`, `parts_list_answer`, `quote_answer`, `circuit_parts`, `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`, 상수 `REVISION`·`WORD`·`NOT_FOUND`·`QUANTITY`·`STANDARD`), `memory.py`(`read_profile`, `memory_context`, `memory_sources`), `mcp_retriever.py`(`RetrievalUnavailableError`)를 가져다 쓴다. 반대로 `backend/graph/nodes.py`는 이 폴더의 `contracts.py`, `messages.py`, `supervisor.py`(`Facts`·`render_facts`)를 가져다 쓰고, 단일 그래프(`backend/graph/build.py`)는 `facts.py`의 `facts_node`와 `agents/judge.py`의 Spec 에이전트 노드를 그대로 붙인다. 사용처별 근거는 [GRAPH.md](../graph/GRAPH.md)의 분담 표다. 순환을 피하려고 `supervisor.py`는 `citations`(답 검사)와 `circuit_parts`(계획 입력의 `Circuit attached` 줄, #59)를 함수 안에서 import한다.
+두 폴더는 서로 import한다. 이 폴더는 `backend/graph/`에서 `nodes.py`의 도우미(`read_input`, `price_answer`, `parts_list_answer`, `quote_answer`, `circuit_parts`, `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`, 상수 `REVISION`·`WORD`·`NOT_FOUND`·`QUANTITY`·`STANDARD`), `memory.py`(`read_profile`, `memory_context`, `memory_sources`), `mcp_retriever.py`(`RetrievalUnavailableError`)를 가져다 쓴다. 반대로 `backend/graph/nodes.py`는 이 폴더의 `contracts.py`, `messages.py`, `supervisor.py`(`Facts`·`render_facts`)를 가져다 쓴다(옛 단일 그래프 `backend/graph/build.py`는 2026-11-26에 지웠다). 사용처별 근거는 [GRAPH.md](../graph/GRAPH.md)의 분담 표다. 순환을 피하려고 `supervisor.py`는 `citations`(답 검사)와 `circuit_parts`(계획 입력의 `Circuit attached` 줄, #59)를 함수 안에서 import한다.
 
 ## 구조 결정
 그래프 노드 이름은 한국어이고 조립한 그래프의 `get_graph().draw_mermaid()`로 그림을 뽑는다(SPEC.md 2절).

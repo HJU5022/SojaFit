@@ -172,12 +172,11 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
 │   │   ├── supervisor.py   <- Supervisor Prompt V0 네 필드 출력·입력 envelope·상태별 의미 검증 계약(현재 그래프에는 미연결)
-│   │   ├── nodes.py        <- 노드 11개: 입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀). 멀티 전용 노드(부품 목록 · 견적 안내 · 대상 확인)와 공용 도우미
+│   │   ├── nodes.py        <- 멀티 그래프가 쓰는 노드 · 도우미(입력 읽기, 가격 안내, 품번 찾기, 인용 검사 등)와 평가 실행기만 부르는 옛 단일 그래프 노드(라우팅 · 채점 · 재작성 · 생성 · 거절)
 │   │   ├── mcp_retriever.py  <- MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
-│   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 단일 그래프 앱을 만듦(평가 비교용, 서비스는 멀티 그래프)
 │   │   ├── netlist.py      <- 평가 · 시험용 KiCad 넷리스트 파서(parse_netlist)와 projects/가 쓰는 S-expression 파서(_sexpr). 서비스 업로드는 projects/netlist.py
 │   │   └── memory.py       <- 옛 승인 사례 Store namespace(탈퇴 때 지우기용), 승인 사례를 크기 제한된 모델 입력으로 만들기, 멀티 그래프의 `기억 읽기` 노드(`read_profile`: Store의 선호 실장 방식만 `mount_preference`로). graph/nodes.py · multi_agent/build.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
-│   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + RAG 에이전트 · Spec 에이전트). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
+│   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + RAG 에이전트 · Spec 에이전트). graph/는 이 폴더가 쓰는 공용 노드 · 도우미
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── contracts.py    <- 계획서·할 일·보고서의 모양, 이유 코드, 질문당 상한 상수
@@ -416,7 +415,6 @@ SojaFit (proj3-b)
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── score_compound.py  <- 여러 개를 묻는 질문의 부분별 채점(답할 부분은 기존 기준, 답하면 안 되는 부분은 거절했는지)
 │   │   ├── eval_grader.py  <- 채점기 기준선(#36): 검색·통과 청크가 정답 쪽을 충분·부분·부족으로 가졌는지 계산해 results/grader/에 저장
-│   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
 │   │   ├── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
 │   │   ├── embed_cards.py  <- 임베딩 격자 본평가(#16)의 카드 적재와 모델별 카드 임베딩(실험 DB, 컨테이너)
@@ -584,12 +582,10 @@ SojaFit (proj3-b)
 │   │   ├── test_graph_route.py  <- 라우팅 노드
 │   │   ├── test_graph_search.py  <- 검색 노드의 품번 고르기
 │   │   ├── test_graph_grade.py  <- 채점 노드의 품번·개정판 거르기
-│   │   ├── test_graph_rewrite.py  <- 재작성 노드와 채점 뒤 갈림길
+│   │   ├── test_graph_rewrite.py  <- 재작성 노드가 원래 질문을 고치는지
 │   │   ├── test_graph_generate.py  <- 생성 노드의 근거 제한과 인용 검사
 │   │   ├── test_graph_refuse.py  <- 거절 노드의 이유와 단서 요청
-│   │   ├── test_graph_build.py  <- D4 v2 그래프 조립 순서(첫 단 거절 · 짧은 답 · 검색 고리 · 판정 길), 같은 대화 다음 턴 초기화
-│   │   ├── test_graph_mcp_retriever.py  <- MCP 응답·세션·장애와 재검색 경로
-│   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
+│   │   └── test_graph_mcp_retriever.py  <- MCP 응답·세션·장애
 │   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명
 │   │   ├── test_contracts.py  <- 계획서·보고서 형식 검사, 이유 코드, 상한
@@ -652,7 +648,6 @@ SojaFit (proj3-b)
 │   │   ├── test_supervisor_prompt_v0_jev.py  <- Jev plan·typed answer 변환·상한 계약
 │   │   ├── test_compare_supervisor_prompt_v0.py  <- 세 후보 집계의 hash·case 집합·지표 검증
 │   │   ├── test_import_supervisor_prompt_v0_langfuse.py  <- V0 Langfuse plan·가져오기·재조회 계약
-│   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
 │   │   ├── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치

@@ -1,14 +1,15 @@
-"""줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
+"""노드 함수와 도우미 모음. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 11개).
-  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다. 부품 목록(`parts_list_answer`, #55) · 견적 안내(`quote_answer`, #60) · 대상 확인(`target_choice`, #62)은 멀티 그래프만 붙인다.
-  사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
-  `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
+- 역할: 멀티 그래프(`backend/multi_agent/`)가 쓰는 도우미와 노드를 둔다. 입력 읽기(`read_input`), 가격 안내(`price_answer`),
+  부품 목록(`parts_list_answer`, #55) · 견적 안내(`quote_answer`, #60) · 대상 확인(`target_choice`, #62), 품번 찾기 · 인용 검사 · 검색 도우미다.
+  라우팅 · 채점 · 재작성 · 생성 · 거절 노드(`route` · `grade` · `rewrite` · `generate` · `refuse`)는 서비스가 쓰지 않는다.
+  옛 D4 단일 그래프의 노드로, 지금은 평가 실행기(`evals/runners/run_retrieval_*` 등)와 `scripts/langfuse/langfuse_skill_check.py`만 부른다.
+  [왜] 단일 그래프 조립(`build.py`)은 2026-11-26에 지웠다. 다시 볼 때는 로컬 태그 `freeze-2026-11-22`에서 꺼낸다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
-- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 Spec 에이전트를 부르기만 한다),
+- 하지 않는 일: 그래프 조립(`backend/multi_agent/build.py`), 숫자 비교 판정(`backend/judge/`),
   LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다), Mouser 가격 · 재고 조회(그래프 밖 `/api/prices`, ADR 0009).
-- 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다),
-  backend/multi_agent/contracts.py(질문 종류 · 거절 사유 코드), backend/multi_agent/messages.py(거절 문구 · 판정 답 틀).
+- 출처: SPEC.md 2절 "그래프", ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다),
+  backend/multi_agent/contracts.py(질문 종류 · 거절 사유 코드), backend/multi_agent/messages.py(거절 문구).
 """
 import hashlib
 import json
@@ -25,7 +26,7 @@ from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
 from backend.graph.memory import memory_context, memory_sources
 from backend.multi_agent.contracts import QuestionType, Reason
-from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST, QUOTE_GUIDE, price_message, refusal_for, render_judgement
+from backend.multi_agent.messages import CIRCUIT_MISSING, NEED_NETLIST, QUOTE_GUIDE, price_message, refusal_for
 from backend.multi_agent.supervisor import Facts, render_facts
 from backend.rag.units import PREFIX, to_si
 from backend.services import llm
@@ -170,7 +171,7 @@ class Route(BaseModel):
             # [왜] 범위 밖 · 다른 부품은 종류만으로 사유가 정해진다. 비워 왔다고 형식 재시도(유료)로 다시 부르지 않고 채운다
             self.reason = REFUSED_TYPES[self.question_type]
         if self.question_type == "chat" and not self.reply.strip():
-            raise ValueError("일상 대화에는 reply가 필요하다")  # [왜] 짧은 답 노드는 LLM을 다시 부르지 않고 이 reply를 답으로 쓴다
+            raise ValueError("일상 대화에는 reply가 필요하다")  # [왜] reply가 없으면 일상 대화의 답을 만들 수 없다
         return self
 
 
@@ -182,15 +183,8 @@ def route(state: AgentState) -> dict:
     facts = render_facts(Facts(**(state.get("facts") or {})))
     user = "\n".join([f"대상: {state.get('target', '')} {part.get('value', '')}", f"질문: {state['question']}", *facts])
     answer = llm.node_chat("route", (PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
-    # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다. route 칸은 갈림길 · 거절 · 짧은 답 노드가 읽는다
+    # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다. route 칸은 거절 노드가 읽는다
     return {"question_type": answer.question_type, "route": answer.model_dump(mode="json"), "path": ["라우팅"]}
-
-
-def short_reply(state: AgentState) -> dict:
-    """짧은 답 노드: 일상 대화는 라우팅이 낸 reply를 그대로 답으로 쓴다. LLM을 더 부르지 않는다(멀티 Supervisor의 끝내기와 같음)."""
-    # [왜] check · skill도 덮어쓴다. 같은 thread 앞 턴의 인용 검사 · Skill 적용 정보가 이 답의 것으로 보이면 안 된다
-    return {"answer": state["route"]["reply"], "check": {}, "skill": {"enabled": False, "applied": False, "sha256": None},
-            "path": ["짧은 답"]}
 
 
 # 품번이 아닌 규격 · 인증 이름(AEC-Q101, IEC61000, J-STD-020, ISO7637, UL94, JESD201). [왜] 'AEC-Q101'을 코퍼스에 없는 품번으로 셌다(11-06 v3-14)
@@ -220,7 +214,7 @@ def price_answer(state: AgentState) -> dict:
     refs = {part.get("ref", "")} | {node.split(".")[0] for net in part.get("nets", []) for node in net["nodes"]}  # 검색 노드와 같은 회로 기호
     # 검색 노드와 같은 규칙: 질문 속 품번, 없으면 대상 값의 품번("D1 가격 얼마야" → D1 값의 품번)
     parts = find_parts(state["question"], refs) or find_parts(part.get("value", ""), refs)
-    # [왜] check · skill도 비운다(짧은 답과 같은 이유). 멀티 메모장에는 skill 칸이 없어 LangGraph가 그 칸을 버린다
+    # [왜] check · skill도 비운다. 같은 thread 앞 턴의 인용 검사 · Skill 정보가 이 답의 것으로 보이면 안 된다. 멀티 메모장에는 skill 칸이 없어 LangGraph가 그 칸을 버린다
     return {"price_parts": parts, "answer": price_message(parts), "check": {},
             "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["가격 안내"]}
 
@@ -588,29 +582,6 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
              "used": sorted(cited & valid)}                                    # 넘긴 근거 중 실제로 인용한 번호
     # shortcut: 검사에 걸려도 기록만 하고 답은 그대로 낸다(강의 2주 20강, 11-02 조장 결정). 실측으로 걸리는 비율을 본 뒤 다시 쓰기나 거절로 보낼지 정한다
     return {"answer": answer, "memory_refs": list(dict.fromkeys(memory_refs)), "check": check, "skill": skill_info, "path": ["생성"]}
-
-
-def judge(state: AgentState, *, specs, find, retriever) -> dict:
-    """판정 노드: 멀티 Spec 에이전트의 판정 노드(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
-
-    입력: judge_read · question_type · conditions · target_part · facts. 출력: judgement, path(사양 표 도구 장애면 retrieval_error,
-    코퍼스 밖 요구면 refusal 코드도).
-    주의: 단일 메모장에는 보고서 칸이 없어 `reports`는 버린다. 보고서의 거절 사유는 칸으로 옮겨 거절로 보낸다.
-    """
-    from backend.multi_agent.agents.judge import judge_agent  # [왜] 판정 길을 이을 때만 판정 규칙 · 프롬프트를 읽는다
-    out = judge_agent(state, specs=specs, find=find, retriever=retriever)
-    reason = out.pop("reports")[-1].get("reason")
-    if reason == Reason.SEARCH_ERROR.value:
-        out["retrieval_error"] = {"kind": "spec_table"}
-    elif reason:
-        out["refusal"] = {"code": reason}  # 코퍼스 밖 요구(SPEC 8.3). 거절 노드가 이 코드로 멀티와 같은 문구를 만든다
-    return out
-
-
-def judgement_answer(state: AgentState) -> dict:
-    """답 틀 노드: 판정 결과를 코드 틀(`render_judgement`)로 답 글로 만든다. LLM이 숫자 · 인용을 다시 쓰지 않는다(AGENTS 7번, 멀티 작성과 같음)."""
-    return {"answer": render_judgement(state["judgement"]), "check": {"used": [], "judgement": True},
-            "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["답 틀"]}
 
 
 def refuse(state: AgentState) -> dict:

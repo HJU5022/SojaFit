@@ -16,7 +16,6 @@
 | `test_frozen_evals.py` | `evals/FROZEN.json`이 있고 기록된 파일의 해시가 바뀌지 않았는지, v2 앞 50건 = v1(더한 칸 `question_type`만 다름), 문항 id 고르기(`select_items`)의 모르는 id 거부 |
 | `test_run_graph.py` | 그래프 평가 실행: 최종 메모장에서 점수 뽑기, 거절 시 점수 제외, 단일·멀티 거절 사유 코드, MCP 사실 확인 + 카드 도구 연결, 판정 인터럽트 한 번 재개, 스레드 검증의 dry-run·덮어쓰기 거부 |
 | `test_run_judge_dev.py` | 판정 연습 문제 채점: 판정 문항의 역할·판정 일치, 찾기 문항의 보여 준 후보·판정 집합, 판정 결과가 없을 때 틀림 처리, 비율 모으기 |
-| `test_skill_pair.py` | Skill 쌍 순차 실행의 경로·검색 상한, 사본 격리·실행 순서 교차, 예외 시 부분 결과·덮어쓰기 금지, 평가 호출·예약비용 상한 |
 | `test_retrieval_d3.py` | D3 검색 측정 실행기: gold 줄의 쪽 풀기, Page Hit·회수율·Full Recall·nDCG, 실패 유형, 정확 부호 검정, no_result 임계값(가짜 청크) |
 | `test_retrieval_service.py` | 서비스 경로 재측정 실행기: 지표 정의, 1위 칸과 상위 5개 대조, 백분위·상한, 파일 이름 대응, 오류 문항 건너뛰기(가짜 retrieve) |
 | `test_retrieval_layers.py` | 층별 재측정의 토큰화·nDCG·판정 규칙, 층 결과 파일 요약의 재계산 일치, 나머지 측정 스크립트 문법 |

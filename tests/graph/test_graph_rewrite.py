@@ -1,13 +1,9 @@
-"""재작성 노드와 채점 뒤 갈림길: 원래 질문을 고쳐 검색어를 덮어쓰는지, 생성·재작성·거절 중 어디로 가는지 확인한다.
+"""재작성 노드: 원래 질문을 고쳐 검색어를 덮어쓰는지 확인한다(평가 실행기 run_retrieval_* 가 이 노드를 쓴다).
 
-- 역할: 통과 청크가 있으면 생성, 검색 1번이면 재작성, 2번이면 거절, 검색 0장이면 재작성 없이 거절인지 확인한다.
 - 하지 않는 일: 실제 LLM이 질문을 잘 고치는지는 보지 않는다(가짜 LLM).
 - 출처: SPEC 2절(그래프)·"근거가 없을 때"
 """
 from backend.graph import nodes
-from backend.graph.build import after_grade
-
-CARD = [{"chunk_id": 1}]
 
 
 def test_rewrite_fixes_original_question_not_last_query(monkeypatch):
@@ -24,17 +20,3 @@ def test_rewrite_fixes_original_question_not_last_query(monkeypatch):
     assert seen["user"] == "1N5819 순방향 전압 몇이야?"  # 1차 검색어가 아니라 원래 질문을 고친다
     assert "Do not invent part numbers" in seen["system"]  # rewrite.md가 시스템 프롬프트로 간다
 
-
-def test_after_grade_goes_to_answer_when_cards_pass():
-    assert after_grade({"passed": [1], "docs": CARD, "tries": 2}) == "생성"
-
-
-def test_after_grade_rewrites_once_then_refuses():
-    # 상수 MAX_TRIES가 아니라 리터럴 2와 비교한다. 상수끼리 비교하면 상한을 바꿔도 통과한다(build.py 안내)
-    assert after_grade({"passed": [], "docs": CARD, "tries": 1}) == "재작성"
-    assert after_grade({"passed": [], "docs": CARD, "tries": 2}) == "거절"
-
-
-def test_after_grade_refuses_without_rewrite_when_search_found_nothing():
-    # 코퍼스에 없는 품번(1N4001)은 재작성해도 품번 필터가 같아 다시 0장이다(11-02 조장 결정)
-    assert after_grade({"passed": [], "docs": [], "tries": 1}) == "거절"

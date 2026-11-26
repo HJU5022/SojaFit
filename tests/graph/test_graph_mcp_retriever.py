@@ -6,8 +6,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from backend.graph import nodes
-from backend.graph.build import build_graph
 from backend.graph.mcp_retriever import (
     RetrievalUnavailableError,
     StdioMcpRetriever,
@@ -17,9 +15,6 @@ from backend.graph.mcp_retriever import (
 
 CARD = {"chunk_id": 7, "file": "1N5817 SERIES_H2104.pdf", "page": 1,
         "content": "VRRM 20 V", "table": None, "doc_parts": ["1n5817"]}
-QUESTION = "TSC 1N5817은 역전압을 몇 V까지 견뎌?"
-INPUT = f"질문: {QUESTION}"
-REWRITTEN = "1N5817 repetitive peak reverse voltage VRRM"
 
 
 def result(value, *, is_error=False):
@@ -108,49 +103,6 @@ def test_stdio_retriever_turns_timeout_into_safe_kind():
             retriever("q", parts=None)
     assert error.value.kind == "timeout"
 
-
-def graph_chat(grades):
-    grades = iter(grades)
-
-    def fake(system, user, schema):
-        if schema is nodes.Route:
-            return schema(question_type="rating")
-        if schema is nodes.Grade:
-            return schema(passed_ids=next(grades))
-        if schema is nodes.Rewrite:
-            return schema(query=REWRITTEN)
-        if schema is nodes.Answer:
-            return schema(answer="1N5817의 반복 피크 역전압은 20 V다 [7].")
-        raise AssertionError(schema)
-    return fake
-
-
-def test_graph_uses_mcp_retriever_for_one_search(monkeypatch):
-    events = []
-    session = FakeSession([[CARD]])
-    monkeypatch.setattr(nodes.llm, "chat", graph_chat([[7]]))
-    with StdioMcpRetriever(session_context_factory=fake_context(session, events)) as retriever:
-        out = build_graph(retriever=retriever).invoke({"input": INPUT})
-    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점", "생성"]  # 첫 검색도 재작성한 검색어로 한다
-    assert session.calls == [
-        ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]})]
-    assert events == ["open", "close"]
-
-
-def test_graph_reuses_mcp_session_for_rewritten_search(monkeypatch):
-    events = []
-    session = FakeSession([[CARD], [CARD]])
-    monkeypatch.setattr(nodes.llm, "chat", graph_chat([[], [7]]))
-    with StdioMcpRetriever(session_context_factory=fake_context(session, events)) as retriever:
-        out = build_graph(retriever=retriever).invoke({"input": INPUT})
-    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점",
-                           "재작성", "검색", "채점", "생성"]
-    assert session.calls == [
-        ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]}),
-        ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]}),
-    ]
-    assert events == ["open", "close"]
-    assert out["tries"] == 2
 
 
 def test_stdio_retriever_check_sends_contract_on_same_session():

@@ -1,6 +1,6 @@
 # MCP `search_corpus` LangGraph 통합
 
-- 상태: 현행
+- 상태: 기록. 이 문서가 다룬 단일 그래프 검색 경로(`backend/graph/build.py`)와 시험 `test_graph_build.py` · `test_graph_mcp_stdio.py`는 2026-11-26에 지웠다(로컬 태그 `freeze-2026-11-22`에 있음). `mcp_retriever.py`와 그 시험은 남아 있다
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 8.7 MCP 검색 도구, 도구 계약은 [mcp-search-tools.md](mcp-search-tools.md))

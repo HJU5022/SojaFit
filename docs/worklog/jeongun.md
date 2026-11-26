@@ -1,5 +1,20 @@
 # jeongun 작업 기록
 
+## 2026-11-26 조각 0-1: 옛 D4 단일 그래프를 지움
+- 결정(정운): 평가 비교용으로 남긴 D4 단일 그래프는 서비스가 쓰지 않으므로 지운다. 개인 저장소(`public`)에는 PR 없이 `main`에 바로 올린다.
+- 바꾼 것 [실측]
+  - 지운 파일 5개: `backend/graph/build.py`, `evals/runners/run_skill_pair.py`, `tests/evals/test_skill_pair.py`, `tests/graph/test_graph_build.py`, `tests/graph/test_graph_mcp_stdio.py`.
+  - `backend/graph/nodes.py`: 단일 그래프만 쓰던 `short_reply` · `judge` · `judgement_answer`를 지우고, 맨 위 설명을 지금 쓰임에 맞췄다.
+  - `evals/runners/run_graph.py`: `--multi` 없이 부르면 멈춘다. 멀티 결과에 `graph_` 이름이 붙지 않게, 조용히 멀티로 바꾸지 않는다.
+  - 시험: `test_graph_mcp_retriever.py`에서 단일 그래프 시험 2개, `test_graph_rewrite.py`에서 `after_grade` 시험 3개, `test_run_graph.py`에서 단일 조립 시험 1개를 뺐다. 카드 도구 감싸기 시험 1개는 멀티 조립으로 바꿨다.
+  - 문서: `SOJAFIT.md` 트리, `SPEC.md`(2절 단일 그래프 노드 표, Skill 비교 실행기 절, 판정 길 D4 줄을 한 줄 안내로), `backend/graph/GRAPH.md`, `MULTI_AGENT.md`, `PROMPTS.md`, `RUNNERS.md`, `tests` 폴더 설명 4개, `mcp-graph-integration.md` 상태를 "기록"으로 바꿨다.
+- 남긴 것: `nodes.py`의 `route` · `grade` · `rewrite` · `generate` · `refuse`와 프롬프트 `route` · `rewrite` · `generate`. 평가 실행기(`run_retrieval_*`, `eval_grader.py`)와 `scripts/langfuse/langfuse_skill_check.py`가 아직 부른다. 위 후보표의 "146줄"은 이 때문에 함수 3개로 줄었다.
+- 확인 [실측]
+  - `uv run pytest -q`: 3006 통과, 13 실패, 202 건너뜀. 실패 13개는 모두 `tests/projects/test_schematic_render.py`이고, 동결 태그 코드에서도 같은 13개가 실패한다(맥 환경 요인).
+  - `uv run pytest tests/repo`: 5 통과. `freeze.py --check`: "동결 이후 바뀐 파일: 없음".
+- 확인 못 한 것: 유료 평가(`run_gate`)는 돌리지 않았다. 서비스가 부르는 함수는 바꾸지 않았고, `run_gate`는 멀티 그래프만 조립한다.
+- 다음 할 일: 정리 후보의 다음 사슬(Supervisor V0 실험).
+
 ## 2026-11-26 에이전트 보강 시작: 큰 흐름 문서와 동결점
 - 결정(정운): 개인 사본에서 에이전트 보강을 한다. LLM이 스스로 도구를 고르게 바꾸는 것이 목표이고, 우선순위는 속도 · 정확도 → 도구 쓰는 에이전트 → 디자인이다. 버전을 나누지 않고 같은 코드를 조각 단위로 계속 고친다. 로컬에서 증명하고, 운영에서만 할 수 있는 일이 있을 때만 배포한다. 큰 흐름과 원칙은 `docs/specs/agent-upgrade.md`.
 - 바꾼 것 [실측]: 로컬 태그 `freeze-2026-11-22`(`3195d9bd`, 원격에 올리지 않음), 그 태그에서 딴 브랜치 `agent-upgrade`, `docs/specs/agent-upgrade.md` 새로 씀, `SOJAFIT.md` 트리 · `docs/specs/SPECS.md` 파일 목록에 한 줄씩.

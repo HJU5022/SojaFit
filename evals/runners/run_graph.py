@@ -12,11 +12,11 @@
   DEMO_MODE=1이면 검색은 임베딩 없이 BM25만 쓴다(backend/rag/retrieve.py).
   찾기 · 판정 값은 서비스와 같은 카드 도구(backend/rag/card_find.py · card_specs.py, ADR 0016)이고, MCP 서버는 사실 확인(check_corpus)에만 쓴다.
   카드 도구는 DATABASE_URL로 DB를 직접 읽고, 코드가 못 읽은 카드가 있으면 카드 읽기 LLM을 부른다(비용).
-실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>] [--multi]
-  기본은 D4 v2 단일 그래프다(사실 확인 · 판정 길을 켜려고 MCP 서버를 연다). 판정 인터럽트는 빈 답(= 모름)으로 한 번 재개한다(사람이 답할 수 없어서).
-  --multi: 단일 그래프 대신 멀티 에이전트(Supervisor + 서브에이전트, backend/multi_agent)를 같은 평가셋 · 같은 채점 · 같은 MCP 도구로 잰다.
-           결과는 multi_<평가셋>_<날짜>.json
-  예) LLM_PROVIDER=openrouter DEMO_MODE=1 uv run python -m evals.runners.run_graph evals/dataset_v1.jsonl draft30-e01 draft30-e03
+실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>] --multi
+  --multi: 멀티 에이전트(Supervisor + 서브에이전트, backend/multi_agent)를 잰다. 결과는 multi_<평가셋>_<날짜>.json.
+           판정 인터럽트는 빈 답(= 모름)으로 한 번 재개한다(사람이 답할 수 없어서).
+  [주의] --multi를 빼면 멈춘다. D4 단일 그래프는 2026-11-26에 지웠다(단일 대 멀티 비교는 로컬 태그 freeze-2026-11-22에서 다시 잰다).
+  예) LLM_PROVIDER=openrouter DEMO_MODE=1 uv run python -m evals.runners.run_graph evals/dataset_v1.jsonl draft30-e01 draft30-e03 --multi
 """
 import hashlib
 import json
@@ -149,7 +149,7 @@ def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) ->
 
 
 def make_app(multi: bool, stack: ExitStack):
-    """평가할 그래프를 조립한다. 단일 · 멀티 모두 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인에 쓰고, 찾기 · 판정 값은 카드 도구로 판정 길을 켠다.
+    """평가할 멀티 그래프를 조립한다. MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인에 쓰고, 찾기 · 판정 값은 카드 도구로 판정 길을 켠다.
 
     반환: (app, warm_eval). warm_eval()은 BM25·첫 검색·MCP 품번확인을 한 번 데운다(GATE_WARMUP용, 안 불러도 됨).
     """
@@ -164,7 +164,6 @@ def make_app(multi: bool, stack: ExitStack):
     from backend.services.langfuse_prompts import timed_tool  # [왜] 서비스와 같은 칸 이름(search · specs · find)으로 단계 시간을 남긴다. 기록기가 없으면 그대로 통과한다
     raw_specs, raw_find = specs, card_find.default_find()
     # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
-    # [왜] 단일(D4 v2)과 멀티(D5)가 같은 사실 확인 · 같은 판정 도구를 써야 같은 평가셋 점수를 나란히 비교할 수 있다
     lookup = make_lookup(mcp.check, specs.doc_rows)
     tools = {"lookup": lookup, "specs": update_wrapper(timed_tool("specs", raw_specs), raw_specs),
              "find": update_wrapper(timed_tool("find", raw_find), raw_find), "checkpointer": InMemorySaver()}
@@ -177,8 +176,8 @@ def make_app(multi: bool, stack: ExitStack):
         lookup({'question': '1N4007G VRRM', 'target_part': {}})
 
     if not multi:
-        from backend.graph.build import build_graph
-        return build_graph(**tools), warm_eval  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
+        # [왜] D4 단일 그래프는 2026-11-26에 지웠다. 멀티 결과에 graph_ 이름이 붙지 않게 조용히 바꾸지 않고 멈춘다
+        raise SystemExit("D4 단일 그래프는 지웠습니다. --multi로 돌리거나 로컬 태그 freeze-2026-11-22에서 돌리세요.")
     from backend.multi_agent.build import build_graph as build_multi
     from backend.rag.retrieve import retrieve
     from backend.services import exa, llm
