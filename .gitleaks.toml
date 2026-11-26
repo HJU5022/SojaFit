@@ -36,3 +36,10 @@ regexes = ['''--to-revisions=''']
 description = "후보 수 실험 리랭크 캐시의 sha256 해시 key(비밀값 아님)"
 targetRules = ["generic-api-key"]
 paths = ['''evals/results/retrieval/2026-11-16-cand-pool/rerank_new_2026-11-16\.jsonl''']
+
+# [왜] Skill 비교 2차 실행 결과의 document_key는 코퍼스 문서 이름이다. 16개 값 모두 data/의 문서 이름과 같았다(2026-11-26 확인).
+#      개인 저장소 첫 검사부터 generic-api-key에 13건 걸렸다(커밋 8b8183ab). 히스토리 전체를 보므로 파일 경로로 뺀다.
+[[allowlists]]
+description = "Skill 비교 결과의 document_key(코퍼스 문서 이름, 비밀값 아님)"
+targetRules = ["generic-api-key"]
+paths = ['''evals/results/skill_pair_2026-11-17_run2/result\.json''']

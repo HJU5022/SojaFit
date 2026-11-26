@@ -1,5 +1,14 @@
 # jeongun 작업 기록
 
+## 2026-11-26 개인 저장소 CI 실패 원인과 1번(비밀값 검사) 고침
+- 원인 [실측]: 개인 저장소 CI는 11-22 첫 푸시부터 실패했다. 동결 태그 코드에서도 같은 실패가 났다. 팀 저장소 CI는 11-17부터 결제 한도로 돌지 않아 드러나지 않았다.
+  1. Secret Scan 13건: `evals/results/skill_pair_2026-11-17_run2/result.json`의 `document_key`를 `generic-api-key`로 봤다. 값 16개 모두 `data/`의 문서 이름과 같아 비밀값이 아니다.
+  2. `tests/db/test_schema_docs.py` 8개: `db/036_thread_continuations.sql`의 표 `thread_continuations` 설명이 `scripts/db/gen_schema_docs.py` `TABLES`에 없다.
+  3. `tests/api/test_auth.py::test_two_approved_google_admins_get_isolated_sessions`: 콜백이 `/login`으로 303을 보내고, 시험이 그 주소를 따라가는데 CI 시험 단계에는 화면 빌드가 없어 404다.
+  4. `tests/api/test_threads.py::test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases`: 시험이 SS34를 SS34로 판정시킨다. #65(11-17, 같은 품번은 묻지 않고 동일품) 뒤로는 묻지 않고 끝나 `WAITING`이 아니라 `DONE`이다.
+- 바꾼 것: `.gitleaks.toml`에 위 결과 파일의 `generic-api-key` 예외 한 묶음(1번). 2 ~ 4번은 아직 고치지 않았다.
+- 확인: 로컬에 gitleaks가 없어 CI Secret Scan 결과로 본다.
+
 ## 2026-11-26 조각 0-2: Supervisor V0 실험을 지움
 - 결정(정운): 끝난 실험 Supervisor V0(13문항으로 Supervisor 후보 모델 셋 비교)의 코드를 지운다.
 - 바꾼 것 [실측]
