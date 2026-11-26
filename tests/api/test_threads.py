@@ -860,7 +860,8 @@ def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(run
             return Plan(next='tasks', question_type='candidate_judge', tasks=[
                 Task(id=1, agent='judge', kind='candidate_judge', goal='judge SS34')])
         assert node == 'judge_read'
-        return schema(role='R01', original_part='SS34', candidates=['SS34'])
+        # [왜] 후보가 원래 부품(SS34)과 같으면 묻지 않고 동일품으로 끝난다(#65, 11-17). 되묻기 · 재개를 보려면 다른 품번이어야 한다
+        return schema(role='R01', original_part='SS34', candidates=['SS26H'])
     def factory(saver, store):
         return build_graph(chat=chat, retriever=lambda *args, **kwargs: [], judge_enabled=True,
                            specs=lambda *args, **kwargs: [], find=lambda *args, **kwargs: [],

@@ -6,9 +6,12 @@
   2. `tests/db/test_schema_docs.py` 8개: `db/036_thread_continuations.sql`의 표 `thread_continuations` 설명이 `scripts/db/gen_schema_docs.py` `TABLES`에 없다.
   3. `tests/api/test_auth.py::test_two_approved_google_admins_get_isolated_sessions`: 콜백이 `/login`으로 303을 보내고, 시험이 그 주소를 따라가는데 CI 시험 단계에는 화면 빌드가 없어 404다.
   4. `tests/api/test_threads.py::test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases`: 시험이 SS34를 SS34로 판정시킨다. #65(11-17, 같은 품번은 묻지 않고 동일품) 뒤로는 묻지 않고 끝나 `WAITING`이 아니라 `DONE`이다.
-- 바꾼 것: `.gitleaks.toml`에 위 결과 파일의 `generic-api-key` 예외 한 묶음(1번). 2 ~ 4번은 아직 고치지 않았다.
+- 바꾼 것: `.gitleaks.toml`에 위 결과 파일의 `generic-api-key` 예외 한 묶음(1번). 3 · 4번은 아래에 고쳤고, 2번은 아직이다.
 - 확인: 로컬에 gitleaks가 없어 CI Secret Scan 결과로 본다. 커밋 `24cf4fab`의 Secret Scan이 통과했다 [실측].
 - 3번 고침: Google 관리자 두 명 시험이 콜백을 따라가지 않고 303과 `location == "/login"`만 본다. 같은 파일의 다른 콜백 시험과 같은 방식이다. 로컬은 DB가 없어 이 시험을 건너뛰므로(`test_auth.py` 63 통과 · 25 건너뜀) CI 시험 결과로 본다.
+  - 3번 결과 [실측]: CI 실패가 10개에서 9개로 줄었다(커밋 `856caf45`, 9 실패 · 3147 통과 · 32 건너뜀).
+- 4번 고침: 시험의 가짜 판정 읽기가 내는 후보를 `SS34`에서 `SS26H`로 바꿨다. 질문 글은 그대로다. `ground_part_names`는 글에 없는 후보를 지우지 않고 그대로 둔다.
+  - 확인 [실측]: 메모리 저장소로 같은 그래프를 돌렸다. 후보 `SS34`는 멈추지 않았고, `SS26H`는 `v_in_max` · `i_max` · `v_drop_allowed`를 물으며 멈췄다. 재개하면 판정 읽기 1번으로 끝났다. Postgres 시험 자체는 로컬에서 건너뛰므로(`test_threads.py` 32 통과 · 26 건너뜀) CI로 본다.
 
 ## 2026-11-26 조각 0-2: Supervisor V0 실험을 지움
 - 결정(정운): 끝난 실험 Supervisor V0(13문항으로 Supervisor 후보 모델 셋 비교)의 코드를 지운다.
